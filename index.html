@@ -3,11 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ONTOHATE V2 — 4 Taxonomias (A | B em colunas)</title>
+  <title>ONTOHATE V2 — Taxonomias Top-Down (A | B) + Export</title>
 
-  <!-- D3 -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-  <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -20,12 +18,12 @@
       --shadow: 0 10px 24px rgba(16,24,40,.10);
       --radius: 14px;
 
-      /* cor por taxonomia */
-      --t1:#2563eb;
-      --t2:#16a34a;
-      --t3:#f97316;
-      --t4:#a855f7;
+      --t1:#2563eb; /* azul */
+      --t2:#16a34a; /* verde */
+      --t3:#f97316; /* laranja */
+      --t4:#a855f7; /* roxo */
     }
+
     html,body{height:100%; margin:0; background:var(--bg); color:var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;}
     header{
@@ -40,7 +38,7 @@
     }
     .brand{display:flex; flex-direction:column; gap:4px; min-width: 280px;}
     .brand h1{margin:0; font-size:14px; font-weight:800;}
-    .brand .sub{margin:0; font-size:12px; color:var(--muted); max-width: 820px; line-height: 1.25;}
+    .brand .sub{margin:0; font-size:12px; color:var(--muted); max-width: 920px; line-height: 1.25;}
 
     .controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end;}
     .btn,.file,.input,.select,.pill{
@@ -59,7 +57,9 @@
     .btn{cursor:pointer; user-select:none;}
     .btn:hover{filter: brightness(.98);}
     .file input[type="file"]{display:none;}
-    .input input, .select select{border:none; outline:none; background:transparent; color:var(--text); font-size: 12px;}
+    .input input, .select select{
+      border:none; outline:none; background:transparent; color:var(--text); font-size: 12px;
+    }
     .input input{width: 220px;}
     .select select{appearance:none;}
 
@@ -71,12 +71,12 @@
     #wrap{
       height: calc(100% - 72px);
       display:grid;
-      grid-template-columns: 1fr 380px;
+      grid-template-columns: 1fr 420px;
       gap: 14px;
       padding: 14px;
       box-sizing: border-box;
     }
-    @media (max-width: 980px){
+    @media (max-width: 1100px){
       #wrap{grid-template-columns: 1fr; height:auto;}
       body{height:auto;}
     }
@@ -88,7 +88,7 @@
       box-shadow: var(--shadow);
     }
 
-    .canvas{min-height: 680px; display:flex; flex-direction:column;}
+    .canvas{min-height: 720px; display:flex; flex-direction:column;}
     .canvasHeader{
       padding: 10px 12px;
       border-bottom:1px solid var(--line);
@@ -108,13 +108,40 @@
     .sep{height:1px; background: var(--line); margin: 6px 0;}
 
     /* SVG styles */
-    .divider{stroke: rgba(16,24,40,.12); stroke-width: 2;}
-    .colLabel{font-size: 12px; fill: var(--muted); font-weight: 700;}
-    .link{fill:none; stroke: rgba(16,24,40,.16); stroke-width: 1.2;}
-    .node rect{fill:#fff; stroke: rgba(16,24,40,.20); stroke-width: 1; rx:10; ry:10;}
-    .node .name{font-size: 12px; fill: var(--text); font-weight: 600;}
-    .node .small{font-size: 10px; fill: var(--muted);}
-    .node--match rect{stroke-width: 2.2; stroke: rgba(249,115,22,.95);}
+    .divider{stroke: rgba(16,24,40,.10); stroke-width: 2;}
+    .colLabel{font-size: 12px; fill: var(--muted); font-weight: 800;}
+    .link{fill:none; stroke: rgba(16,24,40,.14); stroke-width: 1.15;}
+    .node rect{
+      stroke: rgba(16,24,40,.18);
+      stroke-width: 1.15;
+      rx:10; ry:10;
+      shape-rendering: geometricPrecision;
+    }
+    .node .name{font-size: 12px; font-weight: 700;}
+    .node .small{font-size: 10px; opacity:.95;}
+    .node--match rect{stroke-width: 2.4; stroke: rgba(249,115,22,.95);}
+
+    /* Tooltip */
+    .tooltip{
+      position: fixed;
+      z-index: 9999;
+      display: none;
+      max-width: 520px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text);
+      pointer-events: none;
+      white-space: pre-wrap;
+    }
+    .tooltip .tTitle{font-weight: 800; margin-bottom: 6px;}
+    .tooltip .tMeta{color: var(--muted); margin-bottom: 8px;}
+    .tooltip .tSection{margin-top: 8px;}
+    .tooltip .tSection b{display:block; margin-bottom: 4px;}
+    .tooltip .tEmpty{color: var(--muted); font-style: italic;}
 
     .toast{
       position:fixed; left:14px; bottom:14px; z-index:50;
@@ -122,21 +149,21 @@
       padding:10px 12px; border-radius: 12px;
       box-shadow: var(--shadow);
       font-size:12px; color: var(--muted);
-      max-width: min(900px, calc(100% - 28px));
+      max-width: min(980px, calc(100% - 28px));
       white-space: pre-wrap;
     }
     .toast.bad{border-color: rgba(255,107,107,.55); color:#7a0b0b;}
+    .mini{font-size:11px;color:var(--muted)}
   </style>
 </head>
 
 <body>
 <header>
   <div class="brand">
-    <h1>ONTOHATE V2 — Taxonomias (A | B em duas colunas)</h1>
+    <h1>ONTOHATE V2 — Top-Down (A | B) + Raiz escolhida + Export</h1>
     <p class="sub">
-      O canvas divide em <b>duas colunas</b>: esquerda = Subontologia A, direita = Subontologia B.
-      <b>Todas as classes</b> de A e B entram. Relações Classe→Superclasse só são mantidas quando a superclasse também está no mesmo lado (A ou B).
-      Se não estiver, a classe vira “raiz” daquele lado (não some).
+      Visualização <b>Top-Down</b> com <b>duas colunas</b>: A (esquerda) e B (direita).
+      Tooltip no hover mostra <b>Comments/Observações</b> (se existirem no XLSX).
     </p>
   </div>
 
@@ -159,12 +186,22 @@
     </div>
 
     <div class="input">
-      🔎 <input id="search" placeholder="Buscar classe (nos dois lados)" />
+      🔎 <input id="search" placeholder="Buscar classe (A e B)" />
     </div>
 
-    <div class="btn" id="btnFit">⤢ Ajustar ao canvas</div>
+    <div class="btn" id="btnFit">⤢ Ajustar</div>
     <div class="btn" id="btnExpandAll">➕ Expandir</div>
     <div class="btn" id="btnCollapseAll">➖ Recolher</div>
+
+    <div class="btn" id="btnSvg">⬇︎ SVG</div>
+    <div class="select" title="PNG em alta resolução">
+      PNG
+      <select id="pngScale">
+        <option value="3">3×</option>
+        <option value="4">4×</option>
+      </select>
+    </div>
+    <div class="btn" id="btnPng">⬇︎ PNG</div>
 
     <div class="pill">
       <span class="dot" id="taxDot"></span>
@@ -188,8 +225,8 @@
   </div>
 
   <div class="card side">
-    <h2>Pares de subontologias (1–4)</h2>
-    <p>Se o nome da subontologia na planilha for diferente, selecione A/B e clique <b>Aplicar</b>.</p>
+    <h2>Configuração</h2>
+    <p>Selecione duas subontologias (A e B). Escolha (opcionalmente) uma classe raiz por lado.</p>
 
     <div class="row">
       <span class="pill"><span class="dot" id="sideDot"></span><b id="pairLabel">—</b></span>
@@ -207,15 +244,29 @@
 
     <div class="sep"></div>
 
-    <p><b>Sem sobreposição:</b> cada lado tem espaçamento próprio e o texto quebra em linhas.</p>
-    <p><b>Cores:</b> a cor da taxonomia contorna os nós; A fica com preenchimento mais claro, B com preenchimento um pouco mais forte.</p>
+    <h2>Raiz Top-Down</h2>
+    <p class="mini">“(Automático)” mantém raízes naturais. O resto aparece em “Outras raízes” (nenhuma classe some).</p>
+
+    <div class="row">
+      <span class="select">Raiz A:
+        <select id="rootASelect"></select>
+      </span>
+      <span class="select">Raiz B:
+        <select id="rootBSelect"></select>
+      </span>
+      <span class="btn" id="btnApplyRoots">Aplicar raízes</span>
+    </div>
+
+    <div class="sep"></div>
+
+    <p class="mini"><b>Tooltip:</b> o hover mostra Comments/Observações se existirem no XLSX.</p>
   </div>
 </div>
 
+<div class="tooltip" id="tooltip"></div>
 <div class="toast" id="toast" style="display:none;"></div>
 
 <script>
-/* ======= Presets (edite os hints se necessário) ======= */
 const TAX_PRESETS = {
   1: { label: "Taxonomia 1", aHint: "naturez", bHint: "manif",   colorVar: "--t1" },
   2: { label: "Taxonomia 2", aHint: "motiv",   bHint: "consequ", colorVar: "--t2" },
@@ -223,9 +274,12 @@ const TAX_PRESETS = {
   4: { label: "Taxonomia 4", aHint: "recurso", bHint: "moder",   colorVar: "--t4" },
 };
 
-/* ======= UI ======= */
 const svg = d3.select("#svg");
+let viewport = null;
+
 const toastEl = document.getElementById("toast");
+const tooltipEl = document.getElementById("tooltip");
+
 const statsEl = document.getElementById("stats");
 const fileInput = document.getElementById("fileInput");
 const searchEl = document.getElementById("search");
@@ -240,12 +294,24 @@ const canvasMeta = document.getElementById("canvasMeta");
 const taxDot = document.getElementById("taxDot");
 const sideDot = document.getElementById("sideDot");
 
+const rootASelect = document.getElementById("rootASelect");
+const rootBSelect = document.getElementById("rootBSelect");
+const btnApplyRoots = document.getElementById("btnApplyRoots");
+
+const btnFit = document.getElementById("btnFit");
+const btnExpandAll = document.getElementById("btnExpandAll");
+const btnCollapseAll = document.getElementById("btnCollapseAll");
+
+const btnSvg = document.getElementById("btnSvg");
+const btnPng = document.getElementById("btnPng");
+const pngScaleSel = document.getElementById("pngScale");
+
 function toast(msg, bad=false){
   toastEl.textContent = msg;
   toastEl.classList.toggle("bad", !!bad);
   toastEl.style.display = "block";
   clearTimeout(toastEl._t);
-  toastEl._t = setTimeout(()=> toastEl.style.display="none", 8500);
+  toastEl._t = setTimeout(()=> toastEl.style.display="none", 9000);
 }
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function setDotColor(varName){
@@ -303,19 +369,101 @@ function wrapLabel(text, maxChars=30){
   return lines;
 }
 
+/* ======= Color helpers ======= */
+function hexToRgb(hex){
+  const h = hex.replace("#","").trim();
+  if (h.length !== 6) return {r:0,g:0,b:0};
+  return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+}
+function rgbToHex(r,g,b){
+  const to = (n)=> n.toString(16).padStart(2,"0");
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+function mix(hexA, hexB, t){
+  const a = hexToRgb(hexA), b = hexToRgb(hexB);
+  const r = Math.round(a.r*(1-t) + b.r*t);
+  const g = Math.round(a.g*(1-t) + b.g*t);
+  const bb = Math.round(a.b*(1-t) + b.b*t);
+  return rgbToHex(r,g,bb);
+}
+function luminance(hex){
+  const {r,g,b} = hexToRgb(hex);
+  const srgb = [r,g,b].map(v=>{
+    const c = v/255;
+    return (c<=0.03928)? c/12.92 : Math.pow((c+0.055)/1.055, 2.4);
+  });
+  return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
+}
+function contrastText(bgHex){ return luminance(bgHex) > 0.55 ? "#101828" : "#ffffff"; }
+
+/* ======= Tooltip helpers ======= */
+function showTooltip(evt, payload){
+  const pad = 14;
+  const vw = window.innerWidth, vh = window.innerHeight;
+
+  tooltipEl.innerHTML = `
+    <div class="tTitle">${escapeHtml(payload.name || "")}</div>
+    <div class="tMeta">${escapeHtml(payload.group || "")}</div>
+    <div class="tSection">
+      <b>Comments</b>
+      <div>${payload.comment ? escapeHtml(payload.comment) : '<span class="tEmpty">(sem comments)</span>'}</div>
+    </div>
+    <div class="tSection">
+      <b>Observações</b>
+      <div>${payload.obs ? escapeHtml(payload.obs) : '<span class="tEmpty">(sem observações)</span>'}</div>
+    </div>
+  `;
+  tooltipEl.style.display = "block";
+
+  // position near cursor but within viewport
+  const rect = tooltipEl.getBoundingClientRect();
+  let x = evt.clientX + 14;
+  let y = evt.clientY + 14;
+  if (x + rect.width + pad > vw) x = evt.clientX - rect.width - 14;
+  if (y + rect.height + pad > vh) y = evt.clientY - rect.height - 14;
+  x = Math.max(pad, x);
+  y = Math.max(pad, y);
+  tooltipEl.style.left = x + "px";
+  tooltipEl.style.top = y + "px";
+}
+function moveTooltip(evt){
+  if (tooltipEl.style.display !== "block") return;
+  const pad = 14;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const rect = tooltipEl.getBoundingClientRect();
+  let x = evt.clientX + 14;
+  let y = evt.clientY + 14;
+  if (x + rect.width + pad > vw) x = evt.clientX - rect.width - 14;
+  if (y + rect.height + pad > vh) y = evt.clientY - rect.height - 14;
+  x = Math.max(pad, x);
+  y = Math.max(pad, y);
+  tooltipEl.style.left = x + "px";
+  tooltipEl.style.top = y + "px";
+}
+function hideTooltip(){ tooltipEl.style.display = "none"; tooltipEl.innerHTML = ""; }
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
 /* ======= Zoom ======= */
-let viewport = null;
 const zoom = d3.zoom()
-  .scaleExtent([0.12, 3])
+  .scaleExtent([0.10, 3.5])
   .on("zoom", (event) => { if (viewport) viewport.attr("transform", event.transform); });
 
 /* ======= State ======= */
-let RAW = null;      // {nodes, edges, groups, sheetNames, fileName}
-let CURRENT = null;  // {taxId, label, selA, selB, forestA, forestB, counts...}
+let RAW = null; // { nodes, edges, groups, sheetNames, fileName }
+let CURRENT = null;
+
 let rootA = null;
 let rootB = null;
-let nodeLayerA = null;
-let nodeLayerB = null;
+let nodeLayer = null;
+let linkLayer = null;
+
 let updateFn = null;
 let fitToCanvasFn = null;
 let expandAllFn = null;
@@ -329,6 +477,7 @@ fileInput.addEventListener("change", async (ev) => {
   const buf = await f.arrayBuffer();
   await parseAndInit(buf, f.name);
 });
+
 async function loadDefault(){
   const url = "Ontohate_V2.xlsx";
   try{
@@ -340,6 +489,8 @@ async function loadDefault(){
     toast("Erro ao carregar XLSX:\n" + e.message, true);
   }
 }
+
+/* ======= Parse XLSX (inclui comment/observações) ======= */
 async function parseAndInit(buf, fileName){
   let wb;
   try{ wb = XLSX.read(buf, { type:"array" }); }
@@ -348,24 +499,40 @@ async function parseAndInit(buf, fileName){
   const sheetNames = wb.SheetNames || [];
   if (!sheetNames.length){ toast("XLSX sem abas.", true); return; }
 
-  const nodes = new Map(); // name -> {name, group, sheet}
+  const nodes = new Map(); // name -> {name, group, sheet, comment, obs}
   const edges = [];        // [child, parent]
   const groupSet = new Set();
 
-  function ensureNode(name, group="", sheet=""){
+  function ensureNode(name, group="", sheet="", comment="", obs=""){
     const n = String(name||"").trim();
     if (!n) return null;
-    if (!nodes.has(n)) nodes.set(n, { name:n, group:String(group||"").trim(), sheet:String(sheet||"").trim() });
-    else{
+
+    if (!nodes.has(n)){
+      nodes.set(n, {
+        name:n,
+        group:String(group||"").trim(),
+        sheet:String(sheet||"").trim(),
+        comment:String(comment||"").trim(),
+        obs:String(obs||"").trim(),
+      });
+    } else {
       const cur = nodes.get(n);
       if (!cur.group && group) cur.group = String(group).trim();
       if (!cur.sheet && sheet) cur.sheet = String(sheet).trim();
+
+      // acumula comment/obs se aparecerem em outra aba/linha
+      const cmt = String(comment||"").trim();
+      const ob  = String(obs||"").trim();
+      if (cmt && !cur.comment) cur.comment = cmt;
+      if (ob && !cur.obs) cur.obs = ob;
     }
+
     if (nodes.get(n).group) groupSet.add(nodes.get(n).group);
     return n;
   }
 
   let usedRows = 0;
+
   for (const sname of sheetNames){
     const ws = wb.Sheets[sname];
     if (!ws) continue;
@@ -376,18 +543,28 @@ async function parseAndInit(buf, fileName){
       const parent = pick(r, ["Superclasse", "Superclass", "superclasse"]);
       const group  = pick(r, ["Subontologia", "Sub-ontologia", "Subontology", "subontologia"]);
 
+      // Comments/Observações (tentamos vários nomes comuns)
+      const comment = pick(r, ["Comment", "Comments", "comment", "comments", "rdfs:comment", "RDFS:comment", "Anotação", "Anotacao", "anotacao", "anotação"]);
+      const obs     = pick(r, ["Observação", "Observacao", "observacao", "observação", "Observações", "Observacoes", "observacoes", "notes", "Notes", "nota", "notas"]);
+
       const c = String(child||"").trim();
       if (!c) continue;
+
       const p = String(parent||"").trim();
       const g = String(group||"").trim();
 
-      ensureNode(c, g, sname);
-      if (p) ensureNode(p, "", "");
+      ensureNode(c, g, sname, comment, obs);
+      if (p) ensureNode(p, "", "", "", "");
+
       if (p) edges.push([c,p]);
       usedRows++;
     }
   }
-  if (!usedRows || nodes.size === 0){ toast("Não encontrei a coluna 'Classe' na planilha.", true); return; }
+
+  if (!usedRows || nodes.size === 0){
+    toast("Não encontrei a coluna 'Classe' na planilha.", true);
+    return;
+  }
 
   // dedup edges
   const seen = new Set();
@@ -402,12 +579,11 @@ async function parseAndInit(buf, fileName){
 
   RAW = { nodes, edges: edgesUniq, groups: GROUP_OPTIONS, sheetNames, fileName };
 
-  // init UI
   taxSelector.value = "1";
   syncPairUIFromPreset(1);
   applyTaxonomy();
 
-  toast(`Planilha carregada: ${fileName}\nAbas: ${sheetNames.length}\nClasses totais: ${nodes.size}\nSubontologias: ${groups.length} (+ sem subontologia)`);
+  toast(`Planilha carregada: ${fileName}\nAbas: ${sheetNames.length}\nClasses totais: ${nodes.size}`);
 }
 
 /* ======= Pair selection ======= */
@@ -418,6 +594,7 @@ taxSelector.addEventListener("change", () => {
   applyTaxonomy();
 });
 btnApplyPair.addEventListener("click", () => { if (RAW) applyTaxonomy(); });
+btnApplyRoots.addEventListener("click", () => { if (RAW) applyTaxonomy(); });
 
 function syncPairUIFromPreset(taxId){
   const preset = TAX_PRESETS[taxId];
@@ -433,7 +610,7 @@ function syncPairUIFromPreset(taxId){
   fillSelect(pairB, options, b);
 }
 
-/* ======= Build two forests: one for A, one for B ======= */
+/* ======= Taxonomy build ======= */
 function applyTaxonomy(){
   if (!RAW) return;
 
@@ -455,22 +632,26 @@ function applyTaxonomy(){
     if (gx === selB) inB.add(name);
   }
 
-  if (inA.size === 0 && inB.size === 0){
-    toast(`Nenhuma classe encontrada para A=${selA} e B=${selB}`, true);
-    return;
-  }
+  const optA = ["(Automático)", ...Array.from(inA).sort((a,b)=>a.localeCompare(b))];
+  const optB = ["(Automático)", ...Array.from(inB).sort((a,b)=>a.localeCompare(b))];
 
-  // helper to build one side (A or B): keep edges only inside that set
+  const prevA = rootASelect.value || "(Automático)";
+  const prevB = rootBSelect.value || "(Automático)";
+  fillSelect(rootASelect, optA, optA.includes(prevA) ? prevA : "(Automático)");
+  fillSelect(rootBSelect, optB, optB.includes(prevB) ? prevB : "(Automático)");
+
+  const rootPickA = rootASelect.value || "(Automático)";
+  const rootPickB = rootBSelect.value || "(Automático)";
+
   function buildSide(sideSet, sideName){
-    const childrenOf = new Map(); // parent -> [child]
-    const hasParentInSide = new Set();
+    const childrenOf = new Map();
+    const hasParent = new Set();
     let edgesCount = 0;
 
     for (const [c,p] of RAW.edges){
-      if (!sideSet.has(c)) continue;
-      if (!sideSet.has(p)) continue;
+      if (!sideSet.has(c) || !sideSet.has(p)) continue;
       edgesCount++;
-      hasParentInSide.add(c);
+      hasParent.add(c);
       if (!childrenOf.has(p)) childrenOf.set(p, []);
       childrenOf.get(p).push(c);
     }
@@ -478,19 +659,20 @@ function applyTaxonomy(){
       kids.sort((a,b)=> a.toLowerCase().localeCompare(b.toLowerCase()));
     }
 
-    const roots = [];
+    const naturalRoots = [];
     for (const n of sideSet){
-      if (!hasParentInSide.has(n)) roots.push(n);
+      if (!hasParent.has(n)) naturalRoots.push(n);
     }
-    roots.sort((a,b)=> a.toLowerCase().localeCompare(b.toLowerCase()));
+    naturalRoots.sort((a,b)=> a.toLowerCase().localeCompare(b.toLowerCase()));
 
     let idCounter = 0;
     function buildSubtree(name, stack=new Set()){
-      const base = RAW.nodes.get(name) || { name, group:"", sheet:"" };
+      const base = RAW.nodes.get(name) || { name, group:"", sheet:"", comment:"", obs:"" };
       const node = {
         name: base.name,
         group: (base.group || "").trim() || "(Sem subontologia)",
-        sheet: base.sheet || "",
+        comment: (base.comment || "").trim(),
+        obs: (base.obs || "").trim(),
         _id: `${sideName}-${++idCounter}`,
         children: []
       };
@@ -501,93 +683,109 @@ function applyTaxonomy(){
       return node;
     }
 
-    const forest = {
-      name: sideName,
-      group: "Raiz",
-      sheet: "",
-      _id: `${sideName}-ROOT`,
-      children: roots.map(r => buildSubtree(r))
-    };
-    return { forest, edgesCount, nodesCount: sideSet.size };
+    function descendantsSet(rootName){
+      const st = [rootName];
+      const seen = new Set();
+      while(st.length){
+        const cur = st.pop();
+        if (seen.has(cur)) continue;
+        seen.add(cur);
+        const kids = childrenOf.get(cur) || [];
+        for (const k of kids) st.push(k);
+      }
+      return seen;
+    }
+
+    return { edgesCount, naturalRoots, buildSubtree, descendantsSet, nodesCount: sideSet.size };
   }
 
-  const sideA = buildSide(inA, `A: ${selA}`);
-  const sideB = buildSide(inB, `B: ${selB}`);
+  const sideA = buildSide(inA, "A");
+  const sideB = buildSide(inB, "B");
+
+  function makeForest(side, label, chosenRoot){
+    if (!chosenRoot || chosenRoot === "(Automático)"){
+      return { name: label, group:"Raiz", _id: `${label}-ROOT`, children: side.naturalRoots.map(r=>side.buildSubtree(r)) };
+    }
+    const subtreeNodes = side.descendantsSet(chosenRoot);
+    const otherRoots = side.naturalRoots.filter(r => !subtreeNodes.has(r));
+    const children = [ side.buildSubtree(chosenRoot) ];
+    if (otherRoots.length){
+      children.push({ name:"Outras raízes", group:"Raiz", _id:`${label}-OTHERS`, children: otherRoots.map(r=>side.buildSubtree(r)) });
+    }
+    return { name: label, group:"Raiz", _id: `${label}-ROOT`, children };
+  }
+
+  const forestA = makeForest(sideA, `A: ${selA}`, rootPickA);
+  const forestB = makeForest(sideB, `B: ${selB}`, rootPickB);
 
   CURRENT = {
     taxId, label: preset.label, selA, selB,
-    forestA: sideA.forest, forestB: sideB.forest,
+    forestA, forestB,
     countA: sideA.nodesCount, countB: sideB.nodesCount,
     edgesA: sideA.edgesCount, edgesB: sideB.edgesCount,
-    taxColor
+    taxColor, rootPickA, rootPickB
   };
 
   canvasTitle.textContent = `${preset.label}: ${selA}  |  ${selB}`;
-  canvasSubtitle.textContent = `Coluna esquerda = A, coluna direita = B`;
+  canvasSubtitle.textContent = `Top-Down • Raiz A: ${rootPickA} • Raiz B: ${rootPickB}`;
   canvasMeta.textContent = `A: ${sideA.nodesCount} classes / ${sideA.edgesCount} relações • B: ${sideB.nodesCount} classes / ${sideB.edgesCount} relações`;
 
-  statsEl.innerHTML = `<strong>Arquivo:</strong> ${RAW.fileName} | <strong>A:</strong> ${sideA.nodesCount} classes | <strong>B:</strong> ${sideB.nodesCount} classes`;
+  statsEl.innerHTML = `<strong>Arquivo:</strong> ${RAW.fileName} | <strong>A:</strong> ${sideA.nodesCount} | <strong>B:</strong> ${sideB.nodesCount}`;
 
-  renderTwoColumns(sideA.forest, sideB.forest, taxColor);
+  renderTopDownTwoColumns(forestA, forestB, taxColor);
 }
 
-/* ======= Render two columns (A left, B right) ======= */
-document.getElementById("btnFit").addEventListener("click", () => { if (fitToCanvasFn) fitToCanvasFn(true); });
-document.getElementById("btnExpandAll").addEventListener("click", () => {
+/* ======= Render Top-Down Two Columns ======= */
+btnFit.addEventListener("click", () => { if (fitToCanvasFn) fitToCanvasFn(true); });
+btnExpandAll.addEventListener("click", () => {
   if (!updateFn || !expandAllFn) return;
   expandAllFn();
   updateFn();
   applySearchHighlight();
   fitToCanvasFn?.(false);
 });
-document.getElementById("btnCollapseAll").addEventListener("click", () => {
+btnCollapseAll.addEventListener("click", () => {
   if (!updateFn || !collapseAllFn) return;
   collapseAllFn();
   updateFn();
   applySearchHighlight();
   fitToCanvasFn?.(false);
 });
-searchEl.addEventListener("input", () => applySearchHighlight());
+searchEl.addEventListener("input", applySearchHighlight);
 
-function renderTwoColumns(forestA, forestB, taxColor){
+function renderTopDownTwoColumns(forestA, forestB, taxColor){
   svg.selectAll("*").remove();
   viewport = svg.append("g").attr("id","viewport");
   svg.call(zoom);
   svg.call(zoom.transform, d3.zoomIdentity.translate(18, 18).scale(1));
 
-  const linkLayer = viewport.append("g").attr("id","links");
-  const nodeLayer = viewport.append("g").attr("id","nodes");
+  linkLayer = viewport.append("g").attr("id","links");
+  nodeLayer = viewport.append("g").attr("id","nodes");
 
-  // split width
   const svgEl = svg.node();
-  const W = svgEl.clientWidth || 1000;
-  const H = svgEl.clientHeight || 700;
-  const gutter = 70;
-  const leftW = Math.max(380, (W - gutter) / 2);
-  const rightW = Math.max(380, (W - gutter) / 2);
+  const W = svgEl.clientWidth || 1200;
+  const H = svgEl.clientHeight || 800;
+
+  const gutter = 90;
+  const leftW = Math.max(420, (W - gutter) / 2);
   const leftX0 = 0;
   const rightX0 = leftW + gutter;
 
-  // divider + labels (fixed in viewport coords)
   const headerG = viewport.append("g").attr("id","colHeader");
   headerG.append("line").attr("class","divider")
     .attr("x1", leftW + gutter/2).attr("x2", leftW + gutter/2)
-    .attr("y1", 0).attr("y2", Math.max(H, 900));
+    .attr("y1", 0).attr("y2", Math.max(H, 1200));
+  headerG.append("text").attr("class","colLabel").attr("x", leftX0 + 10).attr("y", 18).text(forestA.name);
+  headerG.append("text").attr("class","colLabel").attr("x", rightX0 + 10).attr("y", 18).text(forestB.name);
 
-  headerG.append("text").attr("class","colLabel")
-    .attr("x", leftX0 + 10).attr("y", 18).text(forestA.name);
-  headerG.append("text").attr("class","colLabel")
-    .attr("x", rightX0 + 10).attr("y", 18).text(forestB.name);
-
-  // Build trees with different origins
-  const dx = 56;
-  const dy = 320;
+  // Top-down spacing (x horizontal, y vertical)
+  const dx = 320;
+  const dy = 120;
   const tree = d3.tree().nodeSize([dx, dy]);
 
   rootA = d3.hierarchy(forestA);
   rootB = d3.hierarchy(forestB);
 
-  // collapse deeper initially
   collapseDeep(rootA);
   collapseDeep(rootB);
 
@@ -602,7 +800,6 @@ function renderTwoColumns(forestA, forestB, taxColor){
     }
   }
 
-  // Expand/collapse all across both trees
   expandAllFn = () => { expandAll(rootA); expandAll(rootB); };
   collapseAllFn = () => { collapseAll(rootA); collapseAll(rootB); };
 
@@ -615,38 +812,33 @@ function renderTwoColumns(forestA, forestB, taxColor){
     if (d.depth >= 2) collapse(d);
   }
 
-  function diagonal(d){ return d3.linkHorizontal().x(d=>d.y).y(d=>d.x)(d); }
-
-  function nodeFill(isB){
-    // A mais claro, B um pouco mais marcado
-    return isB ? "rgba(0,0,0,.03)" : "rgba(0,0,0,.015)";
+  function linkVertical(d){
+    return d3.linkVertical().x(p => p.x).y(p => p.y)(d);
   }
 
-  function layoutAndGet(nodeRoot, xOffset){
+  const fillA = mix(taxColor, "#ffffff", 0.72);
+  const fillB = mix(taxColor, "#ffffff", 0.60);
+  const textA = contrastText(fillA);
+  const textB = contrastText(fillB);
+
+  function layoutAndShift(nodeRoot, xOffset){
     tree(nodeRoot);
     const nodes = nodeRoot.descendants();
     const links = nodeRoot.links();
-    // shift to start after header area
     for (const n of nodes){
-      n.y = xOffset + n.y + 10;
-      n.x = n.x + 40;
+      n.x = xOffset + n.x + 20;
+      n.y = n.y + 55;
     }
-    // also shift link coordinates because based on nodes
     return { nodes, links };
   }
 
-  // draw/update
   updateFn = () => {
-    const A = layoutAndGet(rootA, leftX0);
-    const B = layoutAndGet(rootB, rightX0);
+    const A = layoutAndShift(rootA, leftX0);
+    const B = layoutAndShift(rootB, rightX0);
 
     const allNodes = [...A.nodes.map(d=>({d, side:"A"})), ...B.nodes.map(d=>({d, side:"B"}))];
-    const allLinks = [
-      ...A.links.map(l=>({l, side:"A"})),
-      ...B.links.map(l=>({l, side:"B"}))
-    ];
+    const allLinks = [...A.links.map(l=>({l, side:"A"})), ...B.links.map(l=>({l, side:"B"}))];
 
-    // LINKS
     const linkSel = linkLayer.selectAll("path.link")
       .data(allLinks, x => x.l.target.data._id);
 
@@ -654,76 +846,96 @@ function renderTwoColumns(forestA, forestB, taxColor){
       .attr("class","link")
       .attr("d", x => {
         const o = {x: x.l.source.x, y: x.l.source.y};
-        return diagonal({source:o, target:o});
+        return linkVertical({source:o, target:o});
       })
       .merge(linkSel)
-      .transition().duration(240)
-      .attr("d", x => diagonal(x.l));
+      .transition().duration(220)
+      .attr("d", x => linkVertical(x.l));
 
-    linkSel.exit().transition().duration(200).attr("opacity",0).remove();
+    linkSel.exit().transition().duration(180).attr("opacity",0).remove();
 
-    // NODES
     const nodeSel = nodeLayer.selectAll("g.node")
       .data(allNodes, x => x.d.data._id);
 
     const nodeEnter = nodeSel.enter().append("g")
       .attr("class","node")
-      .attr("transform", x => `translate(${x.d.y},${x.d.x})`)
+      .attr("transform", x => `translate(${x.d.x},${x.d.y})`)
       .on("click", (_, x) => {
         const d = x.d;
         if (d.children){ d._children = d.children; d.children = null; }
         else { d.children = d._children; d._children = null; }
         updateFn();
         applySearchHighlight();
-      });
+      })
+      .on("mouseenter", (evt, x) => {
+        const d = x.d.data;
+        // agora: sem "Subontologia:" -> tooltip mostra só o nome do grupo
+        showTooltip(evt, { name: d.name, group: (d.group==="Raiz"?"":d.group), comment: d.comment, obs: d.obs });
+      })
+      .on("mousemove", (evt) => moveTooltip(evt))
+      .on("mouseleave", () => hideTooltip());
 
     nodeEnter.each(function(x){
       const d = x.d;
       const isB = (x.side === "B");
       const g = d3.select(this);
-      const lines = wrapLabel(d.data.name, 30);
+
+      const lines = wrapLabel(d.data.name, 28);
       const hasKids = (d.children || d._children);
 
       const w = 360;
-      const h = lines.length === 1 ? 46 : 60;
+      const h = lines.length === 1 ? 50 : 66;
+
+      const bg = isB ? fillB : fillA;
+      const fg = isB ? textB : textA;
 
       g.append("rect")
-        .attr("x", 0).attr("y", -h/2)
+        .attr("x", -w/2).attr("y", 0)
         .attr("width", w).attr("height", h)
-        .attr("fill", nodeFill(isB))
+        .attr("fill", bg)
         .attr("stroke", taxColor)
-        .attr("stroke-width", d.data.group === "Raiz" ? 2.6 : 1.8);
+        .attr("stroke-width", d.data.group === "Raiz" ? 2.6 : 1.5);
 
-      const t = g.append("text").attr("class","name").attr("x", 12).attr("y", -6);
+      const t = g.append("text")
+        .attr("class","name")
+        .attr("text-anchor","middle")
+        .attr("fill", fg)
+        .attr("x", 0).attr("y", 22);
+
       if (lines.length === 1){
-        t.attr("y",-2).text(lines[0]);
+        t.text(lines[0]);
       } else {
-        t.append("tspan").attr("x",12).attr("dy",0).text(lines[0]);
-        t.append("tspan").attr("x",12).attr("dy",14).text(lines[1]);
+        t.append("tspan").attr("x",0).attr("dy",0).text(lines[0]);
+        t.append("tspan").attr("x",0).attr("dy",16).text(lines[1]);
       }
 
+      // ✅ aqui é a mudança: remove "Subontologia:" e deixa só o nome do grupo
+      // (e não mostra nada para "Raiz")
+      const groupText = (d.data.group && d.data.group !== "Raiz") ? d.data.group : "";
       g.append("text")
         .attr("class","small")
-        .attr("x", 12).attr("y", h/2 - 10)
-        .text(`Subontologia: ${d.data.group}`);
+        .attr("text-anchor","middle")
+        .attr("fill", fg)
+        .attr("x", 0).attr("y", h - 10)
+        .text(groupText);
 
       g.append("text")
         .attr("class","small")
-        .attr("x", w - 10).attr("y", -2)
+        .attr("fill", fg)
+        .attr("x", w/2 - 10).attr("y", 18)
         .attr("text-anchor","end")
         .text(hasKids ? (d.children ? "▾" : "▸") : "");
     });
 
     nodeSel.merge(nodeEnter)
-      .transition().duration(240)
-      .attr("transform", x => `translate(${x.d.y},${x.d.x})`);
+      .transition().duration(220)
+      .attr("transform", x => `translate(${x.d.x},${x.d.y})`);
 
-    nodeSel.exit().transition().duration(200).attr("opacity",0).remove();
+    nodeSel.exit().transition().duration(180).attr("opacity",0).remove();
   };
 
   updateFn();
 
-  // Fit to canvas: consider both columns bounds
   fitToCanvasFn = (strong=true) => {
     if (!viewport) return;
     const bounds = viewport.node().getBBox();
@@ -734,27 +946,25 @@ function renderTwoColumns(forestA, forestB, taxColor){
 
     const bw = bounds.width + pad*2;
     const bh = bounds.height + pad*2;
-    const scale = Math.min(2.4, Math.max(0.12, Math.min(w/bw, h/bh)));
+    const scale = Math.min(3.0, Math.max(0.10, Math.min(w/bw, h/bh)));
 
     const tx = (w - bounds.width*scale)/2 - bounds.x*scale;
     const ty = (h - bounds.height*scale)/2 - bounds.y*scale;
 
-    const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
-    svg.transition().duration(strong ? 380 : 220).call(zoom.transform, t);
+    svg.transition().duration(strong ? 380 : 220).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
   };
 
   fitToCanvasFn(true);
   applySearchHighlight();
 }
 
-/* ======= Search highlight in both columns ======= */
+/* ======= Search highlight ======= */
 function applySearchHighlight(){
   const q = norm(searchEl.value);
   svg.selectAll("g.node").classed("node--match", false);
   if (!q) return;
 
-  svg.selectAll("g.node").each(function(x){
-    // x is bound datum: {d, side} or undefined during transitions. Guard:
+  svg.selectAll("g.node").each(function(){
     const datum = d3.select(this).datum();
     if (!datum || !datum.d) return;
     if (norm(datum.d.data.name).includes(q)){
@@ -763,11 +973,103 @@ function applySearchHighlight(){
   });
 }
 
-/* ======= Auto-load ======= */
+/* ======= Export SVG / PNG ======= */
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
+}
+function getExportName(ext){
+  const t = CURRENT?.label ? CURRENT.label.replace(/\s+/g,"_") : "Taxonomia";
+  const a = (CURRENT?.selA || "A").replace(/[^\w\-]+/g,"_");
+  const b = (CURRENT?.selB || "B").replace(/[^\w\-]+/g,"_");
+  return `${t}_${a}__${b}.${ext}`;
+}
+function serializeSvgForExport(){
+  const svgNode = svg.node();
+  const clone = svgNode.cloneNode(true);
+
+  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  const bg = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  bg.setAttribute("x","0"); bg.setAttribute("y","0");
+  bg.setAttribute("width","100%"); bg.setAttribute("height","100%");
+  bg.setAttribute("fill","#ffffff");
+  clone.insertBefore(bg, clone.firstChild);
+
+  const bbox = viewport?.node()?.getBBox?.();
+  if (bbox){
+    const pad = 30;
+    const x = bbox.x - pad, y = bbox.y - pad, w = bbox.width + pad*2, h = bbox.height + pad*2;
+    clone.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
+    clone.setAttribute("width", String(Math.round(w)));
+    clone.setAttribute("height", String(Math.round(h)));
+  }
+  return new XMLSerializer().serializeToString(clone);
+}
+
+btnSvg.addEventListener("click", () => {
+  try{
+    const xml = serializeSvgForExport();
+    downloadBlob(new Blob([xml], {type:"image/svg+xml;charset=utf-8"}), getExportName("svg"));
+  } catch(e){ toast("Falha ao exportar SVG: " + e.message, true); }
+});
+
+btnPng.addEventListener("click", async () => {
+  try{
+    const scale = parseInt(pngScaleSel.value || "3", 10);
+    const xml = serializeSvgForExport();
+    const svgBlob = new Blob([xml], {type:"image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.decoding = "async";
+    img.src = url;
+
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = () => reject(new Error("Não foi possível renderizar o SVG para PNG."));
+    });
+
+    // derive export size from bbox
+    const bbox = viewport?.node()?.getBBox?.();
+    const w = Math.max(1200, (bbox?.width || 1600) + 80);
+    const h = Math.max(800,  (bbox?.height || 900) + 80);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(w * scale);
+    canvas.height = Math.round(h * scale);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.setTransform(scale,0,0,scale,0,0);
+    ctx.drawImage(img, 0, 0);
+
+    URL.revokeObjectURL(url);
+
+    canvas.toBlob((blob)=>{
+      if (!blob) return toast("Falha ao gerar PNG.", true);
+      downloadBlob(blob, getExportName("png"));
+    }, "image/png", 1.0);
+
+  } catch(e){
+    toast("Falha ao exportar PNG: " + e.message, true);
+  }
+});
+
+/* ======= Init buttons ======= */
+btnApplyPair.addEventListener("click", () => { if (RAW) applyTaxonomy(); });
+btnApplyRoots.addEventListener("click", () => { if (RAW) applyTaxonomy(); });
+
+/* ======= Auto-load XLSX ======= */
 (async function(){
   try{ await loadDefault(); } catch(_) {}
 })();
 </script>
 </body>
 </html>
-
