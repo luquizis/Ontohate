@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Taxonomia (OWL → Árvore)</title>
+
+  <!-- D3 -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+
+  <!-- rdflib.js -->
+  <script src="https://cdn.jsdelivr.net/npm/rdflib@2.2.35/dist/rdflib.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#111826; --text:#e6edf3; --muted:#9aa4b2; --line:rgba(255,255,255,.10);
+      --chip:rgba(255,255,255,.08); --accent:#7aa2f7; --warn:#f7c97a; --bad:#ff6b6b;
+    }
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--text); font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+    header{
+      position:sticky; top:0; z-index:10;
+      background:linear-gradient(180deg, rgba(11,15,20,.98), rgba(11,15,20,.85));
+      border-bottom:1px solid var(--line);
+      padding:12px 14px;
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:12px;
+      align-items:center;
+    }
+    .title{display:flex; flex-direction:column; gap:4px;}
+    .title h1{margin:0; font-size:14px; font-weight:700;}
+    .title .sub{font-size:12px; color:var(--muted);}
+    .controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end;}
+    .btn,.file,.input{
+      border:1px solid var(--line); background:var(--panel); color:var(--text);
+      border-radius:10px; padding:8px 10px; font-size:12px; line-height:1;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn{cursor:pointer; user-select:none;}
+    .btn:hover{border-color:rgba(255,255,255,.22);}
+    .file input[type="file"]{display:none;}
+    .input input{border:none; outline:none; background:transparent; color:var(--text); width:240px; font-size:12px;}
+    .chip{background:var(--chip); border:1px solid var(--line); border-radius:999px; padding:6px 10px; font-size:12px; color:var(--muted); white-space:nowrap;}
+    #wrap{height:calc(100% - 66px);}
+    svg{width:100%; height:100%; display:block;}
+
+    .link{fill:none; stroke:rgba(255,255,255,.16); stroke-width:1.2;}
+    .node rect{fill:rgba(255,255,255,.06); stroke:rgba(255,255,255,.16); stroke-width:1; rx:10; ry:10;}
+    .node text{font-size:12px; fill:var(--text); pointer-events:none;}
+    .node .small{font-size:10px; fill:var(--muted);}
+    .node--match rect{stroke:var(--warn); stroke-width:2;}
+
+    .toast{
+      position:fixed; left:14px; bottom:14px; z-index:50;
+      background:rgba(17,24,38,.92); border:1px solid var(--line);
+      padding:10px 12px; border-radius:12px; font-size:12px; color:var(--muted);
+      max-width:min(720px, calc(100% - 28px)); white-space:pre-wrap;
+    }
+    .toast.bad{border-color:rgba(255,107,107,.5); color:#ffdede;}
+    .legend{
+      position:fixed; right:14px; bottom:14px; z-index:40;
+      background:rgba(17,24,38,.92); border:1px solid var(--line);
+      padding:10px 12px; border-radius:12px; font-size:12px; color:var(--muted);
+      max-width:420px;
+    }
+    .legend b{color:var(--text);}
+    code{color:#cbd5e1}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    <h1>Taxonomia gerada do OWL (todas as classes nomeadas)</h1>
+    <div class="sub">
+      GitHub Pages friendly. Monta árvore por <code>rdfs:subClassOf</code> e coloca desconectadas em <code>Orphan Classes</code>.
+    </div>
+  </div>
+
+  <div class="controls">
+    <label class="file btn" title="Carregar OWL do computador">
+      📄 Carregar OWL
+      <input id="fileInput" type="file" accept=".owl,.rdf,.ttl,.xml,.n3,.nt,.jsonld,.json" />
+    </label>
+
+    <div class="btn" id="btnLoadDefault" title="Carregar ontohate_.owl do mesmo diretório do index.html">
+      ⬇️ Carregar ontohate_.owl
+    </div>
+
+    <div class="input" title="Buscar classe pelo nome/label">
+      🔎 <input id="search" placeholder="Buscar (label ou IRI)" />
+    </div>
+
+    <div class="btn" id="btnExpandAll">➕ Expandir</div>
+    <div class="btn" id="btnCollapseAll">➖ Recolher</div>
+
+    <span class="chip" id="stats">Classes: — | Relações: —</span>
+  </div>
+</header>
+
+<div id="wrap"><svg id="svg"></svg></div>
+
+<div class="legend">
+  <div><b>Dicas</b></div>
+  <div>• Arraste para mover, roda do mouse para zoom.</div>
+  <div>• Clique no nó para expandir/recolher.</div>
+  <div>• Se não carregar, confira se <code>ontohate_.owl</code> está no mesmo diretório publicado.</div>
+</div>
+
+<div class="toast" id="toast" style="display:none;"></div>
+
+<script>
+  // Namespaces
+  const RDF  = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+  const RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+  const OWL  = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
+
+  // UI
+  const svg = d3.select("#svg");
+  const toastEl = document.getElementById("toast");
+  const statsEl = document.getElementById("stats");
+  const searchEl = document.getElementById("search");
+  const fileInput = document.getElementById("fileInput");
+
+  function toast(msg, isBad=false){
+    toastEl.textContent = msg;
+    toastEl.classList.toggle("bad", !!isBad);
+    toastEl.style.display = "block";
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(()=> toastEl.style.display="none", 8000);
+  }
+
+  // Single zoom (IMPORTANT for stability)
+  const zoom = d3.zoom()
+    .scaleExtent([0.15, 2.5])
+    .on("zoom", (event) => {
+      svg.select("g#viewport").attr("transform", event.transform);
+    });
+
+  // Globals for controls
+  let root = null;
+  let viewport = null;
+
+  document.getElementById("btnLoadDefault").addEventListener("click", () => loadDefault());
+  fileInput.addEventListener("change", async (ev) => {
+    const f = ev.target.files?.[0];
+    if (!f) return;
+    const text = await f.text();
+    await buildFromText(text, guessContentType(f.name));
+  });
+
+  document.getElementById("btnExpandAll").addEventListener("click", () => {
+    if (!root) return;
+    expandAll(root);
+    update(root);
+  });
+  document.getElementById("btnCollapseAll").addEventListener("click", () => {
+    if (!root) return;
+    collapseAll(root);
+    update(root);
+  });
+
+  searchEl.addEventListener("input", () => {
+    if (!root) return;
+    applySearchHighlight();
+  });
+
+  function guessContentType(filename){
+    const lower = filename.toLowerCase();
+    if (lower.endsWith(".ttl")) return "text/turtle";
+    if (lower.endsWith(".nt")) return "application/n-triples";
+    if (lower.endsWith(".n3")) return "text/n3";
+    if (lower.endsWith(".jsonld") || lower.endsWith(".json")) return "application/ld+json";
+    return "application/rdf+xml"; // owl/rdf/xml
+  }
+
+  function termToNiceName(store, term){
+    const label = store.any(term, RDFS("label"));
+    if (label && label.value) return label.value;
+
+    const v = term.value || "";
+    const hash = v.lastIndexOf("#");
+    if (hash >= 0 && hash < v.length - 1) return decodeURIComponent(v.slice(hash + 1));
+    const slash = v.lastIndexOf("/");
+    if (slash >= 0 && slash < v.length - 1) return decodeURIComponent(v.slice(slash + 1));
+    return v || "(blank node)";
+  }
+
+  function isBuiltinToIgnore(iri){
+    const v = iri || "";
+    if (v === OWL("Thing").value) return false;
+    return (
+      v.startsWith(RDF("").value) ||
+      v.startsWith(RDFS("").value) ||
+      v.startsWith(OWL("").value)
+    );
+  }
+
+  function uniqByValue(arr){
+    const s = new Set();
+    const out = [];
+    for (const x of arr){
+      const v = x.value || String(x);
+      if (!s.has(v)){ s.add(v); out.push(x); }
+    }
+    return out;
+  }
+
+  async function loadDefault(){
+    // GitHub Pages: same folder as index.html
+    const url = "ontohate_.owl";
+    try{
+      const res = await fetch(url, { cache:"no-store" });
+      if (!res.ok){
+        throw new Error(
+          `Não encontrei ${url} (HTTP ${res.status}).\n` +
+          `No GitHub Pages: coloque index.html e ontohate_.owl na MESMA pasta publicada (ex.: /docs).\n` +
+          `E confira o nome exatamente: ontohate_.owl`
+        );
+      }
+      const text = await res.text();
+      await buildFromText(text, guessContentType(url));
+    } catch(e){
+      toast("Erro ao carregar arquivo padrão:\n" + e.message, true);
+    }
+  }
+
+  async function buildFromText(text, contentType){
+    // Parse RDF
+    const store = $rdf.graph();
+    const baseIRI = document.baseURI || "http://example.local/base#";
+
+    const fallbacks = [contentType, "application/rdf+xml", "text/turtle", "application/n-triples", "application/ld+json"];
+
+    let parsed = false, lastErr = null;
+    for (const ct of fallbacks){
+      try{
+        $rdf.parse(text, store, baseIRI, ct);
+        parsed = true;
+        break;
+      } catch(e){
+        lastErr = e;
+      }
+    }
+    if (!parsed){
+      toast(
+        "Falha ao interpretar o OWL no navegador.\n" +
+        "Dica: exporte/baixe a ontologia também em Turtle (.ttl) e carregue pelo botão “Carregar OWL”.\n\n" +
+        "Detalhe do erro:\n" + (lastErr?.message || String(lastErr)),
+        true
+      );
+      return;
+    }
+
+    // Extract ALL named classes:
+    const explicit = store.each(undefined, RDF("type"), OWL("Class"));
+    const subSubjects = store.each(undefined, RDFS("subClassOf"), undefined);
+    const supers = store.statementsMatching(undefined, RDFS("subClassOf"), undefined)
+      .map(st => st.object)
+      .filter(Boolean);
+
+    let allClasses = uniqByValue([...explicit, ...subSubjects, ...supers])
+      .filter(t => t && t.termType === "NamedNode")
+      .filter(t => !isBuiltinToIgnore(t.value));
+
+    // Build edges child -> parent (only named parents)
+    const edges = [];
+    const subclassTriples = store.statementsMatching(undefined, RDFS("subClassOf"), undefined);
+    for (const st of subclassTriples){
+      if (st.subject.termType !== "NamedNode") continue;
+      if (st.object.termType !== "NamedNode") continue; // skip anonymous restrictions as nodes
+      if (isBuiltinToIgnore(st.subject.value)) continue;
+      if (isBuiltinToIgnore(st.object.value) && st.object.value !== OWL("Thing").value) continue;
+      edges.push([st.subject.value, st.object.value]);
+    }
+
+    // Ensure map includes anything from edges
+    const classesByIri = new Map();
+    function ensure(iri){
+      if (!classesByIri.has(iri)){
+        const t = $rdf.namedNode(iri);
+        classesByIri.set(iri, { iri, name: termToNiceName(store, t) });
+      }
+    }
+    for (const c of allClasses) ensure(c.value);
+    for (const [ch, pa] of edges){ ensure(ch); ensure(pa); }
+
+    const allIris = Array.from(classesByIri.keys());
+
+    // parentsOf: child -> Set(parent)
+    const parentsOf = new Map();
+    for (const [ch, pa] of edges){
+      if (!parentsOf.has(ch)) parentsOf.set(ch, new Set());
+      parentsOf.get(ch).add(pa);
+    }
+
+    // roots: classes with no named parent in our filtered graph
+    const roots = [];
+    for (const iri of allIris){
+      const p = parentsOf.get(iri);
+      if (!p || p.size === 0) roots.push(iri);
+    }
+
+    // Build forest
+    const forest = { iri:"__FOREST__", name:"Ontology Taxonomy", children:[] };
+    const hasThing = classesByIri.has(OWL("Thing").value);
+    const orphanBucket = { iri:"__ORPHANS__", name:"Orphan Classes", children:[] };
+
+    if (hasThing){
+      forest.children.push({ iri: OWL("Thing").value, name: classesByIri.get(OWL("Thing").value).name, children: [] });
+    }
+    forest.children.push(orphanBucket);
+
+    // Build subtree by cloning nodes (handles multiple parents, ensures coverage)
+    let idCounter = 0;
+    function buildSubtree(iri, stack=new Set()){
+      const base = classesByIri.get(iri);
+      const node = { iri: base.iri, name: base.name, children: [], _id: ++idCounter };
+
+      if (stack.has(iri)) return node;
+      stack.add(iri);
+
+      const kids = [];
+      for (const [childIri, pset] of parentsOf.entries()){
+        if (pset.has(iri)) kids.push(childIri);
+      }
+      kids.sort((a,b)=> (classesByIri.get(a).name||"").toLowerCase().localeCompare((classesByIri.get(b).name||"").toLowerCase()));
+      for (const k of kids) node.children.push(buildSubtree(k, new Set(stack)));
+      return node;
+    }
+
+    // Under owl:Thing, attach direct kids that have owl:Thing as parent
+    const seen = new Set();
+    function markSeen(node){
+      if (node.iri && !node.iri.startsWith("__")) seen.add(node.iri);
+      (node.children||[]).forEach(markSeen);
+    }
+
+    if (hasThing){
+      const thingNode = forest.children.find(x=>x.iri===OWL("Thing").value);
+      const directKids = [];
+      for (const [childIri, pset] of parentsOf.entries()){
+        if (pset.has(OWL("Thing").value)) directKids.push(childIri);
+      }
+      directKids.sort((a,b)=> (classesByIri.get(a).name||"").localeCompare((classesByIri.get(b).name||"")));
+      for (const k of directKids){
+        const sub = buildSubtree(k);
+        thingNode.children.push(sub);
+      }
+      markSeen(thingNode);
+    }
+
+    // Orphan roots (excluding owl:Thing)
+    const orphanRoots = roots.filter(r => r !== OWL("Thing").value);
+    orphanRoots.sort((a,b)=> (classesByIri.get(a).name||"").localeCompare((classesByIri.get(b).name||"")));
+    for (const r of orphanRoots){
+      const sub = buildSubtree(r);
+      orphanBucket.children.push(sub);
+      markSeen(sub);
+    }
+
+    // Ensure coverage: add any missing class as leaf under Orphans
+    for (const iri of allIris){
+      if (iri === OWL("Thing").value) continue;
+      if (!seen.has(iri)){
+        orphanBucket.children.push({ iri, name: classesByIri.get(iri).name, children: [], _id: ++idCounter });
+      }
+    }
+
+    // Stats
+    statsEl.textContent = `Classes: ${allIris.length} | Relações: ${edges.length}`;
+
+    // Render
+    renderTree(forest);
+
+    toast(
+      `Carregado OK.\nClasses: ${allIris.length}\nRelações (subClassOf nomeadas): ${edges.length}\n\n` +
+      `Se algum nó não aparecer na hierarquia principal, ele entra em "Orphan Classes".`
+    );
+  }
+
+  function renderTree(data){
+    svg.selectAll("*").remove();
+    viewport = svg.append("g").attr("id","viewport");
+
+    // Attach zoom once
+    svg.call(zoom);
+    svg.call(zoom.transform, d3.zoomIdentity.translate(20, 20).scale(1));
+
+    const tree = d3.tree().nodeSize([34, 240]);
+    root = d3.hierarchy(data);
+    root.x0 = 0; root.y0 = 0;
+
+    // default: collapse deeper than 2 levels
+    root.children?.forEach(c => c.children?.forEach(cc => collapse(cc)));
+
+    const linkLayer = viewport.append("g");
+    const nodeLayer = viewport.append("g");
+
+    function collapse(d){
+      if (d.children){
+        d._children = d.children;
+        d._children.forEach(collapse);
+        d.children = null;
+      }
+    }
+    function expandAll(d){
+      if (d._children){ d.children = d._children; d._children = null; }
+      (d.children||[]).forEach(expandAll);
+    }
+    function collapseAll(d){
+      (d.children||[]).forEach(collapseAll);
+      if (d.depth >= 2) collapse(d);
+    }
+    window.expandAll = expandAll;
+    window.collapseAll = collapseAll;
+
+    function diagonal(d){
+      return d3.linkHorizontal().x(d=>d.y).y(d=>d.x)(d);
+    }
+
+    function compactIri(iri){
+      try{
+        const u = new URL(iri);
+        const tail = iri.includes("#") ? iri.split("#").pop() : iri.split("/").pop();
+        return `${u.hostname}…/${tail}`;
+      } catch {
+        return iri.includes("#") ? iri.split("#").pop() : iri.split("/").pop();
+      }
+    }
+
+    function update(source){
+      tree(root);
+      const nodes = root.descendants();
+      const links = root.links();
+
+      // links
+      const link = linkLayer.selectAll("path.link")
+        .data(links, d => d.target.data._id);
+
+      link.enter().append("path")
+        .attr("class","link")
+        .attr("d", d => {
+          const o = { x: source.x0, y: source.y0 };
+          return diagonal({ source:o, target:o });
+        })
+        .merge(link)
+        .transition().duration(200)
+        .attr("d", diagonal);
+
+      link.exit().transition().duration(200).attr("opacity", 0).remove();
+
+      // nodes
+      const node = nodeLayer.selectAll("g.node")
+        .data(nodes, d => d.data._id);
+
+      const nodeEnter = node.enter().append("g")
+        .attr("class","node")
+        .attr("transform", `translate(${source.y0},${source.x0})`)
+        .on("click", (_, d) => {
+          if (d.children){ d._children = d.children; d.children = null; }
+          else { d.children = d._children; d._children = null; }
+          update(d);
+          applySearchHighlight(); // reapply
+        });
+
+      nodeEnter.append("rect")
+        .attr("x", 0)
+        .attr("y", -18)
+        .attr("width", 360)
+        .attr("height", 36);
+
+      nodeEnter.append("text")
+        .attr("x", 12)
+        .attr("y", -2)
+        .text(d => d.data.name || "(sem nome)");
+
+      nodeEnter.append("text")
+        .attr("class", "small")
+        .attr("x", 12)
+        .attr("y", 14)
+        .text(d => (d.data.iri && !String(d.data.iri).startsWith("__")) ? compactIri(d.data.iri) : "");
+
+      nodeEnter.append("text")
+        .attr("x", 330)
+        .attr("y", -2)
+        .attr("text-anchor","end")
+        .attr("class","small")
+        .text(d => (d.children || d._children) ? (d.children ? "▾" : "▸") : "");
+
+      const nodeMerge = nodeEnter.merge(node);
+
+      nodeMerge.transition().duration(200)
+        .attr("transform", d => `translate(${d.y},${d.x})`);
+
+      nodeMerge.select("rect")
+        .attr("width", d => Math.min(520, 160 + ((d.data.name||"").length)*7));
+
+      nodeMerge.select("text:nth-of-type(3)")
+        .text(d => (d.children || d._children) ? (d.children ? "▾" : "▸") : "");
+
+      node.exit().transition().duration(200).attr("opacity", 0).remove();
+
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    function applySearchHighlight(){
+      const q = (searchEl.value || "").trim().toLowerCase();
+      nodeLayer.selectAll("g.node").classed("node--match", false);
+      if (!q) return;
+
+      nodeLayer.selectAll("g.node").each(function(d){
+        const name = (d.data.name || "").toLowerCase();
+        const iri  = (d.data.iri  || "").toLowerCase();
+        if (name.includes(q) || iri.includes(q)){
+          d3.select(this).classed("node--match", true);
+        }
+      });
+    }
+    window.applySearchHighlight = applySearchHighlight;
+
+    update(root);
+  }
+
+  // Auto-try load (good for GitHub Pages)
+  (async function(){
+    try{
+      await loadDefault();
+    } catch(_) {}
+  })();
+</script>
+</body>
+</html>
