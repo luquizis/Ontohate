@@ -3,220 +3,1197 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ONTOHATE V3.7 — Visualização Hierárquica Completa</title>
+  <title>ONTOHATE V2 — Taxonomia (Dimensões → Raiz → Gerar) + Export</title>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-    :root {
-      --bg: #ffffff; --panel: #fcfcfd; --text: #101828; --muted: #475467;
-      --line: #eaecf0; --accent: #0052cc; --highlight: #f97316;
+    :root{
+      --bg:#ffffff;
+      --panel:#f6f7f9;
+      --text:#101828;
+      --muted:#475467;
+      --line:#e4e7ec;
+      --shadow: 0 10px 24px rgba(16,24,40,.10);
+      --radius: 14px;
+    }
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--text);
+      font-family: Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
+    header{
+      position: sticky; top:0; z-index: 10;
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      display:flex; flex-wrap:wrap;
+      gap: 10px 12px;
+      align-items:center; justify-content: space-between;
+    }
+    .brand{display:flex; flex-direction:column; gap:4px; min-width: 320px;}
+    .brand h1{margin:0; font-size:14px; font-weight:800;}
+    .brand .sub{margin:0; font-size:12px; color:var(--muted); max-width: 980px; line-height: 1.25;}
+    .controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end;}
+    .btn,.file,.input,.select,.pill{
+      border:1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      box-shadow: 0 1px 0 rgba(16,24,40,.04);
+    }
+    .btn{cursor:pointer; user-select:none;}
+    .btn:hover{filter: brightness(.98);}
+    .file input[type="file"]{display:none;}
+    .input input, .select select{
+      border:none; outline:none; background:transparent; color:var(--text); font-size: 12px;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .input input{width: 220px;}
+    .select select{appearance:none;}
+    .pill{background:#fff; box-shadow:none;}
+    .pill strong{font-weight:700;}
+    .dot{width:10px; height:10px; border-radius:999px; display:inline-block;
+      border: 1px solid rgba(16,24,40,.12);}
+
+    #wrap{
+      height: calc(100% - 72px);
+      display:grid;
+      grid-template-columns: 1fr 460px;
+      gap: 14px;
+      padding: 14px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 1100px){
+      #wrap{grid-template-columns: 1fr; height:auto;}
+      body{height:auto;}
+    }
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .canvas{min-height: 740px; display:flex; flex-direction:column;}
+    .canvasHeader{
+      padding: 10px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    }
+    .canvasHeader .title{display:flex; flex-direction:column; gap:4px;}
+    .canvasHeader .title b{font-size:13px;}
+    .canvasHeader .title span{font-size:12px; color:var(--muted);}
+    .canvasHeader .meta{font-size:12px; color:var(--muted); text-align:right; white-space:nowrap;}
+    .canvasBody{flex:1; overflow:hidden;}
+    svg{width:100%; height:100%; display:block; background:#fff;}
+
+    .side{padding: 12px; display:flex; flex-direction:column; gap:10px;}
+    .side h2{font-size:13px; margin:0;}
+    .side p{margin:0; font-size:12px; color:var(--muted); line-height:1.35;}
+    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    .sep{height:1px; background: var(--line); margin: 6px 0;}
+    .mini{font-size:11px;color:var(--muted)}
+
+    .dimList{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .dimListHeader{
+      padding: 10px 10px;
+      background: var(--panel);
+      border-bottom:1px solid var(--line);
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+    }
+    .dimListHeader input{
+      width: 100%;
+      border:1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      outline:none;
+      font-size:12px;
+      font-family: Arial, Helvetica, sans-serif;
+      background:#fff;
+    }
+    .dimItems{
+      max-height: 260px;
+      overflow:auto;
+      padding: 8px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .dimItem{
+      display:flex; align-items:center; gap:10px;
+      border:1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size:12px;
+      background:#fff;
+    }
+    .dimItem input{accent-color:#111827}
+    .dimName{flex:1; font-weight:700;}
+    .dimCount{color:var(--muted); font-size:11px;}
+
+    .link{
+      fill:none;
+      stroke: rgba(16,24,40,.18);
+      stroke-width: 1.25;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+    .node rect{
+      stroke: rgba(16,24,40,.25);
+      stroke-width: 1.2;
+      rx:10; ry:10;
+      shape-rendering: geometricPrecision;
+    }
+    .node .name{
+      font-size: 12px;
+      font-weight: 700;
+      font-family: Arial, Helvetica, sans-serif;
+      text-rendering: geometricPrecision;
+    }
+    .node .small{
+      font-size: 10px;
+      font-weight: 700;
+      font-family: Arial, Helvetica, sans-serif;
+      opacity:.98;
+    }
+    .node--match rect{
+      stroke-width: 2.4;
+      stroke: rgba(249,115,22,.95);
     }
 
-    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); 
-      font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
-
-    header {
-      height: 65px; background: #fff; border-bottom: 1px solid var(--line);
-      padding: 0 20px; display: flex; align-items: center; justify-content: space-between;
+    .tooltip{
+      position: fixed;
+      z-index: 9999;
+      display: none;
+      max-width: 560px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--text);
+      pointer-events: none;
+      white-space: pre-wrap;
+      font-family: Arial, Helvetica, sans-serif;
     }
+    .tooltip .tTitle{font-weight: 800; margin: 0 0 3px 0;}
+    .tooltip .tMeta{color: var(--muted); margin: 0 0 6px 0; font-weight: 700;}
+    .tooltip .tLine{margin: 0;}
+    .tooltip .tLabel{font-weight: 800; margin: 0 0 2px 0;}
+    .tooltip .tEmpty{color: var(--muted); font-style: italic; margin: 0;}
 
-    .brand h1 { margin: 0; font-size: 16px; font-weight: 800; color: var(--text); }
-    #statusBadge { font-size: 10px; padding: 4px 12px; border-radius: 20px; font-weight: 700; background: #ecfdf3; color: #027a48; }
-
-    #wrap { height: calc(100% - 65px); display: grid; grid-template-columns: 1fr 400px; }
-    .canvas { position: relative; overflow: hidden; background: #ffffff; }
-    svg { width: 100%; height: 100%; cursor: grab; }
-
-    .side {
-      background: var(--panel); border-left: 1px solid var(--line);
-      padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto;
+    .toast{
+      position:fixed; left:14px; bottom:14px; z-index:50;
+      background:#fff; border:1px solid var(--line);
+      padding:10px 12px; border-radius: 12px;
+      box-shadow: var(--shadow);
+      font-size:12px; color: var(--muted);
+      max-width: min(980px, calc(100% - 28px));
+      white-space: pre-wrap;
+      font-family: Arial, Helvetica, sans-serif;
     }
-
-    .btn {
-      border: 1px solid var(--line); background: #fff; color: var(--text); 
-      border-radius: 8px; padding: 10px 16px; font-size: 12px; 
-      cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn.primary { background: #101828; color: #fff; border-color: #101828; }
-
-    .dimList { border: 1px solid var(--line); border-radius: 8px; background: #fff; max-height: 250px; overflow-y: auto; }
-    .dimItem { display: flex; align-items: center; gap: 10px; padding: 8px; font-size: 12px; border-bottom: 1px solid #f2f4f7; }
-
-    .node rect { stroke-width: 1.5px; rx: 6; ry: 6; }
-    .node text { font-size: 11px; font-weight: 700; pointer-events: none; }
-    .link { fill: none; stroke: #98a2b3; stroke-width: 1.5px; opacity: 0.5; }
-    
-    .node--is-root rect { stroke: var(--highlight) !important; stroke-width: 4px !important; }
-    .node--connector rect { stroke-dasharray: 5,3; fill: #f9fafb !important; stroke: #d0d5dd !important; }
-
-    .tooltip {
-      position: fixed; display: none; z-index: 1000; background: #101828; color: #fff; 
-      padding: 15px; border-radius: 8px; font-size: 12px; max-width: 320px; line-height: 1.5;
-    }
+    .toast.bad{border-color: rgba(255,107,107,.55); color:#7a0b0b;}
   </style>
 </head>
 
 <body>
 <header>
   <div class="brand">
-    <h1>ONTOHATE V3.7</h1>
-    <span id="statusBadge">Base Integrada</span>
+    <h1>ONTOHATE V2 — Taxonomia (Dimensões → Raiz → Gerar) + Export</h1>
+    <p class="sub">
+      1) Selecione as <b>Dimensões</b>, 2) escolha uma <b>Raiz</b> que gere árvore (>=2 classes), 3) gere a taxonomia Top-Down (vertical/A4).
+    </p>
   </div>
+
   <div class="controls">
-    <button class="btn" onclick="location.reload()">🔄 Resetar Sistema</button>
-    <button class="btn primary" id="btnExport">📸 Exportar Figura</button>
+    <label class="file btn">
+      📄 Carregar XLSX
+      <input id="fileInput" type="file" accept=".xlsx,.xls" />
+    </label>
+
+    <div class="btn" id="btnLoadDefault">⬇️ Carregar Ontohate_V2.xlsx</div>
+
+    <div class="input">
+      🔎 <input id="search" placeholder="Buscar classe no gráfico" />
+    </div>
+
+    <div class="btn" id="btnFit">⤢ Ajustar</div>
+    <div class="btn" id="btnExpandAll">➕ Expandir</div>
+    <div class="btn" id="btnCollapseAll">➖ Recolher</div>
+
+    <div class="btn" id="btnSvg">⬇︎ SVG</div>
+    <div class="select" title="PNG em alta resolução">
+      PNG
+      <select id="pngScale">
+        <option value="3">3×</option>
+        <option value="4">4×</option>
+      </select>
+    </div>
+    <div class="btn" id="btnPng">⬇︎ PNG</div>
+
+    <div class="pill">
+      <span class="dot" id="statusDot"></span>
+      <span id="stats"><strong>Arquivo:</strong> — | <strong>Taxonomia:</strong> —</span>
+    </div>
   </div>
 </header>
 
 <div id="wrap">
-  <div class="canvas"><svg id="svg"></svg></div>
-  <div class="side">
-    <section>
-        <h3 style="font-size:12px; margin:0 0 10px 0;">1. SELECIONAR DIMENSÕES</h3>
-        <div class="dimList" id="dimContainer"></div>
-        <div style="display:flex; gap:5px; margin-top:8px;">
-            <button class="btn" onclick="toggleDims(true)" style="padding:5px 10px">Todas</button>
-            <button class="btn" onclick="toggleDims(false)" style="padding:5px 10px">Nenhuma</button>
-        </div>
-    </section>
-
-    <section>
-        <h3 style="font-size:12px; margin:0 0 10px 0;">2. TERMO RAIZ (TOPO)</h3>
-        <select id="rootSelect" class="btn" style="width:100%; margin-bottom:12px; text-align:left;"></select>
-        <button class="btn primary" id="btnGenerate" style="width:100%;">GERAR TAXONOMIA COMPLETA</button>
-    </section>
-
-    <div style="font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 15px;">
-        <b>Regras de Visualização:</b><br>
-        • A raiz selecionada aparece no topo.<br>
-        • Classes das dimensões marcadas aparecem coloridas.<br>
-        • Classes de outras dimensões necessárias para conexão aparecem em cinza.
+  <div class="card canvas">
+    <div class="canvasHeader">
+      <div class="title">
+        <b id="canvasTitle">Selecione Dimensões e Raiz</b>
+        <span id="canvasSubtitle">—</span>
+      </div>
+      <div class="meta" id="canvasMeta">—</div>
     </div>
+    <div class="canvasBody">
+      <svg id="svg"></svg>
+    </div>
+  </div>
+
+  <div class="card side">
+    <h2>1) Dimensões</h2>
+    <p class="mini">Cores fortes por dimensão + contraste automático no texto. “Motivação e consequência(s)” unificada automaticamente.</p>
+
+    <div class="dimList">
+      <div class="dimListHeader">
+        <input id="dimSearch" placeholder="Filtrar dimensões..." />
+        <div class="btn" id="btnSelectAll" title="Marcar todas">✓ Todas</div>
+        <div class="btn" id="btnClearAll" title="Desmarcar todas">✕</div>
+      </div>
+      <div class="dimItems" id="dimItems"></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <h2>2) Raiz</h2>
+    <p class="mini">A lista mostra apenas raízes que geram árvore com o recorte atual (>=2 nós).</p>
+    <div class="row">
+      <span class="select">Raiz:
+        <select id="rootSelect"></select>
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="btn" id="btnGenerate">Gerar taxonomia</span>
+    </div>
+
+    <div class="sep"></div>
+
+    <p class="mini"><b>Hover</b> mostra comments/observações (compacto).</p>
   </div>
 </div>
 
 <div class="tooltip" id="tooltip"></div>
+<div class="toast" id="toast" style="display:none;"></div>
 
 <script>
+/* ============================
+   Helpers base
+============================ */
+const svg = d3.select("#svg");
+let viewport = null;
+
+const toastEl = document.getElementById("toast");
+const tooltipEl = document.getElementById("tooltip");
+const statusDot = document.getElementById("statusDot");
+const statsEl = document.getElementById("stats");
+
+const fileInput = document.getElementById("fileInput");
+const btnLoadDefault = document.getElementById("btnLoadDefault");
+
+const dimItemsEl = document.getElementById("dimItems");
+const dimSearchEl = document.getElementById("dimSearch");
+const btnSelectAll = document.getElementById("btnSelectAll");
+const btnClearAll = document.getElementById("btnClearAll");
+
+const rootSelect = document.getElementById("rootSelect");
+const btnGenerate = document.getElementById("btnGenerate");
+
+const searchEl = document.getElementById("search");
+const btnFit = document.getElementById("btnFit");
+const btnExpandAll = document.getElementById("btnExpandAll");
+const btnCollapseAll = document.getElementById("btnCollapseAll");
+
+const btnSvg = document.getElementById("btnSvg");
+const btnPng = document.getElementById("btnPng");
+const pngScaleSel = document.getElementById("pngScale");
+
+const canvasTitle = document.getElementById("canvasTitle");
+const canvasSubtitle = document.getElementById("canvasSubtitle");
+const canvasMeta = document.getElementById("canvasMeta");
+
+function toast(msg, bad=false){
+  toastEl.textContent = msg;
+  toastEl.classList.toggle("bad", !!bad);
+  toastEl.style.display = "block";
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=> toastEl.style.display="none", 9000);
+}
+function norm(s){
+  return String(s||"").trim().toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu,"");
+}
+function normalizeKey(k){ return norm(k); }
+function pick(row, wanted){
+  const keys = Object.keys(row || {});
+  const map = new Map(keys.map(k => [normalizeKey(k), k]));
+  for (const w of wanted){
+    const kk = map.get(normalizeKey(w));
+    if (kk != null) return row[kk];
+  }
+  return undefined;
+}
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* ============================
+   Cor segura (sempre HEX)
+============================ */
+function hashToHue(str){
+  const s = String(str||"");
+  let h = 2166136261;
+  for (let i=0;i<s.length;i++){
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h) % 360;
+}
+function hslToHex(h, s, l){
+  // h:0..360, s:0..1, l:0..1
+  const c = (1 - Math.abs(2*l - 1)) * s;
+  const x = c * (1 - Math.abs((h/60) % 2 - 1));
+  const m = l - c/2;
+  let r=0,g=0,b=0;
+  if (0<=h && h<60){ r=c; g=x; b=0; }
+  else if (60<=h && h<120){ r=x; g=c; b=0; }
+  else if (120<=h && h<180){ r=0; g=c; b=x; }
+  else if (180<=h && h<240){ r=0; g=x; b=c; }
+  else if (240<=h && h<300){ r=x; g=0; b=c; }
+  else { r=c; g=0; b=x; }
+  const R = Math.round((r+m)*255);
+  const G = Math.round((g+m)*255);
+  const B = Math.round((b+m)*255);
+  return "#" + [R,G,B].map(v=>v.toString(16).padStart(2,"0")).join("");
+}
+function hashColorHEX(str){
+  const hue = hashToHue(str);
+  // cor “forte” e consistente
+  return hslToHex(hue, 0.72, 0.45);
+}
+function luminanceFromHex(hex){
+  const c = d3.color(hex);
+  // c nunca será null aqui porque hex é sempre válido
+  const srgb = [c.r,c.g,c.b].map(v=>{
+    const x = v/255;
+    return (x<=0.03928)? x/12.92 : Math.pow((x+0.055)/1.055, 2.4);
+  });
+  return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
+}
+function contrastText(bgHex){
+  return luminanceFromHex(bgHex) > 0.55 ? "#101828" : "#ffffff";
+}
+
+/* ===== Canonização Dimensão ===== */
+function canonDimension(name){
+  let s = String(name||"").trim();
+  if (!s) return "";
+  s = s.replace(/\(\s*v2\s*\)/ig, "").trim();
+  s = s.replace(/\bv2\b/ig, "").trim();
+  s = s.replace(/\s+/g, " ").trim();
+  const n = norm(s);
+  if (n === "motivacao e consequencia" || n === "motivacao e consequencias"){
+    return "Motivação e consequência";
+  }
+  return s;
+}
+
+/* wrap do termo (2 linhas) */
+function wrapLabel(text, maxChars=26){
+  const t = String(text||"");
+  if (t.length <= maxChars) return [t];
+  const parts = t.split(/[_\s-]+/);
+  if (parts.length === 1) return [t.slice(0, maxChars) + "…"];
+  const lines = [];
+  let cur = "";
+  for (const p of parts){
+    const next = cur ? (cur + " " + p) : p;
+    if (next.length > maxChars){
+      if (cur) lines.push(cur);
+      cur = p;
+    } else cur = next;
+    if (lines.length >= 2) break;
+  }
+  if (cur && lines.length < 2) lines.push(cur);
+  const joined = parts.join(" ");
+  if (joined.length > lines.join(" ").length) lines[lines.length-1] += "…";
+  return lines;
+}
+
+/* Tooltip compacto */
+function showTooltip(evt, payload){
+  tooltipEl.innerHTML = `
+    <div class="tTitle">${escapeHtml(payload.name || "")}</div>
+    <div class="tMeta">${escapeHtml(payload.dimension || "")}</div>
+    <div class="tLabel">Comments</div>
+    <div class="tLine">${payload.comment ? escapeHtml(payload.comment) : '<span class="tEmpty">(sem comments)</span>'}</div>
+    <div class="tLabel" style="margin-top:6px;">Observações</div>
+    <div class="tLine">${payload.obs ? escapeHtml(payload.obs) : '<span class="tEmpty">(sem observações)</span>'}</div>
+  `;
+  tooltipEl.style.display = "block";
+  moveTooltip(evt);
+}
+function moveTooltip(evt){
+  if (tooltipEl.style.display !== "block") return;
+  const pad = 14;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const rect = tooltipEl.getBoundingClientRect();
+  let x = evt.clientX + 14;
+  let y = evt.clientY + 14;
+  if (x + rect.width + pad > vw) x = evt.clientX - rect.width - 14;
+  if (y + rect.height + pad > vh) y = evt.clientY - rect.height - 14;
+  tooltipEl.style.left = Math.max(pad, x) + "px";
+  tooltipEl.style.top  = Math.max(pad, y) + "px";
+}
+function hideTooltip(){ tooltipEl.style.display = "none"; tooltipEl.innerHTML = ""; }
+
+/* Zoom */
+const zoom = d3.zoom()
+  .scaleExtent([0.10, 3.5])
+  .on("zoom", (event) => { if (viewport) viewport.attr("transform", event.transform); });
+
+/* State */
 let RAW = null;
-const svg = d3.select("#svg"), gMain = svg.append("g");
-const zoom = d3.zoom().scaleExtent([0.01, 3]).on("zoom", (e) => gMain.attr("transform", e.transform));
-svg.call(zoom);
+let VIEW = null;
 
-// Carregamento automático via fetch
-async function loadAuto() {
-    try {
-        const response = await fetch('Ontohate_V2.xlsx');
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, {type: 'array'});
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet);
-        processRows(rows);
-    } catch (e) {
-        console.error("Erro no carregamento automático. Use o console para depurar.");
+let rootHierarchy = null;
+let linkLayer = null;
+let nodeLayer = null;
+let updateFn = null;
+let fitToCanvasFn = null;
+let expandAllFn = null;
+let collapseAllFn = null;
+
+/* DOM refs */
+const fileInput = document.getElementById("fileInput");
+const btnLoadDefault = document.getElementById("btnLoadDefault");
+const dimItemsEl = document.getElementById("dimItems");
+const dimSearchEl = document.getElementById("dimSearch");
+const btnSelectAll = document.getElementById("btnSelectAll");
+const btnClearAll = document.getElementById("btnClearAll");
+const rootSelect = document.getElementById("rootSelect");
+const btnGenerate = document.getElementById("btnGenerate");
+const searchEl = document.getElementById("search");
+const btnFit = document.getElementById("btnFit");
+const btnExpandAll = document.getElementById("btnExpandAll");
+const btnCollapseAll = document.getElementById("btnCollapseAll");
+const btnSvg = document.getElementById("btnSvg");
+const btnPng = document.getElementById("btnPng");
+const pngScaleSel = document.getElementById("pngScale");
+const canvasTitle = document.getElementById("canvasTitle");
+const canvasSubtitle = document.getElementById("canvasSubtitle");
+const canvasMeta = document.getElementById("canvasMeta");
+const statusDot = document.getElementById("statusDot");
+const statsEl = document.getElementById("stats");
+const tooltipEl = document.getElementById("tooltip");
+const toastEl = document.getElementById("toast");
+
+btnLoadDefault.addEventListener("click", loadDefault);
+fileInput.addEventListener("change", async (ev) => {
+  const f = ev.target.files?.[0];
+  if (!f) return;
+  const buf = await f.arrayBuffer();
+  await parseAndInit(buf, f.name);
+});
+
+async function loadDefault(){
+  const url = "Ontohate_V2.xlsx";
+  try{
+    const res = await fetch(url, { cache:"no-store" });
+    if (!res.ok) throw new Error(`Não encontrei ${url} (HTTP ${res.status}). Verifique o nome exato no repo.`);
+    const buf = await res.arrayBuffer();
+    await parseAndInit(buf, url);
+  } catch(e){
+    toast("Erro ao carregar XLSX:\n" + e.message, true);
+  }
+}
+
+async function parseAndInit(buf, fileName){
+  let wb;
+  try{ wb = XLSX.read(buf, { type:"array" }); }
+  catch(e){ toast("Falha ao ler o XLSX:\n" + e.message, true); return; }
+
+  const sheetNames = wb.SheetNames || [];
+  if (!sheetNames.length){ toast("XLSX sem abas.", true); return; }
+
+  const nodes = new Map();
+  const edges = [];
+  const dimSet = new Set();
+
+  function ensureNode(name, dimensionRaw="", comment="", obs=""){
+    const n = String(name||"").trim();
+    if (!n) return null;
+    const dimCanon = canonDimension(dimensionRaw) || "(Sem dimensão)";
+    if (!nodes.has(n)){
+      nodes.set(n, { name:n, dimension: dimCanon, comment:String(comment||"").trim(), obs:String(obs||"").trim() });
+    } else {
+      const cur = nodes.get(n);
+      if ((cur.dimension === "(Sem dimensão)" || !cur.dimension) && dimCanon) cur.dimension = dimCanon;
+      const cmt = String(comment||"").trim();
+      const ob = String(obs||"").trim();
+      if (cmt && !cur.comment) cur.comment = cmt;
+      if (ob && !cur.obs) cur.obs = ob;
     }
-}
+    dimSet.add(dimCanon);
+    return n;
+  }
 
-function processRows(rows) {
-    const nodes = new Map(), childrenMap = new Map(), dims = new Set();
-    rows.forEach(row => {
-        const name = String(row.Classe || row.Class || "").trim();
-        const parent = String(row.Superclasse || row.Superclass || "").trim();
-        const dim = String(row.Dimensão || row.Subontologia || "Geral").trim();
-        if(!name) return;
-        nodes.set(name, { name, dim, comment: row.Comment || row.Comments || "", obs: row.Observações || "" });
-        dims.add(dim);
-        if(parent) {
-            if(!childrenMap.has(parent)) childrenMap.set(parent, []);
-            childrenMap.get(parent).push(name);
-        }
-    });
-    RAW = { nodes, childrenMap, dims: Array.from(dims).sort() };
-    fillUI();
-}
+  let usedRows = 0;
+  for (const sname of sheetNames){
+    const ws = wb.Sheets[sname];
+    if (!ws) continue;
+    const json = XLSX.utils.sheet_to_json(ws, { defval:"" });
 
-function fillUI() {
-    document.getElementById('dimContainer').innerHTML = RAW.dims.map(d => `
-        <div class="dimItem">
-            <input type="checkbox" checked value="${d}" class="dim-check">
-            <span style="width:8px; height:8px; border-radius:50%; background:${getCol(d)}"></span>
-            ${d}
-        </div>
-    `).join('');
-    document.getElementById('rootSelect').innerHTML = Array.from(RAW.nodes.keys()).sort().map(k => `<option value="${k}">${k}</option>`).join('');
-}
+    for (const r of json){
+      const child = pick(r, ["Classe", "Class", "classe"]);
+      const parent = pick(r, ["Superclasse", "Superclass", "superclasse"]);
+      const group  = pick(r, ["Subontologia", "Sub-ontologia", "Subontology", "subontologia", "Dimensão", "Dimensao", "dimensao"]);
 
-function getCol(s) {
-    let h = 0; for(let i=0; i<s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
-    return `hsl(${Math.abs(h)%360}, 65%, 45%)`;
-}
+      const comment = pick(r, ["Comment", "Comments", "comment", "comments", "rdfs:comment", "RDFS:comment", "Anotação", "Anotacao", "anotacao", "anotação"]);
+      const obs     = pick(r, ["Observação", "Observacao", "observacao", "observação", "Observações", "Observacoes", "observacoes", "notes", "Notes", "nota", "notas"]);
 
-function toggleDims(s) { document.querySelectorAll('.dim-check').forEach(i => i.checked = s); }
+      const c = String(child||"").trim();
+      if (!c) continue;
 
-// Lógica de construção recursiva aprimorada
-function buildTree(node, targets, rootId, visited = new Set()) {
-    if (visited.has(node)) return null;
-    visited.add(node);
+      const p = String(parent||"").trim();
+      const g = String(group||"").trim();
 
-    const data = RAW.nodes.get(node) || { name: node, dim: "Conector" };
-    const kids = (RAW.childrenMap.get(node) || [])
-        .map(c => buildTree(c, targets, rootId, new Set(visited)))
-        .filter(c => c !== null);
-
-    const isTarget = targets.has(data.dim) || node === rootId;
-
-    if (isTarget || kids.length > 0) {
-        return { 
-            ...data, 
-            isRoot: node === rootId, 
-            isCon: !isTarget, 
-            children: kids.length > 0 ? kids : null 
-        };
+      ensureNode(c, g, comment, obs);
+      if (p) ensureNode(p, "", "", "");
+      if (p) edges.push([c,p]);
+      usedRows++;
     }
-    return null;
+  }
+
+  if (!usedRows || nodes.size === 0){
+    toast("Não encontrei a coluna 'Classe' na planilha.", true);
+    return;
+  }
+
+  const seen = new Set();
+  const edgesUniq = [];
+  for (const [c,p] of edges){
+    const k = c + "→" + p;
+    if (!seen.has(k)){ seen.add(k); edgesUniq.push([c,p]); }
+  }
+
+  const dimensions = Array.from(dimSet).sort((a,b)=>a.localeCompare(b));
+
+  const childrenOfAll = new Map();
+  for (const [child,parent] of edgesUniq){
+    if (!childrenOfAll.has(parent)) childrenOfAll.set(parent, []);
+    childrenOfAll.get(parent).push(child);
+  }
+  for (const [p,kids] of childrenOfAll.entries()){
+    kids.sort((a,b)=>a.localeCompare(b));
+  }
+
+  RAW = { nodes, edges: edgesUniq, dimensions, fileName, childrenOfAll };
+
+  buildDimensionsUI();
+  updateRootOptions();
+  statusDot.style.background = "#16a34a";
+  statsEl.innerHTML = `<strong>Arquivo:</strong> ${fileName} | <strong>Taxonomia:</strong> selecione dimensões e raiz`;
+
+  toast(`Planilha carregada: ${fileName}\nClasses: ${nodes.size}\nDimensões (padronizadas): ${dimensions.length}`);
 }
 
-document.getElementById('btnGenerate').onclick = () => {
-    if(!RAW) return;
-    const rootId = document.getElementById('rootSelect').value;
-    const targets = new Set([...document.querySelectorAll('.dim-check:checked')].map(i => i.value));
-    const treeData = buildTree(rootId, targets, rootId);
-    
-    gMain.selectAll("*").remove();
-    const root = d3.hierarchy(treeData);
-    d3.tree().nodeSize([280, 180])(root); // Espaçamento maior para legibilidade
+/* Dimensões UI */
+function getSelectedDimensions(){
+  const checks = dimItemsEl.querySelectorAll("input[type=checkbox][data-dim]");
+  const set = new Set();
+  checks.forEach(ch=>{ if (ch.checked) set.add(ch.getAttribute("data-dim")); });
+  return set;
+}
+function buildDimensionsUI(){
+  const dimCounts = new Map();
+  for (const obj of RAW.nodes.values()){
+    dimCounts.set(obj.dimension, (dimCounts.get(obj.dimension)||0) + 1);
+  }
 
-    gMain.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
-        .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
+  dimItemsEl.innerHTML = "";
+  for (const dim of RAW.dimensions){
+    const color = hashColorHEX(dim);
 
-    const node = gMain.selectAll(".node").data(root.descendants()).enter().append("g")
-        .attr("class", d => `node ${d.data.isCon ? 'node--connector' : ''} ${d.data.isRoot ? 'node--is-root' : ''}`)
-        .attr("transform", d => `translate(${d.x},${d.y})`)
-        .on("mouseover", showTooltip).on("mouseout", () => d3.select("#tooltip").style("display", "none"));
+    const item = document.createElement("label");
+    item.className = "dimItem";
 
-    node.each(function(d) {
-        const g = d3.select(this);
-        const txt = g.append("text").attr("text-anchor", "middle").attr("y", 5).text(d.data.name);
-        const w = Math.max(180, txt.node().getBBox().width + 40), h = 45;
-        const col = d.data.isCon ? "#fff" : getCol(d.data.dim);
-        g.insert("rect", "text").attr("width", w).attr("height", h).attr("x", -w/2).attr("y", -h/2).attr("fill", col).attr("stroke", "#333");
-        txt.style("fill", d.data.isCon ? "#101828" : "#fff");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = true;
+    cb.setAttribute("data-dim", dim);
+    cb.addEventListener("change", () => updateRootOptions());
+
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    dot.style.background = color;
+
+    const name = document.createElement("span");
+    name.className = "dimName";
+    name.textContent = dim;
+
+    const count = document.createElement("span");
+    count.className = "dimCount";
+    count.textContent = `${dimCounts.get(dim) || 0} classes`;
+
+    item.appendChild(cb);
+    item.appendChild(dot);
+    item.appendChild(name);
+    item.appendChild(count);
+
+    dimItemsEl.appendChild(item);
+  }
+
+  dimSearchEl.value = "";
+  dimSearchEl.addEventListener("input", () => {
+    const q = norm(dimSearchEl.value);
+    dimItemsEl.querySelectorAll(".dimItem").forEach(el=>{
+      const name = el.querySelector(".dimName")?.textContent || "";
+      el.style.display = norm(name).includes(q) ? "flex" : "none";
     });
-    
-    // Auto-ajuste de câmera
-    const b = gMain.node().getBBox();
-    const sc = Math.min(0.9, 0.9 / Math.max(b.width/svg.node().clientWidth, b.height/svg.node().clientHeight));
-    svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(svg.node().clientWidth/2 - (b.x + b.width/2)*sc, 80).scale(sc));
-};
+  });
 
-function showTooltip(e, d) {
-    d3.select("#tooltip").style("display", "block").style("left", (e.pageX+15)+"px").style("top", (e.pageY+15)+"px")
-     .html(`<b>${d.data.name}</b><br>Dimensão: ${d.data.dim}<br><br>${d.data.comment || d.data.obs || 'Sem descrição.'}`);
+  btnSelectAll.onclick = () => {
+    dimItemsEl.querySelectorAll("input[type=checkbox][data-dim]").forEach(ch=> ch.checked = true);
+    updateRootOptions();
+  };
+  btnClearAll.onclick = () => {
+    dimItemsEl.querySelectorAll("input[type=checkbox][data-dim]").forEach(ch=> ch.checked = false);
+    updateRootOptions();
+  };
 }
 
-loadAuto();
+/* Raízes válidas (>=2 nós) */
+function updateRootOptions(){
+  if (!RAW) return;
+
+  const selected = getSelectedDimensions();
+
+  const targets = new Set();
+  for (const [name,obj] of RAW.nodes.entries()){
+    if (selected.has(obj.dimension)) targets.add(name);
+  }
+
+  const memo = new Map();
+  const visiting = new Set();
+
+  function prunedSize(node){
+    if (memo.has(node)) return memo.get(node);
+    if (visiting.has(node)) return 0;
+    visiting.add(node);
+
+    const kids = RAW.childrenOfAll.get(node) || [];
+    let childSum = 0;
+    for (const k of kids) childSum += prunedSize(k);
+
+    const keep = targets.has(node) || childSum > 0;
+    const size = keep ? (1 + childSum) : 0;
+
+    visiting.delete(node);
+    memo.set(node, size);
+    return size;
+  }
+
+  const candidates = [];
+  for (const name of RAW.nodes.keys()){
+    const sz = prunedSize(name);
+    if (sz >= 2) candidates.push(name);
+  }
+  candidates.sort((a,b)=>a.localeCompare(b));
+
+  const prev = rootSelect.value || "";
+  rootSelect.innerHTML = "";
+
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = "(Escolha a raiz)";
+  rootSelect.appendChild(opt0);
+
+  for (const c of candidates){
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    rootSelect.appendChild(opt);
+  }
+
+  if (prev && candidates.includes(prev)) rootSelect.value = prev;
+
+  canvasSubtitle.textContent = `Dimensões selecionadas: ${selected.size} • Raízes possíveis: ${candidates.length}`;
+  canvasMeta.textContent = `Selecione uma raiz e clique “Gerar taxonomia”`;
+}
+
+/* Gerar taxonomia */
+btnGenerate.addEventListener("click", generateTaxonomy);
+
+function countNodes(node){
+  let c = 1;
+  for (const ch of (node.children || [])) c += countNodes(ch);
+  return c;
+}
+
+function generateTaxonomy(){
+  if (!RAW) return;
+
+  const selected = getSelectedDimensions();
+  if (selected.size === 0){
+    toast("Selecione pelo menos 1 dimensão.", true);
+    return;
+  }
+  const root = rootSelect.value;
+  if (!root){
+    toast("Escolha uma raiz para gerar a taxonomia.", true);
+    return;
+  }
+
+  const targets = new Set();
+  for (const [name,obj] of RAW.nodes.entries()){
+    if (selected.has(obj.dimension)) targets.add(name);
+  }
+
+  const visiting = new Set();
+  function build(node){
+    if (visiting.has(node)) return null;
+    visiting.add(node);
+
+    const base = RAW.nodes.get(node) || {name:node, dimension:"(Sem dimensão)", comment:"", obs:""};
+    const kids = RAW.childrenOfAll.get(node) || [];
+
+    const builtKids = [];
+    for (const k of kids){
+      const bb = build(k);
+      if (bb) builtKids.push(bb);
+    }
+
+    const keep = (node === root) || targets.has(node) || builtKids.length > 0;
+
+    visiting.delete(node);
+
+    if (!keep) return null;
+
+    return {
+      _id: node + "::" + Math.random().toString(16).slice(2),
+      name: base.name,
+      dimension: base.dimension || "(Sem dimensão)",
+      comment: base.comment || "",
+      obs: base.obs || "",
+      children: builtKids
+    };
+  }
+
+  const treeData = build(root);
+  if (!treeData){
+    toast("Não foi possível gerar árvore com o recorte atual. Marque mais dimensões.", true);
+    return;
+  }
+
+  const treeCount = countNodes(treeData);
+  if (treeCount < 2){
+    toast("A raiz escolhida não gera árvore (apenas 1 nó). Escolha outra raiz.", true);
+    return;
+  }
+
+  const dimColor = new Map();
+  for (const d of selected){
+    dimColor.set(d, hashColorHEX(d));
+  }
+
+  VIEW = { selected, root, treeData, dimColor };
+
+  canvasTitle.textContent = `Raiz: ${root}`;
+  canvasSubtitle.textContent = `Dimensões: ${Array.from(selected).join(" | ")}`;
+  canvasMeta.textContent = `Classes na árvore: ${treeCount}`;
+  statsEl.innerHTML = `<strong>Arquivo:</strong> ${RAW.fileName} | <strong>Taxonomia:</strong> ${treeCount} classes`;
+
+  renderTopDown(treeData, dimColor);
+  requestAnimationFrame(()=> fitToCanvasFn?.(true));
+  applySearchHighlight();
+}
+
+/* Render top-down (vertical/A4) + retângulos adaptáveis */
+function renderTopDown(treeData, dimColor){
+  svg.selectAll("*").remove();
+  viewport = svg.append("g").attr("id","viewport");
+  svg.call(zoom);
+  svg.call(zoom.transform, d3.zoomIdentity.translate(18, 18).scale(1));
+
+  linkLayer = viewport.append("g").attr("id","links");
+  nodeLayer = viewport.append("g").attr("id","nodes");
+
+  const dx = 220;
+  const dy = 140;
+  const tree = d3.tree()
+    .nodeSize([dx, dy])
+    .separation((a,b) => (a.parent === b.parent ? 1.15 : 1.35));
+
+  rootHierarchy = d3.hierarchy(treeData);
+
+  function collapse(d){
+    if (d.children){
+      d._children = d.children;
+      d._children.forEach(collapse);
+      d.children = null;
+    }
+  }
+  rootHierarchy.children?.forEach(c => c.children?.forEach(cc => collapse(cc)));
+
+  expandAllFn = () => {
+    (function rec(d){
+      if (d._children){ d.children = d._children; d._children = null; }
+      (d.children||[]).forEach(rec);
+    })(rootHierarchy);
+  };
+  collapseAllFn = () => {
+    (function rec(d){
+      (d.children||[]).forEach(rec);
+      if (d.depth >= 2) collapse(d);
+    })(rootHierarchy);
+  };
+
+  function linkVertical(d){
+    return d3.linkVertical().x(p => p.x).y(p => p.y)(d);
+  }
+
+  updateFn = () => {
+    tree(rootHierarchy);
+    const nodes = rootHierarchy.descendants();
+    const links = rootHierarchy.links();
+
+    for (const n of nodes){
+      n.y = n.y + 40;
+      n.x = n.x + 20;
+    }
+
+    const linkSel = linkLayer.selectAll("path.link")
+      .data(links, d => d.target.data._id);
+
+    linkSel.enter().append("path")
+      .attr("class","link")
+      .attr("d", d => {
+        const o = {x: d.source.x, y: d.source.y};
+        return linkVertical({source:o, target:o});
+      })
+      .merge(linkSel)
+      .transition().duration(220)
+      .attr("d", d => linkVertical(d));
+
+    linkSel.exit().transition().duration(180).attr("opacity",0).remove();
+
+    const nodeSel = nodeLayer.selectAll("g.node")
+      .data(nodes, d => d.data._id);
+
+    const nodeEnter = nodeSel.enter().append("g")
+      .attr("class","node")
+      .attr("transform", d => `translate(${d.x},${d.y})`)
+      .on("click", (_, d) => {
+        if (d.children){ d._children = d.children; d.children = null; }
+        else { d.children = d._children; d._children = null; }
+        updateFn();
+        applySearchHighlight();
+      })
+      .on("mouseenter", (evt, d) => {
+        const dd = d.data;
+        showTooltip(evt, { name: dd.name, dimension: dd.dimension, comment: dd.comment, obs: dd.obs });
+      })
+      .on("mousemove", (evt) => moveTooltip(evt))
+      .on("mouseleave", () => hideTooltip());
+
+    nodeEnter.each(function(d){
+      const g = d3.select(this);
+
+      const dim = d.data.dimension || "(Sem dimensão)";
+      const strokeColor = dimColor.get(dim) || hashColorHEX(dim);
+      const fill = strokeColor;
+      const textColor = contrastText(fill);
+      const hasKids = (d.children || d._children);
+
+      const lines = wrapLabel(d.data.name, 26);
+
+      const nameText = g.append("text")
+        .attr("class","name")
+        .attr("text-anchor","middle")
+        .attr("fill", textColor)
+        .attr("x", 0)
+        .attr("y", 0);
+
+      if (lines.length === 1){
+        nameText.append("tspan").attr("x",0).attr("dy", 0).text(lines[0]);
+      } else {
+        nameText.append("tspan").attr("x",0).attr("dy", 0).text(lines[0]);
+        nameText.append("tspan").attr("x",0).attr("dy", 16).text(lines[1]);
+      }
+
+      const dimText = g.append("text")
+        .attr("class","small")
+        .attr("text-anchor","middle")
+        .attr("fill", textColor)
+        .attr("x", 0)
+        .attr("y", 0)
+        .text(dim);
+
+      const nb = nameText.node().getBBox();
+      const db = dimText.node().getBBox();
+
+      const padX = 18;
+      const padTop = 16;
+      const gap = 10;
+      const padBottom = 12;
+
+      let w = Math.max(nb.width, db.width) + padX*2;
+      w = Math.max(170, Math.min(360, w));
+
+      let h = padTop + nb.height + gap + db.height + padBottom;
+      h = Math.max(54, h);
+
+      const nameY = padTop + 10;
+      const dimY = padTop + nb.height + gap + 8;
+
+      nameText.attr("y", nameY);
+      dimText.attr("y", dimY);
+
+      g.insert("rect", ":first-child")
+        .attr("x", -w/2)
+        .attr("y", 0)
+        .attr("width", w)
+        .attr("height", h)
+        .attr("fill", fill)
+        .attr("stroke", strokeColor)
+        .attr("stroke-width", d.depth === 0 ? 2.6 : 1.5);
+
+      g.append("text")
+        .attr("class","small")
+        .attr("fill", textColor)
+        .attr("text-anchor","end")
+        .attr("x", (w/2) - 10)
+        .attr("y", 18)
+        .text(hasKids ? (d.children ? "▾" : "▸") : "");
+    });
+
+    nodeSel.merge(nodeEnter)
+      .transition().duration(220)
+      .attr("transform", d => `translate(${d.x},${d.y})`);
+
+    nodeSel.exit().transition().duration(180).attr("opacity",0).remove();
+  };
+
+  updateFn();
+
+  fitToCanvasFn = (strong=true) => {
+    if (!viewport) return;
+    const bounds = viewport.node().getBBox();
+    const svgEl = svg.node();
+    const w = svgEl.clientWidth || 900;
+    const h = svgEl.clientHeight || 600;
+    const pad = 50;
+
+    const bw = bounds.width + pad*2;
+    const bh = bounds.height + pad*2;
+    const scale = Math.min(3.0, Math.max(0.10, Math.min(w/bw, h/bh)));
+
+    const tx = (w - bounds.width*scale)/2 - bounds.x*scale;
+    const ty = (h - bounds.height*scale)/2 - bounds.y*scale;
+
+    svg.transition().duration(strong ? 380 : 220)
+      .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+  };
+
+  fitToCanvasFn(true);
+}
+
+/* Search highlight */
+searchEl.addEventListener("input", applySearchHighlight);
+function applySearchHighlight(){
+  const q = norm(searchEl.value);
+  svg.selectAll("g.node").classed("node--match", false);
+  if (!q) return;
+
+  svg.selectAll("g.node").each(function(d){
+    if (!d || !d.data) return;
+    if (norm(d.data.name).includes(q)){
+      d3.select(this).classed("node--match", true);
+    }
+  });
+}
+
+/* Controls */
+btnFit.addEventListener("click", () => fitToCanvasFn?.(true));
+btnExpandAll.addEventListener("click", () => {
+  if (!expandAllFn || !updateFn) return;
+  expandAllFn();
+  updateFn();
+  applySearchHighlight();
+  fitToCanvasFn?.(false);
+});
+btnCollapseAll.addEventListener("click", () => {
+  if (!collapseAllFn || !updateFn) return;
+  collapseAllFn();
+  updateFn();
+  applySearchHighlight();
+  fitToCanvasFn?.(false);
+});
+
+/* Export */
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
+}
+function exportName(ext){
+  const root = (VIEW?.root || "root").replace(/[^\w\-]+/g,"_");
+  return `ONTOHATE_TAXONOMIA_${root}.${ext}`;
+}
+function embeddedExportStyle(){
+  return `
+    svg { background:#ffffff; font-family: Arial, Helvetica, sans-serif; }
+    .link{
+      fill:none; stroke: rgba(16,24,40,.18); stroke-width: 1.25;
+      stroke-linecap: round; stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+    .node rect{
+      stroke: rgba(16,24,40,.25); stroke-width: 1.2;
+      rx:10; ry:10; shape-rendering: geometricPrecision;
+    }
+    .node .name{
+      font-size: 12px; font-weight: 700; font-family: Arial, Helvetica, sans-serif;
+      text-rendering: geometricPrecision;
+    }
+    .node .small{
+      font-size: 10px; font-weight: 700; font-family: Arial, Helvetica, sans-serif;
+    }
+  `;
+}
+function serializeSvgForExport(){
+  if (!viewport) throw new Error("Nada para exportar. Gere a taxonomia antes.");
+  const svgNode = svg.node();
+  const clone = svgNode.cloneNode(true);
+  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+
+  const bg = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  bg.setAttribute("x","0"); bg.setAttribute("y","0");
+  bg.setAttribute("width","100%"); bg.setAttribute("height","100%");
+  bg.setAttribute("fill","#ffffff");
+  clone.insertBefore(bg, clone.firstChild);
+
+  const style = document.createElementNS("http://www.w3.org/2000/svg","style");
+  style.textContent = embeddedExportStyle();
+  clone.insertBefore(style, clone.firstChild.nextSibling);
+
+  clone.querySelectorAll("text").forEach(t=>{
+    t.setAttribute("font-family","Arial, Helvetica, sans-serif");
+    t.setAttribute("font-weight","700");
+  });
+  clone.querySelectorAll("path.link").forEach(p=>{
+    p.setAttribute("vector-effect","non-scaling-stroke");
+    p.setAttribute("stroke-linecap","round");
+    p.setAttribute("stroke-linejoin","round");
+  });
+
+  const bbox = viewport.node().getBBox();
+  const pad = 40;
+  const x = bbox.x - pad, y = bbox.y - pad, w = bbox.width + pad*2, h = bbox.height + pad*2;
+  clone.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
+  clone.setAttribute("width", String(Math.round(w)));
+  clone.setAttribute("height", String(Math.round(h)));
+
+  return new XMLSerializer().serializeToString(clone);
+}
+
+btnSvg.addEventListener("click", () => {
+  try{
+    const xml = serializeSvgForExport();
+    downloadBlob(new Blob([xml], {type:"image/svg+xml;charset=utf-8"}), exportName("svg"));
+  } catch(e){
+    toast("Falha ao exportar SVG: " + e.message, true);
+  }
+});
+
+btnPng.addEventListener("click", async () => {
+  try{
+    const scale = parseInt(pngScaleSel.value || "3", 10);
+    const xml = serializeSvgForExport();
+
+    const svgBlob = new Blob([xml], {type:"image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.decoding = "async";
+    img.src = url;
+
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = () => reject(new Error("Falha ao renderizar SVG no PNG."));
+    });
+
+    // pega width/height exportados
+    const tmp = document.createElement("div");
+    tmp.style.position="fixed"; tmp.style.left="-9999px";
+    tmp.innerHTML = xml;
+    document.body.appendChild(tmp);
+    const s = tmp.querySelector("svg");
+    const w = parseFloat(s.getAttribute("width")) || 1600;
+    const h = parseFloat(s.getAttribute("height")) || 900;
+    tmp.remove();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(w * scale);
+    canvas.height = Math.round(h * scale);
+
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.setTransform(scale,0,0,scale,0,0);
+    ctx.drawImage(img, 0, 0);
+
+    URL.revokeObjectURL(url);
+
+    canvas.toBlob((blob)=>{
+      if (!blob) return toast("Falha ao gerar PNG.", true);
+      downloadBlob(blob, exportName("png"));
+    }, "image/png", 1.0);
+
+  } catch(e){
+    toast("Falha ao exportar PNG: " + e.message, true);
+  }
+});
+
+/* Boot */
+(async function(){
+  try{ await loadDefault(); } catch(_) {}
+})();
 </script>
 </body>
 </html>
