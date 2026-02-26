@@ -147,7 +147,7 @@
     .dimName{flex:1; font-weight:700;}
     .dimCount{color:var(--muted); font-size:11px;}
 
-    /* SVG styles */
+    /* SVG */
     .link{
       fill:none;
       stroke: rgba(16,24,40,.18);
@@ -157,7 +157,7 @@
       vector-effect: non-scaling-stroke;
     }
     .node rect{
-      stroke: rgba(16,24,40,.18);
+      stroke: rgba(16,24,40,.25);
       stroke-width: 1.2;
       rx:10; ry:10;
       shape-rendering: geometricPrecision;
@@ -172,14 +172,14 @@
       font-size: 10px;
       font-weight: 700;
       font-family: Arial, Helvetica, sans-serif;
-      opacity:.95;
+      opacity:.98;
     }
     .node--match rect{
       stroke-width: 2.4;
       stroke: rgba(249,115,22,.95);
     }
 
-    /* Tooltip compact */
+    /* Tooltip compacto */
     .tooltip{
       position: fixed;
       z-index: 9999;
@@ -221,7 +221,7 @@
   <div class="brand">
     <h1>ONTOHATE V2 — Taxonomia (Dimensões → Raiz → Gerar) + Export</h1>
     <p class="sub">
-      1) Selecione as <b>Dimensões</b>, 2) escolha a <b>Raiz</b> (somente raízes que geram árvore), 3) gere a taxonomia Top-Down.
+      1) Selecione as <b>Dimensões</b>, 2) escolha uma <b>Raiz</b> que gere árvore (>=2 classes), 3) gere a taxonomia Top-Down “A4-friendly”.
     </p>
   </div>
 
@@ -274,7 +274,7 @@
 
   <div class="card side">
     <h2>1) Dimensões</h2>
-    <p class="mini">Escolha as dimensões (classificações). “Motivação e consequência(s)” é unificada automaticamente.</p>
+    <p class="mini">As cores usam a “cor da dimensão” (sem clarear demais). “Motivação e consequência(s)” é unificada automaticamente.</p>
 
     <div class="dimList">
       <div class="dimListHeader">
@@ -288,7 +288,7 @@
     <div class="sep"></div>
 
     <h2>2) Raiz</h2>
-    <p class="mini">A lista mostra apenas raízes que geram árvore (evita taxonomia com 1 classe).</p>
+    <p class="mini">A lista mostra apenas raízes que geram árvore com o recorte atual.</p>
     <div class="row">
       <span class="select">Raiz:
         <select id="rootSelect"></select>
@@ -301,7 +301,7 @@
 
     <div class="sep"></div>
 
-    <p class="mini"><b>Hover</b> em uma classe mostra comments/observações (se existirem no XLSX).</p>
+    <p class="mini"><b>Hover</b> em uma classe mostra comments/observações (compacto).</p>
   </div>
 </div>
 
@@ -367,8 +367,7 @@ function pick(row, wanted){
 
 /* ===== Canonização de Dimensões =====
    - remove "(v2)" e "v2"
-   - normaliza espaço
-   - unifica "Motivação e consequência" / "Motivação e consequências"
+   - unifica "Motivação e consequência(s)"
 */
 function canonDimension(name){
   let s = String(name||"").trim();
@@ -376,18 +375,14 @@ function canonDimension(name){
   s = s.replace(/\(\s*v2\s*\)/ig, "").trim();
   s = s.replace(/\bv2\b/ig, "").trim();
   s = s.replace(/\s+/g, " ").trim();
-
   const n = norm(s);
-
-  // Unificação pedida
   if (n === "motivacao e consequencia" || n === "motivacao e consequencias"){
     return "Motivação e consequência";
   }
-
   return s;
 }
 
-function wrapLabel(text, maxChars=28){
+function wrapLabel(text, maxChars=26){
   const t = String(text||"");
   if (t.length <= maxChars) return [t];
   const parts = t.split(/[_\s-]+/);
@@ -417,7 +412,7 @@ function escapeHtml(s){
 }
 
 /* ============================
-   Tooltip (compacto)
+   Tooltip compacto
 ============================ */
 function showTooltip(evt, payload){
   tooltipEl.innerHTML = `
@@ -448,7 +443,7 @@ function moveTooltip(evt){
 function hideTooltip(){ tooltipEl.style.display = "none"; tooltipEl.innerHTML = ""; }
 
 /* ============================
-   Cor por Dimensão (hash)
+   Cor por dimensão (hash) + contraste
 ============================ */
 function hashColor(str){
   const s = String(str||"");
@@ -458,15 +453,7 @@ function hashColor(str){
     h = Math.imul(h, 16777619);
   }
   const hue = Math.abs(h) % 360;
-  return `hsl(${hue} 72% 45%)`;
-}
-function mixToWhite(color, t=0.62){
-  const c = d3.color(color);
-  const w = d3.rgb(255,255,255);
-  const r = Math.round(c.r*(1-t) + w.r*t);
-  const g = Math.round(c.g*(1-t) + w.g*t);
-  const b = Math.round(c.b*(1-t) + w.b*t);
-  return d3.rgb(r,g,b).formatHex();
+  return `hsl(${hue} 70% 45%)`;
 }
 function luminance(hex){
   const c = d3.color(hex);
@@ -476,8 +463,9 @@ function luminance(hex){
   });
   return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
 }
-function contrastText(bgHex){
-  return luminance(bgHex) > 0.55 ? "#101828" : "#ffffff";
+function contrastText(bg){
+  const hex = d3.color(bg).formatHex();
+  return luminance(hex) > 0.55 ? "#101828" : "#ffffff";
 }
 
 /* ============================
@@ -490,8 +478,8 @@ const zoom = d3.zoom()
 /* ============================
    State
 ============================ */
-let RAW = null;  // nodes Map, edges, dims list, fileName, childrenOfAll
-let VIEW = null; // selected dims, root, treeData
+let RAW = null;  // nodes, edges, dims, fileName, childrenOfAll
+let VIEW = null; // selected dims, root, treeData, dimColor
 
 let rootHierarchy = null;
 let linkLayer = null;
@@ -532,14 +520,13 @@ async function parseAndInit(buf, fileName){
   const sheetNames = wb.SheetNames || [];
   if (!sheetNames.length){ toast("XLSX sem abas.", true); return; }
 
-  const nodes = new Map(); // name -> {name, dimension, comment, obs}
+  const nodes = new Map();
   const edges = [];
   const dimSet = new Set();
 
   function ensureNode(name, dimensionRaw="", comment="", obs=""){
     const n = String(name||"").trim();
     if (!n) return null;
-
     const dimCanon = canonDimension(dimensionRaw) || "(Sem dimensão)";
     if (!nodes.has(n)){
       nodes.set(n, { name:n, dimension: dimCanon, comment:String(comment||"").trim(), obs:String(obs||"").trim() });
@@ -551,7 +538,7 @@ async function parseAndInit(buf, fileName){
       if (cmt && !cur.comment) cur.comment = cmt;
       if (ob && !cur.obs) cur.obs = ob;
     }
-    if (dimCanon) dimSet.add(dimCanon);
+    dimSet.add(dimCanon);
     return n;
   }
 
@@ -587,7 +574,6 @@ async function parseAndInit(buf, fileName){
     return;
   }
 
-  // dedup edges
   const seen = new Set();
   const edgesUniq = [];
   for (const [c,p] of edges){
@@ -597,7 +583,6 @@ async function parseAndInit(buf, fileName){
 
   const dimensions = Array.from(dimSet).sort((a,b)=>a.localeCompare(b));
 
-  // childrenOfAll: sem recorte (para permitir conectores)
   const childrenOfAll = new Map();
   for (const [child,parent] of edgesUniq){
     if (!childrenOfAll.has(parent)) childrenOfAll.set(parent, []);
@@ -610,7 +595,7 @@ async function parseAndInit(buf, fileName){
   RAW = { nodes, edges: edgesUniq, dimensions, fileName, childrenOfAll };
 
   buildDimensionsUI();
-  updateRootOptions(); // agora filtra raízes “válidas”
+  updateRootOptions();
   statusDot.style.background = "#16a34a";
   statsEl.innerHTML = `<strong>Arquivo:</strong> ${fileName} | <strong>Taxonomia:</strong> selecione dimensões e raiz`;
 
@@ -618,8 +603,7 @@ async function parseAndInit(buf, fileName){
 }
 
 /* ============================
-   UI: Dimensões
-   - IMPORTANTE: data-dim agora guarda o valor REAL (sem escape)
+   Dimensões UI
 ============================ */
 function getSelectedDimensions(){
   const checks = dimItemsEl.querySelectorAll("input[type=checkbox][data-dim]");
@@ -638,7 +622,7 @@ function buildDimensionsUI(){
 
   dimItemsEl.innerHTML = "";
   for (const dim of RAW.dimensions){
-    const color = hashColor(dim);
+    const color = d3.color(hashColor(dim)).formatHex();
 
     const item = document.createElement("label");
     item.className = "dimItem";
@@ -646,7 +630,7 @@ function buildDimensionsUI(){
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = true;
-    cb.setAttribute("data-dim", dim); // <- valor real
+    cb.setAttribute("data-dim", dim);
     cb.addEventListener("change", () => updateRootOptions());
 
     const dot = document.createElement("span");
@@ -689,56 +673,40 @@ function buildDimensionsUI(){
 }
 
 /* ============================
-   3) Raízes válidas:
-   - só aparece raiz que gera árvore (>= 2 nós) no recorte
-   - com conectores automáticos
+   Raízes válidas (>= 2 nós)
 ============================ */
 function updateRootOptions(){
   if (!RAW) return;
 
   const selected = getSelectedDimensions();
 
-  // conjunto de “nós-alvo” = classes cuja dimensão está selecionada
+  // targets: nós cuja dimensão está selecionada
   const targets = new Set();
   for (const [name,obj] of RAW.nodes.entries()){
     if (selected.has(obj.dimension)) targets.add(name);
   }
 
-  // memo: para cada nó, se sua subárvore contém algum target, e o tamanho pruned
   const memo = new Map();
   const visiting = new Set();
 
+  // tamanho da árvore podada (mantendo conectores)
   function prunedSize(node){
     if (memo.has(node)) return memo.get(node);
-    if (visiting.has(node)) return 0; // evita ciclo
+    if (visiting.has(node)) return 0;
     visiting.add(node);
-
-    const isTarget = targets.has(node);
-    let size = 0;
 
     const kids = RAW.childrenOfAll.get(node) || [];
     let childSum = 0;
-    for (const k of kids){
-      childSum += prunedSize(k);
-    }
+    for (const k of kids) childSum += prunedSize(k);
 
-    // inclui nó se:
-    // - é target OU
-    // - algum filho tem target (childSum>0) OU
-    // - é a própria raiz escolhida (na geração; aqui só estimamos)
-    if (isTarget || childSum > 0){
-      size = 1 + childSum;
-    } else {
-      size = 0;
-    }
+    const keep = targets.has(node) || childSum > 0;
+    const size = keep ? (1 + childSum) : 0;
 
     visiting.delete(node);
     memo.set(node, size);
     return size;
   }
 
-  // candidatos a raiz: nós que, ao podar, dão tamanho >= 2
-  // (evita taxonomia com 1 classe)
   const candidates = [];
   for (const name of RAW.nodes.keys()){
     const sz = prunedSize(name);
@@ -746,7 +714,9 @@ function updateRootOptions(){
   }
   candidates.sort((a,b)=>a.localeCompare(b));
 
+  const prev = rootSelect.value || "";
   rootSelect.innerHTML = "";
+
   const opt0 = document.createElement("option");
   opt0.value = "";
   opt0.textContent = "(Escolha a raiz)";
@@ -759,15 +729,23 @@ function updateRootOptions(){
     rootSelect.appendChild(opt);
   }
 
+  // tenta manter seleção anterior, se ainda existir
+  if (prev && candidates.includes(prev)) rootSelect.value = prev;
+
   canvasSubtitle.textContent = `Dimensões selecionadas: ${selected.size} • Raízes possíveis: ${candidates.length}`;
   canvasMeta.textContent = `Selecione uma raiz e clique “Gerar taxonomia”`;
 }
 
 /* ============================
-   Gerar taxonomia:
-   - inclui conectores automaticamente (mantém hierarquia)
+   Gerar taxonomia (top-down vertical + conectores)
 ============================ */
 btnGenerate.addEventListener("click", generateTaxonomy);
+
+function countNodes(node){
+  let c = 1;
+  for (const ch of (node.children || [])) c += countNodes(ch);
+  return c;
+}
 
 function generateTaxonomy(){
   if (!RAW) return;
@@ -783,15 +761,15 @@ function generateTaxonomy(){
     return;
   }
 
-  // targets: nós cuja dimensão está selecionada
+  // targets
   const targets = new Set();
   for (const [name,obj] of RAW.nodes.entries()){
     if (selected.has(obj.dimension)) targets.add(name);
   }
 
-  // Construção podada (mantém conectores):
-  // mantém nó se ele for target OU tiver descendente target OU for a raiz
   const visiting = new Set();
+
+  // mantém nó se: é target OU tem filho mantido OU é a raiz
   function build(node){
     if (visiting.has(node)) return null;
     visiting.add(node);
@@ -801,12 +779,11 @@ function generateTaxonomy(){
 
     const builtKids = [];
     for (const k of kids){
-      const childBuilt = build(k);
-      if (childBuilt) builtKids.push(childBuilt);
+      const bb = build(k);
+      if (bb) builtKids.push(bb);
     }
 
-    const isTarget = targets.has(node);
-    const keep = (node === root) || isTarget || builtKids.length > 0;
+    const keep = (node === root) || targets.has(node) || builtKids.length > 0;
 
     visiting.delete(node);
 
@@ -830,13 +807,14 @@ function generateTaxonomy(){
 
   const treeCount = countNodes(treeData);
   if (treeCount < 2){
-    toast("A raiz escolhida não gera uma árvore (apenas 1 nó). Escolha outra raiz.", true);
+    toast("A raiz escolhida não gera árvore (apenas 1 nó). Escolha outra raiz.", true);
     return;
   }
 
+  // cor por dimensão selecionada
   const dimColor = new Map();
   for (const d of selected){
-    dimColor.set(d, hashColor(d));
+    dimColor.set(d, d3.color(hashColor(d)).formatHex());
   }
 
   VIEW = { selected, root, treeData, dimColor };
@@ -851,14 +829,8 @@ function generateTaxonomy(){
   applySearchHighlight();
 }
 
-function countNodes(node){
-  let c = 1;
-  for (const ch of (node.children || [])) c += countNodes(ch);
-  return c;
-}
-
 /* ============================
-   Render top-down
+   Render top-down A4-friendly + caixas adaptáveis
 ============================ */
 function renderTopDown(treeData, dimColor){
   svg.selectAll("*").remove();
@@ -869,9 +841,12 @@ function renderTopDown(treeData, dimColor){
   linkLayer = viewport.append("g").attr("id","links");
   nodeLayer = viewport.append("g").attr("id","nodes");
 
-  const dx = 340;
-  const dy = 125;
-  const tree = d3.tree().nodeSize([dx, dy]);
+  // A4-friendly: mais vertical, menos espalhado horizontalmente
+  const dx = 220;   // horizontal (colunas)
+  const dy = 140;   // vertical (níveis)
+  const tree = d3.tree()
+    .nodeSize([dx, dy])
+    .separation((a,b) => (a.parent === b.parent ? 1.15 : 1.35));
 
   rootHierarchy = d3.hierarchy(treeData);
 
@@ -882,7 +857,8 @@ function renderTopDown(treeData, dimColor){
       d.children = null;
     }
   }
-  // colapsa “níveis profundos” só para começar mais limpo
+
+  // colapsa parte mais profunda para começar limpo
   rootHierarchy.children?.forEach(c => c.children?.forEach(cc => collapse(cc)));
 
   expandAllFn = () => {
@@ -891,6 +867,7 @@ function renderTopDown(treeData, dimColor){
       (d.children||[]).forEach(rec);
     })(rootHierarchy);
   };
+
   collapseAllFn = () => {
     (function rec(d){
       (d.children||[]).forEach(rec);
@@ -901,6 +878,9 @@ function renderTopDown(treeData, dimColor){
   function linkVertical(d){
     return d3.linkVertical().x(p => p.x).y(p => p.y)(d);
   }
+
+  // cache local de tamanhos por nodeId (para estabilidade visual)
+  const sizeCache = new Map(); // _id -> {w,h,nameY,dimY}
 
   updateFn = () => {
     tree(rootHierarchy);
@@ -913,6 +893,7 @@ function renderTopDown(treeData, dimColor){
       n.x = n.x + 20;
     }
 
+    // LINKS
     const linkSel = linkLayer.selectAll("path.link")
       .data(links, d => d.target.data._id);
 
@@ -928,6 +909,7 @@ function renderTopDown(treeData, dimColor){
 
     linkSel.exit().transition().duration(180).attr("opacity",0).remove();
 
+    // NODES
     const nodeSel = nodeLayer.selectAll("g.node")
       .data(nodes, d => d.data._id);
 
@@ -947,53 +929,87 @@ function renderTopDown(treeData, dimColor){
       .on("mousemove", (evt) => moveTooltip(evt))
       .on("mouseleave", () => hideTooltip());
 
+    // cria node com caixa adaptável ao texto
     nodeEnter.each(function(d){
       const g = d3.select(this);
 
       const dim = d.data.dimension || "(Sem dimensão)";
-      const strokeColor = dimColor.get(dim) || hashColor(dim);
-      const fill = mixToWhite(strokeColor, 0.64);
-      const text = contrastText(fill);
+      const strokeColor = dimColor.get(dim) || d3.color(hashColor(dim)).formatHex();
 
-      const lines = wrapLabel(d.data.name, 28);
+      // Usa a cor da dimensão como fill (sem clarear demais)
+      const fill = d3.color(strokeColor).formatHex();
+      const textColor = contrastText(fill);
+
       const hasKids = (d.children || d._children);
 
-      const w = 370;
-      const h = lines.length === 1 ? 52 : 68;
+      // nome (com wrap)
+      const lines = wrapLabel(d.data.name, 26);
+      const nameText = g.append("text")
+        .attr("class","name")
+        .attr("text-anchor","middle")
+        .attr("fill", textColor)
+        .attr("x", 0)
+        .attr("y", 0);
 
-      g.append("rect")
-        .attr("x", -w/2).attr("y", 0)
-        .attr("width", w).attr("height", h)
+      if (lines.length === 1){
+        nameText.append("tspan").attr("x",0).attr("dy", 0).text(lines[0]);
+      } else {
+        nameText.append("tspan").attr("x",0).attr("dy", 0).text(lines[0]);
+        nameText.append("tspan").attr("x",0).attr("dy", 16).text(lines[1]);
+      }
+
+      // dimensão
+      const dimText = g.append("text")
+        .attr("class","small")
+        .attr("text-anchor","middle")
+        .attr("fill", textColor)
+        .attr("x", 0)
+        .attr("y", 0)
+        .text(dim);
+
+      // mede bbox (precisa estar no DOM)
+      const nb = nameText.node().getBBox();
+      const db = dimText.node().getBBox();
+
+      const padX = 18;
+      const padTop = 16;
+      const gap = 10;
+      const padBottom = 12;
+
+      let w = Math.max(nb.width, db.width) + padX*2;
+      w = Math.max(170, Math.min(360, w)); // limites A4-friendly
+
+      let h = padTop + nb.height + gap + db.height + padBottom;
+      h = Math.max(54, h);
+
+      const nameY = padTop + 10;
+      const dimY = padTop + nb.height + gap + 8;
+
+      // posiciona textos
+      nameText.attr("y", nameY);
+      dimText.attr("y", dimY);
+
+      // retângulo atrás
+      g.insert("rect", ":first-child")
+        .attr("x", -w/2)
+        .attr("y", 0)
+        .attr("width", w)
+        .attr("height", h)
         .attr("fill", fill)
         .attr("stroke", strokeColor)
         .attr("stroke-width", d.depth === 0 ? 2.6 : 1.5);
 
-      const t = g.append("text")
-        .attr("class","name")
-        .attr("text-anchor","middle")
-        .attr("fill", text)
-        .attr("x", 0).attr("y", 22);
-
-      if (lines.length === 1){
-        t.text(lines[0]);
-      } else {
-        t.append("tspan").attr("x",0).attr("dy",0).text(lines[0]);
-        t.append("tspan").attr("x",0).attr("dy",16).text(lines[1]);
-      }
-
+      // ícone expand/recolher
       g.append("text")
         .attr("class","small")
-        .attr("text-anchor","middle")
-        .attr("fill", text)
-        .attr("x", 0).attr("y", h - 10)
-        .text(dim);
-
-      g.append("text")
-        .attr("class","small")
-        .attr("fill", text)
-        .attr("x", w/2 - 10).attr("y", 18)
+        .attr("fill", textColor)
         .attr("text-anchor","end")
+        .attr("x", (w/2) - 10)
+        .attr("y", 18)
         .text(hasKids ? (d.children ? "▾" : "▸") : "");
+
+      // cache do tamanho (para export e estabilidade)
+      sizeCache.set(d.data._id, {w,h});
     });
 
     nodeSel.merge(nodeEnter)
@@ -1063,7 +1079,7 @@ btnCollapseAll.addEventListener("click", () => {
 });
 
 /* ============================
-   Export SVG / PNG (mantém do seu código anterior)
+   Export SVG / PNG (com styles embutidos)
 ============================ */
 function downloadBlob(blob, filename){
   const url = URL.createObjectURL(blob);
@@ -1088,7 +1104,7 @@ function embeddedExportStyle(){
       vector-effect: non-scaling-stroke;
     }
     .node rect{
-      stroke: rgba(16,24,40,.18); stroke-width: 1.2;
+      stroke: rgba(16,24,40,.25); stroke-width: 1.2;
       rx:10; ry:10; shape-rendering: geometricPrecision;
     }
     .node .name{
