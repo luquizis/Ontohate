@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <title>Taxonomy Builder — Personalização Manual</title>
+  <title>Taxonomy Builder — Conexão Raiz-Copa</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -12,13 +12,14 @@
     header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; height: 70px; }
     .btn { background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; }
     #wrap { display: flex; height: calc(100% - 70px); }
-    .sidebar { width: 340px; background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 20px; font-size: 13px; }
-    .canvas-area { flex: 1; position: relative; background: var(--bg); cursor: crosshair; }
+    .sidebar { width: 340px; background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 20px; font-size: 13px; z-index: 10; }
+    .canvas-area { flex: 1; position: relative; background: var(--bg); overflow: hidden; }
     .node rect { stroke-width: 1.5px; rx: 8; ry: 8; cursor: move; }
     .node text { font-family: Arial, sans-serif; font-weight: bold; pointer-events: none; font-size: 12px; }
-    .link { fill: none; stroke: #94a3b8; stroke-width: 1.5px; opacity: 0.4; }
+    .link { fill: none; stroke: #94a3b8; stroke-width: 1.5px; opacity: 0.6; }
     .guide-step { background: rgba(37, 99, 235, 0.1); border-left: 4px solid var(--accent); padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-    .tooltip { position: fixed; background: #fff; border: 1px solid var(--line); padding: 10px; border-radius: 5px; display: none; z-index: 1000; }
+    svg { width: 100%; height: 100%; }
+    .tooltip { position: fixed; background: #fff; border: 1px solid var(--line); padding: 10px; border-radius: 5px; display: none; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body data-theme="light">
@@ -27,24 +28,25 @@
     <label class="btn" style="background:var(--accent); color:#fff;">📁 CARREGAR ARQUIVO <input type="file" id="fileInput" accept=".xlsx" style="display:none"></label>
     <select id="themeSelect" class="btn"><option value="light">MODO CLARO</option><option value="dark">MODO ESCURO</option></select>
   </div>
-  <div style="font-weight: bold; font-size: 14px;">🛠️ TAXONOMY BUILDER PRO</div>
+  <div style="font-weight: bold; font-size: 14px;">🛠️ CONSTRUTOR DE TAXONOMIA CONECTADA</div>
   <div class="controls">
-    <button class="btn" id="btnExportPng" style="background:var(--accent); color:#fff;">💾 SALVAR PNG (ARTIGO)</button>
+    <button class="btn" id="btnExportPng" style="background:var(--accent); color:#fff;">💾 SALVAR PNG PARA ARTIGO</button>
   </div>
 </header>
 <div id="wrap">
   <div class="sidebar">
-    <div class="guide-step"><b>PASSO 1:</b> Carregue seu XLSX. O sistema lerá todas as abas automaticamente.</div>
+    <div class="guide-step"><b>1.</b> Selecione as dimensões para destacar no gráfico.</div>
     <h3>DIMENSÕES</h3>
-    <div id="dimList">Aguardando...</div>
+    <div id="dimList">Aguardando arquivo...</div>
     <hr>
-    <div class="guide-step"><b>PASSO 2:</b> Defina onde a árvore começa e onde ela deve ser "podada" (Copa).</div>
-    <h3>RAIZ / COPA</h3>
+    <div class="guide-step"><b>2.</b> Escolha a <b>Raiz</b> (onde começa) e a <b>Copa</b> (onde termina). O código forçará a ligação entre elas.</div>
+    <h3>RAIZ (TOPO)</h3>
     <select id="rootSelect"></select>
-    <select id="canopySelect" style="margin-top:10px;"><option value="">Sem limite de Copa</option></select>
+    <h3 style="margin-top:15px;">COPA (LIMITE)</h3>
+    <select id="canopySelect"><option value="">Sem limite (Exibir tudo)</option></select>
     <br><br>
-    <button class="btn" id="btnGenerate" style="width:100%; background:var(--accent); color:#fff; padding:15px;">GERAR E REORGANIZAR</button>
-    <div class="guide-step" style="margin-top:20px;"><b>DICA:</b> Após gerar, arraste as classes com o mouse para criar um layout personalizado.</div>
+    <button class="btn" id="btnGenerate" style="width:100%; background:var(--accent); color:#fff; padding:15px;">GERAR TAXONOMIA CONECTADA</button>
+    <div class="guide-step" style="margin-top:20px;"><b>DICA:</b> Use o scroll do mouse para Zoom e arraste as classes para organizar o espaço.</div>
   </div>
   <div class="canvas-area">
     <svg id="svg"></svg>
@@ -55,13 +57,17 @@
 <script>
 let STORE = null;
 const svg = d3.select("#svg"), gMain = svg.append("g");
-const zoom = d3.zoom().on("zoom", (e) => { if (!e.sourceEvent || e.sourceEvent.type !== 'mousemove') gMain.attr("transform", e.transform); });
+// Zoom aprimorado para garantir visualização total
+const zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", (e) => { 
+  if (!e.sourceEvent || e.sourceEvent.type !== 'mousemove') gMain.attr("transform", e.transform); 
+});
 svg.call(zoom);
 
 async function handleFile(f) {
   const data = await f.arrayBuffer();
   const wb = XLSX.read(data, {type: 'array'});
-  const nodes = new Map(), dimensions = new Set(), hierarchy = new Map();
+  const nodes = new Map(), dimensions = new Set(), hierarchy = new Map(), parentMap = new Map();
+  
   wb.SheetNames.forEach(sheet => {
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet]);
     rows.forEach(row => {
@@ -74,18 +80,19 @@ async function handleFile(f) {
         if (p && p !== n) {
           if (!hierarchy.has(p)) hierarchy.set(p, []);
           hierarchy.get(p).push(n);
+          parentMap.set(n, p); // Guardar pai para reconstrução de caminho
         }
       }
     });
   });
-  STORE = { nodes, dimensions: Array.from(dimensions), hierarchy };
+  STORE = { nodes, dimensions: Array.from(dimensions), hierarchy, parentMap };
   const dL = d3.select("#dimList").html("");
   STORE.dimensions.forEach(d => {
     const l = dL.append("label").attr("class", "dim-item").style("display","block");
     l.append("input").attr("type","checkbox").attr("checked",true).attr("value",d);
     l.append("span").text(" "+d);
   });
-  const rS = d3.select("#rootSelect").html(""), cS = d3.select("#canopySelect").html('<option value="">Copa livre</option>');
+  const rS = d3.select("#rootSelect").html(""), cS = d3.select("#canopySelect").html('<option value="">Sem limite</option>');
   Array.from(STORE.nodes.keys()).sort().forEach(n => {
     rS.append("option").text(n).attr("value",n);
     cS.append("option").text(n).attr("value",n);
@@ -98,15 +105,40 @@ function render() {
   const rootName = d3.select("#rootSelect").property("value"), canopyName = d3.select("#canopySelect").property("value");
   const activeDims = new Set(); d3.selectAll("#dimList input:checked").each(function(){ activeDims.add(this.value); });
 
+  // Lógica de Conexão: Identifica todos os ancestrais da Copa para garantir o caminho
+  const ancestorsOfCanopy = new Set();
+  if (canopyName) {
+    let curr = canopyName;
+    while (curr && curr !== rootName) {
+      ancestorsOfCanopy.add(curr);
+      curr = STORE.parentMap.get(curr);
+    }
+    ancestorsOfCanopy.add(rootName);
+  }
+
   function build(name, visited = new Set()) {
     if (visited.has(name)) return null; visited.add(name);
     const n = STORE.nodes.get(name);
-    const children = (name === canopyName) ? [] : (STORE.hierarchy.get(name) || []).map(c => build(c, new Set(visited))).filter(Boolean);
+    
+    // Se houver uma Copa definida, só desce pelos filhos se o nó atual for um ancestral da Copa
+    // OU se o nó for a própria Copa (parando nela).
+    let children = [];
+    if (!canopyName || ancestorsOfCanopy.has(name)) {
+        if (name !== canopyName) {
+            children = (STORE.hierarchy.get(name) || [])
+                .map(c => build(c, new Set(visited)))
+                .filter(Boolean);
+        }
+    } else {
+        return null; // Fora do caminho Raiz-Copa
+    }
+
     return { ...n, children, highlighted: activeDims.has(n.dim) };
   }
 
   const root = d3.hierarchy(build(rootName));
-  d3.tree().nodeSize([250, 150])(root);
+  // Aumentar espaçamento para evitar sobreposições
+  d3.tree().nodeSize([280, 180])(root);
 
   const links = gMain.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
     .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
@@ -114,18 +146,24 @@ function render() {
   const drag = d3.drag().on("drag", function(event, d) {
     d.x = event.x; d.y = event.y;
     d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
-    links.filter(l => l.source === d || l.target === d)
-      .attr("d", d3.linkVertical().x(l => l.x).y(l => l.y));
+    links.attr("d", d3.linkVertical().x(l => l.x).y(l => l.y));
   });
 
   const nodes = gMain.selectAll(".node").data(root.descendants()).enter().append("g").attr("class", "node")
     .attr("transform", d => `translate(${d.x},${d.y})`).call(drag);
 
-  nodes.append("rect").attr("x", -100).attr("y", -20).attr("width", 200).attr("height", 40)
-    .attr("fill", d => d.data.highlighted ? "#2563eb" : "#cbd5e1");
+  nodes.append("rect").attr("x", -110).attr("y", -25).attr("width", 220).attr("height", 50)
+    .attr("fill", d => d.data.highlighted ? "#2563eb" : "#cbd5e1")
+    .attr("stroke", "#1e40af");
 
-  nodes.append("text").attr("text-anchor", "middle").attr("dy", 6).attr("fill", "#fff")
-    .text(d => d.data.name.substring(0, 22));
+  nodes.append("text").attr("text-anchor", "middle").attr("dy", 5).attr("fill", d => d.data.highlighted ? "#fff" : "#1e293b")
+    .text(d => d.data.name.length > 25 ? d.data.name.substring(0, 23) + "..." : d.data.name);
+
+  // Auto-fit inicial
+  const bbox = gMain.node().getBBox();
+  const svgSize = svg.node().getBoundingClientRect();
+  const scale = Math.min(0.8, svgSize.width / bbox.width, svgSize.height / bbox.height);
+  svg.call(zoom.transform, d3.zoomIdentity.translate(svgSize.width/2 - (bbox.x + bbox.width/2)*scale, 50).scale(scale));
 }
 
 d3.select("#btnGenerate").on("click", render);
@@ -137,7 +175,7 @@ d3.select("#btnExportPng").on("click", () => {
     const ctx = canvas.getContext("2d"); ctx.scale(s, s);
     ctx.fillStyle = document.body.dataset.theme === "dark" ? "#000" : "#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);
     const img = new Image(); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svgN));
-    img.onload = () => { ctx.drawImage(img, p-bbox.x, p-bbox.y); const a = document.createElement("a"); a.download="taxonomia_custom.png"; a.href=canvas.toDataURL(); a.click(); };
+    img.onload = () => { ctx.drawImage(img, p-bbox.x, p-bbox.y); const a = document.createElement("a"); a.download="taxonomia_artigo.png"; a.href=canvas.toDataURL(); a.click(); };
 });
 </script>
 </body>
