@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ONTOHATE V3.5 — Integração Total</title>
+  <title>ONTOHATE V3.6 — Interface Forçada</title>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -15,7 +15,7 @@
     }
 
     html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); 
-      font-family: "Inter", "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+      font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
 
     header {
       height: 65px; background: #fff; border-bottom: 1px solid var(--line);
@@ -23,19 +23,9 @@
     }
 
     .brand h1 { margin: 0; font-size: 16px; font-weight: 800; color: var(--text); }
-    .status-badge { font-size: 10px; padding: 4px 10px; border-radius: 12px; font-weight: 700; cursor: pointer; border: 1px solid transparent; }
-    .status-wait { background: #fef0c7; color: #93370d; border-color: #f97316; animation: pulse 2s infinite; }
-    .status-ok { background: #ecfdf3; color: #027a48; }
-
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-    .controls { display: flex; gap: 10px; }
-    .btn {
-      border: 1px solid var(--line); background: #fff; color: var(--text); 
-      border-radius: 6px; padding: 8px 14px; font-size: 12px; 
-      cursor: pointer; transition: 0.2s; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
-    }
-    .btn.primary { background: #101828; color: #fff; border-color: #101828; }
+    
+    #statusBadge { font-size: 10px; padding: 4px 12px; border-radius: 20px; font-weight: 700; background: #f2f4f7; color: #667085; }
+    .status-ok { background: #ecfdf3 !important; color: #027a48 !important; }
 
     #wrap { height: calc(100% - 65px); display: grid; grid-template-columns: 1fr 400px; }
     .canvas { position: relative; overflow: hidden; background: #ffffff; }
@@ -43,72 +33,84 @@
 
     .side {
       background: var(--panel); border-left: 1px solid var(--line);
-      padding: 24px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;
+      padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto;
     }
 
-    .help-card { background: #f0f7ff; border: 1px solid #cce5ff; padding: 12px; border-radius: 8px; font-size: 11px; color: #004085; line-height: 1.4; }
-    .help-card b { display: block; margin-bottom: 4px; color: #0052cc; text-transform: uppercase; }
+    /* Botão de Upload Fixo e Visível */
+    .upload-box {
+      border: 2px dashed var(--line); padding: 20px; text-align: center;
+      border-radius: 12px; background: #fff; cursor: pointer; transition: 0.2s;
+    }
+    .upload-box:hover { border-color: var(--accent); background: #f0f7ff; }
+    .upload-box b { display: block; color: var(--accent); margin-bottom: 5px; }
 
-    .dimList { border: 1px solid var(--line); border-radius: 8px; background: #fff; overflow: hidden; min-height: 50px; }
-    .dimItems { max-height: 200px; overflow-y: auto; padding: 6px; }
-    .dimItem { display: flex; align-items: center; gap: 10px; padding: 6px; font-size: 12px; cursor: pointer; border-radius: 4px; }
+    .btn {
+      border: 1px solid var(--line); background: #fff; color: var(--text); 
+      border-radius: 8px; padding: 10px 16px; font-size: 12px; 
+      cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn.primary { background: #101828; color: #fff; border-color: #101828; }
 
-    .node rect { stroke-width: 1.5px; rx: 5; ry: 5; }
+    .dimList { border: 1px solid var(--line); border-radius: 8px; background: #fff; min-height: 100px; max-height: 200px; overflow-y: auto; }
+    .dimItem { display: flex; align-items: center; gap: 10px; padding: 8px; font-size: 12px; border-bottom: 1px solid #f2f4f7; }
+
+    .node rect { stroke-width: 1.5px; rx: 6; ry: 6; }
     .node text { font-size: 11px; font-weight: 700; pointer-events: none; }
-    .link { fill: none; stroke: #98a2b3; stroke-width: 1.5px; opacity: 0.6; }
+    .link { fill: none; stroke: #98a2b3; stroke-width: 1.5px; opacity: 0.5; }
     
-    .node--is-root rect { stroke: var(--highlight) !important; stroke-width: 3.5px !important; }
-    .node--connector rect { stroke-dasharray: 4,4; fill: #f9fafb !important; stroke: #d0d5dd !important; }
+    .node--is-root rect { stroke: var(--highlight) !important; stroke-width: 4px !important; }
+    .node--connector rect { stroke-dasharray: 5,3; fill: #f9fafb !important; stroke: #d0d5dd !important; }
 
     .tooltip {
       position: fixed; display: none; z-index: 1000; background: #101828; color: #fff; 
-      padding: 15px; border-radius: 8px; font-size: 12px; max-width: 350px; line-height: 1.5;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      padding: 15px; border-radius: 8px; font-size: 12px; max-width: 320px; line-height: 1.5;
     }
-    .tooltip b { color: #f97316; text-transform: uppercase; font-size: 10px; display: block; margin-top: 10px; }
   </style>
 </head>
 
 <body>
 <header>
   <div class="brand">
-    <h1>ONTOHATE V3.5</h1>
-    <span id="loadStatus" class="status-badge status-wait">⚠️ CLIQUE AQUI PARA INTEGRAR O EXCEL</span>
+    <h1>ONTOHATE V3.6</h1>
+    <span id="statusBadge">Aguardando Base Ontohate_V2.xlsx</span>
   </div>
   <div class="controls">
-    <button class="btn" onclick="location.reload()">🔄 Limpar Tudo</button>
-    <button class="btn primary" id="btnExport">📸 Exportar Figura (300 DPI)</button>
+    <button class="btn" onclick="location.reload()">🔄 Resetar Sistema</button>
+    <button class="btn primary" id="btnExport">📸 Exportar Figura</button>
   </div>
 </header>
 
 <div id="wrap">
   <div class="canvas"><svg id="svg"></svg></div>
   <div class="side">
-    <div class="help-card">
-        <b>💡 Guia de Integração</b>
-        Se as listas abaixo estiverem vazias, clique no botão amarelo <b>"CLIQUE AQUI PARA INTEGRAR"</b> no topo e selecione o arquivo <b>Ontohate_V2.xlsx</b> da sua pasta.
+    
+    <div class="upload-box" onclick="document.getElementById('manualInput').click()">
+        <b>Clique aqui para subir o arquivo</b>
+        <span>Ontohate_V2.xlsx</span>
     </div>
 
     <section>
-        <h3 style="font-size:12px; font-weight:800; margin:10px 0;">1. DIMENSÕES</h3>
-        <div class="dimList"><div class="dimItems" id="dimItems"></div></div>
-        <div style="display:flex; gap:5px; margin-top:5px;">
-            <button class="btn" onclick="toggleDims(true)" style="padding:4px 8px; font-size:10px;">Todas</button>
-            <button class="btn" onclick="toggleDims(false)" style="padding:4px 8px; font-size:10px;">Nenhuma</button>
+        <h3 style="font-size:12px; margin:0 0 10px 0;">1. SELECIONAR DIMENSÕES</h3>
+        <div class="dimList" id="dimContainer"><div style="padding:20px; color:#98a2b3; font-size:11px; text-align:center;">As dimensões aparecerão aqui após o upload</div></div>
+        <div style="display:flex; gap:5px; margin-top:8px;">
+            <button class="btn" onclick="toggleDims(true)" style="padding:5px 10px">Todas</button>
+            <button class="btn" onclick="toggleDims(false)" style="padding:5px 10px">Nenhuma</button>
         </div>
     </section>
 
     <section>
-        <h3 style="font-size:12px; font-weight:800; margin:10px 0;">2. TERMO RAIZ</h3>
-        <select id="rootSelect" class="btn" style="width:100%; margin-bottom:12px;"></select>
-        <button class="btn primary" id="btnGenerate" style="width:100%; justify-content:center;">GERAR VISUALIZAÇÃO</button>
+        <h3 style="font-size:12px; margin:0 0 10px 0;">2. TERMO RAIZ</h3>
+        <select id="rootSelect" class="btn" style="width:100%; margin-bottom:12px; text-align:left;">
+            <option>Aguardando arquivo...</option>
+        </select>
+        <button class="btn primary" id="btnGenerate" style="width:100%;">GERAR VISUALIZAÇÃO</button>
     </section>
 
-    <div style="font-size: 10px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px;">
-        <b>Legenda:</b><br>
-        • Borda Laranja: Raiz Escolhida.<br>
-        • Coloridos: Classes das Dimensões eleitas.<br>
-        • Tracejado Cinza: Conectores automáticos.
+    <div style="font-size: 10px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 15px;">
+        <b>Dicas de Navegação:</b><br>
+        • Passe o mouse para ver detalhes científicos.<br>
+        • Use a roda do mouse para Zoom.<br>
+        • Clique e arraste o fundo branco para mover a árvore.
     </div>
   </div>
 </div>
@@ -119,63 +121,71 @@
 <script>
 let RAW = null;
 const svg = d3.select("#svg"), gMain = svg.append("g");
-const zoom = d3.zoom().scaleExtent([0.02, 3]).on("zoom", (e) => gMain.attr("transform", e.transform));
+const zoom = d3.zoom().scaleExtent([0.01, 3]).on("zoom", (e) => gMain.attr("transform", e.transform));
 svg.call(zoom);
 
-const statusBtn = document.getElementById('loadStatus');
 const fileInput = document.getElementById('manualInput');
 
-// Função Principal de Processamento
-function parseExcel(arrayBuffer) {
-    try {
-        const data = new Uint8Array(arrayBuffer);
+// Função de Processamento Manual
+fileInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const data = new Uint8Array(ev.target.result);
         const workbook = XLSX.read(data, {type: 'array'});
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(firstSheet);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+        
+        processRows(rows);
+    };
+    reader.readAsArrayBuffer(file);
+};
 
-        const nodes = new Map(), childrenMap = new Map(), dims = new Set();
+function processRows(rows) {
+    const nodes = new Map(), childrenMap = new Map(), dims = new Set();
 
-        rows.forEach(row => {
-            const name = String(row.Classe || row.Class || "").trim();
-            const parent = String(row.Superclasse || row.Superclass || "").trim();
-            const dim = String(row.Dimensão || row.Subontologia || "Geral").trim();
+    rows.forEach(row => {
+        const name = String(row.Classe || row.Class || "").trim();
+        const parent = String(row.Superclasse || row.Superclass || "").trim();
+        const dim = String(row.Dimensão || row.Subontologia || "Geral").trim();
 
-            if(!name) return;
-            nodes.set(name, { 
-                name, dim, 
-                comment: row.Comment || row.Comments || row.Observação || "Sem definição.",
-                obs: row.Observações || row.Notas || ""
-            });
-            dims.add(dim);
-            if(parent) {
-                if(!childrenMap.has(parent)) childrenMap.set(parent, []);
-                childrenMap.get(parent).push(name);
-            }
+        if(!name) return;
+        nodes.set(name, { 
+            name, dim, 
+            comment: row.Comment || row.Comments || row.Observação || "Sem definição.",
+            obs: row.Observações || ""
         });
+        dims.add(dim);
+        if(parent) {
+            if(!childrenMap.has(parent)) childrenMap.set(parent, []);
+            childrenMap.get(parent).push(name);
+        }
+    });
 
-        RAW = { nodes, childrenMap, dims: Array.from(dims).sort() };
-        
-        // Atualiza Interface
-        statusBtn.textContent = "✅ ARQUIVO INTEGRADO";
-        statusBtn.className = "status-badge status-ok";
-        statusBtn.onclick = null;
-        
-        fillLists();
-    } catch (e) {
-        alert("Erro ao processar o Excel. Verifique o formato do arquivo.");
-    }
+    RAW = { nodes, childrenMap, dims: Array.from(dims).sort() };
+    
+    // Atualiza Interface
+    document.getElementById('statusBadge').textContent = "Base Integrada";
+    document.getElementById('statusBadge').className = "status-ok";
+    document.querySelector('.upload-box').style.display = 'none';
+    
+    fillUI();
 }
 
-function fillLists() {
-    document.getElementById('dimItems').innerHTML = RAW.dims.map(d => `
-        <label class="dimItem">
+function fillUI() {
+    const dimBox = document.getElementById('dimContainer');
+    dimBox.innerHTML = RAW.dims.map(d => `
+        <div class="dimItem">
             <input type="checkbox" checked value="${d}" class="dim-check">
-            <span style="width:10px; height:10px; border-radius:50%; background:${getCol(d)}"></span>
+            <span style="width:8px; height:8px; border-radius:50%; background:${getCol(d)}"></span>
             ${d}
-        </label>
+        </div>
     `).join('');
     
-    document.getElementById('rootSelect').innerHTML = Array.from(RAW.nodes.keys()).sort().map(k => `<option value="${k}">${k}</option>`).join('');
+    const select = document.getElementById('rootSelect');
+    select.innerHTML = Array.from(RAW.nodes.keys()).sort().map(k => `<option value="${k}">${k}</option>`).join('');
 }
 
 function getCol(s) {
@@ -183,20 +193,9 @@ function getCol(s) {
     return `hsl(${Math.abs(h)%360}, 65%, 45%)`;
 }
 
-// Eventos de Carregamento
-statusBtn.onclick = () => fileInput.click();
-fileInput.onchange = (e) => {
-    const reader = new FileReader();
-    reader.onload = (ev) => parseExcel(ev.target.result);
-    reader.readAsArrayBuffer(e.target.files[0]);
-};
-
-// Tenta carregar automaticamente (funciona em servidores/Github)
-fetch('Ontohate_V2.xlsx').then(r => r.arrayBuffer()).then(parseExcel).catch(() => {});
-
 function toggleDims(s) { document.querySelectorAll('.dim-check').forEach(i => i.checked = s); }
 
-// Lógica da Árvore
+// Lógica de Geração
 function build(node, targets, rootId, visited = new Set()) {
     if (visited.has(node)) return null; visited.add(node);
     const data = RAW.nodes.get(node) || { name: node, dim: "Conector" };
@@ -207,7 +206,7 @@ function build(node, targets, rootId, visited = new Set()) {
 }
 
 document.getElementById('btnGenerate').onclick = () => {
-    if(!RAW) return alert("Por favor, integre o arquivo Excel primeiro.");
+    if(!RAW) return alert("Por favor, suba o arquivo Excel primeiro clicando no botão no topo do menu lateral.");
     const rootId = document.getElementById('rootSelect').value;
     const targets = new Set([...document.querySelectorAll('.dim-check:checked')].map(i => i.value));
     const treeData = build(rootId, targets, rootId);
@@ -230,7 +229,7 @@ document.getElementById('btnGenerate').onclick = () => {
         const w = Math.max(160, txt.node().getBBox().width + 30), h = 42;
         const col = d.data.isCon ? "#fff" : getCol(d.data.dim);
         g.insert("rect", "text").attr("width", w).attr("height", h).attr("x", -w/2).attr("y", -h/2).attr("fill", col).attr("stroke", "#333");
-        txt.style("fill", d.data.isCon ? "#000" : "#fff");
+        txt.style("fill", d.data.isCon ? "#101828" : "#fff");
     });
     
     const b = gMain.node().getBBox();
@@ -239,32 +238,29 @@ document.getElementById('btnGenerate').onclick = () => {
 };
 
 function showTooltip(e, d) {
-    const t = d3.select("#tooltip");
-    t.style("display", "block").style("left", (e.pageX+15)+"px").style("top", (e.pageY+15)+"px")
+    d3.select("#tooltip").style("display", "block").style("left", (e.pageX+15)+"px").style("top", (e.pageY+15)+"px")
      .html(`
-        <div style="color:#84adff; font-weight:800; font-size:14px; border-bottom:1px solid #344054; padding-bottom:5px;">${d.data.name}</div>
-        <div style="font-size:10px; color:#98a2b3; margin-top:5px;">DIMENSÃO: ${d.data.dim}</div>
-        <b>DEFINIÇÃO:</b>
-        <div>${d.data.comment}</div>
-        ${d.data.obs ? `<b>OBSERVAÇÕES:</b><div>${d.data.obs}</div>` : ''}
+        <b style="color:#f97316; font-size:14px; display:block; border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:8px;">${d.data.name}</b>
+        <b>DIMENSÃO:</b> ${d.data.dim}<br><br>
+        <b>COMENTÁRIO:</b><br>${d.data.comment}<br><br>
+        ${d.data.obs ? `<b>OBSERVAÇÕES:</b><br>${d.data.obs}` : ''}
      `);
 }
 
 document.getElementById('btnExport').onclick = function() {
     const svgEl = document.getElementById('svg');
     const serializer = new XMLSerializer();
-    const source = serializer.serializeToString(svgEl);
     const img = new Image();
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(source)));
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(serializer.serializeToString(svgEl))));
     img.onload = function() {
         const canvas = document.createElement("canvas");
-        const scale = 3;
-        canvas.width = svgEl.clientWidth * scale; canvas.height = svgEl.clientHeight * scale;
+        const sc = 3;
+        canvas.width = svgEl.clientWidth * sc; canvas.height = svgEl.clientHeight * sc;
         const ctx = canvas.getContext("2d");
         ctx.fillStyle = "white"; ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.scale(scale, scale); ctx.drawImage(img, 0, 0);
+        ctx.scale(sc, sc); ctx.drawImage(img, 0, 0);
         const link = document.createElement("a");
-        link.download = `ontoHate_simulacao.png`; link.href = canvas.toDataURL("image/png"); link.click();
+        link.download = "ontoHate_simulacao.png"; link.href = canvas.toDataURL("image/png"); link.click();
     };
 };
 </script>
