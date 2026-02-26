@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ONTOHATE V2 — Taxonomia (Dimensões + Raiz) + Export</title>
+  <title>ONTOHATE V2 — Taxonomia (Dimensões → Raiz → Gerar) + Export</title>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -179,6 +179,7 @@
       stroke: rgba(249,115,22,.95);
     }
 
+    /* Tooltip compact */
     .tooltip{
       position: fixed;
       z-index: 9999;
@@ -188,18 +189,18 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       box-shadow: var(--shadow);
-      padding: 10px 12px;
+      padding: 8px 10px;
       font-size: 12px;
       color: var(--text);
       pointer-events: none;
       white-space: pre-wrap;
       font-family: Arial, Helvetica, sans-serif;
     }
-    .tooltip .tTitle{font-weight: 800; margin-bottom: 6px;}
-    .tooltip .tMeta{color: var(--muted); margin-bottom: 8px; font-weight: 700;}
-    .tooltip .tSection{margin-top: 8px;}
-    .tooltip .tSection b{display:block; margin-bottom: 4px;}
-    .tooltip .tEmpty{color: var(--muted); font-style: italic;}
+    .tooltip .tTitle{font-weight: 800; margin: 0 0 3px 0;}
+    .tooltip .tMeta{color: var(--muted); margin: 0 0 6px 0; font-weight: 700;}
+    .tooltip .tLine{margin: 0;}
+    .tooltip .tLabel{font-weight: 800; margin: 0 0 2px 0;}
+    .tooltip .tEmpty{color: var(--muted); font-style: italic; margin: 0;}
 
     .toast{
       position:fixed; left:14px; bottom:14px; z-index:50;
@@ -220,7 +221,7 @@
   <div class="brand">
     <h1>ONTOHATE V2 — Taxonomia (Dimensões → Raiz → Gerar) + Export</h1>
     <p class="sub">
-      1) Selecione as <b>Dimensões</b> (antes “subontologias”), 2) escolha a <b>Raiz</b>, 3) gere a taxonomia Top-Down.
+      1) Selecione as <b>Dimensões</b>, 2) escolha a <b>Raiz</b> (somente raízes que geram árvore), 3) gere a taxonomia Top-Down.
     </p>
   </div>
 
@@ -273,7 +274,7 @@
 
   <div class="card side">
     <h2>1) Dimensões</h2>
-    <p class="mini">Escolha as dimensões (classificações) que deseja incluir na taxonomia. Ex.: Contexto, Natureza, Núcleo.</p>
+    <p class="mini">Escolha as dimensões (classificações). “Motivação e consequência(s)” é unificada automaticamente.</p>
 
     <div class="dimList">
       <div class="dimListHeader">
@@ -287,7 +288,7 @@
     <div class="sep"></div>
 
     <h2>2) Raiz</h2>
-    <p class="mini">Depois de escolher dimensões, selecione a raiz (ex.: <b>Discurso_de_odio_online</b>).</p>
+    <p class="mini">A lista mostra apenas raízes que geram árvore (evita taxonomia com 1 classe).</p>
     <div class="row">
       <span class="select">Raiz:
         <select id="rootSelect"></select>
@@ -363,14 +364,29 @@ function pick(row, wanted){
   }
   return undefined;
 }
+
+/* ===== Canonização de Dimensões =====
+   - remove "(v2)" e "v2"
+   - normaliza espaço
+   - unifica "Motivação e consequência" / "Motivação e consequências"
+*/
 function canonDimension(name){
   let s = String(name||"").trim();
   if (!s) return "";
   s = s.replace(/\(\s*v2\s*\)/ig, "").trim();
   s = s.replace(/\bv2\b/ig, "").trim();
   s = s.replace(/\s+/g, " ").trim();
+
+  const n = norm(s);
+
+  // Unificação pedida
+  if (n === "motivacao e consequencia" || n === "motivacao e consequencias"){
+    return "Motivação e consequência";
+  }
+
   return s;
 }
+
 function wrapLabel(text, maxChars=28){
   const t = String(text||"");
   if (t.length <= maxChars) return [t];
@@ -401,35 +417,19 @@ function escapeHtml(s){
 }
 
 /* ============================
-   Tooltip
+   Tooltip (compacto)
 ============================ */
 function showTooltip(evt, payload){
-  const pad = 14;
-  const vw = window.innerWidth, vh = window.innerHeight;
-
   tooltipEl.innerHTML = `
     <div class="tTitle">${escapeHtml(payload.name || "")}</div>
     <div class="tMeta">${escapeHtml(payload.dimension || "")}</div>
-    <div class="tSection">
-      <b>Comments</b>
-      <div>${payload.comment ? escapeHtml(payload.comment) : '<span class="tEmpty">(sem comments)</span>'}</div>
-    </div>
-    <div class="tSection">
-      <b>Observações</b>
-      <div>${payload.obs ? escapeHtml(payload.obs) : '<span class="tEmpty">(sem observações)</span>'}</div>
-    </div>
+    <div class="tLabel">Comments</div>
+    <div class="tLine">${payload.comment ? escapeHtml(payload.comment) : '<span class="tEmpty">(sem comments)</span>'}</div>
+    <div class="tLabel" style="margin-top:6px;">Observações</div>
+    <div class="tLine">${payload.obs ? escapeHtml(payload.obs) : '<span class="tEmpty">(sem observações)</span>'}</div>
   `;
   tooltipEl.style.display = "block";
-
-  const rect = tooltipEl.getBoundingClientRect();
-  let x = evt.clientX + 14;
-  let y = evt.clientY + 14;
-  if (x + rect.width + pad > vw) x = evt.clientX - rect.width - 14;
-  if (y + rect.height + pad > vh) y = evt.clientY - rect.height - 14;
-  x = Math.max(pad, x);
-  y = Math.max(pad, y);
-  tooltipEl.style.left = x + "px";
-  tooltipEl.style.top = y + "px";
+  moveTooltip(evt);
 }
 function moveTooltip(evt){
   if (tooltipEl.style.display !== "block") return;
@@ -448,8 +448,7 @@ function moveTooltip(evt){
 function hideTooltip(){ tooltipEl.style.display = "none"; tooltipEl.innerHTML = ""; }
 
 /* ============================
-   Color (dimensão -> cor)
-   - cores determinísticas via hash
+   Cor por Dimensão (hash)
 ============================ */
 function hashColor(str){
   const s = String(str||"");
@@ -458,13 +457,11 @@ function hashColor(str){
     h ^= s.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
-  // HSL agradável: 0..360
   const hue = Math.abs(h) % 360;
   return `hsl(${hue} 72% 45%)`;
 }
-function mixToWhite(hslOrHex, t=0.62){
-  // usar d3.color para misturar com branco
-  const c = d3.color(hslOrHex);
+function mixToWhite(color, t=0.62){
+  const c = d3.color(color);
   const w = d3.rgb(255,255,255);
   const r = Math.round(c.r*(1-t) + w.r*t);
   const g = Math.round(c.g*(1-t) + w.g*t);
@@ -491,10 +488,10 @@ const zoom = d3.zoom()
   .on("zoom", (event) => { if (viewport) viewport.attr("transform", event.transform); });
 
 /* ============================
-   State (RAW + VIEW)
+   State
 ============================ */
-let RAW = null;  // nodes Map, edges, dimensions list, fileName
-let VIEW = null; // selected dimensions, root, allowedSet, treeData
+let RAW = null;  // nodes Map, edges, dims list, fileName, childrenOfAll
+let VIEW = null; // selected dims, root, treeData
 
 let rootHierarchy = null;
 let linkLayer = null;
@@ -599,10 +596,21 @@ async function parseAndInit(buf, fileName){
   }
 
   const dimensions = Array.from(dimSet).sort((a,b)=>a.localeCompare(b));
-  RAW = { nodes, edges: edgesUniq, dimensions, fileName };
+
+  // childrenOfAll: sem recorte (para permitir conectores)
+  const childrenOfAll = new Map();
+  for (const [child,parent] of edgesUniq){
+    if (!childrenOfAll.has(parent)) childrenOfAll.set(parent, []);
+    childrenOfAll.get(parent).push(child);
+  }
+  for (const [p,kids] of childrenOfAll.entries()){
+    kids.sort((a,b)=>a.localeCompare(b));
+  }
+
+  RAW = { nodes, edges: edgesUniq, dimensions, fileName, childrenOfAll };
 
   buildDimensionsUI();
-  updateRootOptions(); // baseado nas dimensões marcadas
+  updateRootOptions(); // agora filtra raízes “válidas”
   statusDot.style.background = "#16a34a";
   statsEl.innerHTML = `<strong>Arquivo:</strong> ${fileName} | <strong>Taxonomia:</strong> selecione dimensões e raiz`;
 
@@ -610,7 +618,8 @@ async function parseAndInit(buf, fileName){
 }
 
 /* ============================
-   UI: Dimensões (checklist)
+   UI: Dimensões
+   - IMPORTANTE: data-dim agora guarda o valor REAL (sem escape)
 ============================ */
 function getSelectedDimensions(){
   const checks = dimItemsEl.querySelectorAll("input[type=checkbox][data-dim]");
@@ -630,21 +639,35 @@ function buildDimensionsUI(){
   dimItemsEl.innerHTML = "";
   for (const dim of RAW.dimensions){
     const color = hashColor(dim);
+
     const item = document.createElement("label");
     item.className = "dimItem";
-    item.innerHTML = `
-      <input type="checkbox" data-dim="${escapeHtml(dim)}" checked />
-      <span class="dot" style="background:${color}"></span>
-      <span class="dimName">${escapeHtml(dim)}</span>
-      <span class="dimCount">${dimCounts.get(dim) || 0} classes</span>
-    `;
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = true;
+    cb.setAttribute("data-dim", dim); // <- valor real
+    cb.addEventListener("change", () => updateRootOptions());
+
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    dot.style.background = color;
+
+    const name = document.createElement("span");
+    name.className = "dimName";
+    name.textContent = dim;
+
+    const count = document.createElement("span");
+    count.className = "dimCount";
+    count.textContent = `${dimCounts.get(dim) || 0} classes`;
+
+    item.appendChild(cb);
+    item.appendChild(dot);
+    item.appendChild(name);
+    item.appendChild(count);
+
     dimItemsEl.appendChild(item);
   }
-
-  // handlers
-  dimItemsEl.querySelectorAll("input[type=checkbox][data-dim]").forEach(ch=>{
-    ch.addEventListener("change", () => updateRootOptions());
-  });
 
   dimSearchEl.value = "";
   dimSearchEl.addEventListener("input", () => {
@@ -666,17 +689,60 @@ function buildDimensionsUI(){
 }
 
 /* ============================
-   Raiz: opções dependem das dimensões selecionadas
+   3) Raízes válidas:
+   - só aparece raiz que gera árvore (>= 2 nós) no recorte
+   - com conectores automáticos
 ============================ */
 function updateRootOptions(){
   if (!RAW) return;
 
   const selected = getSelectedDimensions();
-  const candidates = [];
 
-  // raiz pode ser qualquer classe dentro das dimensões selecionadas
-  for (const [name, obj] of RAW.nodes.entries()){
-    if (selected.has(obj.dimension)) candidates.push(name);
+  // conjunto de “nós-alvo” = classes cuja dimensão está selecionada
+  const targets = new Set();
+  for (const [name,obj] of RAW.nodes.entries()){
+    if (selected.has(obj.dimension)) targets.add(name);
+  }
+
+  // memo: para cada nó, se sua subárvore contém algum target, e o tamanho pruned
+  const memo = new Map();
+  const visiting = new Set();
+
+  function prunedSize(node){
+    if (memo.has(node)) return memo.get(node);
+    if (visiting.has(node)) return 0; // evita ciclo
+    visiting.add(node);
+
+    const isTarget = targets.has(node);
+    let size = 0;
+
+    const kids = RAW.childrenOfAll.get(node) || [];
+    let childSum = 0;
+    for (const k of kids){
+      childSum += prunedSize(k);
+    }
+
+    // inclui nó se:
+    // - é target OU
+    // - algum filho tem target (childSum>0) OU
+    // - é a própria raiz escolhida (na geração; aqui só estimamos)
+    if (isTarget || childSum > 0){
+      size = 1 + childSum;
+    } else {
+      size = 0;
+    }
+
+    visiting.delete(node);
+    memo.set(node, size);
+    return size;
+  }
+
+  // candidatos a raiz: nós que, ao podar, dão tamanho >= 2
+  // (evita taxonomia com 1 classe)
+  const candidates = [];
+  for (const name of RAW.nodes.keys()){
+    const sz = prunedSize(name);
+    if (sz >= 2) candidates.push(name);
   }
   candidates.sort((a,b)=>a.localeCompare(b));
 
@@ -693,16 +759,13 @@ function updateRootOptions(){
     rootSelect.appendChild(opt);
   }
 
-  canvasSubtitle.textContent = `Dimensões selecionadas: ${selected.size} • Agora escolha a raiz`;
-  canvasMeta.textContent = `Candidatas a raiz: ${candidates.length}`;
+  canvasSubtitle.textContent = `Dimensões selecionadas: ${selected.size} • Raízes possíveis: ${candidates.length}`;
+  canvasMeta.textContent = `Selecione uma raiz e clique “Gerar taxonomia”`;
 }
 
 /* ============================
-   Gerar taxonomia (dimensões + raiz)
-   Regra do usuário:
-   - seleciona Dimensões (Contexto, Natureza, Núcleo)
-   - escolhe Raiz (Discurso_de_odio_online)
-   - taxonomia engloba da raiz para baixo considerando classes/subclasses dessas dimensões
+   Gerar taxonomia:
+   - inclui conectores automaticamente (mantém hierarquia)
 ============================ */
 btnGenerate.addEventListener("click", generateTaxonomy);
 
@@ -714,99 +777,84 @@ function generateTaxonomy(){
     toast("Selecione pelo menos 1 dimensão.", true);
     return;
   }
-
   const root = rootSelect.value;
   if (!root){
     toast("Escolha uma raiz para gerar a taxonomia.", true);
     return;
   }
 
-  // childrenOf dentro do recorte de dimensões (mas a raiz sempre entra, mesmo que esteja fora)
-  const allowedNodes = new Set();
-  for (const [name, obj] of RAW.nodes.entries()){
-    if (selected.has(obj.dimension)) allowedNodes.add(name);
-  }
-  allowedNodes.add(root);
-
-  // adjacency (parent -> children) apenas se ambos estão no allowedNodes
-  const childrenOf = new Map();
-  for (const [child, parent] of RAW.edges){
-    if (!allowedNodes.has(child)) continue;
-    if (!allowedNodes.has(parent)) continue;
-    if (!childrenOf.has(parent)) childrenOf.set(parent, []);
-    childrenOf.get(parent).push(child);
-  }
-  for (const [p, kids] of childrenOf.entries()){
-    kids.sort((a,b)=>a.localeCompare(b));
+  // targets: nós cuja dimensão está selecionada
+  const targets = new Set();
+  for (const [name,obj] of RAW.nodes.entries()){
+    if (selected.has(obj.dimension)) targets.add(name);
   }
 
-  // descendentes a partir da raiz (top-down real)
-  const desc = descendantsSet(childrenOf, root);
-  if (!desc.has(root)){
-    toast("A raiz não está conectada dentro do recorte selecionado. Tente incluir mais dimensões.", true);
-    return;
-  }
+  // Construção podada (mantém conectores):
+  // mantém nó se ele for target OU tiver descendente target OU for a raiz
+  const visiting = new Set();
+  function build(node){
+    if (visiting.has(node)) return null;
+    visiting.add(node);
 
-  // montar treeData
-  const treeData = buildTreeDataFromRoot(root, childrenOf, desc);
+    const base = RAW.nodes.get(node) || {name:node, dimension:"(Sem dimensão)", comment:"", obs:""};
+    const kids = RAW.childrenOfAll.get(node) || [];
 
-  // map dimensão -> cor (para o recorte)
-  const dimColor = new Map();
-  for (const d of selected){
-    dimColor.set(d, hashColor(d));
-  }
-  // caso raiz esteja fora das dimensões selecionadas, dá uma cor neutra
-  if (!dimColor.has(RAW.nodes.get(root)?.dimension || "")){
-    dimColor.set("(Sem dimensão)", "hsl(220 10% 55%)");
-  }
+    const builtKids = [];
+    for (const k of kids){
+      const childBuilt = build(k);
+      if (childBuilt) builtKids.push(childBuilt);
+    }
 
-  VIEW = { selected, root, allowedNodes, childrenOf, desc, treeData, dimColor };
+    const isTarget = targets.has(node);
+    const keep = (node === root) || isTarget || builtKids.length > 0;
 
-  canvasTitle.textContent = `Raiz: ${root}`;
-  canvasSubtitle.textContent = `Dimensões: ${Array.from(selected).join(" | ")}`;
-  canvasMeta.textContent = `Classes na árvore: ${desc.size}`;
-  statsEl.innerHTML = `<strong>Arquivo:</strong> ${RAW.fileName} | <strong>Taxonomia:</strong> ${desc.size} classes`;
+    visiting.delete(node);
 
-  renderTopDown(treeData, dimColor);
-  // dá um frame para o browser finalizar layout antes de qualquer export
-  requestAnimationFrame(()=> fitToCanvasFn?.(true));
-  applySearchHighlight();
-}
+    if (!keep) return null;
 
-/* ============================
-   Descendentes + árvore
-============================ */
-function descendantsSet(childrenOf, root){
-  const st = [root];
-  const seen = new Set();
-  while(st.length){
-    const cur = st.pop();
-    if (seen.has(cur)) continue;
-    seen.add(cur);
-    const kids = childrenOf.get(cur) || [];
-    for (const k of kids) st.push(k);
-  }
-  return seen;
-}
-function buildTreeDataFromRoot(root, childrenOf, allowedSet){
-  let id = 0;
-  function build(name, path=new Set()){
-    const base = RAW.nodes.get(name) || {name, dimension:"(Sem dimensão)", comment:"", obs:""};
-    const node = {
-      _id: `N${++id}`,
+    return {
+      _id: node + "::" + Math.random().toString(16).slice(2),
       name: base.name,
       dimension: base.dimension || "(Sem dimensão)",
       comment: base.comment || "",
       obs: base.obs || "",
-      children: []
+      children: builtKids
     };
-    if (path.has(name)) return node;
-    path.add(name);
-    const kids = (childrenOf.get(name) || []).filter(k => allowedSet.has(k));
-    for (const k of kids) node.children.push(build(k, new Set(path)));
-    return node;
   }
-  return build(root, new Set());
+
+  const treeData = build(root);
+  if (!treeData){
+    toast("Não foi possível gerar árvore com o recorte atual. Marque mais dimensões.", true);
+    return;
+  }
+
+  const treeCount = countNodes(treeData);
+  if (treeCount < 2){
+    toast("A raiz escolhida não gera uma árvore (apenas 1 nó). Escolha outra raiz.", true);
+    return;
+  }
+
+  const dimColor = new Map();
+  for (const d of selected){
+    dimColor.set(d, hashColor(d));
+  }
+
+  VIEW = { selected, root, treeData, dimColor };
+
+  canvasTitle.textContent = `Raiz: ${root}`;
+  canvasSubtitle.textContent = `Dimensões: ${Array.from(selected).join(" | ")}`;
+  canvasMeta.textContent = `Classes na árvore: ${treeCount}`;
+  statsEl.innerHTML = `<strong>Arquivo:</strong> ${RAW.fileName} | <strong>Taxonomia:</strong> ${treeCount} classes`;
+
+  renderTopDown(treeData, dimColor);
+  requestAnimationFrame(()=> fitToCanvasFn?.(true));
+  applySearchHighlight();
+}
+
+function countNodes(node){
+  let c = 1;
+  for (const ch of (node.children || [])) c += countNodes(ch);
+  return c;
 }
 
 /* ============================
@@ -821,18 +869,12 @@ function renderTopDown(treeData, dimColor){
   linkLayer = viewport.append("g").attr("id","links");
   nodeLayer = viewport.append("g").attr("id","nodes");
 
-  const dx = 340;  // horizontal spacing
-  const dy = 125;  // vertical spacing
+  const dx = 340;
+  const dy = 125;
   const tree = d3.tree().nodeSize([dx, dy]);
 
   rootHierarchy = d3.hierarchy(treeData);
 
-  // collapse deeper initially
-  collapseDeep(rootHierarchy);
-
-  function collapseDeep(r){
-    r.children?.forEach(c => c.children?.forEach(cc => collapse(cc)));
-  }
   function collapse(d){
     if (d.children){
       d._children = d.children;
@@ -840,18 +882,21 @@ function renderTopDown(treeData, dimColor){
       d.children = null;
     }
   }
+  // colapsa “níveis profundos” só para começar mais limpo
+  rootHierarchy.children?.forEach(c => c.children?.forEach(cc => collapse(cc)));
 
-  expandAllFn = () => expandAll(rootHierarchy);
-  collapseAllFn = () => collapseAll(rootHierarchy);
-
-  function expandAll(d){
-    if (d._children){ d.children = d._children; d._children = null; }
-    (d.children||[]).forEach(expandAll);
-  }
-  function collapseAll(d){
-    (d.children||[]).forEach(collapseAll);
-    if (d.depth >= 2) collapse(d);
-  }
+  expandAllFn = () => {
+    (function rec(d){
+      if (d._children){ d.children = d._children; d._children = null; }
+      (d.children||[]).forEach(rec);
+    })(rootHierarchy);
+  };
+  collapseAllFn = () => {
+    (function rec(d){
+      (d.children||[]).forEach(rec);
+      if (d.depth >= 2) collapse(d);
+    })(rootHierarchy);
+  };
 
   function linkVertical(d){
     return d3.linkVertical().x(p => p.x).y(p => p.y)(d);
@@ -868,7 +913,6 @@ function renderTopDown(treeData, dimColor){
       n.x = n.x + 20;
     }
 
-    // LINKS
     const linkSel = linkLayer.selectAll("path.link")
       .data(links, d => d.target.data._id);
 
@@ -884,7 +928,6 @@ function renderTopDown(treeData, dimColor){
 
     linkSel.exit().transition().duration(180).attr("opacity",0).remove();
 
-    // NODES
     const nodeSel = nodeLayer.selectAll("g.node")
       .data(nodes, d => d.data._id);
 
@@ -938,7 +981,6 @@ function renderTopDown(treeData, dimColor){
         t.append("tspan").attr("x",0).attr("dy",16).text(lines[1]);
       }
 
-      // “Dimensão” (sem falar “subontologia”)
       g.append("text")
         .attr("class","small")
         .attr("text-anchor","middle")
@@ -1021,7 +1063,7 @@ btnCollapseAll.addEventListener("click", () => {
 });
 
 /* ============================
-   Export SVG / PNG (corrigido: não vem branco)
+   Export SVG / PNG (mantém do seu código anterior)
 ============================ */
 function downloadBlob(blob, filename){
   const url = URL.createObjectURL(blob);
@@ -1064,26 +1106,22 @@ function serializeSvgForExport(){
   const clone = svgNode.cloneNode(true);
   clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
 
-  // remove event handlers
   clone.querySelectorAll("*").forEach(el=>{
     [...el.attributes].forEach(a=>{
       if (a.name.startsWith("on")) el.removeAttribute(a.name);
     });
   });
 
-  // fundo branco
   const bg = document.createElementNS("http://www.w3.org/2000/svg","rect");
   bg.setAttribute("x","0"); bg.setAttribute("y","0");
   bg.setAttribute("width","100%"); bg.setAttribute("height","100%");
   bg.setAttribute("fill","#ffffff");
   clone.insertBefore(bg, clone.firstChild);
 
-  // estilo embutido
   const style = document.createElementNS("http://www.w3.org/2000/svg","style");
   style.textContent = embeddedExportStyle();
   clone.insertBefore(style, clone.firstChild.nextSibling);
 
-  // inline fonts (evita PNG branco por perda de CSS)
   clone.querySelectorAll("text").forEach(t=>{
     t.setAttribute("font-family","Arial, Helvetica, sans-serif");
     t.setAttribute("font-weight","700");
@@ -1094,7 +1132,6 @@ function serializeSvgForExport(){
     p.setAttribute("stroke-linejoin","round");
   });
 
-  // viewBox baseado no bbox real do viewport original
   const bbox = viewport.node().getBBox();
   const pad = 40;
   const x = bbox.x - pad, y = bbox.y - pad, w = bbox.width + pad*2, h = bbox.height + pad*2;
@@ -1131,7 +1168,6 @@ btnPng.addEventListener("click", async () => {
       img.onerror = () => reject(new Error("Falha ao renderizar SVG no PNG."));
     });
 
-    // lê width/height do SVG exportado (não depende de bbox em DOM)
     const tmp = document.createElement("div");
     tmp.style.position="fixed"; tmp.style.left="-9999px";
     tmp.innerHTML = xml;
