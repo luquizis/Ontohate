@@ -18,8 +18,10 @@
       --shadow: 0 10px 24px rgba(16,24,40,.10);
       --radius: 14px;
     }
+
     html,body{height:100%; margin:0; background:var(--bg); color:var(--text);
       font-family: Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
+
     header{
       position: sticky; top:0; z-index: 10;
       background: rgba(255,255,255,.94);
@@ -30,9 +32,11 @@
       gap: 10px 12px;
       align-items:center; justify-content: space-between;
     }
+
     .brand{display:flex; flex-direction:column; gap:4px; min-width: 320px;}
     .brand h1{margin:0; font-size:14px; font-weight:800;}
     .brand .sub{margin:0; font-size:12px; color:var(--muted); max-width: 980px; line-height: 1.25;}
+
     .controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end;}
     .btn,.file,.input,.select,.pill{
       border:1px solid var(--line);
@@ -73,12 +77,14 @@
       #wrap{grid-template-columns: 1fr; height:auto;}
       body{height:auto;}
     }
+
     .card{
       background:#fff;
       border:1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
+
     .canvas{min-height: 740px; display:flex; flex-direction:column;}
     .canvasHeader{
       padding: 10px 12px;
@@ -141,6 +147,7 @@
     .dimName{flex:1; font-weight:700;}
     .dimCount{color:var(--muted); font-size:11px;}
 
+    /* SVG styles */
     .link{
       fill:none;
       stroke: rgba(16,24,40,.18);
@@ -150,7 +157,7 @@
       vector-effect: non-scaling-stroke;
     }
     .node rect{
-      stroke: rgba(16,24,40,.25);
+      stroke: rgba(16,24,40,.18);
       stroke-width: 1.2;
       rx:10; ry:10;
       shape-rendering: geometricPrecision;
@@ -165,13 +172,14 @@
       font-size: 10px;
       font-weight: 700;
       font-family: Arial, Helvetica, sans-serif;
-      opacity:.98;
+      opacity:.95;
     }
     .node--match rect{
       stroke-width: 2.4;
       stroke: rgba(249,115,22,.95);
     }
 
+    /* Tooltip compact */
     .tooltip{
       position: fixed;
       z-index: 9999;
@@ -213,7 +221,7 @@
   <div class="brand">
     <h1>ONTOHATE V2 — Taxonomia (Dimensões → Raiz → Gerar) + Export</h1>
     <p class="sub">
-      1) Selecione as <b>Dimensões</b>, 2) escolha uma <b>Raiz</b> que gere árvore (>=2 classes), 3) gere a taxonomia Top-Down (vertical/A4).
+      1) Selecione as <b>Dimensões</b>, 2) escolha a <b>Raiz</b> (somente raízes que geram árvore), 3) gere a taxonomia Top-Down.
     </p>
   </div>
 
@@ -266,7 +274,7 @@
 
   <div class="card side">
     <h2>1) Dimensões</h2>
-    <p class="mini">Cores fortes por dimensão + contraste automático no texto. “Motivação e consequência(s)” unificada automaticamente.</p>
+    <p class="mini">Escolha as dimensões (classificações). “Motivação e consequência(s)” é unificada automaticamente.</p>
 
     <div class="dimList">
       <div class="dimListHeader">
@@ -280,7 +288,7 @@
     <div class="sep"></div>
 
     <h2>2) Raiz</h2>
-    <p class="mini">A lista mostra apenas raízes que geram árvore com o recorte atual (>=2 nós).</p>
+    <p class="mini">A lista mostra apenas raízes que geram árvore (evita taxonomia com 1 classe).</p>
     <div class="row">
       <span class="select">Raiz:
         <select id="rootSelect"></select>
@@ -293,7 +301,7 @@
 
     <div class="sep"></div>
 
-    <p class="mini"><b>Hover</b> mostra comments/observações (compacto).</p>
+    <p class="mini"><b>Hover</b> em uma classe mostra comments/observações (se existirem no XLSX).</p>
   </div>
 </div>
 
@@ -356,78 +364,30 @@ function pick(row, wanted){
   }
   return undefined;
 }
-function escapeHtml(s){
-  return String(s||"")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
 
-/* ============================
-   Cor segura (sempre HEX)
-============================ */
-function hashToHue(str){
-  const s = String(str||"");
-  let h = 2166136261;
-  for (let i=0;i<s.length;i++){
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return Math.abs(h) % 360;
-}
-function hslToHex(h, s, l){
-  // h:0..360, s:0..1, l:0..1
-  const c = (1 - Math.abs(2*l - 1)) * s;
-  const x = c * (1 - Math.abs((h/60) % 2 - 1));
-  const m = l - c/2;
-  let r=0,g=0,b=0;
-  if (0<=h && h<60){ r=c; g=x; b=0; }
-  else if (60<=h && h<120){ r=x; g=c; b=0; }
-  else if (120<=h && h<180){ r=0; g=c; b=x; }
-  else if (180<=h && h<240){ r=0; g=x; b=c; }
-  else if (240<=h && h<300){ r=x; g=0; b=c; }
-  else { r=c; g=0; b=x; }
-  const R = Math.round((r+m)*255);
-  const G = Math.round((g+m)*255);
-  const B = Math.round((b+m)*255);
-  return "#" + [R,G,B].map(v=>v.toString(16).padStart(2,"0")).join("");
-}
-function hashColorHEX(str){
-  const hue = hashToHue(str);
-  // cor “forte” e consistente
-  return hslToHex(hue, 0.72, 0.45);
-}
-function luminanceFromHex(hex){
-  const c = d3.color(hex);
-  // c nunca será null aqui porque hex é sempre válido
-  const srgb = [c.r,c.g,c.b].map(v=>{
-    const x = v/255;
-    return (x<=0.03928)? x/12.92 : Math.pow((x+0.055)/1.055, 2.4);
-  });
-  return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
-}
-function contrastText(bgHex){
-  return luminanceFromHex(bgHex) > 0.55 ? "#101828" : "#ffffff";
-}
-
-/* ===== Canonização Dimensão ===== */
+/* ===== Canonização de Dimensões =====
+   - remove "(v2)" e "v2"
+   - normaliza espaço
+   - unifica "Motivação e consequência" / "Motivação e consequências"
+*/
 function canonDimension(name){
   let s = String(name||"").trim();
   if (!s) return "";
   s = s.replace(/\(\s*v2\s*\)/ig, "").trim();
   s = s.replace(/\bv2\b/ig, "").trim();
   s = s.replace(/\s+/g, " ").trim();
+
   const n = norm(s);
+
+  // Unificação pedida
   if (n === "motivacao e consequencia" || n === "motivacao e consequencias"){
     return "Motivação e consequência";
   }
+
   return s;
 }
 
-/* wrap do termo (2 linhas) */
-function wrapLabel(text, maxChars=26){
+function wrapLabel(text, maxChars=28){
   const t = String(text||"");
   if (t.length <= maxChars) return [t];
   const parts = t.split(/[_\s-]+/);
@@ -447,8 +407,18 @@ function wrapLabel(text, maxChars=26){
   if (joined.length > lines.join(" ").length) lines[lines.length-1] += "…";
   return lines;
 }
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
-/* Tooltip compacto */
+/* ============================
+   Tooltip (compacto)
+============================ */
 function showTooltip(evt, payload){
   tooltipEl.innerHTML = `
     <div class="tTitle">${escapeHtml(payload.name || "")}</div>
@@ -470,19 +440,58 @@ function moveTooltip(evt){
   let y = evt.clientY + 14;
   if (x + rect.width + pad > vw) x = evt.clientX - rect.width - 14;
   if (y + rect.height + pad > vh) y = evt.clientY - rect.height - 14;
-  tooltipEl.style.left = Math.max(pad, x) + "px";
-  tooltipEl.style.top  = Math.max(pad, y) + "px";
+  x = Math.max(pad, x);
+  y = Math.max(pad, y);
+  tooltipEl.style.left = x + "px";
+  tooltipEl.style.top = y + "px";
 }
 function hideTooltip(){ tooltipEl.style.display = "none"; tooltipEl.innerHTML = ""; }
 
-/* Zoom */
+/* ============================
+   Cor por Dimensão (hash)
+============================ */
+function hashColor(str){
+  const s = String(str||"");
+  let h = 2166136261;
+  for (let i=0;i<s.length;i++){
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const hue = Math.abs(h) % 360;
+  return `hsl(${hue} 72% 45%)`;
+}
+function mixToWhite(color, t=0.62){
+  const c = d3.color(color);
+  const w = d3.rgb(255,255,255);
+  const r = Math.round(c.r*(1-t) + w.r*t);
+  const g = Math.round(c.g*(1-t) + w.g*t);
+  const b = Math.round(c.b*(1-t) + w.b*t);
+  return d3.rgb(r,g,b).formatHex();
+}
+function luminance(hex){
+  const c = d3.color(hex);
+  const srgb = [c.r,c.g,c.b].map(v=>{
+    const x = v/255;
+    return (x<=0.03928)? x/12.92 : Math.pow((x+0.055)/1.055, 2.4);
+  });
+  return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
+}
+function contrastText(bgHex){
+  return luminance(bgHex) > 0.55 ? "#101828" : "#ffffff";
+}
+
+/* ============================
+   Zoom
+============================ */
 const zoom = d3.zoom()
   .scaleExtent([0.10, 3.5])
   .on("zoom", (event) => { if (viewport) viewport.attr("transform", event.transform); });
 
-/* State */
-let RAW = null;
-let VIEW = null;
+/* ============================
+   State
+============================ */
+let RAW = null;  // nodes Map, edges, dims list, fileName, childrenOfAll
+let VIEW = null; // selected dims, root, treeData
 
 let rootHierarchy = null;
 let linkLayer = null;
@@ -492,30 +501,9 @@ let fitToCanvasFn = null;
 let expandAllFn = null;
 let collapseAllFn = null;
 
-/* DOM refs */
-const fileInput = document.getElementById("fileInput");
-const btnLoadDefault = document.getElementById("btnLoadDefault");
-const dimItemsEl = document.getElementById("dimItems");
-const dimSearchEl = document.getElementById("dimSearch");
-const btnSelectAll = document.getElementById("btnSelectAll");
-const btnClearAll = document.getElementById("btnClearAll");
-const rootSelect = document.getElementById("rootSelect");
-const btnGenerate = document.getElementById("btnGenerate");
-const searchEl = document.getElementById("search");
-const btnFit = document.getElementById("btnFit");
-const btnExpandAll = document.getElementById("btnExpandAll");
-const btnCollapseAll = document.getElementById("btnCollapseAll");
-const btnSvg = document.getElementById("btnSvg");
-const btnPng = document.getElementById("btnPng");
-const pngScaleSel = document.getElementById("pngScale");
-const canvasTitle = document.getElementById("canvasTitle");
-const canvasSubtitle = document.getElementById("canvasSubtitle");
-const canvasMeta = document.getElementById("canvasMeta");
-const statusDot = document.getElementById("statusDot");
-const statsEl = document.getElementById("stats");
-const tooltipEl = document.getElementById("tooltip");
-const toastEl = document.getElementById("toast");
-
+/* ============================
+   Load XLSX
+============================ */
 btnLoadDefault.addEventListener("click", loadDefault);
 fileInput.addEventListener("change", async (ev) => {
   const f = ev.target.files?.[0];
@@ -544,13 +532,14 @@ async function parseAndInit(buf, fileName){
   const sheetNames = wb.SheetNames || [];
   if (!sheetNames.length){ toast("XLSX sem abas.", true); return; }
 
-  const nodes = new Map();
+  const nodes = new Map(); // name -> {name, dimension, comment, obs}
   const edges = [];
   const dimSet = new Set();
 
   function ensureNode(name, dimensionRaw="", comment="", obs=""){
     const n = String(name||"").trim();
     if (!n) return null;
+
     const dimCanon = canonDimension(dimensionRaw) || "(Sem dimensão)";
     if (!nodes.has(n)){
       nodes.set(n, { name:n, dimension: dimCanon, comment:String(comment||"").trim(), obs:String(obs||"").trim() });
@@ -562,7 +551,7 @@ async function parseAndInit(buf, fileName){
       if (cmt && !cur.comment) cur.comment = cmt;
       if (ob && !cur.obs) cur.obs = ob;
     }
-    dimSet.add(dimCanon);
+    if (dimCanon) dimSet.add(dimCanon);
     return n;
   }
 
@@ -598,6 +587,7 @@ async function parseAndInit(buf, fileName){
     return;
   }
 
+  // dedup edges
   const seen = new Set();
   const edgesUniq = [];
   for (const [c,p] of edges){
@@ -607,6 +597,7 @@ async function parseAndInit(buf, fileName){
 
   const dimensions = Array.from(dimSet).sort((a,b)=>a.localeCompare(b));
 
+  // childrenOfAll: sem recorte (para permitir conectores)
   const childrenOfAll = new Map();
   for (const [child,parent] of edgesUniq){
     if (!childrenOfAll.has(parent)) childrenOfAll.set(parent, []);
@@ -619,20 +610,26 @@ async function parseAndInit(buf, fileName){
   RAW = { nodes, edges: edgesUniq, dimensions, fileName, childrenOfAll };
 
   buildDimensionsUI();
-  updateRootOptions();
+  updateRootOptions(); // agora filtra raízes “válidas”
   statusDot.style.background = "#16a34a";
   statsEl.innerHTML = `<strong>Arquivo:</strong> ${fileName} | <strong>Taxonomia:</strong> selecione dimensões e raiz`;
 
   toast(`Planilha carregada: ${fileName}\nClasses: ${nodes.size}\nDimensões (padronizadas): ${dimensions.length}`);
 }
 
-/* Dimensões UI */
+/* ============================
+   UI: Dimensões
+   - IMPORTANTE: data-dim agora guarda o valor REAL (sem escape)
+============================ */
 function getSelectedDimensions(){
   const checks = dimItemsEl.querySelectorAll("input[type=checkbox][data-dim]");
   const set = new Set();
-  checks.forEach(ch=>{ if (ch.checked) set.add(ch.getAttribute("data-dim")); });
+  checks.forEach(ch=>{
+    if (ch.checked) set.add(ch.getAttribute("data-dim"));
+  });
   return set;
 }
+
 function buildDimensionsUI(){
   const dimCounts = new Map();
   for (const obj of RAW.nodes.values()){
@@ -641,7 +638,7 @@ function buildDimensionsUI(){
 
   dimItemsEl.innerHTML = "";
   for (const dim of RAW.dimensions){
-    const color = hashColorHEX(dim);
+    const color = hashColor(dim);
 
     const item = document.createElement("label");
     item.className = "dimItem";
@@ -649,7 +646,7 @@ function buildDimensionsUI(){
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = true;
-    cb.setAttribute("data-dim", dim);
+    cb.setAttribute("data-dim", dim); // <- valor real
     cb.addEventListener("change", () => updateRootOptions());
 
     const dot = document.createElement("span");
@@ -691,37 +688,57 @@ function buildDimensionsUI(){
   };
 }
 
-/* Raízes válidas (>=2 nós) */
+/* ============================
+   3) Raízes válidas:
+   - só aparece raiz que gera árvore (>= 2 nós) no recorte
+   - com conectores automáticos
+============================ */
 function updateRootOptions(){
   if (!RAW) return;
 
   const selected = getSelectedDimensions();
 
+  // conjunto de “nós-alvo” = classes cuja dimensão está selecionada
   const targets = new Set();
   for (const [name,obj] of RAW.nodes.entries()){
     if (selected.has(obj.dimension)) targets.add(name);
   }
 
+  // memo: para cada nó, se sua subárvore contém algum target, e o tamanho pruned
   const memo = new Map();
   const visiting = new Set();
 
   function prunedSize(node){
     if (memo.has(node)) return memo.get(node);
-    if (visiting.has(node)) return 0;
+    if (visiting.has(node)) return 0; // evita ciclo
     visiting.add(node);
+
+    const isTarget = targets.has(node);
+    let size = 0;
 
     const kids = RAW.childrenOfAll.get(node) || [];
     let childSum = 0;
-    for (const k of kids) childSum += prunedSize(k);
+    for (const k of kids){
+      childSum += prunedSize(k);
+    }
 
-    const keep = targets.has(node) || childSum > 0;
-    const size = keep ? (1 + childSum) : 0;
+    // inclui nó se:
+    // - é target OU
+    // - algum filho tem target (childSum>0) OU
+    // - é a própria raiz escolhida (na geração; aqui só estimamos)
+    if (isTarget || childSum > 0){
+      size = 1 + childSum;
+    } else {
+      size = 0;
+    }
 
     visiting.delete(node);
     memo.set(node, size);
     return size;
   }
 
+  // candidatos a raiz: nós que, ao podar, dão tamanho >= 2
+  // (evita taxonomia com 1 classe)
   const candidates = [];
   for (const name of RAW.nodes.keys()){
     const sz = prunedSize(name);
@@ -729,9 +746,7 @@ function updateRootOptions(){
   }
   candidates.sort((a,b)=>a.localeCompare(b));
 
-  const prev = rootSelect.value || "";
   rootSelect.innerHTML = "";
-
   const opt0 = document.createElement("option");
   opt0.value = "";
   opt0.textContent = "(Escolha a raiz)";
@@ -744,20 +759,15 @@ function updateRootOptions(){
     rootSelect.appendChild(opt);
   }
 
-  if (prev && candidates.includes(prev)) rootSelect.value = prev;
-
   canvasSubtitle.textContent = `Dimensões selecionadas: ${selected.size} • Raízes possíveis: ${candidates.length}`;
   canvasMeta.textContent = `Selecione uma raiz e clique “Gerar taxonomia”`;
 }
 
-/* Gerar taxonomia */
+/* ============================
+   Gerar taxonomia:
+   - inclui conectores automaticamente (mantém hierarquia)
+============================ */
 btnGenerate.addEventListener("click", generateTaxonomy);
-
-function countNodes(node){
-  let c = 1;
-  for (const ch of (node.children || [])) c += countNodes(ch);
-  return c;
-}
 
 function generateTaxonomy(){
   if (!RAW) return;
@@ -773,11 +783,14 @@ function generateTaxonomy(){
     return;
   }
 
+  // targets: nós cuja dimensão está selecionada
   const targets = new Set();
   for (const [name,obj] of RAW.nodes.entries()){
     if (selected.has(obj.dimension)) targets.add(name);
   }
 
+  // Construção podada (mantém conectores):
+  // mantém nó se ele for target OU tiver descendente target OU for a raiz
   const visiting = new Set();
   function build(node){
     if (visiting.has(node)) return null;
@@ -788,11 +801,12 @@ function generateTaxonomy(){
 
     const builtKids = [];
     for (const k of kids){
-      const bb = build(k);
-      if (bb) builtKids.push(bb);
+      const childBuilt = build(k);
+      if (childBuilt) builtKids.push(childBuilt);
     }
 
-    const keep = (node === root) || targets.has(node) || builtKids.length > 0;
+    const isTarget = targets.has(node);
+    const keep = (node === root) || isTarget || builtKids.length > 0;
 
     visiting.delete(node);
 
@@ -816,13 +830,13 @@ function generateTaxonomy(){
 
   const treeCount = countNodes(treeData);
   if (treeCount < 2){
-    toast("A raiz escolhida não gera árvore (apenas 1 nó). Escolha outra raiz.", true);
+    toast("A raiz escolhida não gera uma árvore (apenas 1 nó). Escolha outra raiz.", true);
     return;
   }
 
   const dimColor = new Map();
   for (const d of selected){
-    dimColor.set(d, hashColorHEX(d));
+    dimColor.set(d, hashColor(d));
   }
 
   VIEW = { selected, root, treeData, dimColor };
@@ -837,7 +851,15 @@ function generateTaxonomy(){
   applySearchHighlight();
 }
 
-/* Render top-down (vertical/A4) + retângulos adaptáveis */
+function countNodes(node){
+  let c = 1;
+  for (const ch of (node.children || [])) c += countNodes(ch);
+  return c;
+}
+
+/* ============================
+   Render top-down
+============================ */
 function renderTopDown(treeData, dimColor){
   svg.selectAll("*").remove();
   viewport = svg.append("g").attr("id","viewport");
@@ -847,11 +869,9 @@ function renderTopDown(treeData, dimColor){
   linkLayer = viewport.append("g").attr("id","links");
   nodeLayer = viewport.append("g").attr("id","nodes");
 
-  const dx = 220;
-  const dy = 140;
-  const tree = d3.tree()
-    .nodeSize([dx, dy])
-    .separation((a,b) => (a.parent === b.parent ? 1.15 : 1.35));
+  const dx = 340;
+  const dy = 125;
+  const tree = d3.tree().nodeSize([dx, dy]);
 
   rootHierarchy = d3.hierarchy(treeData);
 
@@ -862,6 +882,7 @@ function renderTopDown(treeData, dimColor){
       d.children = null;
     }
   }
+  // colapsa “níveis profundos” só para começar mais limpo
   rootHierarchy.children?.forEach(c => c.children?.forEach(cc => collapse(cc)));
 
   expandAllFn = () => {
@@ -883,6 +904,7 @@ function renderTopDown(treeData, dimColor){
 
   updateFn = () => {
     tree(rootHierarchy);
+
     const nodes = rootHierarchy.descendants();
     const links = rootHierarchy.links();
 
@@ -929,70 +951,48 @@ function renderTopDown(treeData, dimColor){
       const g = d3.select(this);
 
       const dim = d.data.dimension || "(Sem dimensão)";
-      const strokeColor = dimColor.get(dim) || hashColorHEX(dim);
-      const fill = strokeColor;
-      const textColor = contrastText(fill);
+      const strokeColor = dimColor.get(dim) || hashColor(dim);
+      const fill = mixToWhite(strokeColor, 0.64);
+      const text = contrastText(fill);
+
+      const lines = wrapLabel(d.data.name, 28);
       const hasKids = (d.children || d._children);
 
-      const lines = wrapLabel(d.data.name, 26);
+      const w = 370;
+      const h = lines.length === 1 ? 52 : 68;
 
-      const nameText = g.append("text")
-        .attr("class","name")
-        .attr("text-anchor","middle")
-        .attr("fill", textColor)
-        .attr("x", 0)
-        .attr("y", 0);
-
-      if (lines.length === 1){
-        nameText.append("tspan").attr("x",0).attr("dy", 0).text(lines[0]);
-      } else {
-        nameText.append("tspan").attr("x",0).attr("dy", 0).text(lines[0]);
-        nameText.append("tspan").attr("x",0).attr("dy", 16).text(lines[1]);
-      }
-
-      const dimText = g.append("text")
-        .attr("class","small")
-        .attr("text-anchor","middle")
-        .attr("fill", textColor)
-        .attr("x", 0)
-        .attr("y", 0)
-        .text(dim);
-
-      const nb = nameText.node().getBBox();
-      const db = dimText.node().getBBox();
-
-      const padX = 18;
-      const padTop = 16;
-      const gap = 10;
-      const padBottom = 12;
-
-      let w = Math.max(nb.width, db.width) + padX*2;
-      w = Math.max(170, Math.min(360, w));
-
-      let h = padTop + nb.height + gap + db.height + padBottom;
-      h = Math.max(54, h);
-
-      const nameY = padTop + 10;
-      const dimY = padTop + nb.height + gap + 8;
-
-      nameText.attr("y", nameY);
-      dimText.attr("y", dimY);
-
-      g.insert("rect", ":first-child")
-        .attr("x", -w/2)
-        .attr("y", 0)
-        .attr("width", w)
-        .attr("height", h)
+      g.append("rect")
+        .attr("x", -w/2).attr("y", 0)
+        .attr("width", w).attr("height", h)
         .attr("fill", fill)
         .attr("stroke", strokeColor)
         .attr("stroke-width", d.depth === 0 ? 2.6 : 1.5);
 
+      const t = g.append("text")
+        .attr("class","name")
+        .attr("text-anchor","middle")
+        .attr("fill", text)
+        .attr("x", 0).attr("y", 22);
+
+      if (lines.length === 1){
+        t.text(lines[0]);
+      } else {
+        t.append("tspan").attr("x",0).attr("dy",0).text(lines[0]);
+        t.append("tspan").attr("x",0).attr("dy",16).text(lines[1]);
+      }
+
       g.append("text")
         .attr("class","small")
-        .attr("fill", textColor)
+        .attr("text-anchor","middle")
+        .attr("fill", text)
+        .attr("x", 0).attr("y", h - 10)
+        .text(dim);
+
+      g.append("text")
+        .attr("class","small")
+        .attr("fill", text)
+        .attr("x", w/2 - 10).attr("y", 18)
         .attr("text-anchor","end")
-        .attr("x", (w/2) - 10)
-        .attr("y", 18)
         .text(hasKids ? (d.children ? "▾" : "▸") : "");
     });
 
@@ -1020,14 +1020,15 @@ function renderTopDown(treeData, dimColor){
     const tx = (w - bounds.width*scale)/2 - bounds.x*scale;
     const ty = (h - bounds.height*scale)/2 - bounds.y*scale;
 
-    svg.transition().duration(strong ? 380 : 220)
-      .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+    svg.transition().duration(strong ? 380 : 220).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
   };
 
   fitToCanvasFn(true);
 }
 
-/* Search highlight */
+/* ============================
+   Search highlight
+============================ */
 searchEl.addEventListener("input", applySearchHighlight);
 function applySearchHighlight(){
   const q = norm(searchEl.value);
@@ -1042,7 +1043,9 @@ function applySearchHighlight(){
   });
 }
 
-/* Controls */
+/* ============================
+   Expand/Collapse/Fit
+============================ */
 btnFit.addEventListener("click", () => fitToCanvasFn?.(true));
 btnExpandAll.addEventListener("click", () => {
   if (!expandAllFn || !updateFn) return;
@@ -1059,7 +1062,9 @@ btnCollapseAll.addEventListener("click", () => {
   fitToCanvasFn?.(false);
 });
 
-/* Export */
+/* ============================
+   Export SVG / PNG (mantém do seu código anterior)
+============================ */
 function downloadBlob(blob, filename){
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1083,7 +1088,7 @@ function embeddedExportStyle(){
       vector-effect: non-scaling-stroke;
     }
     .node rect{
-      stroke: rgba(16,24,40,.25); stroke-width: 1.2;
+      stroke: rgba(16,24,40,.18); stroke-width: 1.2;
       rx:10; ry:10; shape-rendering: geometricPrecision;
     }
     .node .name{
@@ -1100,6 +1105,12 @@ function serializeSvgForExport(){
   const svgNode = svg.node();
   const clone = svgNode.cloneNode(true);
   clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+
+  clone.querySelectorAll("*").forEach(el=>{
+    [...el.attributes].forEach(a=>{
+      if (a.name.startsWith("on")) el.removeAttribute(a.name);
+    });
+  });
 
   const bg = document.createElementNS("http://www.w3.org/2000/svg","rect");
   bg.setAttribute("x","0"); bg.setAttribute("y","0");
@@ -1157,7 +1168,6 @@ btnPng.addEventListener("click", async () => {
       img.onerror = () => reject(new Error("Falha ao renderizar SVG no PNG."));
     });
 
-    // pega width/height exportados
     const tmp = document.createElement("div");
     tmp.style.position="fixed"; tmp.style.left="-9999px";
     tmp.innerHTML = xml;
@@ -1190,7 +1200,9 @@ btnPng.addEventListener("click", async () => {
   }
 });
 
-/* Boot */
+/* ============================
+   Boot
+============================ */
 (async function(){
   try{ await loadDefault(); } catch(_) {}
 })();
