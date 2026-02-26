@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ONTOHATE V2.4 — Gerador de Taxonomia</title>
+  <title>ONTOHATE V2.5 — Gerador de Taxonomia</title>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -15,121 +15,90 @@
     }
 
     html,body{height:100%; margin:0; background:var(--bg); color:var(--text); 
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden;}
+      font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden;}
 
     header{
       height: 65px; z-index: 100; background: #fff; border-bottom: 1px solid var(--line);
       padding: 0 20px; display:flex; align-items:center; justify-content: space-between;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
 
-    .brand h1{margin:0; font-size:15px; font-weight:800; color: var(--text); letter-spacing: -0.02em;}
+    .brand h1{margin:0; font-size:15px; font-weight:800; color: var(--text);}
     .brand span{font-size:11px; color:var(--muted);}
 
     .controls{display:flex; gap:10px; align-items:center;}
     
     .btn,.file,.input,.select{
       border:1px solid var(--line); background: #fff;
-      color: var(--text); border-radius: 8px; padding: 7px 14px;
+      color: var(--text); border-radius: 8px; padding: 8px 14px;
       font-size: 12px; display:inline-flex; gap:8px; align-items:center;
       cursor:pointer; transition: all 0.2s ease;
-      text-decoration: none;
     }
-    .btn:hover{background: #f2f4f7; border-color: #b0b5bd;}
-    .btn.primary{background: var(--text); color: #fff; border-color: var(--text);}
-    .btn.primary:hover{background: #1d2939;}
+    .btn:hover{background: #f2f4f7;}
+    .btn.primary{background: var(--text); color: #fff; border-color: var(--text); font-weight: 600;}
     
     .file input[type="file"]{display:none;}
-    .input input{border:none; outline:none; background:transparent; width: 180px; font-family: inherit;}
+    .input input{border:none; outline:none; background:transparent; width: 160px;}
 
     #wrap{ height: calc(100% - 65px); display:grid; grid-template-columns: 1fr 340px; }
 
     .canvas{position: relative; overflow: hidden; background: #ffffff;}
     svg{width:100%; height:100%; cursor: grab;}
-    svg:active{cursor: grabbing;}
 
     .side{
       background: var(--panel); border-left: 1px solid var(--line);
-      padding: 24px; display:flex; flex-direction:column; gap:24px; overflow-y: auto;
+      padding: 24px; display:flex; flex-direction:column; gap:20px; overflow-y: auto;
     }
 
-    h3{font-size:13px; font-weight: 700; margin:0 0 12px 0; color: #344054;}
-
     .dimList{ border:1px solid var(--line); border-radius: 8px; background:#fff; overflow:hidden; }
-    .dimItems{max-height: 250px; overflow-y:auto; padding: 6px;}
-    .dimItem{ display:flex; align-items:center; gap:10px; padding: 8px; font-size:12px; cursor: pointer; border-radius: 6px;}
+    .dimItems{max-height: 250px; overflow-y:auto; padding: 8px; display: flex; flex-direction: column; gap: 4px;}
+    .dimItem{ display:flex; align-items:center; gap:10px; padding: 6px; font-size:12px; cursor: pointer; border-radius: 4px;}
     .dimItem:hover{background: #f9fafb;}
-    .dimItem input{cursor: pointer;}
 
-    /* SVG Node Styles */
-    .link{fill:none; stroke: #98a2b3; stroke-width: 1.5px; stroke-linecap: round;}
-    .node rect{ stroke-width: 1.5px; rx: 6; ry: 6; }
-    .node text{ pointer-events: none; font-family: inherit; }
-    .node--connector rect{ stroke-dasharray: 5,3; fill-opacity: 0.05; }
-
-    /* Tooltip Otimizado */
     .tooltip{
       position: fixed; display: none; z-index: 1000;
       background: rgba(16,24,40,0.98); color: #fff;
-      padding: 10px 14px; border-radius: 8px; font-size: 12px;
-      max-width: 280px; pointer-events: none; line-height: 1.4;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-      backdrop-filter: blur(4px);
+      padding: 10px; border-radius: 6px; font-size: 11px;
+      max-width: 260px; pointer-events: none; line-height: 1.4;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-    .tooltip b { display: block; color: var(--accent); margin-bottom: 2px; font-size: 13px; }
-    .tooltip i { font-size: 11px; color: #98a2b3; font-style: normal; font-weight: 500; }
-    .tooltip p { margin: 8px 0 0 0; padding-top: 8px; border-top: 1px solid #475467; color: #eaecf0; }
+    .tooltip b { display: block; color: var(--accent); margin-bottom: 2px; }
+    .tooltip p { margin: 5px 0 0 0; padding-top: 5px; border-top: 1px solid #444; }
 
-    .empty-state{
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        text-align: center; color: var(--muted); pointer-events: none;
-    }
+    .empty-msg { text-align: center; margin-top: 40%; color: var(--muted); font-size: 14px; }
   </style>
 </head>
 
 <body>
 <header>
   <div class="brand">
-    <h1>ONTOHATE V2.4</h1>
-    <span>Taxonomia Hierárquica Otimizada</span>
+    <h1>ONTOHATE V2.5</h1>
+    <span>Carregue o Excel para ativar as opções</span>
   </div>
 
   <div class="controls">
-    <label class="file btn">📂 Carregar Planilha <input id="fileInput" type="file" accept=".xlsx,.xls" /></label>
-    <div class="input">🔎 <input id="search" placeholder="Buscar classe no gráfico..." /></div>
-    <div class="btn" id="btnFit">🎯 Resetar Visualização</div>
-    <div class="btn primary" id="btnPng">📸 Exportar PNG (A4)</div>
+    <label class="file btn primary">📂 Selecionar Arquivo Excel <input id="fileInput" type="file" accept=".xlsx,.xls" /></label>
+    <div class="input">🔎 <input id="search" placeholder="Buscar classe..." /></div>
+    <div class="btn" id="btnPng">📸 Exportar PNG</div>
   </div>
 </header>
 
 <div id="wrap">
-  <div class="canvas">
-    <div id="emptyMsg" class="empty-state">
-        <p style="font-size: 16px; font-weight: 600;">Nenhuma taxonomia gerada.</p>
-        <p style="font-size: 13px;">Carregue um arquivo Excel e selecione as opções ao lado.</p>
-    </div>
-    <svg id="svg"></svg>
-  </div>
+  <div class="canvas"><svg id="svg"></svg></div>
   
-  <div class="side">
-    <section>
-        <h3>1. Filtrar Dimensões</h3>
-        <div class="dimList">
-            <div class="dimItems" id="dimItems"></div>
-        </div>
-    </section>
+  <div class="side" id="sidePanel">
+    <div id="setupMsg" class="empty-msg">Aguardando arquivo...</div>
+    
+    <div id="optionsArea" style="display: none;">
+        <section>
+            <h3 style="font-size:13px; margin:0 0 10px 0;">1. Dimensões</h3>
+            <div class="dimList"><div class="dimItems" id="dimItems"></div></div>
+        </section>
 
-    <section>
-        <h3>2. Selecionar Raiz</h3>
-        <p style="font-size: 11px; color: var(--muted); margin-bottom: 8px;">Apenas termos com descendentes aparecem aqui.</p>
-        <select id="rootSelect" class="select" style="width:100%; margin-bottom:12px;"></select>
-        <div class="btn primary" id="btnGenerate" style="width:100%; justify-content:center; font-weight: 600;">Gerar Árvore Vertical</div>
-    </section>
-
-    <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--line);">
-        <p style="font-size: 11px; color: var(--muted); line-height: 1.5;">
-            <strong>Dica:</strong> Use o scroll para zoom. Clique e arraste para mover. Passe o mouse sobre as classes para ver detalhes e observações.
-        </p>
+        <section style="margin-top: 20px;">
+            <h3 style="font-size:13px; margin:0 0 10px 0;">2. Raiz da Árvore</h3>
+            <select id="rootSelect" class="select" style="width:100%; margin-bottom:15px;"></select>
+            <div class="btn primary" id="btnGenerate" style="width:100%; justify-content:center;">Gerar Taxonomia</div>
+        </section>
     </div>
   </div>
 </div>
@@ -137,72 +106,71 @@
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-/** * ONTOHATE V2.4 - Lógica Core
- */
 let RAW_DATA = null;
 const svg = d3.select("#svg");
-const gMain = svg.append("g").attr("id", "export-area");
+const gMain = svg.append("g");
 const zoom = d3.zoom().scaleExtent([0.05, 3]).on("zoom", (e) => gMain.attr("transform", e.transform));
 svg.call(zoom);
 
-// 1. Unificação de Dimensões (Regra: Singular e Plural como uma só)
 function canonizeDim(dim) {
     let d = String(dim || "Geral").trim();
-    if (norm(d).includes("motivacao e consequencia")) {
-        return "Motivação e consequência";
-    }
+    if (d.toLowerCase().includes("motivacao e consequencia")) return "Motivação e consequência";
     return d;
 }
 
-// Helper para normalização de texto (remover acentos para busca e lógica)
-function norm(s) {
-    return String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-// 2. Cálculo de contraste automático (WCGAG compliant)
-function getContrastColor(hexcolor){
-    const r = parseInt(hexcolor.substring(1,3),16);
-    const g = parseInt(hexcolor.substring(3,5),16);
-    const b = parseInt(hexcolor.substring(5,7),16);
-    const yiq = ((r*299)+(g*587)+(b*114))/1000;
-    return (yiq >= 155) ? '#101828' : '#ffffff';
+function getContrast(hex){
+    const r = parseInt(hex.substring(1,3),16), g = parseInt(hex.substring(3,5),16), b = parseInt(hex.substring(5,7),16);
+    return ((r*299)+(g*587)+(b*114))/1000 > 150 ? '#000000' : '#ffffff';
 }
 
 function stringToColor(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    // HSL fixo em saturação e brilho para manter paleta profissional
-    return `hsl(${Math.abs(hash) % 360}, 65%, 42%)`;
+    return `hsl(${Math.abs(hash) % 360}, 65%, 40%)`;
 }
 
-// Processamento do Arquivo Excel
-async function handleFile(file) {
-    const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet);
+// GATILHO DE CARREGAMENTO
+document.getElementById('fileInput').addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if(!file) return;
 
-    const nodes = new Map(), childrenMap = new Map(), dims = new Set();
+    try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-    json.forEach(row => {
-        const name = String(row.Classe || row.Class || "").trim();
-        const parent = String(row.Superclasse || row.Superclass || "").trim();
-        const dim = canonizeDim(row.Dimensão || row.Subontologia || "Geral");
+        const nodes = new Map(), childrenMap = new Map(), dims = new Set();
 
-        if(!name) return;
-        nodes.set(name, { name, dim, comment: row.Comment || row.Observação || row.Observacoes || "" });
-        dims.add(dim);
+        json.forEach(row => {
+            const name = String(row.Classe || row.Class || "").trim();
+            const parent = String(row.Superclasse || row.Superclass || "").trim();
+            const dim = canonizeDim(row.Dimensão || row.Subontologia || "Geral");
 
-        if(parent) {
-            if(!childrenMap.has(parent)) childrenMap.set(parent, []);
-            childrenMap.get(parent).push(name);
-        }
-    });
+            if(!name) return;
+            nodes.set(name, { name, dim, comment: row.Comment || row.Observação || row.Observacoes || "" });
+            dims.add(dim);
 
-    RAW_DATA = { nodes, childrenMap, dims: Array.from(dims).sort() };
-    renderDimList();
-    updateValidRoots();
-}
+            if(parent) {
+                if(!childrenMap.has(parent)) childrenMap.set(parent, []);
+                childrenMap.get(parent).push(name);
+            }
+        });
+
+        RAW_DATA = { nodes, childrenMap, dims: Array.from(dims).sort() };
+        
+        // MOSTRAR PAINEL
+        document.getElementById('setupMsg').style.display = 'none';
+        document.getElementById('optionsArea').style.display = 'block';
+        
+        renderDimList();
+        updateValidRoots();
+        alert("Planilha carregada com sucesso! Agora escolha a Raiz ao lado.");
+
+    } catch (err) {
+        console.error(err);
+        alert("Erro ao ler o arquivo. Verifique se é um Excel válido.");
+    }
+});
 
 function renderDimList() {
     const container = document.getElementById('dimItems');
@@ -216,15 +184,11 @@ function renderDimList() {
     container.querySelectorAll('input').forEach(i => i.onchange = updateValidRoots);
 }
 
-// 3. Somente termos com filhos aparecem como opção de raiz
 function updateValidRoots() {
-    if(!RAW_DATA) return;
     const select = document.getElementById('rootSelect');
-    select.innerHTML = '<option value="">Selecione uma raiz...</option>';
-    
+    select.innerHTML = '<option value="">Selecione...</option>';
     RAW_DATA.nodes.forEach((v, k) => {
-        const children = RAW_DATA.childrenMap.get(k) || [];
-        if(children.length > 0) {
+        if((RAW_DATA.childrenMap.get(k) || []).length > 0) {
             const opt = document.createElement('option');
             opt.value = k; opt.textContent = k;
             select.appendChild(opt);
@@ -232,180 +196,82 @@ function updateValidRoots() {
     });
 }
 
-// Construção recursiva da árvore com segurança contra loops
 function buildHierarchy(nodeName, selectedDims, visited = new Set()) {
     if (visited.has(nodeName)) return null;
     visited.add(nodeName);
-
-    const nodeData = RAW_DATA.nodes.get(nodeName) || { name: nodeName, dim: "Geral", comment: "" };
-    const childrenNames = RAW_DATA.childrenMap.get(nodeName) || [];
-    
-    const children = childrenNames
+    const nodeData = RAW_DATA.nodes.get(nodeName) || { name: nodeName, dim: "Geral" };
+    const children = (RAW_DATA.childrenMap.get(nodeName) || [])
         .map(c => buildHierarchy(c, selectedDims, visited))
         .filter(c => c !== null);
 
-    const isDirectTarget = selectedDims.has(nodeData.dim);
-    // Um nó é mantido se ele pertence à dimensão ou se serve de ponte para um filho que pertence
-    if (isDirectTarget || children.length > 0) {
-        return { 
-            ...nodeData, 
-            isConnector: !isDirectTarget, 
-            children: children.length > 0 ? children : null 
-        };
+    const isTarget = selectedDims.has(nodeData.dim);
+    if (isTarget || children.length > 0) {
+        return { ...nodeData, isConnector: !isTarget, children: children.length > 0 ? children : null };
     }
     return null;
 }
 
-// Renderização da Árvore
-function renderTree() {
+function render() {
     const rootName = document.getElementById('rootSelect').value;
     const selectedDims = new Set([...document.querySelectorAll('.dim-check:checked')].map(i => i.value));
-    
-    if(!rootName) return alert("Por favor, selecione uma raiz.");
+    if(!rootName) return alert("Selecione uma classe raiz!");
 
     const treeData = buildHierarchy(rootName, selectedDims);
-    if(!treeData) return alert("Nenhum dado encontrado para os filtros selecionados.");
+    if(!treeData) return alert("Nenhum dado encontrado para estas dimensões.");
 
-    document.getElementById('emptyMsg').style.display = 'none';
     gMain.selectAll("*").remove();
-
     const root = d3.hierarchy(treeData);
-    
-    // Layout Vertical: nodeSize define o espaçamento [largura_da_coluna, altura_do_nível]
-    const treeLayout = d3.tree().nodeSize([220, 120]);
+    const treeLayout = d3.tree().nodeSize([200, 120]); 
     treeLayout(root);
 
     const links = root.links();
     const nodes = root.descendants();
 
-    // Desenhar Conexões (Links)
     gMain.selectAll(".link").data(links).enter().append("path").attr("class", "link")
         .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
 
-    // Desenhar Classes (Nodes)
     const node = gMain.selectAll(".node").data(nodes).enter().append("g")
         .attr("class", d => `node ${d.data.isConnector ? 'node--connector' : ''}`)
         .attr("transform", d => `translate(${d.x},${d.y})`)
-        .on("mouseover", showTooltip)
+        .on("mouseover", (e, d) => {
+            d3.select("#tooltip").style("display", "block").style("left", (e.pageX+15)+"px").style("top", (e.pageY+15)+"px")
+              .html(`<b>${d.data.name}</b><i>${d.data.dim}</i><p>${d.data.comment || 'Sem observações.'}</p>`);
+        })
         .on("mouseout", () => d3.select("#tooltip").style("display", "none"));
 
     node.each(function(d) {
-        const group = d3.select(this);
-        
-        // Texto principal
-        const text = group.append("text")
-            .attr("text-anchor", "middle")
-            .attr("y", 4)
-            .style("font-size", "11px")
-            .style("font-weight", "700")
-            .text(d.data.name);
-
-        // Ajuste dinâmico do retângulo ao texto
-        const bbox = text.node().getBBox();
-        const paddingH = 24;
-        const rectW = Math.max(140, bbox.width + paddingH);
-        const rectH = 38;
-
+        const g = d3.select(this);
+        const textElement = g.append("text").attr("text-anchor", "middle").attr("y", 4).style("font-size", "11px").style("font-weight", "600").text(d.data.name);
+        const bbox = textElement.node().getBBox();
+        const rectW = Math.max(140, bbox.width + 24), rectH = 38;
         const bgColor = d.data.isConnector ? "#ffffff" : stringToColor(d.data.dim);
-        const strokeColor = d.data.isConnector ? "#98a2b3" : d3.color(bgColor).darker(0.5);
+        
+        g.insert("rect", "text").attr("width", rectW).attr("height", rectH).attr("x", -rectW/2).attr("y", -rectH/2)
+            .attr("fill", bgColor).attr("stroke", d.data.isConnector ? "#98a2b3" : d3.color(bgColor).darker());
 
-        // Retângulo de fundo
-        group.insert("rect", "text")
-            .attr("width", rectW)
-            .attr("height", rectH)
-            .attr("x", -rectW/2)
-            .attr("y", -rectH/2)
-            .attr("fill", bgColor)
-            .attr("stroke", strokeColor);
-
-        // Cor do texto baseada no contraste
-        text.style("fill", getContrastColor(d3.rgb(bgColor).formatHex()));
-
-        // Rótulo da Dimensão (Sub-legenda)
-        if(!d.data.isConnector) {
-            group.append("text")
-                .attr("text-anchor", "middle")
-                .attr("y", rectH/2 + 14)
-                .style("font-size", "9px")
-                .style("fill", "#667085")
-                .style("font-weight", "500")
-                .text(d.data.dim);
-        }
+        textElement.style("fill", getContrast(d3.rgb(bgColor).formatHex()));
     });
 
-    // Centralização Automática
-    const fullW = svg.node().clientWidth, fullH = svg.node().clientHeight;
     const bounds = gMain.node().getBBox();
-    const scale = Math.min(0.9, 0.9 / Math.max(bounds.width / fullW, bounds.height / fullH));
-    
-    svg.transition().duration(800).call(
-        zoom.transform, 
-        d3.zoomIdentity.translate(fullW/2 - (bounds.x + bounds.width/2)*scale, 60).scale(scale)
-    );
+    const scale = 0.8 / Math.max(bounds.width / svg.node().clientWidth, bounds.height / svg.node().clientHeight);
+    svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(svg.node().clientWidth/2, 60).scale(scale));
 }
 
-// Tooltip Compacto
-function showTooltip(e, d) {
-    const t = d3.select("#tooltip");
-    t.style("display", "block")
-     .style("left", (e.pageX + 15) + "px")
-     .style("top", (e.pageY + 15) + "px")
-     .html(`
-        <b>${d.data.name}</b>
-        <i>Dimensão: ${d.data.dim}</i>
-        <p>${d.data.comment || 'Nenhuma observação cadastrada.'}</p>
-     `);
-}
-
-// Eventos e UI
-document.getElementById('fileInput').onchange = e => handleFile(e.target.files[0]);
-document.getElementById('btnGenerate').onclick = renderTree;
-
-document.getElementById('btnFit').onclick = () => {
-    if(!RAW_DATA) return;
-    renderTree();
-};
-
-document.getElementById('search').oninput = function(e) {
-    const val = norm(e.target.value);
-    gMain.selectAll(".node").each(function(d) {
-        const isMatch = val && norm(d.data.name).includes(val);
-        d3.select(this).select("rect")
-            .style("stroke", isMatch ? "#f97316" : null)
-            .style("stroke-width", isMatch ? "4px" : null);
-    });
-};
-
-// Exportação PNG em Alta Resolução
+document.getElementById('btnGenerate').onclick = render;
 document.getElementById('btnPng').onclick = function() {
     const svgEl = document.getElementById('svg');
-    const bounds = gMain.node().getBBox();
-    const padding = 50;
-    
-    // Serializar SVG
     const serializer = new XMLSerializer();
-    let source = serializer.serializeToString(svgEl);
-    
+    const source = serializer.serializeToString(svgEl);
     const img = new Image();
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(source)));
-    
     img.onload = function() {
         const canvas = document.createElement("canvas");
-        // Escalar para 2x para garantir nitidez no A4
-        const scale = 2;
-        canvas.width = svgEl.clientWidth * scale;
-        canvas.height = svgEl.clientHeight * scale;
-        
+        canvas.width = svgEl.clientWidth * 2; canvas.height = svgEl.clientHeight * 2;
         const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.scale(scale, scale);
-        ctx.drawImage(img, 0, 0);
-        
+        ctx.fillStyle = "white"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.scale(2,2); ctx.drawImage(img, 0, 0);
         const link = document.createElement("a");
-        link.download = `taxonomia_ontohate_${Date.now()}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
+        link.download = "taxonomia.png"; link.href = canvas.toDataURL("image/png"); link.click();
     };
 };
 </script>
