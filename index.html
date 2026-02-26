@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Taxonomy Builder — Conexão Raiz-Copa (Aprimorado)</title>
+  <title>Taxonomy Builder — A → B → (folhas C)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -39,7 +39,7 @@
 
     #wrap{ display:flex; height:calc(100% - 70px); }
     .sidebar{
-      width:380px; min-width:340px; background:var(--panel); border-right:1px solid var(--line);
+      width:420px; min-width:360px; background:var(--panel); border-right:1px solid var(--line);
       overflow-y:auto; padding:16px; font-size:13px; z-index:10;
     }
     .canvas-area{ flex:1; position:relative; background:var(--bg); overflow:hidden; }
@@ -53,7 +53,7 @@
     }
 
     .section{ margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
-    h3{ margin:8px 0; font-size:12px; letter-spacing:.5px; color:var(--muted); }
+    h3{ margin:8px 0; font-size:12px; letter-spacing:.5px; color:var(--muted); text-transform:uppercase; }
     .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .field{ width:100%; display:flex; flex-direction:column; gap:6px; margin:8px 0; }
     select, input[type="text"]{
@@ -70,6 +70,15 @@
     .status.ok{ background: rgba(22,101,52,.10); border-color: rgba(22,101,52,.35); }
     .status.warn{ background: rgba(180,83,9,.10); border-color: rgba(180,83,9,.35); }
     .status.danger{ background: rgba(185,28,28,.10); border-color: rgba(185,28,28,.35); }
+
+    /* Leaf list */
+    .leafbox{
+      border:1px solid var(--line); border-radius:10px; background:var(--bg);
+      padding:10px; max-height:230px; overflow:auto;
+    }
+    .leafbox .count{ font-size:12px; color:var(--muted); margin-bottom:8px; }
+    .leafbox label{ display:flex; align-items:flex-start; gap:8px; margin:6px 0; }
+    .leafbox input{ margin-top:2px; }
 
     /* D3 */
     .link{ fill:none; stroke:#94a3b8; stroke-width:1.5px; opacity:.65; }
@@ -118,7 +127,7 @@
     <span class="pill" id="statsPill">Nenhum arquivo carregado</span>
   </div>
 
-  <div class="title">🛠️ Construtor de Taxonomia Conectada (Raiz → Copa)</div>
+  <div class="title">🧩 Taxonomia com início fixo: <b>A → B → (folhas C)</b></div>
 
   <div class="controls">
     <button class="btn" id="btnRelayout" disabled>🔄 Reorganizar</button>
@@ -130,40 +139,48 @@
 <div id="wrap">
   <div class="sidebar">
     <div class="guide-step">
-      <b>1.</b> Carregue um <b>XLSX</b>. O sistema tenta detectar colunas de <b>Classe</b> e <b>Pai</b> automaticamente.
-      <div class="hint">Se não detectar, ele te avisa no status.</div>
+      <b>Regra:</b> toda figura começa em <b>A</b>. O sistema cria sempre a ligação <b>A → B</b>.
+      Depois, <b>B</b> desce até as folhas <b>C</b> selecionadas (união dos caminhos). Se você não selecionar folhas, mostra toda a árvore de B.
     </div>
 
     <div class="section">
-      <h3>DIMENSÕES (planilhas)</h3>
+      <h3>Dimensões (planilhas)</h3>
       <div id="dimList" class="small">Aguardando arquivo…</div>
       <div class="small" style="margin-top:6px;">
-        Observação: nomes muito parecidos (ex.: “Motivação e consequência(s)”) são unificados automaticamente.
+        “Motivação e consequência(s)” é unificada automaticamente.
       </div>
     </div>
 
     <div class="section">
-      <div class="guide-step">
-        <b>2.</b> Escolha a <b>Raiz</b> (topo) e opcionalmente a <b>Copa</b> (limite). Se definir Copa, será desenhado <b>apenas o caminho</b> Raiz → Copa.
+      <h3>Buscar em listas</h3>
+      <input type="text" id="filterInput" placeholder="Filtrar A, B e folhas…" />
+      <div class="hint">Dica: funciona por “contém” (sem acentos).</div>
+
+      <div class="field">
+        <h3>A — ponto inicial (obrigatório)</h3>
+        <select id="startSelect"></select>
+        <div class="small"><b>A</b> sempre será o topo da taxonomia.</div>
       </div>
 
       <div class="field">
-        <h3>Buscar na lista</h3>
-        <input type="text" id="filterInput" placeholder="Digite para filtrar opções (raiz e copa)…" />
-      </div>
-
-      <div class="field">
-        <h3>Raiz (apenas nós com filhos)</h3>
+        <h3>B — raiz (somente superclasse)</h3>
         <select id="rootSelect"></select>
-        <div class="small">A raiz só mostra classes que possuem nós (filhos), evitando listas inúteis.</div>
+        <div class="small"><b>B</b> precisa ter filhos (superclasse).</div>
       </div>
 
       <div class="field">
-        <h3>Copa (limite)</h3>
-        <select id="canopySelect">
-          <option value="">Sem limite (exibir toda a árvore)</option>
-        </select>
-        <div class="small">A copa mostra nós alcançáveis a partir da raiz (quando possível).</div>
+        <h3>C — folhas limite (opcional, múltiplas)</h3>
+        <div class="row">
+          <button class="btn" id="btnSelectAllLeaves" disabled>Selecionar tudo</button>
+          <button class="btn" id="btnClearLeaves" disabled>Limpar</button>
+        </div>
+        <div class="leafbox" id="leafBox">
+          <div class="count small">Carregue um arquivo…</div>
+        </div>
+        <div class="small" style="margin-top:6px;">
+          Se houver uma aba chamada <b>Folhas</b>/<b>Leaves</b>, o sistema usa as classes dela como “folhas sugeridas”.
+          Caso contrário, ele lista automaticamente as <b>folhas alcançáveis</b> a partir de B.
+        </div>
       </div>
 
       <div class="row">
@@ -178,8 +195,7 @@
       </div>
 
       <div class="guide-step" style="margin-top:12px;">
-        <b>Dica:</b> use scroll/trackpad para <b>zoom</b> e arraste para <b>pan</b>.
-        Para um layout “de artigo”, prefira <b>Reorganizar</b> em vez de arrastar nós.
+        <b>Zoom:</b> scroll/trackpad • <b>Pan:</b> arraste no fundo • <b>Layout “artigo”:</b> use Reorganizar.
       </div>
     </div>
   </div>
@@ -192,7 +208,7 @@
 
 <script>
 /* =========================
-   Helpers (string/normalize)
+   Helpers
 ========================= */
 function stripAccents(s){
   return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -200,22 +216,12 @@ function stripAccents(s){
 function normKey(s){
   return stripAccents(String(s || "").trim().toLowerCase()).replace(/\s+/g," ");
 }
-
-/**
- * Normaliza nomes de dimensões para reduzir duplicatas:
- * - remove acentos, lower, espaços
- * - regra específica: "motivacao e consequencia" / "motivacao e consequencias"
- * - regra leve de plural: remove 's' final quando fizer sentido
- */
 function normalizeDimensionName(dim){
   const base = normKey(dim);
-  // Regra específica pedida
   if (base === "motivacao e consequencia" || base === "motivacao e consequencias") return "motivacao e consequencia(s)";
-  // Regra leve: se terminar com 's' e tiver mais de 4 chars, remove (ajuda "consequencias" -> "consequencia")
   if (base.length > 4 && base.endsWith("s")) return base.slice(0, -1);
   return base;
 }
-
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
@@ -223,14 +229,12 @@ function escapeHtml(str){
 }
 
 /* =========================
-   App State
+   State
 ========================= */
 let STORE = null;
-let LAST_RENDER = { rootName:"", canopyName:"", activeDims:new Set(), onlyHighlighted:false };
 
 const svg = d3.select("#svg");
 const gMain = svg.append("g");
-
 const tooltip = document.getElementById("tooltip");
 
 function setStatus(msg, type=""){
@@ -238,16 +242,16 @@ function setStatus(msg, type=""){
   el.className = "status" + (type ? " " + type : "");
   el.innerHTML = msg;
 }
-
 function setStatsPill(text){
   document.getElementById("statsPill").textContent = text;
 }
-
 function setControlsEnabled(enabled){
   document.getElementById("btnGenerate").disabled = !enabled;
   document.getElementById("btnRelayout").disabled = !enabled;
   document.getElementById("btnExportPng").disabled = !enabled;
   document.getElementById("btnExportA4").disabled = !enabled;
+  document.getElementById("btnSelectAllLeaves").disabled = !enabled;
+  document.getElementById("btnClearLeaves").disabled = !enabled;
 }
 
 /* =========================
@@ -256,18 +260,14 @@ function setControlsEnabled(enabled){
 const zoom = d3.zoom()
   .scaleExtent([0.08, 4])
   .on("zoom", (e) => gMain.attr("transform", e.transform));
-
 svg.call(zoom);
 
 /* =========================
-   Parse XLSX (robusto)
-   - detecta colunas de classe e pai
-   - suporta pai com múltiplos valores (separados por ; , |)
-   - cria:
-       nodes: Map(name -> {name, dimKey, dimLabel, meta})
-       childrenMap: Map(parent -> Set(child))
-       parentsMap: Map(child -> Set(parent))
-       dims: Map(dimKey -> dimLabel)
+   Parse XLSX
+   - nodes: Map(name -> {name, dimKey, dimLabel, meta})
+   - childrenMap: Map(parent -> Set(children))
+   - dims: Map(dimKey -> dimLabel)
+   - suggestedLeaves: Set(name) from a sheet named Folhas/Leaves (if exists)
 ========================= */
 async function handleFile(file){
   try{
@@ -277,30 +277,41 @@ async function handleFile(file){
 
     const data = await file.arrayBuffer();
     const wb = XLSX.read(data, { type:"array" });
-
-    if(!wb.SheetNames || wb.SheetNames.length === 0){
-      throw new Error("O arquivo não contém planilhas.");
-    }
+    if(!wb.SheetNames || wb.SheetNames.length === 0) throw new Error("O arquivo não contém planilhas.");
 
     const nodes = new Map();
-    const childrenMap = new Map();   // parent -> Set(children)
-    const parentsMap = new Map();    // child -> Set(parents)
-    const dims = new Map();          // dimKey -> label
+    const childrenMap = new Map();
+    const dims = new Map();
+    const suggestedLeaves = new Set();
 
     let totalRows = 0;
     let detectedProblems = [];
 
+    // detectar aba de folhas
+    const leafSheetName = wb.SheetNames.find(s => /^(folhas|leaves)$/i.test(String(s||"").trim()));
+    if(leafSheetName){
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[leafSheetName], { defval:"" });
+      // tenta achar coluna de classe/termo
+      const keys = Object.keys(rows[0] || {});
+      const nameKey = keys.find(k => /classe|class|item|name|termo|term/i.test(k));
+      rows.forEach(r => {
+        const n = String(r[nameKey] ?? "").trim();
+        if(n) suggestedLeaves.add(n);
+      });
+    }
+
     for(const sheet of wb.SheetNames){
+      // pula a aba Folhas/Leaves como dimensão (ela é “controle”, não dimensão)
+      if(leafSheetName && sheet === leafSheetName) continue;
+
       const dimLabel = String(sheet || "").trim() || "Sem nome";
       const dimKey = normalizeDimensionName(dimLabel);
       if(!dims.has(dimKey)) dims.set(dimKey, dimLabel);
 
       const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval:"" });
       totalRows += rows.length;
-
       if(rows.length === 0) continue;
 
-      // Detectar colunas olhando o primeiro row com keys
       const keys = Object.keys(rows[0] || {});
       const nameKey = keys.find(k => /classe|class|item|name|termo|term/i.test(k));
       const parentKey = keys.find(k => /super|pai|parent|broader|mae|mãe|hierarquia/i.test(k));
@@ -309,33 +320,23 @@ async function handleFile(file){
         detectedProblems.push(`Planilha <b>${escapeHtml(dimLabel)}</b>: não detectei coluna de <b>Classe</b> (ex.: "classe", "name", "item").`);
       }
 
-      rows.forEach((row, idx) => {
+      rows.forEach(row => {
         const name = String(row[nameKey] ?? "").trim();
         if(!name) return;
 
-        // Nó
         if(!nodes.has(name)){
           nodes.set(name, { name, dimKey, dimLabel: dims.get(dimKey), meta: row });
-        }else{
-          // Se já existir, preserva o primeiro e apenas complementa meta se estiver vazio
-          const prev = nodes.get(name);
-          if(prev && (!prev.meta || Object.keys(prev.meta).length === 0)) prev.meta = row;
         }
 
-        // Relação de pai
         const parentRaw = parentKey ? String(row[parentKey] ?? "").trim() : "";
         if(parentRaw && parentRaw !== name){
-          const parts = parentRaw.split(/[;,|]/g).map(s => s.trim()).filter(Boolean);
-          parts.forEach(parent => {
-            if(parent === name) return;
-
+          const parents = parentRaw.split(/[;,|]/g).map(s => s.trim()).filter(Boolean);
+          parents.forEach(parent => {
+            if(!parent || parent === name) return;
             if(!childrenMap.has(parent)) childrenMap.set(parent, new Set());
             childrenMap.get(parent).add(name);
 
-            if(!parentsMap.has(name)) parentsMap.set(name, new Set());
-            parentsMap.get(name).add(parent);
-
-            // garante nó do pai existir (mesmo que não esteja listado como classe em alguma linha)
+            // garante nó do pai existir
             if(!nodes.has(parent)){
               nodes.set(parent, { name: parent, dimKey, dimLabel: dims.get(dimKey), meta: { __auto__: true } });
             }
@@ -344,28 +345,20 @@ async function handleFile(file){
       });
     }
 
-    // Guardar no STORE
-    STORE = { nodes, childrenMap, parentsMap, dims };
+    STORE = { nodes, childrenMap, dims, suggestedLeaves };
 
-    // UI
+    // stats
+    const numNodes = nodes.size;
+    const numEdges = Array.from(childrenMap.values()).reduce((a,s)=>a+s.size,0);
+    setStatsPill(`${numNodes} classes • ${numEdges} relações • ${dims.size} dimensões`);
+
     populateUI(detectedProblems);
-
-    // Stats
-    const numNodes = STORE.nodes.size;
-    const numEdges = Array.from(STORE.childrenMap.values()).reduce((acc, set) => acc + set.size, 0);
-    setStatsPill(`${numNodes} classes • ${numEdges} relações • ${STORE.dims.size} dimensões`);
-
-    // Enable
     setControlsEnabled(true);
 
-    // Status
     if(detectedProblems.length){
-      setStatus(
-        `<b>Atenção:</b> detectei alguns pontos no XLSX:<br>• ` + detectedProblems.join("<br>• "),
-        "warn"
-      );
+      setStatus(`<b>Atenção:</b><br>• ` + detectedProblems.join("<br>• "), "warn");
     }else{
-      setStatus("<b>Arquivo carregado.</b> Agora selecione Raiz/Copa e clique em <b>Gerar</b>.", "ok");
+      setStatus("<b>Arquivo carregado.</b> Selecione A e B, (opcional) folhas C, e clique em <b>Gerar</b>.", "ok");
     }
 
   }catch(err){
@@ -379,54 +372,61 @@ async function handleFile(file){
 
 /* =========================
    UI population
-   - dimensões com unificação
-   - rootSelect: apenas nós com filhos
-   - canopySelect: nós (atualiza após escolher raiz)
 ========================= */
 function populateUI(problems){
   // Dimensões
   const dimList = d3.select("#dimList").html("");
-  const dimEntries = Array.from(STORE.dims.entries()).sort((a,b) => a[1].localeCompare(b[1]));
+  const dimEntries = Array.from(STORE.dims.entries()).sort((a,b) => a[1].localeCompare(b[1], "pt-BR"));
 
   dimEntries.forEach(([dimKey, dimLabel]) => {
     const l = dimList.append("label").attr("class","chk");
-    l.append("input")
-      .attr("type","checkbox")
-      .attr("checked", true)
-      .attr("value", dimKey);
+    l.append("input").attr("type","checkbox").attr("checked", true).attr("value", dimKey);
     l.append("span").text(" " + dimLabel);
   });
 
-  // Root: só nós que têm filhos (childrenMap has key)
+  updateStartOptions();
   updateRootOptions();
+  updateLeafOptions(); // depende do B selecionado
 
-  // Canopy: baseado na raiz atual (alcance)
-  updateCanopyOptions();
+  applyFilterToUI(document.getElementById("filterInput").value);
+}
 
-  // Filtragem
-  applyFilterToSelects(document.getElementById("filterInput").value);
+function updateStartOptions(){
+  const sS = d3.select("#startSelect").html("");
+  Array.from(STORE.nodes.keys()).sort((a,b)=>a.localeCompare(b,"pt-BR")).forEach(n=>{
+    sS.append("option").attr("value", n).text(n);
+  });
 }
 
 function updateRootOptions(){
-  const rootSelect = d3.select("#rootSelect").html("");
+  const rS = d3.select("#rootSelect").html("");
+
   const roots = Array.from(STORE.childrenMap.keys())
     .filter(n => STORE.nodes.has(n))
-    .sort((a,b) => a.localeCompare(b, "pt-BR"));
+    .sort((a,b)=>a.localeCompare(b,"pt-BR"));
 
   if(roots.length === 0){
-    rootSelect.append("option").attr("value","").text("Nenhum nó com filhos encontrado");
-    setStatus("<b>Não encontrei nenhum nó com filhos.</b> Verifique se a planilha tem relações Pai → Filho.", "danger");
+    rS.append("option").attr("value","").text("Nenhum nó com filhos encontrado");
+    setStatus("<b>Não encontrei nenhum nó com filhos.</b> Verifique se o XLSX tem relações Pai → Filho.", "danger");
     setControlsEnabled(false);
     return;
   }
-
-  roots.forEach(n => rootSelect.append("option").attr("value", n).text(n));
+  roots.forEach(n => rS.append("option").attr("value", n).text(n));
 }
 
-function reachableFromRoot(rootName){
+function getActiveDims(){
+  const active = new Set();
+  d3.selectAll("#dimList input:checked").each(function(){ active.add(this.value); });
+  return active;
+}
+
+/* =========================
+   Reach + Leaves (a partir de B)
+========================= */
+function reachableFrom(rootB){
   const seen = new Set();
-  const q = [rootName];
-  seen.add(rootName);
+  const q = [rootB];
+  seen.add(rootB);
 
   while(q.length){
     const cur = q.shift();
@@ -442,102 +442,155 @@ function reachableFromRoot(rootName){
   return seen;
 }
 
-function updateCanopyOptions(){
-  const canopySelect = d3.select("#canopySelect");
-  canopySelect.html('<option value="">Sem limite (exibir toda a árvore)</option>');
-
-  const rootName = d3.select("#rootSelect").property("value");
-  if(!rootName || !STORE.nodes.has(rootName)) return;
-
-  const reach = reachableFromRoot(rootName);
-  const options = Array.from(reach).sort((a,b) => a.localeCompare(b, "pt-BR"));
-  options.forEach(n => canopySelect.append("option").attr("value", n).text(n));
+function leafCandidatesFromReach(reach){
+  // folhas = nós alcançáveis que NÃO são pais (não têm filhos em childrenMap) OU têm filhos fora do reach? (consideramos dentro do reach)
+  const leaves = [];
+  for(const n of reach){
+    const kids = STORE.childrenMap.get(n);
+    const hasChildInReach = kids ? Array.from(kids).some(k => reach.has(k)) : false;
+    if(!hasChildInReach) leaves.push(n);
+  }
+  return leaves.sort((a,b)=>a.localeCompare(b,"pt-BR"));
 }
 
 /* =========================
-   Select filter (search)
+   Leaf UI (C múltiplas)
+   - se existir aba Folhas/Leaves: usa essa lista (filtrando pelas alcançáveis de B)
+   - senão: usa folhas alcançáveis (automático)
 ========================= */
-function applyFilterToSelects(q){
+function updateLeafOptions(){
+  const leafBox = document.getElementById("leafBox");
+  leafBox.innerHTML = `<div class="count small">Selecione B para listar folhas…</div>`;
+
+  const rootB = d3.select("#rootSelect").property("value");
+  if(!rootB || !STORE.nodes.has(rootB)) return;
+
+  const reach = reachableFrom(rootB);
+
+  let candidates = [];
+  if(STORE.suggestedLeaves && STORE.suggestedLeaves.size){
+    candidates = Array.from(STORE.suggestedLeaves).filter(n => reach.has(n));
+    candidates.sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  }else{
+    candidates = leafCandidatesFromReach(reach);
+  }
+
+  if(candidates.length === 0){
+    leafBox.innerHTML = `<div class="count small">Nenhuma folha encontrada a partir de B.</div>`;
+    return;
+  }
+
+  const countDiv = document.createElement("div");
+  countDiv.className = "count small";
+  countDiv.textContent = `${candidates.length} folhas disponíveis`;
+  leafBox.appendChild(countDiv);
+
+  candidates.forEach(name => {
+    const label = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.value = name;
+    cb.className = "leaf-cb";
+    const span = document.createElement("span");
+    span.textContent = name;
+    label.appendChild(cb);
+    label.appendChild(span);
+    leafBox.appendChild(label);
+  });
+}
+
+function getSelectedLeaves(){
+  const selected = [];
+  document.querySelectorAll(".leaf-cb:checked").forEach(cb => selected.push(cb.value));
+  return selected;
+}
+
+function selectAllLeaves(){
+  document.querySelectorAll(".leaf-cb").forEach(cb => cb.checked = true);
+}
+function clearLeaves(){
+  document.querySelectorAll(".leaf-cb").forEach(cb => cb.checked = false);
+}
+
+/* =========================
+   Filter UI (A, B, folhas)
+========================= */
+function applyFilterToUI(q){
   q = normKey(q);
-  const selects = [document.getElementById("rootSelect"), document.getElementById("canopySelect")];
+
+  // selects A e B
+  const selects = [document.getElementById("startSelect"), document.getElementById("rootSelect")];
   selects.forEach(sel => {
     for(const opt of sel.options){
-      // não filtra a opção "Sem limite"
-      if(opt.value === "" && opt.textContent.toLowerCase().includes("sem limite")) continue;
       const ok = !q || normKey(opt.textContent).includes(q);
       opt.hidden = !ok;
     }
   });
+
+  // folhas
+  document.querySelectorAll("#leafBox label").forEach(lbl => {
+    const text = lbl.textContent || "";
+    const ok = !q || normKey(text).includes(q);
+    lbl.style.display = ok ? "" : "none";
+  });
 }
 
 /* =========================
-   Build "tree" to render
-   - constrói uma árvore (spanning tree) a partir da raiz via BFS
-   - se canopy definido: encontra caminho raiz->canopy e renderiza somente os nós desse caminho
-   - se onlyHighlighted: remove nós não destacados (mas mantém caminho mínimo se canopy)
+   Build spanning parents from B (BFS)
 ========================= */
-function getActiveDims(){
-  const active = new Set();
-  d3.selectAll("#dimList input:checked").each(function(){ active.add(this.value); });
-  return active;
-}
-
-function buildSpanningTree(rootName){
-  // BFS: define parentPtr e depth
+function buildParentPtr(rootB){
   const parentPtr = new Map();
-  const depth = new Map();
-  const order = [];
-
-  const q = [rootName];
-  parentPtr.set(rootName, null);
-  depth.set(rootName, 0);
+  const q = [rootB];
+  parentPtr.set(rootB, null);
 
   while(q.length){
     const cur = q.shift();
-    order.push(cur);
-
     const kids = STORE.childrenMap.get(cur);
     if(!kids) continue;
 
     for(const k of kids){
       if(!parentPtr.has(k)){
         parentPtr.set(k, cur);
-        depth.set(k, depth.get(cur) + 1);
         q.push(k);
       }
     }
   }
-  return { parentPtr, depth, order };
+  return parentPtr;
 }
 
-function pathRootToCanopy(rootName, canopyName, parentPtr){
-  if(!parentPtr.has(canopyName)) return null;
+function pathBtoX(rootB, x, parentPtr){
+  if(!parentPtr.has(x)) return null;
   const path = [];
-  let cur = canopyName;
+  let cur = x;
   while(cur !== null){
     path.push(cur);
-    if(cur === rootName) break;
+    if(cur === rootB) break;
     cur = parentPtr.get(cur);
   }
-  if(path[path.length - 1] !== rootName) return null;
+  if(path[path.length - 1] !== rootB) return null;
   path.reverse();
   return path;
 }
 
-function buildHierarchyObject(rootName, canopyName, activeDims, onlyHighlighted){
-  const { parentPtr } = buildSpanningTree(rootName);
+/* =========================
+   Build subtree from B
+   - se folhas C selecionadas: allowed = união de caminhos B->Ci
+   - se nenhuma folha: allowed = null => árvore completa a partir de B
+   - o build usa childrenMap, mas só mantém filhos que estão em allowed (quando existir)
+========================= */
+function buildSubtreeFromB(rootB, selectedLeaves, activeDims, onlyHighlighted){
+  const parentPtr = buildParentPtr(rootB);
 
-  // Se canopy: restringe ao caminho
   let allowed = null;
-  if(canopyName){
-    const path = pathRootToCanopy(rootName, canopyName, parentPtr);
-    if(!path){
-      return { error: `A copa <b>${escapeHtml(canopyName)}</b> não é alcançável a partir da raiz <b>${escapeHtml(rootName)}</b>.` };
+  if(selectedLeaves && selectedLeaves.length){
+    allowed = new Set([rootB]);
+    for(const leaf of selectedLeaves){
+      const p = pathBtoX(rootB, leaf, parentPtr);
+      if(!p) return { error: `A folha <b>${escapeHtml(leaf)}</b> não é alcançável a partir de B.` };
+      p.forEach(n => allowed.add(n));
     }
-    allowed = new Set(path);
   }
 
-  // Função de build recursivo (apenas via childrenMap)
   function buildNode(name, visited){
     if(visited.has(name)) return null;
     visited.add(name);
@@ -546,74 +599,84 @@ function buildHierarchyObject(rootName, canopyName, activeDims, onlyHighlighted)
     const highlighted = activeDims.has(n.dimKey);
 
     if(onlyHighlighted && !highlighted){
-      // se canopy, ainda permite nós do caminho (allowed) para não quebrar o caminho
+      // se for um nó permitido por "allowed" (por causa do caminho até folhas), mantemos
       if(!(allowed && allowed.has(name))) return null;
     }
 
-    let children = [];
     const kids = STORE.childrenMap.get(name);
+    let children = [];
     if(kids){
       for(const c of kids){
-        if(allowed && !allowed.has(c)) continue; // se canopy, só caminho
+        if(allowed && !allowed.has(c)) continue;
         const built = buildNode(c, new Set(visited));
         if(built) children.push(built);
       }
     }
 
-    // se canopy e name é canopy, para aqui
-    if(canopyName && name === canopyName) children = [];
-
     return { ...n, highlighted, children };
   }
 
-  const rootObj = buildNode(rootName, new Set());
-  if(!rootObj){
-    return { error: "Não foi possível construir a hierarquia com os filtros atuais." };
-  }
+  const rootObj = buildNode(rootB, new Set());
+  if(!rootObj) return { error: "Não foi possível construir a árvore com os filtros atuais." };
   return { rootObj, allowed };
 }
 
 /* =========================
-   Render (layout vertical, node box adaptável, tooltip compacto)
+   Render: A como raiz visual; B como primeiro filho (A → B sempre)
 ========================= */
 function render(){
   if(!STORE) return;
 
-  const rootName = d3.select("#rootSelect").property("value");
-  const canopyName = d3.select("#canopySelect").property("value") || "";
+  const startA = d3.select("#startSelect").property("value");
+  const rootB  = d3.select("#rootSelect").property("value");
   const activeDims = getActiveDims();
   const onlyHighlighted = document.getElementById("chkShowOnlyHighlighted").checked;
 
-  if(!rootName || !STORE.nodes.has(rootName)){
-    setStatus("Selecione uma <b>Raiz</b> válida.", "warn");
+  if(!startA || !STORE.nodes.has(startA)){
+    setStatus("Selecione um <b>A</b> válido (ponto inicial).", "warn");
+    return;
+  }
+  if(!rootB || !STORE.nodes.has(rootB)){
+    setStatus("Selecione um <b>B</b> válido (raiz/superclasse).", "warn");
+    return;
+  }
+  // B precisa ser superclasse (ter filhos)
+  if(!STORE.childrenMap.has(rootB)){
+    setStatus("A <b>Raiz (B)</b> precisa ser uma <b>superclasse</b> (ter filhos).", "warn");
     return;
   }
 
-  const built = buildHierarchyObject(rootName, canopyName, activeDims, onlyHighlighted);
-  if(built.error){
-    setStatus(`<b>Não deu para gerar:</b> ${built.error}`, "warn");
+  const selectedLeaves = getSelectedLeaves(); // C múltiplas (opcional)
+  const subtree = buildSubtreeFromB(rootB, selectedLeaves, activeDims, onlyHighlighted);
+  if(subtree.error){
+    setStatus(`<b>Não deu para gerar:</b> ${subtree.error}`, "warn");
     return;
   }
 
-  LAST_RENDER = { rootName, canopyName, activeDims, onlyHighlighted };
+  // Regra A → B SEMPRE
+  const nodeA = STORE.nodes.get(startA);
+  const visualRootObj = {
+    ...nodeA,
+    highlighted: activeDims.has(nodeA.dimKey),
+    children: [ subtree.rootObj ]
+  };
 
   gMain.selectAll("*").remove();
 
-  const root = d3.hierarchy(built.rootObj);
+  const root = d3.hierarchy(visualRootObj);
 
-  // Layout: vertical, com espaçamento generoso e separação entre irmãos
-  const NODE_W = 260;       // largura-alvo para wrap
-  const NODE_PAD_X = 14;
-  const NODE_PAD_Y = 10;
+  // Layout vertical (A4-friendly) + caixas adaptáveis
+  const NODE_W = 280;
+  const PAD_X = 14;
+  const PAD_Y = 10;
   const LINE_H = 14;
 
   const layout = d3.tree()
-    .nodeSize([320, 140])
-    .separation((a,b) => (a.parent === b.parent ? 1.2 : 1.6));
+    .nodeSize([340, 150])
+    .separation((a,b) => (a.parent === b.parent ? 1.2 : 1.7));
 
   layout(root);
 
-  // Links
   const linkGen = d3.linkVertical().x(d => d.x).y(d => d.y);
 
   const links = gMain.selectAll(".link")
@@ -623,43 +686,33 @@ function render(){
     .attr("class","link")
     .attr("d", d => linkGen(d));
 
-  // Nodes
   const nodeSel = gMain.selectAll(".node")
     .data(root.descendants())
     .enter()
     .append("g")
     .attr("class","node")
-    .attr("transform", d => `translate(${d.x},${d.y})`);
-
-  // Tooltip events
-  nodeSel
+    .attr("transform", d => `translate(${d.x},${d.y})`)
     .on("mousemove", (event, d) => showTooltip(event, d))
     .on("mouseleave", hideTooltip);
 
-  // Text first (to measure)
+  // texto (com wrap) primeiro para medir
   const textSel = nodeSel.append("text")
     .attr("text-anchor","middle")
-    .attr("dy", 0)
-    .attr("fill", d => d.data.highlighted ? "#ffffff" : (document.body.dataset.theme === "dark" ? "#e2e8f0" : "#0f172a"));
+    .attr("dy", 0);
 
-  // Wrap text into tspans
   textSel.each(function(d){
-    const label = String(d.data.name || "");
-    wrapSvgText(d3.select(this), label, NODE_W - NODE_PAD_X*2, LINE_H);
+    wrapSvgText(d3.select(this), String(d.data.name || ""), NODE_W - PAD_X*2, LINE_H);
   });
 
-  // Compute rect sizes based on text bbox per node
+  // medir e criar retângulo adaptável
   nodeSel.each(function(d){
-    const g = d3.select(this);
-    const t = g.select("text").node();
+    const t = d3.select(this).select("text").node();
     const bb = t.getBBox();
-    const w = Math.max(170, Math.min(420, bb.width + NODE_PAD_X*2));
-    const h = Math.max(44, bb.height + NODE_PAD_Y*2);
-
+    const w = Math.max(180, Math.min(460, bb.width + PAD_X*2));
+    const h = Math.max(46, bb.height + PAD_Y*2);
     d.__box = { w, h };
   });
 
-  // Rects (after measurement)
   nodeSel.insert("rect", "text")
     .attr("x", d => -d.__box.w/2)
     .attr("y", d => -d.__box.h/2)
@@ -668,35 +721,34 @@ function render(){
     .attr("fill", d => d.data.highlighted ? "var(--accent)" : (document.body.dataset.theme === "dark" ? "#111827" : "#cbd5e1"))
     .attr("stroke", d => d.data.highlighted ? "var(--accent2)" : (document.body.dataset.theme === "dark" ? "#334155" : "#94a3b8"));
 
-  // Recolor text after theme
   nodeSel.select("text")
     .attr("fill", d => d.data.highlighted ? "#ffffff" : (document.body.dataset.theme === "dark" ? "#e2e8f0" : "#0f172a"));
 
-  // Optional drag (disabled by default)
+  // Drag opcional
   const dragEnabled = document.getElementById("chkDrag").checked;
   if(dragEnabled){
     const drag = d3.drag().on("drag", function(event, d){
-      d.x = event.x;
-      d.y = event.y;
+      d.x = event.x; d.y = event.y;
       d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
       links.attr("d", l => linkGen(l));
     });
     nodeSel.call(drag);
   }
 
-  // Auto-fit
   autofitView(60);
 
-  // Status
-  const canopyText = canopyName ? `Copa: <b>${escapeHtml(canopyName)}</b> (modo caminho)` : `Copa: <b>sem limite</b>`;
+  const cInfo = selectedLeaves.length
+    ? `Folhas C selecionadas: <b>${selectedLeaves.length}</b> (união dos caminhos B→C)`
+    : `Folhas C: <b>nenhuma</b> (mostrando toda a árvore de B)`;
+
   setStatus(
-    `<b>Gerado.</b> Raiz: <b>${escapeHtml(rootName)}</b> • ${canopyText} • Dimensões ativas: <b>${activeDims.size}</b>`,
+    `<b>Gerado.</b> A: <b>${escapeHtml(startA)}</b> → B: <b>${escapeHtml(rootB)}</b> • ${cInfo}`,
     "ok"
   );
 }
 
 /* =========================
-   Text wrap for SVG <text>
+   Text wrap
 ========================= */
 function wrapSvgText(textSel, text, maxWidth, lineHeight){
   const words = String(text).split(/\s+/g);
@@ -705,9 +757,7 @@ function wrapSvgText(textSel, text, maxWidth, lineHeight){
 
   textSel.text(null);
 
-  let tspan = textSel.append("tspan")
-    .attr("x", 0)
-    .attr("dy", "0em");
+  let tspan = textSel.append("tspan").attr("x", 0).attr("dy", "0em");
 
   for(const w of words){
     line.push(w);
@@ -719,18 +769,15 @@ function wrapSvgText(textSel, text, maxWidth, lineHeight){
       lineNumber += 1;
       tspan = textSel.append("tspan")
         .attr("x", 0)
-        .attr("dy", (lineNumber === 1 ? "1.15em" : "1.15em"))
+        .attr("dy", "1.15em")
         .text(w);
     }
   }
 
-  // Centralizar bloco verticalmente: move dy do primeiro tspan
   const tspans = textSel.selectAll("tspan").nodes();
   const lines = tspans.length || 1;
   const offset = -((lines - 1) * (lineHeight/2)) / lineHeight; // em "em"
-  if(tspans[0]){
-    tspans[0].setAttribute("dy", `${offset}em`);
-  }
+  if(tspans[0]) tspans[0].setAttribute("dy", `${offset}em`);
 }
 
 /* =========================
@@ -738,31 +785,21 @@ function wrapSvgText(textSel, text, maxWidth, lineHeight){
 ========================= */
 function showTooltip(event, d){
   if(!d || !d.data) return;
-
   const meta = d.data.meta || {};
   const dim = d.data.dimLabel || d.data.dimKey || "";
   const isAuto = meta.__auto__ ? "Sim (criado por relação)" : "Não";
 
-  // Escolhe alguns campos úteis primeiro (se existirem)
-  const preferredKeys = ["classe", "Class", "name", "Name", "termo", "Termo", "descrição", "descricao", "Description", "super", "pai", "parent"];
+  const preferredKeys = ["classe","Class","name","Name","termo","Termo","descricao","descrição","Description","super","pai","parent"];
   const entries = [];
-
-  // Dimensão
   if(dim) entries.push(["Dimensão", dim]);
   entries.push(["Auto-criado", isAuto]);
 
-  // Preferidos
   for(const k of preferredKeys){
-    if(meta && Object.prototype.hasOwnProperty.call(meta, k) && String(meta[k]).trim()){
+    if(Object.prototype.hasOwnProperty.call(meta, k) && String(meta[k]).trim()){
       entries.push([k, String(meta[k])]);
     }
   }
-
-  // Outros (limitado)
-  const other = Object.keys(meta || {})
-    .filter(k => !preferredKeys.includes(k) && k !== "__auto__")
-    .slice(0, 10);
-
+  const other = Object.keys(meta || {}).filter(k => !preferredKeys.includes(k) && k !== "__auto__").slice(0, 10);
   other.forEach(k => {
     const v = String(meta[k] ?? "").trim();
     if(v) entries.push([k, v]);
@@ -779,7 +816,6 @@ function showTooltip(event, d){
     </div>
   `;
 
-  // Posicionamento
   const pad = 14;
   const rect = tooltip.getBoundingClientRect();
   let x = event.clientX + pad;
@@ -789,10 +825,7 @@ function showTooltip(event, d){
   tooltip.style.left = x + "px";
   tooltip.style.top = y + "px";
 }
-
-function hideTooltip(){
-  tooltip.style.display = "none";
-}
+function hideTooltip(){ tooltip.style.display = "none"; }
 
 /* =========================
    Auto-fit view
@@ -800,10 +833,7 @@ function hideTooltip(){
 function autofitView(topPadding=50){
   const bbox = gMain.node().getBBox();
   const svgRect = svg.node().getBoundingClientRect();
-
-  if(!bbox || bbox.width === 0 || bbox.height === 0){
-    return;
-  }
+  if(!bbox || bbox.width === 0 || bbox.height === 0) return;
 
   const margin = 60;
   const availableW = Math.max(1, svgRect.width - margin*2);
@@ -818,14 +848,9 @@ function autofitView(topPadding=50){
 
 /* =========================
    Export PNG
-   - Auto-fit (igual tela)
-   - A4 300dpi (2480x3508), encaixa bbox com margem
 ========================= */
 function serializeSvgWithInlineStyle(svgNode){
-  // Clona para não mexer no original
   const clone = svgNode.cloneNode(true);
-
-  // Injeta style básico dentro do SVG para export fiel
   const style = document.createElementNS("http://www.w3.org/2000/svg","style");
   style.textContent = `
     .link{ fill:none; stroke:${document.body.dataset.theme === "dark" ? "#64748b" : "#94a3b8"}; stroke-width:1.5px; opacity:${document.body.dataset.theme === "dark" ? 0.7 : 0.65}; }
@@ -833,11 +858,8 @@ function serializeSvgWithInlineStyle(svgNode){
     .node rect{ stroke-width:1.5px; rx:10; ry:10; }
   `;
   clone.insertBefore(style, clone.firstChild);
-
-  // Garante xmlns
   clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
   clone.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
-
   return new XMLSerializer().serializeToString(clone);
 }
 
@@ -845,12 +867,11 @@ function exportPngAuto(){
   const svgNode = document.getElementById("svg");
   const bbox = gMain.node().getBBox();
   if(!bbox || bbox.width === 0 || bbox.height === 0){
-    setStatus("Nada para exportar (bbox vazio). Gere a taxonomia antes.", "warn");
+    setStatus("Nada para exportar. Gere a taxonomia antes.", "warn");
     return;
   }
-
   const padding = 120;
-  const scale = 3; // “resolução” melhor
+  const scale = 3;
   const w = (bbox.width + padding*2);
   const h = (bbox.height + padding*2);
 
@@ -860,7 +881,6 @@ function exportPngAuto(){
 
   const ctx = canvas.getContext("2d");
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-
   ctx.fillStyle = (document.body.dataset.theme === "dark") ? "#000000" : "#ffffff";
   ctx.fillRect(0,0,w,h);
 
@@ -869,7 +889,7 @@ function exportPngAuto(){
   img.onload = () => {
     ctx.drawImage(img, padding - bbox.x, padding - bbox.y);
     const a = document.createElement("a");
-    a.download = "taxonomia_auto.png";
+    a.download = "taxonomia_A-B-C_auto.png";
     a.href = canvas.toDataURL("image/png");
     a.click();
   };
@@ -881,27 +901,19 @@ function exportPngA4(){
   const svgNode = document.getElementById("svg");
   const bbox = gMain.node().getBBox();
   if(!bbox || bbox.width === 0 || bbox.height === 0){
-    setStatus("Nada para exportar (bbox vazio). Gere a taxonomia antes.", "warn");
+    setStatus("Nada para exportar. Gere a taxonomia antes.", "warn");
     return;
   }
-
-  // A4 portrait 300dpi
-  const A4_W = 2480;
-  const A4_H = 3508;
-  const margin = 180;
-
+  const A4_W = 2480, A4_H = 3508, margin = 180;
   const canvas = document.createElement("canvas");
-  canvas.width = A4_W;
-  canvas.height = A4_H;
+  canvas.width = A4_W; canvas.height = A4_H;
 
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = (document.body.dataset.theme === "dark") ? "#000000" : "#ffffff";
   ctx.fillRect(0,0,A4_W,A4_H);
 
-  // escala para caber no A4 (área útil)
   const usableW = A4_W - margin*2;
   const usableH = A4_H - margin*2;
-
   const s = Math.min(usableW / bbox.width, usableH / bbox.height);
   const tx = margin + (usableW/2) - (bbox.x + bbox.width/2) * s;
   const ty = margin + (usableH/2) - (bbox.y + bbox.height/2) * s;
@@ -912,20 +924,12 @@ function exportPngA4(){
     ctx.setTransform(s, 0, 0, s, tx, ty);
     ctx.drawImage(img, 0, 0);
     const a = document.createElement("a");
-    a.download = "taxonomia_A4_300dpi.png";
+    a.download = "taxonomia_A4_300dpi_A-B-C.png";
     a.href = canvas.toDataURL("image/png");
     a.click();
   };
   img.onerror = () => setStatus("Falha ao exportar A4: não consegui rasterizar o SVG.", "danger");
   img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgString);
-}
-
-/* =========================
-   Re-layout button
-========================= */
-function relayout(){
-  // Só reaplica render com os mesmos parâmetros, recalculando o tree layout
-  render();
 }
 
 /* =========================
@@ -935,38 +939,39 @@ document.getElementById("fileInput").addEventListener("change", (e) => {
   const f = e.target.files && e.target.files[0];
   if(f) handleFile(f);
 });
-
 document.getElementById("themeSelect").addEventListener("change", function(){
   document.body.dataset.theme = this.value;
-
-  // Re-render para ajustar cores com o tema
-  if(STORE){
-    render();
-  }
+  if(STORE) render();
 });
-
 document.getElementById("btnGenerate").addEventListener("click", render);
-document.getElementById("btnRelayout").addEventListener("click", relayout);
+document.getElementById("btnRelayout").addEventListener("click", render);
 document.getElementById("btnExportPng").addEventListener("click", exportPngAuto);
 document.getElementById("btnExportA4").addEventListener("click", exportPngA4);
 
 document.getElementById("rootSelect").addEventListener("change", () => {
-  updateCanopyOptions();
-  applyFilterToSelects(document.getElementById("filterInput").value);
+  updateLeafOptions();
+  applyFilterToUI(document.getElementById("filterInput").value);
 });
 
 document.getElementById("filterInput").addEventListener("input", (e) => {
-  applyFilterToSelects(e.target.value);
+  applyFilterToUI(e.target.value);
 });
 
 document.getElementById("chkDrag").addEventListener("change", () => {
-  // Só re-render se já existe render
   if(STORE) render();
 });
-
 document.getElementById("chkShowOnlyHighlighted").addEventListener("change", () => {
   if(STORE) render();
 });
+
+document.getElementById("btnSelectAllLeaves").addEventListener("click", selectAllLeaves);
+document.getElementById("btnClearLeaves").addEventListener("click", clearLeaves);
+
+/* Enable buttons once STORE exists */
+(function init(){
+  setControlsEnabled(false);
+  setStatus("Carregue um arquivo para começar.", "");
+})();
 
 </script>
 </body>
