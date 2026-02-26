@@ -18,10 +18,8 @@
       --shadow: 0 10px 24px rgba(16,24,40,.10);
       --radius: 14px;
     }
-
     html,body{height:100%; margin:0; background:var(--bg); color:var(--text);
       font-family: Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
-
     header{
       position: sticky; top:0; z-index: 10;
       background: rgba(255,255,255,.94);
@@ -32,11 +30,9 @@
       gap: 10px 12px;
       align-items:center; justify-content: space-between;
     }
-
     .brand{display:flex; flex-direction:column; gap:4px; min-width: 320px;}
     .brand h1{margin:0; font-size:14px; font-weight:800;}
     .brand .sub{margin:0; font-size:12px; color:var(--muted); max-width: 980px; line-height: 1.25;}
-
     .controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end;}
     .btn,.file,.input,.select,.pill{
       border:1px solid var(--line);
@@ -77,14 +73,12 @@
       #wrap{grid-template-columns: 1fr; height:auto;}
       body{height:auto;}
     }
-
     .card{
       background:#fff;
       border:1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
-
     .canvas{min-height: 740px; display:flex; flex-direction:column;}
     .canvasHeader{
       padding: 10px 12px;
@@ -147,7 +141,6 @@
     .dimName{flex:1; font-weight:700;}
     .dimCount{color:var(--muted); font-size:11px;}
 
-    /* SVG */
     .link{
       fill:none;
       stroke: rgba(16,24,40,.18);
@@ -179,7 +172,6 @@
       stroke: rgba(249,115,22,.95);
     }
 
-    /* Tooltip compacto */
     .tooltip{
       position: fixed;
       z-index: 9999;
@@ -221,7 +213,7 @@
   <div class="brand">
     <h1>ONTOHATE V2 — Taxonomia (Dimensões → Raiz → Gerar) + Export</h1>
     <p class="sub">
-      1) Selecione as <b>Dimensões</b>, 2) escolha uma <b>Raiz</b> que gere árvore (>=2 classes), 3) gere a taxonomia Top-Down “A4-friendly”.
+      1) Selecione as <b>Dimensões</b>, 2) escolha uma <b>Raiz</b> que gere árvore (>=2 classes), 3) gere a taxonomia Top-Down (vertical/A4).
     </p>
   </div>
 
@@ -274,7 +266,7 @@
 
   <div class="card side">
     <h2>1) Dimensões</h2>
-    <p class="mini">As cores usam a “cor da dimensão” (sem clarear demais). “Motivação e consequência(s)” é unificada automaticamente.</p>
+    <p class="mini">Cores fortes por dimensão + contraste automático no texto. “Motivação e consequência(s)” unificada automaticamente.</p>
 
     <div class="dimList">
       <div class="dimListHeader">
@@ -288,7 +280,7 @@
     <div class="sep"></div>
 
     <h2>2) Raiz</h2>
-    <p class="mini">A lista mostra apenas raízes que geram árvore com o recorte atual.</p>
+    <p class="mini">A lista mostra apenas raízes que geram árvore com o recorte atual (>=2 nós).</p>
     <div class="row">
       <span class="select">Raiz:
         <select id="rootSelect"></select>
@@ -301,7 +293,7 @@
 
     <div class="sep"></div>
 
-    <p class="mini"><b>Hover</b> em uma classe mostra comments/observações (compacto).</p>
+    <p class="mini"><b>Hover</b> mostra comments/observações (compacto).</p>
   </div>
 </div>
 
@@ -364,11 +356,63 @@ function pick(row, wanted){
   }
   return undefined;
 }
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
-/* ===== Canonização de Dimensões =====
-   - remove "(v2)" e "v2"
-   - unifica "Motivação e consequência(s)"
-*/
+/* ============================
+   Cor segura (sempre HEX)
+============================ */
+function hashToHue(str){
+  const s = String(str||"");
+  let h = 2166136261;
+  for (let i=0;i<s.length;i++){
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h) % 360;
+}
+function hslToHex(h, s, l){
+  // h:0..360, s:0..1, l:0..1
+  const c = (1 - Math.abs(2*l - 1)) * s;
+  const x = c * (1 - Math.abs((h/60) % 2 - 1));
+  const m = l - c/2;
+  let r=0,g=0,b=0;
+  if (0<=h && h<60){ r=c; g=x; b=0; }
+  else if (60<=h && h<120){ r=x; g=c; b=0; }
+  else if (120<=h && h<180){ r=0; g=c; b=x; }
+  else if (180<=h && h<240){ r=0; g=x; b=c; }
+  else if (240<=h && h<300){ r=x; g=0; b=c; }
+  else { r=c; g=0; b=x; }
+  const R = Math.round((r+m)*255);
+  const G = Math.round((g+m)*255);
+  const B = Math.round((b+m)*255);
+  return "#" + [R,G,B].map(v=>v.toString(16).padStart(2,"0")).join("");
+}
+function hashColorHEX(str){
+  const hue = hashToHue(str);
+  // cor “forte” e consistente
+  return hslToHex(hue, 0.72, 0.45);
+}
+function luminanceFromHex(hex){
+  const c = d3.color(hex);
+  // c nunca será null aqui porque hex é sempre válido
+  const srgb = [c.r,c.g,c.b].map(v=>{
+    const x = v/255;
+    return (x<=0.03928)? x/12.92 : Math.pow((x+0.055)/1.055, 2.4);
+  });
+  return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
+}
+function contrastText(bgHex){
+  return luminanceFromHex(bgHex) > 0.55 ? "#101828" : "#ffffff";
+}
+
+/* ===== Canonização Dimensão ===== */
 function canonDimension(name){
   let s = String(name||"").trim();
   if (!s) return "";
@@ -382,6 +426,7 @@ function canonDimension(name){
   return s;
 }
 
+/* wrap do termo (2 linhas) */
 function wrapLabel(text, maxChars=26){
   const t = String(text||"");
   if (t.length <= maxChars) return [t];
@@ -402,18 +447,8 @@ function wrapLabel(text, maxChars=26){
   if (joined.length > lines.join(" ").length) lines[lines.length-1] += "…";
   return lines;
 }
-function escapeHtml(s){
-  return String(s||"")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
 
-/* ============================
-   Tooltip compacto
-============================ */
+/* Tooltip compacto */
 function showTooltip(evt, payload){
   tooltipEl.innerHTML = `
     <div class="tTitle">${escapeHtml(payload.name || "")}</div>
@@ -435,51 +470,19 @@ function moveTooltip(evt){
   let y = evt.clientY + 14;
   if (x + rect.width + pad > vw) x = evt.clientX - rect.width - 14;
   if (y + rect.height + pad > vh) y = evt.clientY - rect.height - 14;
-  x = Math.max(pad, x);
-  y = Math.max(pad, y);
-  tooltipEl.style.left = x + "px";
-  tooltipEl.style.top = y + "px";
+  tooltipEl.style.left = Math.max(pad, x) + "px";
+  tooltipEl.style.top  = Math.max(pad, y) + "px";
 }
 function hideTooltip(){ tooltipEl.style.display = "none"; tooltipEl.innerHTML = ""; }
 
-/* ============================
-   Cor por dimensão (hash) + contraste
-============================ */
-function hashColor(str){
-  const s = String(str||"");
-  let h = 2166136261;
-  for (let i=0;i<s.length;i++){
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  const hue = Math.abs(h) % 360;
-  return `hsl(${hue} 70% 45%)`;
-}
-function luminance(hex){
-  const c = d3.color(hex);
-  const srgb = [c.r,c.g,c.b].map(v=>{
-    const x = v/255;
-    return (x<=0.03928)? x/12.92 : Math.pow((x+0.055)/1.055, 2.4);
-  });
-  return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
-}
-function contrastText(bg){
-  const hex = d3.color(bg).formatHex();
-  return luminance(hex) > 0.55 ? "#101828" : "#ffffff";
-}
-
-/* ============================
-   Zoom
-============================ */
+/* Zoom */
 const zoom = d3.zoom()
   .scaleExtent([0.10, 3.5])
   .on("zoom", (event) => { if (viewport) viewport.attr("transform", event.transform); });
 
-/* ============================
-   State
-============================ */
-let RAW = null;  // nodes, edges, dims, fileName, childrenOfAll
-let VIEW = null; // selected dims, root, treeData, dimColor
+/* State */
+let RAW = null;
+let VIEW = null;
 
 let rootHierarchy = null;
 let linkLayer = null;
@@ -489,9 +492,30 @@ let fitToCanvasFn = null;
 let expandAllFn = null;
 let collapseAllFn = null;
 
-/* ============================
-   Load XLSX
-============================ */
+/* DOM refs */
+const fileInput = document.getElementById("fileInput");
+const btnLoadDefault = document.getElementById("btnLoadDefault");
+const dimItemsEl = document.getElementById("dimItems");
+const dimSearchEl = document.getElementById("dimSearch");
+const btnSelectAll = document.getElementById("btnSelectAll");
+const btnClearAll = document.getElementById("btnClearAll");
+const rootSelect = document.getElementById("rootSelect");
+const btnGenerate = document.getElementById("btnGenerate");
+const searchEl = document.getElementById("search");
+const btnFit = document.getElementById("btnFit");
+const btnExpandAll = document.getElementById("btnExpandAll");
+const btnCollapseAll = document.getElementById("btnCollapseAll");
+const btnSvg = document.getElementById("btnSvg");
+const btnPng = document.getElementById("btnPng");
+const pngScaleSel = document.getElementById("pngScale");
+const canvasTitle = document.getElementById("canvasTitle");
+const canvasSubtitle = document.getElementById("canvasSubtitle");
+const canvasMeta = document.getElementById("canvasMeta");
+const statusDot = document.getElementById("statusDot");
+const statsEl = document.getElementById("stats");
+const tooltipEl = document.getElementById("tooltip");
+const toastEl = document.getElementById("toast");
+
 btnLoadDefault.addEventListener("click", loadDefault);
 fileInput.addEventListener("change", async (ev) => {
   const f = ev.target.files?.[0];
@@ -602,18 +626,13 @@ async function parseAndInit(buf, fileName){
   toast(`Planilha carregada: ${fileName}\nClasses: ${nodes.size}\nDimensões (padronizadas): ${dimensions.length}`);
 }
 
-/* ============================
-   Dimensões UI
-============================ */
+/* Dimensões UI */
 function getSelectedDimensions(){
   const checks = dimItemsEl.querySelectorAll("input[type=checkbox][data-dim]");
   const set = new Set();
-  checks.forEach(ch=>{
-    if (ch.checked) set.add(ch.getAttribute("data-dim"));
-  });
+  checks.forEach(ch=>{ if (ch.checked) set.add(ch.getAttribute("data-dim")); });
   return set;
 }
-
 function buildDimensionsUI(){
   const dimCounts = new Map();
   for (const obj of RAW.nodes.values()){
@@ -622,7 +641,7 @@ function buildDimensionsUI(){
 
   dimItemsEl.innerHTML = "";
   for (const dim of RAW.dimensions){
-    const color = d3.color(hashColor(dim)).formatHex();
+    const color = hashColorHEX(dim);
 
     const item = document.createElement("label");
     item.className = "dimItem";
@@ -672,15 +691,12 @@ function buildDimensionsUI(){
   };
 }
 
-/* ============================
-   Raízes válidas (>= 2 nós)
-============================ */
+/* Raízes válidas (>=2 nós) */
 function updateRootOptions(){
   if (!RAW) return;
 
   const selected = getSelectedDimensions();
 
-  // targets: nós cuja dimensão está selecionada
   const targets = new Set();
   for (const [name,obj] of RAW.nodes.entries()){
     if (selected.has(obj.dimension)) targets.add(name);
@@ -689,7 +705,6 @@ function updateRootOptions(){
   const memo = new Map();
   const visiting = new Set();
 
-  // tamanho da árvore podada (mantendo conectores)
   function prunedSize(node){
     if (memo.has(node)) return memo.get(node);
     if (visiting.has(node)) return 0;
@@ -729,16 +744,13 @@ function updateRootOptions(){
     rootSelect.appendChild(opt);
   }
 
-  // tenta manter seleção anterior, se ainda existir
   if (prev && candidates.includes(prev)) rootSelect.value = prev;
 
   canvasSubtitle.textContent = `Dimensões selecionadas: ${selected.size} • Raízes possíveis: ${candidates.length}`;
   canvasMeta.textContent = `Selecione uma raiz e clique “Gerar taxonomia”`;
 }
 
-/* ============================
-   Gerar taxonomia (top-down vertical + conectores)
-============================ */
+/* Gerar taxonomia */
 btnGenerate.addEventListener("click", generateTaxonomy);
 
 function countNodes(node){
@@ -761,15 +773,12 @@ function generateTaxonomy(){
     return;
   }
 
-  // targets
   const targets = new Set();
   for (const [name,obj] of RAW.nodes.entries()){
     if (selected.has(obj.dimension)) targets.add(name);
   }
 
   const visiting = new Set();
-
-  // mantém nó se: é target OU tem filho mantido OU é a raiz
   function build(node){
     if (visiting.has(node)) return null;
     visiting.add(node);
@@ -811,10 +820,9 @@ function generateTaxonomy(){
     return;
   }
 
-  // cor por dimensão selecionada
   const dimColor = new Map();
   for (const d of selected){
-    dimColor.set(d, d3.color(hashColor(d)).formatHex());
+    dimColor.set(d, hashColorHEX(d));
   }
 
   VIEW = { selected, root, treeData, dimColor };
@@ -829,9 +837,7 @@ function generateTaxonomy(){
   applySearchHighlight();
 }
 
-/* ============================
-   Render top-down A4-friendly + caixas adaptáveis
-============================ */
+/* Render top-down (vertical/A4) + retângulos adaptáveis */
 function renderTopDown(treeData, dimColor){
   svg.selectAll("*").remove();
   viewport = svg.append("g").attr("id","viewport");
@@ -841,9 +847,8 @@ function renderTopDown(treeData, dimColor){
   linkLayer = viewport.append("g").attr("id","links");
   nodeLayer = viewport.append("g").attr("id","nodes");
 
-  // A4-friendly: mais vertical, menos espalhado horizontalmente
-  const dx = 220;   // horizontal (colunas)
-  const dy = 140;   // vertical (níveis)
+  const dx = 220;
+  const dy = 140;
   const tree = d3.tree()
     .nodeSize([dx, dy])
     .separation((a,b) => (a.parent === b.parent ? 1.15 : 1.35));
@@ -857,8 +862,6 @@ function renderTopDown(treeData, dimColor){
       d.children = null;
     }
   }
-
-  // colapsa parte mais profunda para começar limpo
   rootHierarchy.children?.forEach(c => c.children?.forEach(cc => collapse(cc)));
 
   expandAllFn = () => {
@@ -867,7 +870,6 @@ function renderTopDown(treeData, dimColor){
       (d.children||[]).forEach(rec);
     })(rootHierarchy);
   };
-
   collapseAllFn = () => {
     (function rec(d){
       (d.children||[]).forEach(rec);
@@ -879,12 +881,8 @@ function renderTopDown(treeData, dimColor){
     return d3.linkVertical().x(p => p.x).y(p => p.y)(d);
   }
 
-  // cache local de tamanhos por nodeId (para estabilidade visual)
-  const sizeCache = new Map(); // _id -> {w,h,nameY,dimY}
-
   updateFn = () => {
     tree(rootHierarchy);
-
     const nodes = rootHierarchy.descendants();
     const links = rootHierarchy.links();
 
@@ -893,7 +891,6 @@ function renderTopDown(treeData, dimColor){
       n.x = n.x + 20;
     }
 
-    // LINKS
     const linkSel = linkLayer.selectAll("path.link")
       .data(links, d => d.target.data._id);
 
@@ -909,7 +906,6 @@ function renderTopDown(treeData, dimColor){
 
     linkSel.exit().transition().duration(180).attr("opacity",0).remove();
 
-    // NODES
     const nodeSel = nodeLayer.selectAll("g.node")
       .data(nodes, d => d.data._id);
 
@@ -929,21 +925,17 @@ function renderTopDown(treeData, dimColor){
       .on("mousemove", (evt) => moveTooltip(evt))
       .on("mouseleave", () => hideTooltip());
 
-    // cria node com caixa adaptável ao texto
     nodeEnter.each(function(d){
       const g = d3.select(this);
 
       const dim = d.data.dimension || "(Sem dimensão)";
-      const strokeColor = dimColor.get(dim) || d3.color(hashColor(dim)).formatHex();
-
-      // Usa a cor da dimensão como fill (sem clarear demais)
-      const fill = d3.color(strokeColor).formatHex();
+      const strokeColor = dimColor.get(dim) || hashColorHEX(dim);
+      const fill = strokeColor;
       const textColor = contrastText(fill);
-
       const hasKids = (d.children || d._children);
 
-      // nome (com wrap)
       const lines = wrapLabel(d.data.name, 26);
+
       const nameText = g.append("text")
         .attr("class","name")
         .attr("text-anchor","middle")
@@ -958,7 +950,6 @@ function renderTopDown(treeData, dimColor){
         nameText.append("tspan").attr("x",0).attr("dy", 16).text(lines[1]);
       }
 
-      // dimensão
       const dimText = g.append("text")
         .attr("class","small")
         .attr("text-anchor","middle")
@@ -967,7 +958,6 @@ function renderTopDown(treeData, dimColor){
         .attr("y", 0)
         .text(dim);
 
-      // mede bbox (precisa estar no DOM)
       const nb = nameText.node().getBBox();
       const db = dimText.node().getBBox();
 
@@ -977,7 +967,7 @@ function renderTopDown(treeData, dimColor){
       const padBottom = 12;
 
       let w = Math.max(nb.width, db.width) + padX*2;
-      w = Math.max(170, Math.min(360, w)); // limites A4-friendly
+      w = Math.max(170, Math.min(360, w));
 
       let h = padTop + nb.height + gap + db.height + padBottom;
       h = Math.max(54, h);
@@ -985,11 +975,9 @@ function renderTopDown(treeData, dimColor){
       const nameY = padTop + 10;
       const dimY = padTop + nb.height + gap + 8;
 
-      // posiciona textos
       nameText.attr("y", nameY);
       dimText.attr("y", dimY);
 
-      // retângulo atrás
       g.insert("rect", ":first-child")
         .attr("x", -w/2)
         .attr("y", 0)
@@ -999,7 +987,6 @@ function renderTopDown(treeData, dimColor){
         .attr("stroke", strokeColor)
         .attr("stroke-width", d.depth === 0 ? 2.6 : 1.5);
 
-      // ícone expand/recolher
       g.append("text")
         .attr("class","small")
         .attr("fill", textColor)
@@ -1007,9 +994,6 @@ function renderTopDown(treeData, dimColor){
         .attr("x", (w/2) - 10)
         .attr("y", 18)
         .text(hasKids ? (d.children ? "▾" : "▸") : "");
-
-      // cache do tamanho (para export e estabilidade)
-      sizeCache.set(d.data._id, {w,h});
     });
 
     nodeSel.merge(nodeEnter)
@@ -1036,15 +1020,14 @@ function renderTopDown(treeData, dimColor){
     const tx = (w - bounds.width*scale)/2 - bounds.x*scale;
     const ty = (h - bounds.height*scale)/2 - bounds.y*scale;
 
-    svg.transition().duration(strong ? 380 : 220).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+    svg.transition().duration(strong ? 380 : 220)
+      .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
   };
 
   fitToCanvasFn(true);
 }
 
-/* ============================
-   Search highlight
-============================ */
+/* Search highlight */
 searchEl.addEventListener("input", applySearchHighlight);
 function applySearchHighlight(){
   const q = norm(searchEl.value);
@@ -1059,9 +1042,7 @@ function applySearchHighlight(){
   });
 }
 
-/* ============================
-   Expand/Collapse/Fit
-============================ */
+/* Controls */
 btnFit.addEventListener("click", () => fitToCanvasFn?.(true));
 btnExpandAll.addEventListener("click", () => {
   if (!expandAllFn || !updateFn) return;
@@ -1078,9 +1059,7 @@ btnCollapseAll.addEventListener("click", () => {
   fitToCanvasFn?.(false);
 });
 
-/* ============================
-   Export SVG / PNG (com styles embutidos)
-============================ */
+/* Export */
 function downloadBlob(blob, filename){
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1121,12 +1100,6 @@ function serializeSvgForExport(){
   const svgNode = svg.node();
   const clone = svgNode.cloneNode(true);
   clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
-
-  clone.querySelectorAll("*").forEach(el=>{
-    [...el.attributes].forEach(a=>{
-      if (a.name.startsWith("on")) el.removeAttribute(a.name);
-    });
-  });
 
   const bg = document.createElementNS("http://www.w3.org/2000/svg","rect");
   bg.setAttribute("x","0"); bg.setAttribute("y","0");
@@ -1184,6 +1157,7 @@ btnPng.addEventListener("click", async () => {
       img.onerror = () => reject(new Error("Falha ao renderizar SVG no PNG."));
     });
 
+    // pega width/height exportados
     const tmp = document.createElement("div");
     tmp.style.position="fixed"; tmp.style.left="-9999px";
     tmp.innerHTML = xml;
@@ -1216,13 +1190,10 @@ btnPng.addEventListener("click", async () => {
   }
 });
 
-/* ============================
-   Boot
-============================ */
+/* Boot */
 (async function(){
   try{ await loadDefault(); } catch(_) {}
 })();
 </script>
 </body>
 </html>
-
