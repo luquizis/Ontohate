@@ -1,12 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Taxonomy Builder — A → B → (folhas C)</title>
-
+  <title>Taxonomy Builder (OWL) — A → B → (folhas C) + Layouts</title>
+  
+  <!-- D3 -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- rdflib.js (lê OWL em RDF/XML no browser) -->
+  <script src="https://cdn.jsdelivr.net/npm/rdflib@2.2.37/dist/rdflib.min.js"></script>
 
   <style>
     :root{
@@ -23,23 +26,23 @@
       background:var(--panel); border-bottom:1px solid var(--line);
       padding:10px 16px; display:flex; align-items:center; justify-content:space-between; height:70px; gap:12px;
     }
-    .title{ font-weight:800; font-size:14px; letter-spacing:.3px; display:flex; align-items:center; gap:8px; }
+    .title{ font-weight:900; font-size:14px; letter-spacing:.2px; display:flex; align-items:center; gap:10px; }
     .controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .btn{
       background:var(--bg); border:1px solid var(--line); color:var(--text);
-      padding:8px 12px; border-radius:10px; cursor:pointer; font-size:11px; font-weight:800; text-transform:uppercase;
+      padding:8px 12px; border-radius:10px; cursor:pointer; font-size:11px; font-weight:900; text-transform:uppercase;
       display:inline-flex; align-items:center; gap:8px;
     }
     .btn.primary{ background:var(--accent); color:#fff; border-color:transparent; }
     .btn:disabled{ opacity:.45; cursor:not-allowed; }
     .pill{
-      font-size:11px; font-weight:800; padding:6px 10px; border-radius:999px; border:1px solid var(--line);
+      font-size:11px; font-weight:900; padding:6px 10px; border-radius:999px; border:1px solid var(--line);
       color:var(--muted); background:rgba(37,99,235,.06);
     }
 
     #wrap{ display:flex; height:calc(100% - 70px); }
     .sidebar{
-      width:420px; min-width:360px; background:var(--panel); border-right:1px solid var(--line);
+      width:480px; min-width:390px; background:var(--panel); border-right:1px solid var(--line);
       overflow-y:auto; padding:16px; font-size:13px; z-index:10;
     }
     .canvas-area{ flex:1; position:relative; background:var(--bg); overflow:hidden; }
@@ -51,15 +54,15 @@
       padding:10px; margin-bottom:12px; border-radius:8px;
       color:var(--text);
     }
-
     .section{ margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
     h3{ margin:8px 0; font-size:12px; letter-spacing:.5px; color:var(--muted); text-transform:uppercase; }
     .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .field{ width:100%; display:flex; flex-direction:column; gap:6px; margin:8px 0; }
-    select, input[type="text"]{
+    select, input[type="text"], input[type="range"]{
       width:100%; padding:10px 10px; border-radius:10px; border:1px solid var(--line);
       background:var(--bg); color:var(--text); outline:none;
     }
+    input[type="range"]{ padding:6px 10px; }
     label.chk{ display:flex; align-items:center; gap:8px; margin:6px 0; color:var(--text); }
     .small{ font-size:12px; color:var(--muted); line-height:1.3; }
     .status{
@@ -71,12 +74,11 @@
     .status.warn{ background: rgba(180,83,9,.10); border-color: rgba(180,83,9,.35); }
     .status.danger{ background: rgba(185,28,28,.10); border-color: rgba(185,28,28,.35); }
 
-    /* Leaf list */
-    .leafbox{
+    .branchbox, .leafbox{
       border:1px solid var(--line); border-radius:10px; background:var(--bg);
-      padding:10px; max-height:230px; overflow:auto;
+      padding:10px; max-height:210px; overflow:auto;
     }
-    .leafbox .count{ font-size:12px; color:var(--muted); margin-bottom:8px; }
+    .branchbox .count, .leafbox .count{ font-size:12px; color:var(--muted); margin-bottom:8px; }
     .leafbox label{ display:flex; align-items:flex-start; gap:8px; margin:6px 0; }
     .leafbox input{ margin-top:2px; }
 
@@ -92,22 +94,23 @@
       filter: drop-shadow(0 4px 10px rgba(0,0,0,.35));
     }
     .node text{
-      font-family: Arial, sans-serif; font-weight:800; pointer-events:none;
+      font-family: Arial, sans-serif; font-weight:900; pointer-events:none;
       font-size:12px;
     }
 
     .tooltip{
-      position:fixed; display:none; z-index:1000; max-width:420px;
+      position:fixed; display:none; z-index:1000; max-width:520px;
       background:var(--panel); color:var(--text);
       border:1px solid var(--line); border-radius:10px; padding:10px;
       box-shadow:var(--shadow);
       font-size:12px; line-height:1.25;
     }
     .tooltip .t-title{ font-weight:900; margin-bottom:6px; }
-    .tooltip .kv{ display:grid; grid-template-columns: 140px 1fr; gap:6px 10px; }
-    .tooltip .k{ color:var(--muted); font-weight:800; }
+    .tooltip .kv{ display:grid; grid-template-columns: 160px 1fr; gap:6px 10px; }
+    .tooltip .k{ color:var(--muted); font-weight:900; }
     .tooltip .v{ color:var(--text); word-break:break-word; }
     .hint{ color:var(--muted); font-size:12px; margin-top:6px; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:11px; }
   </style>
 </head>
 
@@ -115,8 +118,8 @@
 <header>
   <div class="controls">
     <label class="btn primary" style="cursor:pointer;">
-      📁 Carregar XLSX
-      <input type="file" id="fileInput" accept=".xlsx" style="display:none">
+      🦉 Carregar OWL
+      <input type="file" id="fileInput" accept=".owl,.rdf,.xml" style="display:none">
     </label>
 
     <select id="themeSelect" class="btn" style="text-transform:uppercase; font-weight:900;">
@@ -127,7 +130,9 @@
     <span class="pill" id="statsPill">Nenhum arquivo carregado</span>
   </div>
 
-  <div class="title">🧩 Taxonomia com início fixo: <b>A → B → (folhas C)</b></div>
+  <div class="title">
+    Visualização OWL: <span class="pill">Top-down</span> <span class="pill">Horizontal</span> <span class="pill">Radial</span>
+  </div>
 
   <div class="controls">
     <button class="btn" id="btnRelayout" disabled>🔄 Reorganizar</button>
@@ -139,63 +144,79 @@
 <div id="wrap">
   <div class="sidebar">
     <div class="guide-step">
-      <b>Regra:</b> toda figura começa em <b>A</b>. O sistema cria sempre a ligação <b>A → B</b>.
-      Depois, <b>B</b> desce até as folhas <b>C</b> selecionadas (união dos caminhos). Se você não selecionar folhas, mostra toda a árvore de B.
+      <b>Regra fixa:</b> a figura sempre começa em <b>A</b>. O sistema cria a ligação <b>A → B</b>.
+      Depois, <b>B</b> desce por <span class="mono">rdfs:subClassOf</span> até as folhas <b>C</b> (união de caminhos).
     </div>
 
     <div class="section">
-      <h3>Dimensões (planilhas)</h3>
-      <div id="dimList" class="small">Aguardando arquivo…</div>
-      <div class="small" style="margin-top:6px;">
-        “Motivação e consequência(s)” é unificada automaticamente.
+      <h3>Layout da Ontologia</h3>
+      <div class="field">
+        <select id="layoutSelect">
+          <option value="topdown">Top-down (vertical)</option>
+          <option value="horizontal">Horizontal (esquerda → direita)</option>
+          <option value="radial">Radial (topo → fora)</option>
+        </select>
+        <div class="small">Top-down é o mais "artigo/A4". Radial é ótimo para explorar estruturas grandes.</div>
+      </div>
+
+      <div class="field">
+        <h3>Espaçamento</h3>
+        <div class="small">Ajuste fino do espaçamento entre nós (afeta todos os layouts).</div>
+        <input id="spacingRange" type="range" min="0.7" max="2.2" step="0.05" value="1.15" />
+        <div class="small">Valor atual: <span id="spacingLabel">1.15</span></div>
       </div>
     </div>
 
     <div class="section">
-      <h3>Buscar em listas</h3>
-      <input type="text" id="filterInput" placeholder="Filtrar A, B e folhas…" />
-      <div class="hint">Dica: funciona por “contém” (sem acentos).</div>
+      <h3>Buscar</h3>
+      <input type="text" id="filterInput" placeholder="Filtrar A, B, folhas e destaques…" />
+      <div class="hint">Busca sem acentos e por "contém".</div>
+    </div>
 
-      <div class="field">
-        <h3>A — ponto inicial (obrigatório)</h3>
-        <select id="startSelect"></select>
-        <div class="small"><b>A</b> sempre será o topo da taxonomia.</div>
+    <div class="section">
+      <h3>A — ponto inicial (obrigatório)</h3>
+      <select id="startSelect"></select>
+      <div class="small"><b>A</b> sempre aparece no topo/centro do diagrama.</div>
+
+      <h3 style="margin-top:12px;">B — raiz (somente superclasse)</h3>
+      <select id="rootSelect"></select>
+      <div class="small"><b>B</b> precisa ter subclasses (filhos).</div>
+    </div>
+
+    <div class="section">
+      <h3>Destaque por subárvore (filhos diretos de B)</h3>
+      <div class="small">Marque quais ramos sob <b>B</b> devem ficar em azul.</div>
+      <div class="row">
+        <button class="btn" id="btnBranchAll" disabled>Marcar tudo</button>
+        <button class="btn" id="btnBranchNone" disabled>Desmarcar</button>
       </div>
-
-      <div class="field">
-        <h3>B — raiz (somente superclasse)</h3>
-        <select id="rootSelect"></select>
-        <div class="small"><b>B</b> precisa ter filhos (superclasse).</div>
+      <div class="branchbox" id="branchBox">
+        <div class="count small">Carregue um OWL…</div>
       </div>
+    </div>
 
-      <div class="field">
-        <h3>C — folhas limite (opcional, múltiplas)</h3>
-        <div class="row">
-          <button class="btn" id="btnSelectAllLeaves" disabled>Selecionar tudo</button>
-          <button class="btn" id="btnClearLeaves" disabled>Limpar</button>
-        </div>
-        <div class="leafbox" id="leafBox">
-          <div class="count small">Carregue um arquivo…</div>
-        </div>
-        <div class="small" style="margin-top:6px;">
-          Se houver uma aba chamada <b>Folhas</b>/<b>Leaves</b>, o sistema usa as classes dela como “folhas sugeridas”.
-          Caso contrário, ele lista automaticamente as <b>folhas alcançáveis</b> a partir de B.
-        </div>
+    <div class="section">
+      <h3>C — folhas limite (opcional, múltiplas)</h3>
+      <div class="small">Se não selecionar folhas, mostramos toda a árvore de <b>B</b>. Se selecionar, mostramos a união dos caminhos <b>B → C</b>.</div>
+      <div class="row">
+        <button class="btn" id="btnSelectAllLeaves" disabled>Selecionar tudo</button>
+        <button class="btn" id="btnClearLeaves" disabled>Limpar</button>
       </div>
+      <div class="leafbox" id="leafBox">
+        <div class="count small">Escolha B para listar folhas…</div>
+      </div>
+    </div>
 
+    <div class="section">
       <div class="row">
         <label class="chk"><input type="checkbox" id="chkDrag" /> Permitir arrastar nós</label>
-        <label class="chk"><input type="checkbox" id="chkShowOnlyHighlighted" /> Mostrar somente dimensões marcadas</label>
+        <label class="chk"><input type="checkbox" id="chkShowOnlyHighlighted" /> Mostrar só nós destacados</label>
       </div>
 
-      <button class="btn primary" id="btnGenerate" style="width:100%; padding:14px;" disabled>Gerar taxonomia</button>
+      <button class="btn primary" id="btnGenerate" style="width:100%; padding:14px;" disabled>Gerar ontologia</button>
 
       <div id="statusBox" class="status" style="margin-top:12px;">
-        Carregue um arquivo para começar.
-      </div>
-
-      <div class="guide-step" style="margin-top:12px;">
-        <b>Zoom:</b> scroll/trackpad • <b>Pan:</b> arraste no fundo • <b>Layout “artigo”:</b> use Reorganizar.
+        Carregue um OWL para começar.
       </div>
     </div>
   </div>
@@ -208,771 +229,273 @@
 
 <script>
 /* =========================
-   Helpers
+   CONFIG (constantes centralizadas)
 ========================= */
-function stripAccents(s){
-  return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-function normKey(s){
-  return stripAccents(String(s || "").trim().toLowerCase()).replace(/\s+/g," ");
-}
-function normalizeDimensionName(dim){
-  const base = normKey(dim);
-  if (base === "motivacao e consequencia" || base === "motivacao e consequencias") return "motivacao e consequencia(s)";
-  if (base.length > 4 && base.endsWith("s")) return base.slice(0, -1);
-  return base;
-}
-function escapeHtml(str){
-  return String(str ?? "").replace(/[&<>"']/g, m => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
-}
+const CONFIG = {
+  TARGET_W: 300, PAD_X: 14, PAD_Y: 10, LINE_H: 14,
+  NODE_DX: 360, NODE_DY: 160, AUTOFIT_MARGIN: 60,
+  MAX_TOOLTIP_PARENTS: 6, MAX_TOOLTIP_CHILDREN: 8, MAX_TOOLTIP_PROPS: 10,
+  FILTER_DEBOUNCE_MS: 200,
+  RDF: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+  RDFS: "http://www.w3.org/2000/01/rdf-schema#",
+  OWL: "http://www.w3.org/2002/07/owl#"
+};
 
 /* =========================
-   State
+   OwlViz - Namespace principal (refatorado)
 ========================= */
-let STORE = null;
-
-const svg = d3.select("#svg");
-const gMain = svg.append("g");
-const tooltip = document.getElementById("tooltip");
-
-function setStatus(msg, type=""){
-  const el = document.getElementById("statusBox");
-  el.className = "status" + (type ? " " + type : "");
-  el.innerHTML = msg;
-}
-function setStatsPill(text){
-  document.getElementById("statsPill").textContent = text;
-}
-function setControlsEnabled(enabled){
-  document.getElementById("btnGenerate").disabled = !enabled;
-  document.getElementById("btnRelayout").disabled = !enabled;
-  document.getElementById("btnExportPng").disabled = !enabled;
-  document.getElementById("btnExportA4").disabled = !enabled;
-  document.getElementById("btnSelectAllLeaves").disabled = !enabled;
-  document.getElementById("btnClearLeaves").disabled = !enabled;
-}
-
-/* =========================
-   Zoom / Pan
-========================= */
-const zoom = d3.zoom()
-  .scaleExtent([0.08, 4])
-  .on("zoom", (e) => gMain.attr("transform", e.transform));
-svg.call(zoom);
-
-/* =========================
-   Parse XLSX
-   - nodes: Map(name -> {name, dimKey, dimLabel, meta})
-   - childrenMap: Map(parent -> Set(children))
-   - dims: Map(dimKey -> dimLabel)
-   - suggestedLeaves: Set(name) from a sheet named Folhas/Leaves (if exists)
-========================= */
-async function handleFile(file){
-  try{
-    setControlsEnabled(false);
-    setStatus("Lendo arquivo…", "");
-    setStatsPill("Carregando…");
-
-    const data = await file.arrayBuffer();
-    const wb = XLSX.read(data, { type:"array" });
-    if(!wb.SheetNames || wb.SheetNames.length === 0) throw new Error("O arquivo não contém planilhas.");
-
-    const nodes = new Map();
-    const childrenMap = new Map();
-    const dims = new Map();
-    const suggestedLeaves = new Set();
-
-    let totalRows = 0;
-    let detectedProblems = [];
-
-    // detectar aba de folhas
-    const leafSheetName = wb.SheetNames.find(s => /^(folhas|leaves)$/i.test(String(s||"").trim()));
-    if(leafSheetName){
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[leafSheetName], { defval:"" });
-      // tenta achar coluna de classe/termo
-      const keys = Object.keys(rows[0] || {});
-      const nameKey = keys.find(k => /classe|class|item|name|termo|term/i.test(k));
-      rows.forEach(r => {
-        const n = String(r[nameKey] ?? "").trim();
-        if(n) suggestedLeaves.add(n);
-      });
-    }
-
-    for(const sheet of wb.SheetNames){
-      // pula a aba Folhas/Leaves como dimensão (ela é “controle”, não dimensão)
-      if(leafSheetName && sheet === leafSheetName) continue;
-
-      const dimLabel = String(sheet || "").trim() || "Sem nome";
-      const dimKey = normalizeDimensionName(dimLabel);
-      if(!dims.has(dimKey)) dims.set(dimKey, dimLabel);
-
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval:"" });
-      totalRows += rows.length;
-      if(rows.length === 0) continue;
-
-      const keys = Object.keys(rows[0] || {});
-      const nameKey = keys.find(k => /classe|class|item|name|termo|term/i.test(k));
-      const parentKey = keys.find(k => /super|pai|parent|broader|mae|mãe|hierarquia/i.test(k));
-
-      if(!nameKey){
-        detectedProblems.push(`Planilha <b>${escapeHtml(dimLabel)}</b>: não detectei coluna de <b>Classe</b> (ex.: "classe", "name", "item").`);
-      }
-
-      rows.forEach(row => {
-        const name = String(row[nameKey] ?? "").trim();
-        if(!name) return;
-
-        if(!nodes.has(name)){
-          nodes.set(name, { name, dimKey, dimLabel: dims.get(dimKey), meta: row });
-        }
-
-        const parentRaw = parentKey ? String(row[parentKey] ?? "").trim() : "";
-        if(parentRaw && parentRaw !== name){
-          const parents = parentRaw.split(/[;,|]/g).map(s => s.trim()).filter(Boolean);
-          parents.forEach(parent => {
-            if(!parent || parent === name) return;
-            if(!childrenMap.has(parent)) childrenMap.set(parent, new Set());
-            childrenMap.get(parent).add(name);
-
-            // garante nó do pai existir
-            if(!nodes.has(parent)){
-              nodes.set(parent, { name: parent, dimKey, dimLabel: dims.get(dimKey), meta: { __auto__: true } });
-            }
-          });
-        }
-      });
-    }
-
-    STORE = { nodes, childrenMap, dims, suggestedLeaves };
-
-    // stats
-    const numNodes = nodes.size;
-    const numEdges = Array.from(childrenMap.values()).reduce((a,s)=>a+s.size,0);
-    setStatsPill(`${numNodes} classes • ${numEdges} relações • ${dims.size} dimensões`);
-
-    populateUI(detectedProblems);
-    setControlsEnabled(true);
-
-    if(detectedProblems.length){
-      setStatus(`<b>Atenção:</b><br>• ` + detectedProblems.join("<br>• "), "warn");
-    }else{
-      setStatus("<b>Arquivo carregado.</b> Selecione A e B, (opcional) folhas C, e clique em <b>Gerar</b>.", "ok");
-    }
-
-  }catch(err){
-    console.error(err);
-    STORE = null;
-    setControlsEnabled(false);
-    setStatsPill("Falha ao carregar");
-    setStatus(`<b>Erro ao carregar XLSX:</b> ${escapeHtml(err.message || String(err))}`, "danger");
+class OwlViz {
+  constructor() {
+    this.owlData = null;
+    this.uiState = {
+      startA: "", rootB: "", selectedLeaves: [], activeBranches: new Set(),
+      layout: "topdown", spacing: 1.15, dragEnabled: false, showOnlyHighlighted: false, filterQuery: ""
+    };
+    this.cache = { parentPtr: null, nodeBranches: null, objPropsByDomain: new Map(), objPropsByRange: new Map() };
+    
+    this.svg = d3.select("#svg");
+    this.gMain = this.svg.append("g");
+    this.tooltip = document.getElementById("tooltip");
+    this.zoom = d3.zoom().scaleExtent([0.08, 4]).on("zoom", (e) => this.gMain.attr("transform", e.transform));
+    this.svg.call(this.zoom);
+    
+    this.initUI();
+    this.bindEvents();
   }
-}
 
-/* =========================
-   UI population
-========================= */
-function populateUI(problems){
-  // Dimensões
-  const dimList = d3.select("#dimList").html("");
-  const dimEntries = Array.from(STORE.dims.entries()).sort((a,b) => a[1].localeCompare(b[1], "pt-BR"));
-
-  dimEntries.forEach(([dimKey, dimLabel]) => {
-    const l = dimList.append("label").attr("class","chk");
-    l.append("input").attr("type","checkbox").attr("checked", true).attr("value", dimKey);
-    l.append("span").text(" " + dimLabel);
-  });
-
-  updateStartOptions();
-  updateRootOptions();
-  updateLeafOptions(); // depende do B selecionado
-
-  applyFilterToUI(document.getElementById("filterInput").value);
-}
-
-function updateStartOptions(){
-  const sS = d3.select("#startSelect").html("");
-  Array.from(STORE.nodes.keys()).sort((a,b)=>a.localeCompare(b,"pt-BR")).forEach(n=>{
-    sS.append("option").attr("value", n).text(n);
-  });
-}
-
-function updateRootOptions(){
-  const rS = d3.select("#rootSelect").html("");
-
-  const roots = Array.from(STORE.childrenMap.keys())
-    .filter(n => STORE.nodes.has(n))
-    .sort((a,b)=>a.localeCompare(b,"pt-BR"));
-
-  if(roots.length === 0){
-    rS.append("option").attr("value","").text("Nenhum nó com filhos encontrado");
-    setStatus("<b>Não encontrei nenhum nó com filhos.</b> Verifique se o XLSX tem relações Pai → Filho.", "danger");
-    setControlsEnabled(false);
-    return;
+  // =========================
+  // Helpers estáticos
+  // =========================
+  static stripAccents(s) { return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+  static normKey(s) { return this.stripAccents(String(s || "").trim().toLowerCase()).replace(/\s+/g, " "); }
+  static escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]));
   }
-  roots.forEach(n => rS.append("option").attr("value", n).text(n));
-}
-
-function getActiveDims(){
-  const active = new Set();
-  d3.selectAll("#dimList input:checked").each(function(){ active.add(this.value); });
-  return active;
-}
-
-/* =========================
-   Reach + Leaves (a partir de B)
-========================= */
-function reachableFrom(rootB){
-  const seen = new Set();
-  const q = [rootB];
-  seen.add(rootB);
-
-  while(q.length){
-    const cur = q.shift();
-    const kids = STORE.childrenMap.get(cur);
-    if(!kids) continue;
-    for(const k of kids){
-      if(!seen.has(k)){
-        seen.add(k);
-        q.push(k);
+  static localName(iri) {
+    const s = String(iri || ""); const hash = s.lastIndexOf("#"); const slash = s.lastIndexOf("/");
+    return Math.max(hash, slash) >= 0 ? s.slice(Math.max(hash, slash) + 1) : s;
+  }
+  static wrapSvgText(textSel, text, maxWidth, lineHeight) {
+    const words = String(text).split(/\s+/g); let line = []; let lineNumber = 0;
+    textSel.text(null); let tspan = textSel.append("tspan").attr("x", 0).attr("dy", "0em");
+    for (const w of words) {
+      line.push(w); tspan.text(line.join(" "));
+      if (tspan.node().getComputedTextLength() > maxWidth && line.length > 1) {
+        line.pop(); tspan.text(line.join(" ")); line = [w]; lineNumber++;
+        tspan = textSel.append("tspan").attr("x", 0).attr("dy", "1.15em").text(w);
       }
     }
-  }
-  return seen;
-}
-
-function leafCandidatesFromReach(reach){
-  // folhas = nós alcançáveis que NÃO são pais (não têm filhos em childrenMap) OU têm filhos fora do reach? (consideramos dentro do reach)
-  const leaves = [];
-  for(const n of reach){
-    const kids = STORE.childrenMap.get(n);
-    const hasChildInReach = kids ? Array.from(kids).some(k => reach.has(k)) : false;
-    if(!hasChildInReach) leaves.push(n);
-  }
-  return leaves.sort((a,b)=>a.localeCompare(b,"pt-BR"));
-}
-
-/* =========================
-   Leaf UI (C múltiplas)
-   - se existir aba Folhas/Leaves: usa essa lista (filtrando pelas alcançáveis de B)
-   - senão: usa folhas alcançáveis (automático)
-========================= */
-function updateLeafOptions(){
-  const leafBox = document.getElementById("leafBox");
-  leafBox.innerHTML = `<div class="count small">Selecione B para listar folhas…</div>`;
-
-  const rootB = d3.select("#rootSelect").property("value");
-  if(!rootB || !STORE.nodes.has(rootB)) return;
-
-  const reach = reachableFrom(rootB);
-
-  let candidates = [];
-  if(STORE.suggestedLeaves && STORE.suggestedLeaves.size){
-    candidates = Array.from(STORE.suggestedLeaves).filter(n => reach.has(n));
-    candidates.sort((a,b)=>a.localeCompare(b,"pt-BR"));
-  }else{
-    candidates = leafCandidatesFromReach(reach);
+    const tspans = textSel.selectAll("tspan").nodes(); const lines = tspans.length || 1;
+    const offset = -((lines - 1) * (lineHeight / 2)) / lineHeight;
+    if (tspans[0]) tspans[0].setAttribute("dy", `${offset}em`);
   }
 
-  if(candidates.length === 0){
-    leafBox.innerHTML = `<div class="count small">Nenhuma folha encontrada a partir de B.</div>`;
-    return;
+  // =========================
+  // UI & Status
+  // =========================
+  setStatus(msg, type = "") {
+    const el = document.getElementById("statusBox");
+    el.className = `status${type ? ` ${type}` : ""}`; el.innerHTML = msg;
   }
-
-  const countDiv = document.createElement("div");
-  countDiv.className = "count small";
-  countDiv.textContent = `${candidates.length} folhas disponíveis`;
-  leafBox.appendChild(countDiv);
-
-  candidates.forEach(name => {
-    const label = document.createElement("label");
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.value = name;
-    cb.className = "leaf-cb";
-    const span = document.createElement("span");
-    span.textContent = name;
-    label.appendChild(cb);
-    label.appendChild(span);
-    leafBox.appendChild(label);
-  });
-}
-
-function getSelectedLeaves(){
-  const selected = [];
-  document.querySelectorAll(".leaf-cb:checked").forEach(cb => selected.push(cb.value));
-  return selected;
-}
-
-function selectAllLeaves(){
-  document.querySelectorAll(".leaf-cb").forEach(cb => cb.checked = true);
-}
-function clearLeaves(){
-  document.querySelectorAll(".leaf-cb").forEach(cb => cb.checked = false);
-}
-
-/* =========================
-   Filter UI (A, B, folhas)
-========================= */
-function applyFilterToUI(q){
-  q = normKey(q);
-
-  // selects A e B
-  const selects = [document.getElementById("startSelect"), document.getElementById("rootSelect")];
-  selects.forEach(sel => {
-    for(const opt of sel.options){
-      const ok = !q || normKey(opt.textContent).includes(q);
-      opt.hidden = !ok;
-    }
-  });
-
-  // folhas
-  document.querySelectorAll("#leafBox label").forEach(lbl => {
-    const text = lbl.textContent || "";
-    const ok = !q || normKey(text).includes(q);
-    lbl.style.display = ok ? "" : "none";
-  });
-}
-
-/* =========================
-   Build spanning parents from B (BFS)
-========================= */
-function buildParentPtr(rootB){
-  const parentPtr = new Map();
-  const q = [rootB];
-  parentPtr.set(rootB, null);
-
-  while(q.length){
-    const cur = q.shift();
-    const kids = STORE.childrenMap.get(cur);
-    if(!kids) continue;
-
-    for(const k of kids){
-      if(!parentPtr.has(k)){
-        parentPtr.set(k, cur);
-        q.push(k);
-      }
-    }
-  }
-  return parentPtr;
-}
-
-function pathBtoX(rootB, x, parentPtr){
-  if(!parentPtr.has(x)) return null;
-  const path = [];
-  let cur = x;
-  while(cur !== null){
-    path.push(cur);
-    if(cur === rootB) break;
-    cur = parentPtr.get(cur);
-  }
-  if(path[path.length - 1] !== rootB) return null;
-  path.reverse();
-  return path;
-}
-
-/* =========================
-   Build subtree from B
-   - se folhas C selecionadas: allowed = união de caminhos B->Ci
-   - se nenhuma folha: allowed = null => árvore completa a partir de B
-   - o build usa childrenMap, mas só mantém filhos que estão em allowed (quando existir)
-========================= */
-function buildSubtreeFromB(rootB, selectedLeaves, activeDims, onlyHighlighted){
-  const parentPtr = buildParentPtr(rootB);
-
-  let allowed = null;
-  if(selectedLeaves && selectedLeaves.length){
-    allowed = new Set([rootB]);
-    for(const leaf of selectedLeaves){
-      const p = pathBtoX(rootB, leaf, parentPtr);
-      if(!p) return { error: `A folha <b>${escapeHtml(leaf)}</b> não é alcançável a partir de B.` };
-      p.forEach(n => allowed.add(n));
-    }
-  }
-
-  function buildNode(name, visited){
-    if(visited.has(name)) return null;
-    visited.add(name);
-
-    const n = STORE.nodes.get(name) || { name, dimKey:"", dimLabel:"", meta:{} };
-    const highlighted = activeDims.has(n.dimKey);
-
-    if(onlyHighlighted && !highlighted){
-      // se for um nó permitido por "allowed" (por causa do caminho até folhas), mantemos
-      if(!(allowed && allowed.has(name))) return null;
-    }
-
-    const kids = STORE.childrenMap.get(name);
-    let children = [];
-    if(kids){
-      for(const c of kids){
-        if(allowed && !allowed.has(c)) continue;
-        const built = buildNode(c, new Set(visited));
-        if(built) children.push(built);
-      }
-    }
-
-    return { ...n, highlighted, children };
-  }
-
-  const rootObj = buildNode(rootB, new Set());
-  if(!rootObj) return { error: "Não foi possível construir a árvore com os filtros atuais." };
-  return { rootObj, allowed };
-}
-
-/* =========================
-   Render: A como raiz visual; B como primeiro filho (A → B sempre)
-========================= */
-function render(){
-  if(!STORE) return;
-
-  const startA = d3.select("#startSelect").property("value");
-  const rootB  = d3.select("#rootSelect").property("value");
-  const activeDims = getActiveDims();
-  const onlyHighlighted = document.getElementById("chkShowOnlyHighlighted").checked;
-
-  if(!startA || !STORE.nodes.has(startA)){
-    setStatus("Selecione um <b>A</b> válido (ponto inicial).", "warn");
-    return;
-  }
-  if(!rootB || !STORE.nodes.has(rootB)){
-    setStatus("Selecione um <b>B</b> válido (raiz/superclasse).", "warn");
-    return;
-  }
-  // B precisa ser superclasse (ter filhos)
-  if(!STORE.childrenMap.has(rootB)){
-    setStatus("A <b>Raiz (B)</b> precisa ser uma <b>superclasse</b> (ter filhos).", "warn");
-    return;
-  }
-
-  const selectedLeaves = getSelectedLeaves(); // C múltiplas (opcional)
-  const subtree = buildSubtreeFromB(rootB, selectedLeaves, activeDims, onlyHighlighted);
-  if(subtree.error){
-    setStatus(`<b>Não deu para gerar:</b> ${subtree.error}`, "warn");
-    return;
-  }
-
-  // Regra A → B SEMPRE
-  const nodeA = STORE.nodes.get(startA);
-  const visualRootObj = {
-    ...nodeA,
-    highlighted: activeDims.has(nodeA.dimKey),
-    children: [ subtree.rootObj ]
-  };
-
-  gMain.selectAll("*").remove();
-
-  const root = d3.hierarchy(visualRootObj);
-
-  // Layout vertical (A4-friendly) + caixas adaptáveis
-  const NODE_W = 280;
-  const PAD_X = 14;
-  const PAD_Y = 10;
-  const LINE_H = 14;
-
-  const layout = d3.tree()
-    .nodeSize([340, 150])
-    .separation((a,b) => (a.parent === b.parent ? 1.2 : 1.7));
-
-  layout(root);
-
-  const linkGen = d3.linkVertical().x(d => d.x).y(d => d.y);
-
-  const links = gMain.selectAll(".link")
-    .data(root.links())
-    .enter()
-    .append("path")
-    .attr("class","link")
-    .attr("d", d => linkGen(d));
-
-  const nodeSel = gMain.selectAll(".node")
-    .data(root.descendants())
-    .enter()
-    .append("g")
-    .attr("class","node")
-    .attr("transform", d => `translate(${d.x},${d.y})`)
-    .on("mousemove", (event, d) => showTooltip(event, d))
-    .on("mouseleave", hideTooltip);
-
-  // texto (com wrap) primeiro para medir
-  const textSel = nodeSel.append("text")
-    .attr("text-anchor","middle")
-    .attr("dy", 0);
-
-  textSel.each(function(d){
-    wrapSvgText(d3.select(this), String(d.data.name || ""), NODE_W - PAD_X*2, LINE_H);
-  });
-
-  // medir e criar retângulo adaptável
-  nodeSel.each(function(d){
-    const t = d3.select(this).select("text").node();
-    const bb = t.getBBox();
-    const w = Math.max(180, Math.min(460, bb.width + PAD_X*2));
-    const h = Math.max(46, bb.height + PAD_Y*2);
-    d.__box = { w, h };
-  });
-
-  nodeSel.insert("rect", "text")
-    .attr("x", d => -d.__box.w/2)
-    .attr("y", d => -d.__box.h/2)
-    .attr("width", d => d.__box.w)
-    .attr("height", d => d.__box.h)
-    .attr("fill", d => d.data.highlighted ? "var(--accent)" : (document.body.dataset.theme === "dark" ? "#111827" : "#cbd5e1"))
-    .attr("stroke", d => d.data.highlighted ? "var(--accent2)" : (document.body.dataset.theme === "dark" ? "#334155" : "#94a3b8"));
-
-  nodeSel.select("text")
-    .attr("fill", d => d.data.highlighted ? "#ffffff" : (document.body.dataset.theme === "dark" ? "#e2e8f0" : "#0f172a"));
-
-  // Drag opcional
-  const dragEnabled = document.getElementById("chkDrag").checked;
-  if(dragEnabled){
-    const drag = d3.drag().on("drag", function(event, d){
-      d.x = event.x; d.y = event.y;
-      d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
-      links.attr("d", l => linkGen(l));
+  setStatsPill(text) { document.getElementById("statsPill").textContent = text; }
+  setControlsEnabled(enabled) {
+    ["btnGenerate", "btnRelayout", "btnExportPng", "btnExportA4", "btnSelectAllLeaves", 
+     "btnClearLeaves", "btnBranchAll", "btnBranchNone"].forEach(id => {
+      document.getElementById(id).disabled = !enabled;
     });
-    nodeSel.call(drag);
+  }
+  formatStatusSummary(aLabel, bLabel, selectedLeaves, layout) {
+    const cInfo = selectedLeaves.length 
+      ? `Folhas C: <b>${selectedLeaves.length}</b> (união dos caminhos B→C)`
+      : `Folhas C: <b>nenhuma</b> (árvore completa de B)`;
+    const modeLabel = layout === "topdown" ? "Top-down" : layout === "horizontal" ? "Horizontal" : "Radial";
+    return `<b>Gerado.</b> Layout: <b>${modeLabel}</b> • A: <b>${OwlViz.escapeHtml(aLabel)}</b> → B: <b>${OwlViz.escapeHtml(bLabel)}</b> • ${cInfo}`;
   }
 
-  autofitView(60);
+  // =========================
+  // Carregar OWL (com pré-indexação)
+  // =========================
+  async loadOwl(file) {
+    try {
+      this.setControlsEnabled(false); this.setStatsPill("Carregando…"); this.setStatus("Lendo OWL…", "");
+      const text = await file.text(); const $rdf = window.$rdf; const store = $rdf.graph();
+      const baseIRI = window.location.href || "urn:local:ont";
+      $rdf.parse(text, store, baseIRI, "application/rdf+xml");
 
-  const cInfo = selectedLeaves.length
-    ? `Folhas C selecionadas: <b>${selectedLeaves.length}</b> (união dos caminhos B→C)`
-    : `Folhas C: <b>nenhuma</b> (mostrando toda a árvore de B)`;
+      if (!text.includes("<rdf:RDF")) throw new Error("Arquivo não parece RDF/XML (sem <rdf:RDF>).");
 
-  setStatus(
-    `<b>Gerado.</b> A: <b>${escapeHtml(startA)}</b> → B: <b>${escapeHtml(rootB)}</b> • ${cInfo}`,
-    "ok"
-  );
-}
+      const RDF = $rdf.Namespace(CONFIG.RDF); const RDFS = $rdf.Namespace(CONFIG.RDFS); const OWL = $rdf.Namespace(CONFIG.OWL);
+      const classTerms = [...store.each(undefined, RDF("type"), OWL("Class")), ...store.each(undefined, RDF("type"), RDFS("Class"))];
+      const classes = new Set(classTerms.map(t => t.value));
+      if (classes.size === 0) throw new Error("Não encontrei owl:Class / rdfs:Class.");
 
-/* =========================
-   Text wrap
-========================= */
-function wrapSvgText(textSel, text, maxWidth, lineHeight){
-  const words = String(text).split(/\s+/g);
-  let line = [];
-  let lineNumber = 0;
+      const nodes = new Map(); const labelToIris = new Map();
+      const getLiteral = (subject, predicate) => store.any($rdf.sym(subject), predicate, undefined)?.value || "";
+      
+      for (const iri of classes) {
+        const label = getLiteral(iri, RDFS("label")) || OwlViz.localName(iri);
+        const comment = getLiteral(iri, RDFS("comment"));
+        const ns = iri.includes("#") ? iri.slice(0, iri.lastIndexOf("#") + 1) : iri.slice(0, iri.lastIndexOf("/") + 1);
+        nodes.set(iri, { iri, label, comment, ns });
+        const key = OwlViz.normKey(label);
+        if (key && !labelToIris.has(key)) labelToIris.set(key, new Set()).get(key).add(iri);
+      }
 
-  textSel.text(null);
+      const childrenMap = new Map(); const parentsMap = new Map();
+      const addEdge = (parentIri, childIri) => {
+        if (!childrenMap.has(parentIri)) childrenMap.set(parentIri, new Set());
+        childrenMap.get(parentIri).add(childIri);
+        if (!parentsMap.has(childIri)) parentsMap.set(childIri, new Set());
+        parentsMap.get(childIri).add(parentIri);
+      };
+      
+      store.statementsMatching(undefined, RDFS("subClassOf"), undefined)
+        .forEach(st => {
+          const child = st.subject?.value; const parent = st.object?.value;
+          if (child && parent && classes.has(child) && classes.has(parent)) addEdge(parent, child);
+        });
 
-  let tspan = textSel.append("tspan").attr("x", 0).attr("dy", "0em");
+      const objProps = []; const objPropsByDomain = new Map(); const objPropsByRange = new Map();
+      store.each(undefined, RDF("type"), OWL("ObjectProperty")).forEach(p => {
+        const iri = p.value; const label = getLiteral(iri, RDFS("label")) || OwlViz.localName(iri);
+        const domTerms = store.each(p, RDFS("domain"), undefined); const rngTerms = store.each(p, RDFS("range"), undefined);
+        const domain = new Set(domTerms.map(t => t.value).filter(v => classes.has(v)));
+        const range = new Set(rngTerms.map(t => t.value).filter(v => classes.has(v)));
+        objProps.push({ iri, label, domain, range });
+        domain.forEach(iri => { if (!objPropsByDomain.has(iri)) objPropsByDomain.set(iri, []); objPropsByDomain.get(iri).push(label); });
+        range.forEach(iri => { if (!objPropsByRange.has(iri)) objPropsByRange.set(iri, []); objPropsByRange.get(iri).push(label); });
+      });
+      objPropsByDomain.forEach(list => list.sort((a, b) => a.localeCompare(b, "pt-BR")));
+      objPropsByRange.forEach(list => list.sort((a, b) => a.localeCompare(b, "pt-BR")));
 
-  for(const w of words){
-    line.push(w);
-    tspan.text(line.join(" "));
-    if(tspan.node().getComputedTextLength() > maxWidth && line.length > 1){
-      line.pop();
-      tspan.text(line.join(" "));
-      line = [w];
-      lineNumber += 1;
-      tspan = textSel.append("tspan")
-        .attr("x", 0)
-        .attr("dy", "1.15em")
-        .text(w);
+      this.owlData = { nodes, childrenMap, parentsMap, objProps, labelToIris };
+      this.cache.objPropsByDomain = objPropsByDomain; this.cache.objPropsByRange = objPropsByRange;
+
+      const edgesCount = Array.from(childrenMap.values()).reduce((a, s) => a + s.size, 0);
+      this.setStatsPill(`${nodes.size} classes • ${edgesCount} subClassOf • ${objProps.length} object properties`);
+      this.populateUI(); this.setControlsEnabled(true);
+      this.setStatus("<b>OWL carregado.</b> Selecione <b>A</b>, <b>B</b> e (opcional) folhas <b>C</b>.", "ok");
+    } catch (err) {
+      console.error(err); this.owlData = null; this.setControlsEnabled(false);
+      this.setStatsPill("Falha ao carregar"); this.setStatus(`<b>Erro:</b> ${OwlViz.escapeHtml(err.message || String(err))}`, "danger");
     }
   }
 
-  const tspans = textSel.selectAll("tspan").nodes();
-  const lines = tspans.length || 1;
-  const offset = -((lines - 1) * (lineHeight/2)) / lineHeight; // em "em"
-  if(tspans[0]) tspans[0].setAttribute("dy", `${offset}em`);
-}
-
-/* =========================
-   Tooltip
-========================= */
-function showTooltip(event, d){
-  if(!d || !d.data) return;
-  const meta = d.data.meta || {};
-  const dim = d.data.dimLabel || d.data.dimKey || "";
-  const isAuto = meta.__auto__ ? "Sim (criado por relação)" : "Não";
-
-  const preferredKeys = ["classe","Class","name","Name","termo","Termo","descricao","descrição","Description","super","pai","parent"];
-  const entries = [];
-  if(dim) entries.push(["Dimensão", dim]);
-  entries.push(["Auto-criado", isAuto]);
-
-  for(const k of preferredKeys){
-    if(Object.prototype.hasOwnProperty.call(meta, k) && String(meta[k]).trim()){
-      entries.push([k, String(meta[k])]);
+  // =========================
+  // Cache e hierarquia
+  // =========================
+  updateBcache(rootBIri) {
+    if (!this.owlData?.nodes.has(rootBIri)) return;
+    this.cache.parentPtr = this.buildParentPtr(rootBIri);
+    this.cache.nodeBranches = new Map();
+    for (const [childIri] of this.owlData.childrenMap) {
+      if (this.cache.parentPtr.has(childIri)) this.cache.nodeBranches.set(childIri, this.computeBranchOfNode(rootBIri, childIri));
     }
   }
-  const other = Object.keys(meta || {}).filter(k => !preferredKeys.includes(k) && k !== "__auto__").slice(0, 10);
-  other.forEach(k => {
-    const v = String(meta[k] ?? "").trim();
-    if(v) entries.push([k, v]);
-  });
 
-  tooltip.style.display = "block";
-  tooltip.innerHTML = `
-    <div class="t-title">${escapeHtml(d.data.name || "")}</div>
-    <div class="kv">
-      ${entries.map(([k,v]) => `
-        <div class="k">${escapeHtml(k)}:</div>
-        <div class="v">${escapeHtml(v)}</div>
-      `).join("")}
-    </div>
-  `;
-
-  const pad = 14;
-  const rect = tooltip.getBoundingClientRect();
-  let x = event.clientX + pad;
-  let y = event.clientY + pad;
-  if(x + rect.width > window.innerWidth - 10) x = event.clientX - rect.width - pad;
-  if(y + rect.height > window.innerHeight - 10) y = event.clientY - rect.height - pad;
-  tooltip.style.left = x + "px";
-  tooltip.style.top = y + "px";
-}
-function hideTooltip(){ tooltip.style.display = "none"; }
-
-/* =========================
-   Auto-fit view
-========================= */
-function autofitView(topPadding=50){
-  const bbox = gMain.node().getBBox();
-  const svgRect = svg.node().getBoundingClientRect();
-  if(!bbox || bbox.width === 0 || bbox.height === 0) return;
-
-  const margin = 60;
-  const availableW = Math.max(1, svgRect.width - margin*2);
-  const availableH = Math.max(1, svgRect.height - margin*2);
-
-  const scale = Math.min(1.0, availableW / bbox.width, availableH / bbox.height);
-  const tx = svgRect.width/2 - (bbox.x + bbox.width/2) * scale;
-  const ty = topPadding - bbox.y * scale;
-
-  svg.call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
-}
-
-/* =========================
-   Export PNG
-========================= */
-function serializeSvgWithInlineStyle(svgNode){
-  const clone = svgNode.cloneNode(true);
-  const style = document.createElementNS("http://www.w3.org/2000/svg","style");
-  style.textContent = `
-    .link{ fill:none; stroke:${document.body.dataset.theme === "dark" ? "#64748b" : "#94a3b8"}; stroke-width:1.5px; opacity:${document.body.dataset.theme === "dark" ? 0.7 : 0.65}; }
-    .node text{ font-family: Arial, sans-serif; font-weight:800; font-size:12px; }
-    .node rect{ stroke-width:1.5px; rx:10; ry:10; }
-  `;
-  clone.insertBefore(style, clone.firstChild);
-  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
-  clone.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
-  return new XMLSerializer().serializeToString(clone);
-}
-
-function exportPngAuto(){
-  const svgNode = document.getElementById("svg");
-  const bbox = gMain.node().getBBox();
-  if(!bbox || bbox.width === 0 || bbox.height === 0){
-    setStatus("Nada para exportar. Gere a taxonomia antes.", "warn");
-    return;
+  buildParentPtr(rootBIri) {
+    const parentPtr = new Map(); const q = [rootBIri]; parentPtr.set(rootBIri, null);
+    while (q.length) {
+      const cur = q.shift(); const kids = this.owlData.childrenMap.get(cur);
+      if (!kids) continue; for (const k of kids) {
+        if (!parentPtr.has(k)) { parentPtr.set(k, cur); q.push(k); }
+      }
+    }
+    return parentPtr;
   }
-  const padding = 120;
-  const scale = 3;
-  const w = (bbox.width + padding*2);
-  const h = (bbox.height + padding*2);
 
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.ceil(w * scale);
-  canvas.height = Math.ceil(h * scale);
-
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  ctx.fillStyle = (document.body.dataset.theme === "dark") ? "#000000" : "#ffffff";
-  ctx.fillRect(0,0,w,h);
-
-  const svgString = serializeSvgWithInlineStyle(svgNode);
-  const img = new Image();
-  img.onload = () => {
-    ctx.drawImage(img, padding - bbox.x, padding - bbox.y);
-    const a = document.createElement("a");
-    a.download = "taxonomia_A-B-C_auto.png";
-    a.href = canvas.toDataURL("image/png");
-    a.click();
-  };
-  img.onerror = () => setStatus("Falha ao exportar: não consegui rasterizar o SVG.", "danger");
-  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgString);
-}
-
-function exportPngA4(){
-  const svgNode = document.getElementById("svg");
-  const bbox = gMain.node().getBBox();
-  if(!bbox || bbox.width === 0 || bbox.height === 0){
-    setStatus("Nada para exportar. Gere a taxonomia antes.", "warn");
-    return;
+  computeBranchOfNode(rootBIri, nodeIri) {
+    if (nodeIri === rootBIri) return rootBIri;
+    let cur = nodeIri; while (cur !== null) {
+      const p = this.cache.parentPtr.get(cur); if (p === rootBIri) return cur; cur = p;
+    }
+    return null;
   }
-  const A4_W = 2480, A4_H = 3508, margin = 180;
-  const canvas = document.createElement("canvas");
-  canvas.width = A4_W; canvas.height = A4_H;
 
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = (document.body.dataset.theme === "dark") ? "#000000" : "#ffffff";
-  ctx.fillRect(0,0,A4_W,A4_H);
+  pathBtoX(rootBIri, xIri) {
+    if (!this.cache.parentPtr?.has(xIri)) return null;
+    const path = []; let cur = xIri;
+    while (cur !== null) { path.push(cur); if (cur === rootBIri) break; cur = this.cache.parentPtr.get(cur); }
+    return path[path.length - 1] === rootBIri ? path.reverse() : null;
+  }
 
-  const usableW = A4_W - margin*2;
-  const usableH = A4_H - margin*2;
-  const s = Math.min(usableW / bbox.width, usableH / bbox.height);
-  const tx = margin + (usableW/2) - (bbox.x + bbox.width/2) * s;
-  const ty = margin + (usableH/2) - (bbox.y + bbox.height/2) * s;
+  buildVisualHierarchy() {
+    if (!this.owlData || !this.uiState.startA || !this.uiState.rootB) return null;
+    const startA = this.owlData.nodes.get(this.uiState.startA);
+    if (!startA) return null;
+    
+    const subtree = this.buildSubtreeFromB(this.uiState.rootB, this.uiState.selectedLeaves, this.uiState.activeBranches, this.uiState.showOnlyHighlighted);
+    if (subtree.error) { this.setStatus(subtree.error, "warn"); return null; }
+    
+    return d3.hierarchy({
+      ...startA, highlighted: true, __isA: true,
+      children: [{ ...subtree.rootObj, highlighted: true, __isB: true }]
+    });
+  }
 
-  const svgString = serializeSvgWithInlineStyle(svgNode);
-  const img = new Image();
-  img.onload = () => {
-    ctx.setTransform(s, 0, 0, s, tx, ty);
-    ctx.drawImage(img, 0, 0);
-    const a = document.createElement("a");
-    a.download = "taxonomia_A4_300dpi_A-B-C.png";
-    a.href = canvas.toDataURL("image/png");
-    a.click();
-  };
-  img.onerror = () => setStatus("Falha ao exportar A4: não consegui rasterizar o SVG.", "danger");
-  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgString);
-}
+  buildSubtreeFromB(rootBIri, selectedLeaves, activeBranches, showOnlyHighlighted) {
+    this.updateBcache(rootBIri);
+    const parentPtr = this.cache.parentPtr;
+    let allowed = null;
+    
+    if (selectedLeaves.length) {
+      allowed = new Set([rootBIri]);
+      const invalidLeaves = [];
+      for (const leaf of selectedLeaves) {
+        const path = this.pathBtoX(rootBIri, leaf);
+        if (!path) invalidLeaves.push(this.owlData.nodes.get(leaf)?.label || OwlViz.localName(leaf));
+        else path.forEach(n => allowed.add(n));
+      }
+      if (invalidLeaves.length) return { error: `Folhas inalcançáveis: ${invalidLeaves.join(", ")}` };
+    }
 
-/* =========================
-   Events
-========================= */
-document.getElementById("fileInput").addEventListener("change", (e) => {
-  const f = e.target.files && e.target.files[0];
-  if(f) handleFile(f);
-});
-document.getElementById("themeSelect").addEventListener("change", function(){
-  document.body.dataset.theme = this.value;
-  if(STORE) render();
-});
-document.getElementById("btnGenerate").addEventListener("click", render);
-document.getElementById("btnRelayout").addEventListener("click", render);
-document.getElementById("btnExportPng").addEventListener("click", exportPngAuto);
-document.getElementById("btnExportA4").addEventListener("click", exportPngA4);
+    function buildNode(name, visited) {
+      if (visited.has(name)) return null; visited.add(name);
+      if (allowed && !allowed.has(name)) return null;
+      
+      const n = this.owlData.nodes.get(name) || { iri: name, label: OwlViz.localName(name), comment: "", ns: "" };
+      const highlighted = name === rootBIri || this.cache.nodeBranches.get(name) && activeBranches.has(this.cache.nodeBranches.get(name));
+      
+      if (showOnlyHighlighted && !highlighted && !(allowed && allowed.has(name))) return null;
+      
+      const kids = this.owlData.childrenMap.get(name); let children = [];
+      if (kids) for (const c of kids) {
+        if (allowed && !allowed.has(c)) continue;
+        const built = buildNode.call(this, c, new Set(visited));
+        if (built) children.push(built);
+      }
+      children.sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
+      return { ...n, highlighted, children };
+    }
 
-document.getElementById("rootSelect").addEventListener("change", () => {
-  updateLeafOptions();
-  applyFilterToUI(document.getElementById("filterInput").value);
-});
+    const rootObj = buildNode.call(this, rootBIri, new Set());
+    return rootObj ? { rootObj } : { error: "Não foi possível construir a árvore." };
+  }
 
-document.getElementById("filterInput").addEventListener("input", (e) => {
-  applyFilterToUI(e.target.value);
-});
+  // =========================
+  // UI Population (resumido)
+  // =========================
+  iriListSorted() {
+    return Array.from(this.owlData.nodes.values())
+      .sort((a, b) => a.label.localeCompare(b.label, "pt-BR")).map(n => n.iri);
+  }
 
-document.getElementById("chkDrag").addEventListener("change", () => {
-  if(STORE) render();
-});
-document.getElementById("chkShowOnlyHighlighted").addEventListener("change", () => {
-  if(STORE) render();
-});
+  populateUI() {
+    this.updateStartOptions(); this.updateRootOptions();
+    this.updateBranchOptions(); this.updateLeafOptions();
+    this.applyFilterToUI(this.uiState.filterQuery);
+  }
 
-document.getElementById("btnSelectAllLeaves").addEventListener("click", selectAllLeaves);
-document.getElementById("btnClearLeaves").addEventListener("click", clearLeaves);
+  updateStartOptions() {
+    const sel = d3.select("#startSelect").html("");
+    this.iriListSorted().forEach(iri => sel.append("option").attr("value", iri).text(this.owlData.nodes.get(iri).label));
+  }
 
-/* Enable buttons once STORE exists */
-(function init(){
-  setControlsEnabled(false);
-  setStatus("Carregue um arquivo para começar.", "");
-})();
-
-</script>
-</body>
-</html>
+  updateRootOptions() {
+    const sel = d3.select("#rootSelect").html("");
+    const superClasses = Array.from(this.owlData.childrenMap.keys())
+      .filter(iri => this.owlData.nodes.has(iri))
+      .sort((a, b) => this.owlData.nodes.get(a).label.localeCompare(this.owlData.nodes.get(b).label, "pt-BR"));
+    
+    if (superClasses.length === 0) {
+      sel
