@@ -2,91 +2,262 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <title>OWL Taxonomy - Multi-View Interactive PRO</title>
+  <title>OWL Taxonomy — A→B Corridor + Manual Expansion</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/rdflib@2.2.37/dist/rdflib.min.js"></script>
+
   <style>
-    :root { --bg: #ffffff; --panel: #f8fafc; --text: #0f172a; --muted: #64748b; --line: #e2e8f0; --accent: #2563eb; }
-    [data-theme="dark"] { --bg: #020617; --panel: #0f172a; --text: #f1f5f9; --muted: #94a3b8; --line: #1e293b; }
+    :root {
+      --bg: #ffffff;
+      --panel: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --accent: #2563eb;
+      --shadow: rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --line: #1e293b;
+      --shadow: rgba(0,0,0,0.35);
+    }
+
     * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
-    
-    header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 65px; z-index: 1000; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .btn { background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.2s; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      padding: 0 18px;
+      height: 65px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1000;
+      box-shadow: 0 2px 10px var(--shadow);
+      gap: 12px;
+    }
+
+    .btn {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      transition: 0.2s;
+      user-select: none;
+      white-space: nowrap;
+    }
     .btn.primary { background: var(--accent); color: #fff; border-color: transparent; }
-    .btn.active { background: #ef4444 !important; color: white; }
+    .btn.active  { background: #ef4444 !important; color: #fff; border-color: transparent; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
     #wrap { display: flex; height: calc(100vh - 65px); }
-    .sidebar { width: 340px; background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 20px; font-size: 13px; z-index: 10; }
+    .sidebar {
+      width: 360px;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      overflow-y: auto;
+      padding: 18px;
+      font-size: 13px;
+      z-index: 10;
+    }
     .canvas-area { flex: 1; position: relative; background: var(--bg); overflow: hidden; }
     svg { width: 100%; height: 100%; cursor: grab; }
-    
-    .section { margin-bottom: 18px; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
-    h3 { margin: 0 0 10px 0; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-    select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin-bottom: 10px; }
 
-    /* Grafo */
-    .link { fill: none; stroke: #cbd5e1; stroke-width: 1.5px; transition: 0.3s; }
-    .node rect { stroke-width: 2.5px; transition: fill 0.3s; }
-    .node text { font-size: 10px; font-weight: 800; text-anchor: middle; pointer-events: none; font-family: sans-serif; }
+    .section { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+    h3 {
+      margin: 0 0 10px 0;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    select, input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--text);
+      margin-bottom: 10px;
+      outline: none;
+    }
+    label { display:block; margin-top: 6px; margin-bottom: 6px; color: var(--muted); font-size: 12px; }
+
+    .row { display:flex; gap:10px; }
+    .row > * { flex:1; }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+      margin-top: 8px;
+    }
+    .hint kbd {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    /* Graph */
+    .link { fill: none; stroke: #cbd5e1; stroke-width: 1.5px; opacity: 0.95; }
+    [data-theme="dark"] .link { stroke: #334155; opacity: 0.9; }
+
+    .node rect { stroke-width: 2.5px; }
+    .node text {
+      font-size: 10px;
+      font-weight: 800;
+      text-anchor: middle;
+      pointer-events: none;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
 
     /* Tooltip */
     .tooltip {
-      position: absolute; display: none; padding: 12px; background: rgba(15, 23, 42, 0.95);
-      color: #fff; border-radius: 8px; font-size: 12px; max-width: 300px; z-index: 2000;
-      pointer-events: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); line-height: 1.4;
-      border: 1px solid rgba(255,255,255,0.1);
+      position: absolute;
+      display: none;
+      padding: 10px;
+      background: rgba(15, 23, 42, 0.95);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 12px;
+      max-width: 340px;
+      z-index: 2000;
+      pointer-events: none;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.22);
+      line-height: 1.25;
+      border: 1px solid rgba(255,255,255,0.10);
     }
-    .tooltip b { color: #60a5fa; display: block; margin-bottom: 4px; font-size: 13px; border-bottom: 1px solid #334155; padding-bottom: 4px; }
-    .tooltip i { color: #94a3b8; font-style: normal; font-size: 10px; word-break: break-all; }
 
-    .hint { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 5px; }
+    .badge {
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 10px;
+      color: #e2e8f0;
+      font-weight: 800;
+    }
+
+    .toast {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(15, 23, 42, 0.92);
+      color: #e2e8f0;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.22);
+      display: none;
+      z-index: 2500;
+      max-width: 520px;
+    }
+    .toast b { color: #93c5fd; }
   </style>
 </head>
-<body data-theme="light">
 
+<body data-theme="light">
 <header>
-  <div style="display:flex; gap:10px">
-    <label class="btn primary">🦉 Abrir OWL <input type="file" id="fileInput" accept=".owl,.rdf,.xml" style="display:none"></label>
-    <button class="btn" id="btnToggleDrag">🖱️ Modo Arrastar: OFF</button>
+  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <label class="btn primary">🦉 Abrir OWL
+      <input type="file" id="fileInput" accept=".owl,.rdf,.xml" style="display:none">
+    </label>
+    <button class="btn" id="btnToggleDrag" disabled>🖱️ Modo Arrastar: OFF</button>
+    <button class="btn" id="btnResetView" disabled>🔎 Autofit</button>
   </div>
-  <div style="display:flex; gap:10px">
-    <select id="themeSelect" class="btn" style="width:auto; margin:0"><option value="light">☀️ Light</option><option value="dark">🌙 Dark</option></select>
-    <button class="btn primary" id="btnExportPng">💾 Exportar PNG HD</button>
+
+  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <select id="themeSelect" class="btn" style="width:auto; margin:0">
+      <option value="light">☀️ Light</option>
+      <option value="dark">🌙 Dark</option>
+    </select>
+    <button class="btn" id="btnCollapseToCorridor" disabled>🧭 Só Corredor</button>
+    <button class="btn" id="btnExpandFocus" disabled>🌿 Expandir B (2 níveis)</button>
+    <button class="btn primary" id="btnExportPng" disabled>💾 Exportar PNG HD</button>
   </div>
 </header>
 
 <div id="wrap">
   <div class="sidebar">
     <div class="section">
-      <h3>🔍 Localizar</h3>
-      <input type="text" id="searchInput" placeholder="Buscar classe...">
+      <h3>📌 Como usar</h3>
+      <div class="hint">
+        <div><span class="badge">Clique</span> expandir/recolher um nó</div>
+        <div style="margin-top:6px;"><span class="badge"><kbd>Shift</kbd> + Clique</span> expandir 2 níveis</div>
+        <div style="margin-top:6px;"><span class="badge"><kbd>Alt</kbd> + Clique</span> recolher 3 níveis</div>
+        <div style="margin-top:6px;">A árvore sempre mostra o <b>corredor A→…→B</b> (superclasses). A partir de <b>B</b>, você abre galhos e folhas manualmente.</div>
+      </div>
     </div>
-    
+
+    <div class="section">
+      <h3>🔍 Localizar</h3>
+      <input type="text" id="searchInput" placeholder="Buscar classe (nome)..." disabled>
+      <button class="btn" id="btnFind" style="width:100%" disabled>🎯 Ir para classe</button>
+      <div class="hint">Dica: procure por termos do label. O zoom centraliza o nó encontrado.</div>
+    </div>
+
     <div class="section">
       <h3>📐 Visualização</h3>
-      <select id="layoutSelect">
+      <select id="layoutSelect" disabled>
         <option value="topdown">Vertical (Cima para Baixo)</option>
         <option value="horizontal">Esquerda para Direita</option>
         <option value="radial">Radial (Circular)</option>
         <option value="a4">Compacto (Otimizado A4)</option>
       </select>
+
       <label>Densidade: <span id="spacingLabel">1.2</span></label>
-      <input id="spacingRange" type="range" min="0.5" max="3.0" step="0.1" value="1.2">
+      <input id="spacingRange" type="range" min="0.5" max="3.0" step="0.1" value="1.2" disabled>
+      <div class="hint">Para artigo (A4): use <b>Compacto (A4)</b> e densidade 1.0–1.4.</div>
     </div>
 
     <div class="section">
-      <h3>🌳 Estrutura A → B</h3>
-      <label>Início (A):</label><select id="startSelect"></select>
-      <label>Alvo Focal (B):</label><select id="rootSelect"></select>
-      <button class="btn primary" id="btnGenerate" style="width:100%; margin-top:10px;">🎨 Gerar Caminho</button>
-      <p class="hint">Clique nos nós para expandir ramos (C).</p>
+      <h3>🌳 Estrutura A → B → (galhos/folhas)</h3>
+
+      <label>Início (A):</label>
+      <select id="startSelect" disabled></select>
+
+      <label>Raiz Focal (B):</label>
+      <select id="rootSelect" disabled></select>
+
+      <button class="btn primary" id="btnGenerate" style="width:100%; margin-top:10px;" disabled>🎨 Gerar Taxonomia</button>
+
+      <div class="hint">
+        - A sempre aparece no topo (corredor).<br>
+        - B inicia expandido (primeiros galhos).<br>
+        - Para “crescer” rápido: <kbd>Shift</kbd>+Clique em B.
+      </div>
     </div>
   </div>
 
   <div class="canvas-area">
     <svg id="svg"></svg>
     <div id="tooltip" class="tooltip"></div>
+    <div id="toast" class="toast"></div>
   </div>
 </div>
 
@@ -94,219 +265,679 @@
 class OwlViz {
   constructor() {
     this.owlData = null;
-    this.uiState = { startA: '', rootB: '', layout: 'topdown', spacing: 1.2, isDragEnabled: false };
+
+    this.uiState = {
+      startA: '',
+      rootB: '',
+      layout: 'topdown',
+      spacing: 1.2,
+      isDragEnabled: false
+    };
+
     this.expandedNodes = new Set();
-    
+    this._lastLayoutCache = null; // for search/center
+    this._toastTimer = null;
+
     this.svg = d3.select('#svg');
     this.gMain = this.svg.append('g');
     this.tooltip = d3.select('#tooltip');
-    
-    this.zoom = d3.zoom().on('zoom', e => { 
-      if(!this.uiState.isDragEnabled) this.gMain.attr('transform', e.transform); 
+    this.toastEl = document.getElementById('toast');
+
+    this.zoom = d3.zoom().on('zoom', e => {
+      if (!this.uiState.isDragEnabled) this.gMain.attr('transform', e.transform);
     });
     this.svg.call(this.zoom);
+
     this.bindEvents();
   }
 
-  localName(iri) { return iri.split(/[#\/]/).pop() || "Node"; }
+  // ---------- Utilities ----------
+  localName(iri) {
+    return (iri || "").split(/[#\/]/).pop() || "Node";
+  }
 
+  showToast(html, ms = 2400) {
+    clearTimeout(this._toastTimer);
+    this.toastEl.innerHTML = html;
+    this.toastEl.style.display = 'block';
+    this._toastTimer = setTimeout(() => { this.toastEl.style.display = 'none'; }, ms);
+  }
+
+  enableUI(enabled) {
+    const ids = [
+      'btnToggleDrag','btnResetView','btnCollapseToCorridor','btnExpandFocus','btnExportPng',
+      'searchInput','btnFind','layoutSelect','spacingRange','startSelect','rootSelect','btnGenerate'
+    ];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.disabled = !enabled;
+    });
+  }
+
+  // ---------- OWL Load ----------
   async loadOwl(file) {
     const text = await file.text();
     const store = $rdf.graph();
+
     try {
       $rdf.parse(text, store, 'urn:local', 'application/rdf+xml');
-      const nodes = new Map(), childrenMap = new Map(), parentMap = new Map();
+
+      const nodes = new Map();
+      const childrenMap = new Map();
+      const parentMap = new Map();  // child -> Set(parents)
+      const indegree = new Map();
+
+      const RDF  = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#');
       const RDFS = $rdf.Namespace('http://www.w3.org/2000/01/rdf-schema#');
-      
-      const classes = store.each(undefined, $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), $rdf.sym('http://www.w3.org/2002/07/owl#Class'))
-        .concat(store.each(undefined, $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), RDFS('Class')))
-        .filter(c => !c.value.includes('genid'));
+      const OWL  = $rdf.Namespace('http://www.w3.org/2002/07/owl#');
+
+      const classes =
+        store.each(undefined, RDF('type'), OWL('Class'))
+          .concat(store.each(undefined, RDF('type'), RDFS('Class')))
+          .filter(c => c?.value && !c.value.includes('genid'));
 
       classes.forEach(c => {
-        nodes.set(c.value, { 
-          iri: c.value, 
+        nodes.set(c.value, {
+          iri: c.value,
           label: store.any(c, RDFS('label'))?.value || this.localName(c.value),
           comment: store.any(c, RDFS('comment'))?.value || "Sem descrição disponível."
         });
+        indegree.set(c.value, 0);
       });
 
       store.statementsMatching(undefined, RDFS('subClassOf'), undefined).forEach(st => {
-        if (nodes.has(st.subject.value) && nodes.has(st.object.value)) {
-          if (!childrenMap.has(st.object.value)) childrenMap.set(st.object.value, []);
-          childrenMap.get(st.object.value).push(st.subject.value);
-          parentMap.set(st.subject.value, st.object.value);
-        }
+        const child = st.subject?.value;
+        const parent = st.object?.value;
+
+        if (!nodes.has(child) || !nodes.has(parent)) return;
+
+        if (!childrenMap.has(parent)) childrenMap.set(parent, []);
+        childrenMap.get(parent).push(child);
+
+        if (!parentMap.has(child)) parentMap.set(child, new Set());
+        parentMap.get(child).add(parent);
+
+        indegree.set(child, (indegree.get(child) || 0) + 1);
       });
-      this.owlData = { nodes, childrenMap, parentMap };
+
+      // sort children
+      for (const [p, arr] of childrenMap.entries()) {
+        arr.sort((a, b) => nodes.get(a).label.localeCompare(nodes.get(b).label));
+      }
+
+      this.owlData = { nodes, childrenMap, parentMap, indegree };
       this.populateUI();
-    } catch (e) { alert("Erro no arquivo. Use RDF/XML."); }
+      this.autoselectDefaults();
+
+      this.enableUI(true);
+      this.showToast('OWL carregado. Selecione <b>A</b> e <b>B</b> e clique em <b>Gerar Taxonomia</b>.', 2600);
+
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao carregar OWL. Este viewer espera RDF/XML. (Se seu OWL estiver em Turtle, converta antes.)");
+      this.enableUI(false);
+    }
   }
 
   populateUI() {
-    const sorted = Array.from(this.owlData.nodes.values()).sort((a,b) => a.label.localeCompare(b.label));
-    d3.selectAll('#startSelect, #rootSelect').selectAll('option').remove();
-    d3.selectAll('#startSelect, #rootSelect').selectAll('option').data(sorted).enter().append('option').attr('value', d => d.iri).text(d => d.label);
+    const all = Array.from(this.owlData.nodes.values())
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    // A: qualquer classe
+    const startSel = d3.select('#startSelect');
+    startSel.selectAll('option').remove();
+    startSel.selectAll('option')
+      .data(all)
+      .enter()
+      .append('option')
+      .attr('value', d => d.iri)
+      .text(d => d.label);
+
+    // B: classes com filhos (subclasses)
+    const bOptions = all.filter(d => (this.owlData.childrenMap.get(d.iri) || []).length > 0);
+
+    const rootSel = d3.select('#rootSelect');
+    rootSel.selectAll('option').remove();
+    rootSel.selectAll('option')
+      .data(bOptions)
+      .enter()
+      .append('option')
+      .attr('value', d => d.iri)
+      .text(d => d.label);
+
+    // cache for search
+    this._sortedNodesByLabel = all;
   }
 
-  getPath(start, end) {
-    let path = [], curr = end;
-    while (curr && curr !== start) { path.push(curr); curr = this.owlData.parentMap.get(curr); }
-    path.push(start);
-    return new Set(path);
+  autoselectDefaults() {
+    const start = document.getElementById('startSelect');
+    const root  = document.getElementById('rootSelect');
+
+    if (start.options.length) start.selectedIndex = 0;
+    if (root.options.length) root.selectedIndex = 0;
+
+    this.uiState.startA = start.value;
+    this.uiState.rootB  = root.value;
   }
 
-  buildTree(iri, depth, pathSet) {
+  // ---------- Corridor Path A -> ... -> B ----------
+  getPathArray(startA, rootB) {
+    const parents = this.owlData.parentMap; // child -> Set(parents)
+
+    const queue = [rootB];
+    const visited = new Set([rootB]);
+    const prev = new Map(); // node -> next node toward B
+
+    while (queue.length) {
+      const cur = queue.shift();
+      if (cur === startA) break;
+
+      const ps = parents.get(cur);
+      if (!ps) continue;
+
+      for (const p of ps) {
+        if (visited.has(p)) continue;
+        visited.add(p);
+        prev.set(p, cur);
+        queue.push(p);
+      }
+    }
+
+    if (!visited.has(startA)) return null;
+
+    const arr = [startA];
+    let cur = startA;
+    while (cur !== rootB) {
+      cur = prev.get(cur);
+      arr.push(cur);
+    }
+    return arr;
+  }
+
+  makeNextOnPathMap(pathArr) {
+    const next = new Map(); // node -> next on corridor
+    for (let i = 0; i < pathArr.length - 1; i++) {
+      next.set(pathArr[i], pathArr[i + 1]);
+    }
+    return next;
+  }
+
+  // ---------- Expand helpers ----------
+  toggleSubtree(iri, depth = 2, expand = true) {
+    const walk = (n, d) => {
+      if (expand) this.expandedNodes.add(n);
+      else this.expandedNodes.delete(n);
+
+      if (d <= 0) return;
+      const kids = this.owlData.childrenMap.get(n) || [];
+      kids.forEach(k => walk(k, d - 1));
+    };
+    walk(iri, depth);
+  }
+
+  // ---------- Tree building (Corridor + Manual expansion) ----------
+  buildTree(iri, pathSet, nextOnPath, rootB) {
     const node = this.owlData.nodes.get(iri);
     const children = this.owlData.childrenMap.get(iri) || [];
-    const visible = children.filter(c => pathSet.has(c) || this.expandedNodes.has(iri));
+
+    const onPath = !!(pathSet && pathSet.has(iri));
+    const isFocus = (iri === rootB);
+    const isExpanded = this.expandedNodes.has(iri);
+
+    let visibleChildren = [];
+
+    if (!pathSet) {
+      visibleChildren = isExpanded ? children : [];
+    } else if (isFocus) {
+      // B: always show immediate children (B starts expanded for "galhos/folhas")
+      visibleChildren = children;
+    } else if (onPath) {
+      // corridor: by default only the next node in corridor, unless manually expanded
+      const next = nextOnPath.get(iri);
+      visibleChildren = isExpanded ? children : (next ? [next] : []);
+    } else {
+      // off-corridor: only when expanded
+      visibleChildren = isExpanded ? children : [];
+    }
+
     return {
-      iri: iri, name: node.label, info: node.comment,
-      children: visible.map(c => this.buildTree(c, depth + 1, pathSet))
+      iri,
+      name: node?.label || this.localName(iri),
+      info: node?.comment || "Sem descrição disponível.",
+      children: visibleChildren.map(c => this.buildTree(c, pathSet, nextOnPath, rootB))
     };
   }
 
-  wrapText(text, limit = 15) {
-    const words = text.split(/\s+/), lines = []; let line = "";
-    words.forEach(w => {
-      if ((line + w).length > limit) { lines.push(line.trim()); line = w + " "; }
-      else { line += w + " "; }
-    });
-    lines.push(line.trim());
-    return lines.filter(l => l.length > 0).slice(0, 3);
+  wrapText(text, limit = 18) {
+    const words = (text || "").split(/\s+/);
+    const lines = [];
+    let line = "";
+    for (const w of words) {
+      if ((line + w).length > limit) {
+        lines.push(line.trim());
+        line = w + " ";
+      } else {
+        line += w + " ";
+      }
+    }
+    if (line.trim()) lines.push(line.trim());
+    return lines.slice(0, 4);
   }
 
+  // ---------- Render ----------
   render() {
     if (!this.owlData) return;
+
+    const startA = this.uiState.startA;
+    const rootB  = this.uiState.rootB;
+
     this.gMain.selectAll('*').remove();
-    
-    const pathSet = this.getPath(this.uiState.startA, this.uiState.rootB);
-    const rootData = d3.hierarchy(this.buildTree(this.uiState.startA, 0, pathSet));
-    
-    const spc = this.uiState.spacing;
-    let layout;
-    
-    // Escolha do Motor de Layout
-    if (this.uiState.layout === 'radial') {
-      layout = d3.cluster().size([2 * Math.PI, 300 * spc]);
-    } else if (this.uiState.layout === 'a4') {
-      layout = d3.tree().nodeSize([120 * spc, 160 * spc]);
-    } else {
-      layout = d3.tree().nodeSize([180 * spc, 130 * spc]);
+    this._lastLayoutCache = null;
+
+    const pathArr = this.getPathArray(startA, rootB);
+
+    if (!pathArr) {
+      const single = d3.hierarchy(this.buildTree(startA, null, null, rootB));
+      this.renderHierarchy(single, null, true);
+      this.showToast('⚠️ <b>B</b> não é descendente de <b>A</b>. Ajuste A/B para obter o corredor completo.', 3200);
+      return;
     }
-    
+
+    const pathSet = new Set(pathArr);
+    const nextOnPath = this.makeNextOnPathMap(pathArr);
+
+    const rootData = d3.hierarchy(this.buildTree(startA, pathSet, nextOnPath, rootB));
+    this.renderHierarchy(rootData, pathSet, false);
+  }
+
+  renderHierarchy(rootData, pathSet, noPath) {
+    const spc = +this.uiState.spacing;
+
+    let layout;
+    if (this.uiState.layout === 'radial') {
+      layout = d3.cluster().size([2 * Math.PI, 320 * spc]);
+    } else if (this.uiState.layout === 'a4') {
+      layout = d3.tree().nodeSize([95 * spc, 150 * spc]);
+    } else {
+      layout = d3.tree().nodeSize([150 * spc, 130 * spc]);
+    }
+
     layout(rootData);
 
-    // Transformação de Coordenadas conforme Modo
+    // coords
     rootData.descendants().forEach(d => {
-      if (this.uiState.layout === 'horizontal') { [d.xP, d.yP] = [d.y, d.x]; }
-      else if (this.uiState.layout === 'radial') {
-        d.xP = Math.cos(d.x - Math.PI/2) * d.y;
-        d.yP = Math.sin(d.x - Math.PI/2) * d.y;
-      } else { [d.xP, d.yP] = [d.x, d.y]; }
+      if (this.uiState.layout === 'horizontal') {
+        d.xP = d.y;
+        d.yP = d.x;
+      } else if (this.uiState.layout === 'radial') {
+        d.xP = Math.cos(d.x - Math.PI / 2) * d.y;
+        d.yP = Math.sin(d.x - Math.PI / 2) * d.y;
+      } else {
+        d.xP = d.x;
+        d.yP = d.y;
+      }
     });
 
-    const linkGen = this.uiState.layout === 'radial' 
-      ? d3.linkRadial().angle(d => d.x).radius(d => d.y)
-      : (this.uiState.layout === 'horizontal' ? d3.linkHorizontal().x(d => d.xP).y(d => d.yP) : d3.linkVertical().x(d => d.xP).y(d => d.yP));
+    const linkGen =
+      this.uiState.layout === 'radial'
+        ? d3.linkRadial().angle(d => d.x).radius(d => d.y)
+        : (this.uiState.layout === 'horizontal'
+            ? d3.linkHorizontal().x(d => d.xP).y(d => d.yP)
+            : d3.linkVertical().x(d => d.xP).y(d => d.yP));
 
-    const links = this.gMain.selectAll('.link').data(rootData.links()).enter().append('path')
-      .attr('class', 'link').attr('d', linkGen);
+    const links = this.gMain.selectAll('.link')
+      .data(rootData.links())
+      .enter()
+      .append('path')
+      .attr('class', 'link')
+      .attr('d', linkGen);
 
-    const nodesG = this.gMain.selectAll('.node').data(rootData.descendants()).enter().append('g')
-      .attr('class', 'node').attr('transform', d => `translate(${d.xP},${d.yP})`);
+    const nodesG = this.gMain.selectAll('.node')
+      .data(rootData.descendants())
+      .enter()
+      .append('g')
+      .attr('class', 'node')
+      .attr('transform', d => `translate(${d.xP},${d.yP})`);
 
     const self = this;
+
+    // Node draw
     nodesG.each(function(d) {
       const g = d3.select(this);
-      const lines = self.wrapText(d.data.name);
-      const h = lines.length * 12 + 20;
-      
-      // Cores por contexto
-      let colors = {bg: "#f8fafc", stroke: "#cbd5e1", text: "#1e293b"};
-      if (d.data.iri === self.uiState.rootB) colors = {bg: "#e0f2fe", stroke: "#0369a1", text: "#0c4a6e"};
-      else if (pathSet.has(d.data.iri)) colors = {bg: "#f1f5f9", stroke: "#475569", text: "#334155"};
-      else if (d.depth > 0) colors = {bg: "#f0fdf4", stroke: "#15803d", text: "#166534"};
 
-      g.append('rect').attr('x', -70).attr('y', -h/2).attr('width', 140).attr('height', h).attr('rx', 6)
-        .attr('fill', colors.bg).attr('stroke', colors.stroke);
+      const label = d.data.name || '';
+      const lines = self.wrapText(label);
+
+      // adaptive node size
+      const w = Math.max(150, Math.min(300, Math.ceil(label.length * 7.2)));
+      const h = Math.max(36, lines.length * 12 + 18);
+
+      const onPath = pathSet && pathSet.has(d.data.iri);
+      const isFocus = (d.data.iri === self.uiState.rootB);
+
+      // colors
+      let colors = { bg: "#f8fafc", stroke: "#cbd5e1", text: "#1e293b" };
+
+      if (isFocus) colors = { bg: "#e0f2fe", stroke: "#0369a1", text: "#0c4a6e" };
+      else if (!noPath && onPath) colors = { bg: "#f1f5f9", stroke: "#475569", text: "#334155" };
+      else if (d.depth > 0) colors = { bg: "#f0fdf4", stroke: "#15803d", text: "#166534" };
+
+      g.append('rect')
+        .attr('x', -w / 2)
+        .attr('y', -h / 2)
+        .attr('width', w)
+        .attr('height', h)
+        .attr('rx', 10)
+        .attr('fill', colors.bg)
+        .attr('stroke', colors.stroke);
 
       lines.forEach((line, i) => {
-        g.append('text').attr('y', -((lines.length-1)*6) + (i * 12) + 4).attr('fill', colors.text).text(line);
+        g.append('text')
+          .attr('y', -((lines.length - 1) * 6) + (i * 12) + 4)
+          .attr('fill', colors.text)
+          .text(line);
       });
 
-      // Interatividade
+      // hover tooltip
       g.on('mouseover', (e) => {
-        self.tooltip.style('display', 'block').html(`<b>${d.data.name}</b><i>${d.data.iri}</i><br><br>${d.data.info}`);
+        const extra = noPath
+          ? `<div style="margin-top:8px; color:#fca5a5; font-size:11px; font-weight:800;">Aviso: B não é descendente de A.</div>`
+          : '';
+
+        const tags = `
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            ${isFocus ? `<span class="badge">Raiz (B)</span>` : ''}
+            ${onPath ? `<span class="badge">Corredor A→B</span>` : ''}
+            ${self.expandedNodes.has(d.data.iri) ? `<span class="badge">Expandido</span>` : `<span class="badge">Fechado</span>`}
+          </div>
+        `;
+
+        self.tooltip
+          .style('display', 'block')
+          .html(`
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="font-weight:900; color:#93c5fd; font-size:13px; line-height:1.2;">${d.data.name}</div>
+              <div style="font-size:10px; color:#94a3b8; word-break:break-all;">${d.data.iri}</div>
+              <div style="font-size:12px; color:#e2e8f0; line-height:1.3;">${d.data.info}</div>
+              ${tags}
+              ${extra}
+            </div>
+          `);
       })
       .on('mousemove', (e) => {
-        self.tooltip.style('left', (e.pageX + 15) + 'px').style('top', (e.pageY - 20) + 'px');
+        self.tooltip
+          .style('left', (e.pageX + 12) + 'px')
+          .style('top', (e.pageY - 18) + 'px');
       })
       .on('mouseout', () => self.tooltip.style('display', 'none'))
       .on('click', (e) => {
         if (self.uiState.isDragEnabled) return;
-        if (self.expandedNodes.has(d.data.iri)) self.expandedNodes.delete(d.data.iri);
-        else self.expandedNodes.add(d.data.iri);
+
+        const iri = d.data.iri;
+
+        // Alt: collapse subtree, Shift: expand subtree, normal: toggle node
+        if (e.altKey) {
+          self.toggleSubtree(iri, 3, false);
+        } else if (e.shiftKey) {
+          self.toggleSubtree(iri, 2, true);
+        } else {
+          if (self.expandedNodes.has(iri)) self.expandedNodes.delete(iri);
+          else self.expandedNodes.add(iri);
+        }
+
         self.render();
       });
     });
 
-    // Motor de Arraste (Funciona em todos os layouts)
-    nodesG.call(d3.drag().on('drag', (event, d) => {
-      if (!this.uiState.isDragEnabled) return;
-      d.xP = event.x; d.yP = event.y;
-      d3.select(event.sourceEvent.target.parentNode).attr('transform', `translate(${d.xP},${d.yP})`);
-      links.filter(l => l.source === d || l.target === d).attr('d', (l) => {
-          // No arraste, as linhas tornam-se retas para facilitar a performance
-          return `M${l.source.xP},${l.source.yP} L${l.target.xP},${l.target.yP}`;
-      });
-    }));
+    // Drag (optional)
+    nodesG.call(
+      d3.drag()
+        .on('drag', (event, d) => {
+          if (!this.uiState.isDragEnabled) return;
 
-    if (this.expandedNodes.size === 0) this.autofit();
+          d.xP = event.x;
+          d.yP = event.y;
+
+          const nodeG = event.sourceEvent.target.closest('g.node');
+          if (nodeG) d3.select(nodeG).attr('transform', `translate(${d.xP},${d.yP})`);
+
+          links
+            .filter(l => l.source === d || l.target === d)
+            .attr('d', (l) => `M${l.source.xP},${l.source.yP} L${l.target.xP},${l.target.yP}`);
+        })
+        .on('end', () => {
+          if (!this.uiState.isDragEnabled) return;
+          this.render(); // restore curves + consistency
+        })
+    );
+
+    // cache for search centering
+    this._lastLayoutCache = {
+      nodes: rootData.descendants().map(d => ({ iri: d.data.iri, x: d.xP, y: d.yP })),
+      bbox: this.gMain.node().getBBox()
+    };
+
+    // autofit on fresh generation
+    if (this.expandedNodes.size === 0 && !this.uiState.isDragEnabled) this.autofit();
+    else this.autofit(); // keep it nicely framed after expansions too (better for A4)
+
+    // little hint
+    if (!noPath && pathSet) {
+      this.showToast('✅ Corredor A→B criado. Clique para abrir galhos e folhas a partir de <b>B</b>.', 2000);
+    }
   }
 
   autofit() {
-    const b = this.gMain.node().getBBox();
-    const s = Math.min(1.2, 0.85 / Math.max(b.width/window.innerWidth, b.height/window.innerHeight));
-    this.svg.transition().duration(800).call(this.zoom.transform, d3.zoomIdentity.translate(window.innerWidth/2 - (b.x + b.width/2)*s, 60).scale(s));
+    const g = this.gMain.node();
+    if (!g) return;
+    const b = g.getBBox();
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight - 65;
+
+    const s = Math.min(1.25, 0.92 / Math.max(b.width / vw, b.height / vh));
+
+    this.svg
+      .transition()
+      .duration(550)
+      .call(
+        this.zoom.transform,
+        d3.zoomIdentity
+          .translate(vw / 2 - (b.x + b.width / 2) * s, (65 + vh * 0.10))
+          .scale(s)
+      );
+  }
+
+  // ---------- Export PNG ----------
+  exportPng() {
+    const svgEl = document.getElementById('svg');
+    const gEl = this.gMain.node();
+    if (!gEl) return;
+
+    const bbox = gEl.getBBox();
+    const pad = 90;
+
+    const clone = svgEl.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', (bbox.width + pad * 2));
+    clone.setAttribute('height', (bbox.height + pad * 2));
+    clone.setAttribute('viewBox', `${bbox.x - pad} ${bbox.y - pad} ${bbox.width + pad * 2} ${bbox.height + pad * 2}`);
+
+    // White background
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('x', bbox.x - pad);
+    bg.setAttribute('y', bbox.y - pad);
+    bg.setAttribute('width', bbox.width + pad * 2);
+    bg.setAttribute('height', bbox.height + pad * 2);
+    bg.setAttribute('fill', 'white');
+    clone.insertBefore(bg, clone.firstChild);
+
+    const svgStr = new XMLSerializer().serializeToString(clone);
+
+    const scale = 2; // HD
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil((bbox.width + pad * 2) * scale);
+    canvas.height = Math.ceil((bbox.height + pad * 2) * scale);
+
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      ctx.drawImage(img, 0, 0);
+
+      const a = document.createElement('a');
+      a.download = 'taxonomia_final.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+  }
+
+  // ---------- Search / Center ----------
+  findByLabel(query) {
+    const q = (query || '').trim().toLowerCase();
+    if (!q) return null;
+
+    // first try exact contains over all known nodes
+    const all = this._sortedNodesByLabel || Array.from(this.owlData.nodes.values());
+    const hit = all.find(n => (n.label || '').toLowerCase().includes(q));
+    return hit ? hit.iri : null;
+  }
+
+  centerOnIri(iri) {
+    if (!iri || !this._lastLayoutCache) return false;
+
+    const hit = this._lastLayoutCache.nodes.find(n => n.iri === iri);
+    if (!hit) return false;
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight - 65;
+
+    // keep current scale if possible
+    const t = d3.zoomTransform(this.svg.node());
+    const s = t.k || 1;
+
+    this.svg
+      .transition()
+      .duration(550)
+      .call(
+        this.zoom.transform,
+        d3.zoomIdentity
+          .translate(vw / 2 - hit.x * s, (65 + vh / 2) - hit.y * s)
+          .scale(s)
+      );
+
+    return true;
+  }
+
+  // ---------- Controls ----------
+  collapseToCorridor() {
+    // Keep only B expanded; corridor stays visible by design
+    const b = this.uiState.rootB;
+    this.expandedNodes.clear();
+    this.expandedNodes.add(b);
+    this.render();
+  }
+
+  expandFocus(depth = 2) {
+    const b = this.uiState.rootB;
+    this.toggleSubtree(b, depth, true);
+    this.render();
   }
 
   bindEvents() {
-    document.getElementById('fileInput').onchange = e => this.loadOwl(e.target.files[0]);
+    // file
+    document.getElementById('fileInput').onchange = e => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      this.enableUI(false);
+      this.loadOwl(f);
+    };
+
+    // generate
     document.getElementById('btnGenerate').onclick = () => {
       this.uiState.startA = document.getElementById('startSelect').value;
-      this.uiState.rootB = document.getElementById('rootSelect').value;
+      this.uiState.rootB  = document.getElementById('rootSelect').value;
+
       this.expandedNodes.clear();
+      this.expandedNodes.add(this.uiState.rootB); // focus starts expanded
+
       this.render();
     };
-    document.getElementById('layoutSelect').onchange = e => { this.uiState.layout = e.target.value; this.render(); };
+
+    // layout
+    document.getElementById('layoutSelect').onchange = e => {
+      this.uiState.layout = e.target.value;
+      this.render();
+    };
+
+    // spacing
+    document.getElementById('spacingRange').oninput = e => {
+      this.uiState.spacing = +e.target.value;
+      document.getElementById('spacingLabel').textContent = e.target.value;
+      this.render();
+    };
+
+    // theme
+    document.getElementById('themeSelect').onchange = e => {
+      document.body.dataset.theme = e.target.value;
+    };
+
+    // drag toggle
     document.getElementById('btnToggleDrag').onclick = e => {
       this.uiState.isDragEnabled = !this.uiState.isDragEnabled;
       e.target.textContent = `🖱️ Modo Arrastar: ${this.uiState.isDragEnabled ? 'ON' : 'OFF'}`;
       e.target.classList.toggle('active', this.uiState.isDragEnabled);
     };
-    document.getElementById('spacingRange').oninput = e => {
-      this.uiState.spacing = e.target.value;
-      document.getElementById('spacingLabel').textContent = e.target.value;
+
+    // autofit
+    document.getElementById('btnResetView').onclick = () => this.autofit();
+
+    // corridor only
+    document.getElementById('btnCollapseToCorridor').onclick = () => this.collapseToCorridor();
+
+    // expand focus
+    document.getElementById('btnExpandFocus').onclick = () => this.expandFocus(2);
+
+    // export
+    document.getElementById('btnExportPng').onclick = () => this.exportPng();
+
+    // find
+    document.getElementById('btnFind').onclick = () => {
+      const q = document.getElementById('searchInput').value;
+      const iri = this.findByLabel(q);
+      if (!iri) {
+        this.showToast('Nada encontrado. Tente outra palavra do <b>label</b>.', 1800);
+        return;
+      }
+
+      // If node isn't currently rendered, we can still set it as B (optional),
+      // but here we simply try to center if visible.
+      const ok = this.centerOnIri(iri);
+      if (!ok) {
+        this.showToast('Encontrado na ontologia, mas não está visível no grafo atual. Gere A→B ou expanda nós.', 2600);
+      } else {
+        this.showToast('🎯 Centralizado no nó encontrado.', 1400);
+      }
     };
-    document.getElementById('themeSelect').onchange = e => document.body.dataset.theme = e.target.value;
-    document.getElementById('btnExportPng').onclick = () => {
-      const bbox = this.gMain.node().getBBox();
-      const pad = 80;
-      const canvas = document.createElement('canvas');
-      canvas.width = (bbox.width + pad*2)*2; canvas.height = (bbox.height + pad*2)*2;
-      const ctx = canvas.getContext('2d');
-      const svgStr = new XMLSerializer().serializeToString(document.getElementById('svg'));
-      const img = new Image();
-      img.onload = () => {
-        ctx.fillStyle = "white"; ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.drawImage(img, 0,0, canvas.width, canvas.height);
-        const a = document.createElement('a'); a.download = 'taxonomia_final.png'; a.href = canvas.toDataURL(); a.click();
-      };
-      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
-    };
+
+    // allow enter to trigger find
+    document.getElementById('searchInput').addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') document.getElementById('btnFind').click();
+    });
+
+    // responsive
+    window.addEventListener('resize', () => {
+      if (!this.owlData) return;
+      this.autofit();
+    });
   }
 }
-new OwlViz();
+
+const app = new OwlViz();
 </script>
 </body>
 </html>
