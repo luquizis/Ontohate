@@ -2,67 +2,57 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OWL Taxonomy Builder - FINAL PRO</title>
-  
+  <title>OWL Taxonomy - Multi-View Interactive PRO</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/rdflib@2.2.37/dist/rdflib.min.js"></script>
-
   <style>
-    :root { 
-      --bg: #ffffff; --panel: #f8fafc; --text: #0f172a; --muted: #64748b; --line: #e2e8f0; --accent: #2563eb; 
-    }
-    [data-theme="dark"] { 
-      --bg: #020617; --panel: #0f172a; --text: #f1f5f9; --muted: #94a3b8; --line: #1e293b; 
-    }
-    
+    :root { --bg: #ffffff; --panel: #f8fafc; --text: #0f172a; --muted: #64748b; --line: #e2e8f0; --accent: #2563eb; }
+    [data-theme="dark"] { --bg: #020617; --panel: #0f172a; --text: #f1f5f9; --muted: #94a3b8; --line: #1e293b; }
     * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
     
-    header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 70px; z-index: 100; }
-    .controls { display: flex; align-items: center; gap: 12px; }
-    
-    .btn { background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.2s; }
-    .btn:hover { background: var(--line); }
+    header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 65px; z-index: 1000; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .btn { background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.2s; }
     .btn.primary { background: var(--accent); color: #fff; border-color: transparent; }
-    .btn.active { background: #ef4444 !important; color: white; border-color: transparent; }
+    .btn.active { background: #ef4444 !important; color: white; }
 
-    #wrap { display: flex; height: calc(100vh - 70px); }
-    .sidebar { width: 350px; background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 20px; font-size: 13px; }
-    .canvas-area { flex: 1; position: relative; background: var(--bg); }
-    
+    #wrap { display: flex; height: calc(100vh - 65px); }
+    .sidebar { width: 340px; background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 20px; font-size: 13px; z-index: 10; }
+    .canvas-area { flex: 1; position: relative; background: var(--bg); overflow: hidden; }
     svg { width: 100%; height: 100%; cursor: grab; }
-    svg.dragging-active { cursor: crosshair; }
-
-    .section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
-    h3 { margin: 0 0 10px 0; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
     
-    select, input[type="text"], input[type="range"] { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin-bottom: 10px; }
-    
-    .scroll-box { border: 1px solid var(--line); border-radius: 6px; background: var(--bg); padding: 8px; max-height: 120px; overflow-y: auto; }
-    .item-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 0.5px solid var(--line); font-size: 11px; }
+    .section { margin-bottom: 18px; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
+    h3 { margin: 0 0 10px 0; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin-bottom: 10px; }
 
-    /* Estilos do Grafo */
-    .link { fill: none; stroke: #cbd5e1; stroke-width: 2px; }
-    .node rect { stroke-width: 2.5px; cursor: move; }
-    .node text { font-size: 11px; font-weight: 800; text-anchor: middle; font-family: sans-serif; pointer-events: none; }
-    .node.highlight rect { stroke: #ef4444 !important; stroke-width: 5px !important; }
+    /* Grafo */
+    .link { fill: none; stroke: #cbd5e1; stroke-width: 1.5px; transition: 0.3s; }
+    .node rect { stroke-width: 2.5px; transition: fill 0.3s; }
+    .node text { font-size: 10px; font-weight: 800; text-anchor: middle; pointer-events: none; font-family: sans-serif; }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute; display: none; padding: 12px; background: rgba(15, 23, 42, 0.95);
+      color: #fff; border-radius: 8px; font-size: 12px; max-width: 300px; z-index: 2000;
+      pointer-events: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); line-height: 1.4;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .tooltip b { color: #60a5fa; display: block; margin-bottom: 4px; font-size: 13px; border-bottom: 1px solid #334155; padding-bottom: 4px; }
+    .tooltip i { color: #94a3b8; font-style: normal; font-size: 10px; word-break: break-all; }
+
+    .hint { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 5px; }
   </style>
 </head>
-
 <body data-theme="light">
 
 <header>
-  <div class="controls">
+  <div style="display:flex; gap:10px">
     <label class="btn primary">🦉 Abrir OWL <input type="file" id="fileInput" accept=".owl,.rdf,.xml" style="display:none"></label>
     <button class="btn" id="btnToggleDrag">🖱️ Modo Arrastar: OFF</button>
   </div>
-  <div class="controls">
-    <select id="themeSelect" class="btn" style="width:auto; margin:0">
-      <option value="light">☀️ Light</option>
-      <option value="dark">🌙 Dark</option>
-    </select>
-    <button class="btn primary" id="btnExportPng">💾 Exportar HD (A4)</button>
+  <div style="display:flex; gap:10px">
+    <select id="themeSelect" class="btn" style="width:auto; margin:0"><option value="light">☀️ Light</option><option value="dark">🌙 Dark</option></select>
+    <button class="btn primary" id="btnExportPng">💾 Exportar PNG HD</button>
   </div>
 </header>
 
@@ -72,33 +62,31 @@
       <h3>🔍 Localizar</h3>
       <input type="text" id="searchInput" placeholder="Buscar classe...">
     </div>
-
+    
     <div class="section">
-      <h3>📐 Layout e Ajustes</h3>
+      <h3>📐 Visualização</h3>
       <select id="layoutSelect">
-        <option value="topdown">Vertical (Tronco A→B)</option>
-        <option value="horizontal">Horizontal</option>
+        <option value="topdown">Vertical (Cima para Baixo)</option>
+        <option value="horizontal">Esquerda para Direita</option>
+        <option value="radial">Radial (Circular)</option>
+        <option value="a4">Compacto (Otimizado A4)</option>
       </select>
       <label>Densidade: <span id="spacingLabel">1.2</span></label>
       <input id="spacingRange" type="range" min="0.5" max="3.0" step="0.1" value="1.2">
     </div>
 
     <div class="section">
-      <h3>🌳 Estrutura do Caminho</h3>
-      <label>Origem (A):</label><select id="startSelect"></select>
-      <label>Raiz Focal (B):</label><select id="rootSelect"></select>
+      <h3>🌳 Estrutura A → B</h3>
+      <label>Início (A):</label><select id="startSelect"></select>
+      <label>Alvo Focal (B):</label><select id="rootSelect"></select>
+      <button class="btn primary" id="btnGenerate" style="width:100%; margin-top:10px;">🎨 Gerar Caminho</button>
+      <p class="hint">Clique nos nós para expandir ramos (C).</p>
     </div>
-
-    <div class="section">
-      <h3>🌿 Ramos Ativos (C)</h3>
-      <div class="scroll-box" id="branchBox">Aguardando arquivo...</div>
-    </div>
-
-    <button class="btn primary" id="btnGenerate" style="width:100%; padding:15px;">🎨 Gerar Taxonomia</button>
   </div>
 
   <div class="canvas-area">
     <svg id="svg"></svg>
+    <div id="tooltip" class="tooltip"></div>
   </div>
 </div>
 
@@ -106,19 +94,15 @@
 class OwlViz {
   constructor() {
     this.owlData = null;
-    this.uiState = { startA: '', rootB: '', activeBranches: new Set(), layout: 'topdown', spacing: 1.2, isDragEnabled: false };
+    this.uiState = { startA: '', rootB: '', layout: 'topdown', spacing: 1.2, isDragEnabled: false };
+    this.expandedNodes = new Set();
     
-    this.dimColors = [
-      {bg: "#f8fafc", stroke: "#94a3b8", text: "#1e293b"}, // Superclasses
-      {bg: "#e0f2fe", stroke: "#0369a1", text: "#0c4a6e"}, // Raiz B
-      {bg: "#fef3c7", stroke: "#b45309", text: "#78350f"}, // Ramos C
-      {bg: "#dcfce7", stroke: "#15803d", text: "#064e3b"}  // Nível 4+
-    ];
-
     this.svg = d3.select('#svg');
-    this.gMain = this.svg.append('g').attr('class', 'main-container');
-    this.zoom = d3.zoom().on('zoom', e => {
-      if (!this.uiState.isDragEnabled) this.gMain.attr('transform', e.transform);
+    this.gMain = this.svg.append('g');
+    this.tooltip = d3.select('#tooltip');
+    
+    this.zoom = d3.zoom().on('zoom', e => { 
+      if(!this.uiState.isDragEnabled) this.gMain.attr('transform', e.transform); 
     });
     this.svg.call(this.zoom);
     this.bindEvents();
@@ -135,10 +119,15 @@ class OwlViz {
       const RDFS = $rdf.Namespace('http://www.w3.org/2000/01/rdf-schema#');
       
       const classes = store.each(undefined, $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), $rdf.sym('http://www.w3.org/2002/07/owl#Class'))
+        .concat(store.each(undefined, $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), RDFS('Class')))
         .filter(c => !c.value.includes('genid'));
 
       classes.forEach(c => {
-        nodes.set(c.value, { iri: c.value, label: store.any(c, RDFS('label'))?.value || this.localName(c.value) });
+        nodes.set(c.value, { 
+          iri: c.value, 
+          label: store.any(c, RDFS('label'))?.value || this.localName(c.value),
+          comment: store.any(c, RDFS('comment'))?.value || "Sem descrição disponível."
+        });
       });
 
       store.statementsMatching(undefined, RDFS('subClassOf'), undefined).forEach(st => {
@@ -148,36 +137,35 @@ class OwlViz {
           parentMap.set(st.subject.value, st.object.value);
         }
       });
-
       this.owlData = { nodes, childrenMap, parentMap };
       this.populateUI();
-    } catch (e) { alert("Erro ao processar OWL."); }
+    } catch (e) { alert("Erro no arquivo. Use RDF/XML."); }
   }
 
   populateUI() {
     const sorted = Array.from(this.owlData.nodes.values()).sort((a,b) => a.label.localeCompare(b.label));
     d3.selectAll('#startSelect, #rootSelect').selectAll('option').remove();
     d3.selectAll('#startSelect, #rootSelect').selectAll('option').data(sorted).enter().append('option').attr('value', d => d.iri).text(d => d.label);
-    this.uiState.startA = sorted[0].iri;
-    this.uiState.rootB = sorted[0].iri;
-    this.updateBranchList();
   }
 
-  updateBranchList() {
-    const branches = this.owlData.childrenMap.get(this.uiState.rootB) || [];
-    const container = d3.select('#branchBox').html("");
-    this.uiState.activeBranches.clear();
-    branches.forEach(iri => {
-      const row = container.append('div').attr('class', 'item-row');
-      row.append('input').attr('type', 'checkbox').property('checked', true).on('change', e => {
-        if (e.target.checked) this.uiState.activeBranches.add(iri); else this.uiState.activeBranches.delete(iri);
-      });
-      row.append('span').text(this.owlData.nodes.get(iri).label);
-      this.uiState.activeBranches.add(iri);
-    });
+  getPath(start, end) {
+    let path = [], curr = end;
+    while (curr && curr !== start) { path.push(curr); curr = this.owlData.parentMap.get(curr); }
+    path.push(start);
+    return new Set(path);
   }
 
-  wrapText(text, limit = 16) {
+  buildTree(iri, depth, pathSet) {
+    const node = this.owlData.nodes.get(iri);
+    const children = this.owlData.childrenMap.get(iri) || [];
+    const visible = children.filter(c => pathSet.has(c) || this.expandedNodes.has(iri));
+    return {
+      iri: iri, name: node.label, info: node.comment,
+      children: visible.map(c => this.buildTree(c, depth + 1, pathSet))
+    };
+  }
+
+  wrapText(text, limit = 15) {
     const words = text.split(/\s+/), lines = []; let line = "";
     words.forEach(w => {
       if ((line + w).length > limit) { lines.push(line.trim()); line = w + " "; }
@@ -190,132 +178,134 @@ class OwlViz {
   render() {
     if (!this.owlData) return;
     this.gMain.selectAll('*').remove();
-
-    // Lógica do Caminho A -> B -> C
-    const { startA, rootB, activeBranches } = this.uiState;
-    const { nodes, childrenMap, parentMap } = this.owlData;
     
-    let pathAB = []; let curr = rootB;
-    while (curr && curr !== startA && pathAB.length < 50) { pathAB.push(curr); curr = parentMap.get(curr); }
-    pathAB.push(startA); pathAB.reverse();
+    const pathSet = this.getPath(this.uiState.startA, this.uiState.rootB);
+    const rootData = d3.hierarchy(this.buildTree(this.uiState.startA, 0, pathSet));
+    
+    const spc = this.uiState.spacing;
+    let layout;
+    
+    // Escolha do Motor de Layout
+    if (this.uiState.layout === 'radial') {
+      layout = d3.cluster().size([2 * Math.PI, 300 * spc]);
+    } else if (this.uiState.layout === 'a4') {
+      layout = d3.tree().nodeSize([120 * spc, 160 * spc]);
+    } else {
+      layout = d3.tree().nodeSize([180 * spc, 130 * spc]);
+    }
+    
+    layout(rootData);
 
-    const build = (iri, depth) => {
-      const isB = (iri === rootB);
-      let children = [];
-      if (isB) {
-        children = Array.from(activeBranches);
-      } else {
-        const idx = pathAB.indexOf(iri);
-        if (idx !== -1 && idx < pathAB.length - 1) children = [pathAB[idx+1]];
-      }
-      return { name: nodes.get(iri).label, depthLevel: depth, children: children.map(c => build(c, depth + 1)) };
-    };
-
-    const rootHierarchy = d3.hierarchy(build(pathAB[0], 0));
-    const treeLayout = d3.tree().nodeSize([180 * this.uiState.spacing, 140 * this.uiState.spacing]);
-    treeLayout(rootHierarchy);
-
-    rootHierarchy.descendants().forEach(d => {
-      d.xP = (this.uiState.layout === 'horizontal') ? d.y : d.x;
-      d.yP = (this.uiState.layout === 'horizontal') ? d.x : d.y;
+    // Transformação de Coordenadas conforme Modo
+    rootData.descendants().forEach(d => {
+      if (this.uiState.layout === 'horizontal') { [d.xP, d.yP] = [d.y, d.x]; }
+      else if (this.uiState.layout === 'radial') {
+        d.xP = Math.cos(d.x - Math.PI/2) * d.y;
+        d.yP = Math.sin(d.x - Math.PI/2) * d.y;
+      } else { [d.xP, d.yP] = [d.x, d.y]; }
     });
 
-    const linkGen = d3.linkVertical().x(d => d.xP).y(d => d.yP);
-    const links = this.gMain.selectAll('.link').data(rootHierarchy.links()).enter().append('path').attr('class', 'link').attr('d', linkGen);
+    const linkGen = this.uiState.layout === 'radial' 
+      ? d3.linkRadial().angle(d => d.x).radius(d => d.y)
+      : (this.uiState.layout === 'horizontal' ? d3.linkHorizontal().x(d => d.xP).y(d => d.yP) : d3.linkVertical().x(d => d.xP).y(d => d.yP));
 
-    const nodesG = this.gMain.selectAll('.node').data(rootHierarchy.descendants()).enter().append('g').attr('class', 'node')
-      .attr('transform', d => `translate(${d.xP},${d.yP})`);
+    const links = this.gMain.selectAll('.link').data(rootData.links()).enter().append('path')
+      .attr('class', 'link').attr('d', linkGen);
+
+    const nodesG = this.gMain.selectAll('.node').data(rootData.descendants()).enter().append('g')
+      .attr('class', 'node').attr('transform', d => `translate(${d.xP},${d.yP})`);
 
     const self = this;
     nodesG.each(function(d) {
       const g = d3.select(this);
       const lines = self.wrapText(d.data.name);
-      const h = lines.length * 12 + 22;
-      const color = self.dimColors[Math.min(d.data.depthLevel, 3)];
+      const h = lines.length * 12 + 20;
       
-      g.append('rect').attr('x', -75).attr('y', -h/2).attr('width', 150).attr('height', h).attr('rx', 8)
-        .attr('fill', color.bg).attr('stroke', color.stroke);
+      // Cores por contexto
+      let colors = {bg: "#f8fafc", stroke: "#cbd5e1", text: "#1e293b"};
+      if (d.data.iri === self.uiState.rootB) colors = {bg: "#e0f2fe", stroke: "#0369a1", text: "#0c4a6e"};
+      else if (pathSet.has(d.data.iri)) colors = {bg: "#f1f5f9", stroke: "#475569", text: "#334155"};
+      else if (d.depth > 0) colors = {bg: "#f0fdf4", stroke: "#15803d", text: "#166534"};
+
+      g.append('rect').attr('x', -70).attr('y', -h/2).attr('width', 140).attr('height', h).attr('rx', 6)
+        .attr('fill', colors.bg).attr('stroke', colors.stroke);
 
       lines.forEach((line, i) => {
-        g.append('text').attr('y', -((lines.length-1)*6) + (i*12) + 4).attr('fill', color.text).text(line);
+        g.append('text').attr('y', -((lines.length-1)*6) + (i * 12) + 4).attr('fill', colors.text).text(line);
+      });
+
+      // Interatividade
+      g.on('mouseover', (e) => {
+        self.tooltip.style('display', 'block').html(`<b>${d.data.name}</b><i>${d.data.iri}</i><br><br>${d.data.info}`);
+      })
+      .on('mousemove', (e) => {
+        self.tooltip.style('left', (e.pageX + 15) + 'px').style('top', (e.pageY - 20) + 'px');
+      })
+      .on('mouseout', () => self.tooltip.style('display', 'none'))
+      .on('click', (e) => {
+        if (self.uiState.isDragEnabled) return;
+        if (self.expandedNodes.has(d.data.iri)) self.expandedNodes.delete(d.data.iri);
+        else self.expandedNodes.add(d.data.iri);
+        self.render();
       });
     });
 
-    // Motor de Arraste
-    const drag = d3.drag().on('drag', (event, d) => {
+    // Motor de Arraste (Funciona em todos os layouts)
+    nodesG.call(d3.drag().on('drag', (event, d) => {
       if (!this.uiState.isDragEnabled) return;
       d.xP = event.x; d.yP = event.y;
       d3.select(event.sourceEvent.target.parentNode).attr('transform', `translate(${d.xP},${d.yP})`);
-      links.attr('d', linkGen);
-    });
-    nodesG.call(drag);
+      links.filter(l => l.source === d || l.target === d).attr('d', (l) => {
+          // No arraste, as linhas tornam-se retas para facilitar a performance
+          return `M${l.source.xP},${l.source.yP} L${l.target.xP},${l.target.yP}`;
+      });
+    }));
 
-    this.autofit();
+    if (this.expandedNodes.size === 0) this.autofit();
   }
 
   autofit() {
     const b = this.gMain.node().getBBox();
-    const s = Math.min(1.2, 0.9 / Math.max(b.width/window.innerWidth, b.height/window.innerHeight));
-    this.svg.transition().duration(800).call(this.zoom.transform, d3.zoomIdentity.translate(window.innerWidth/2 - (b.x + b.width/2)*s, 80).scale(s));
-  }
-
-  exportHighResPng() {
-    const bbox = this.gMain.node().getBBox();
-    const padding = 100;
-    const scale = 2.5;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = (bbox.width + padding * 2) * scale;
-    canvas.height = (bbox.height + padding * 2) * scale;
-    const ctx = canvas.getContext('2d');
-
-    const svgClone = document.getElementById('svg').cloneNode(true);
-    const styleNode = document.createElementNS("http://www.w3.org/2000/svg", "style");
-    styleNode.textContent = `.link{fill:none;stroke:#cbd5e1;stroke-width:2px;} rect{stroke-width:2.5px;} text{font-family:sans-serif;font-weight:800;font-size:11px;text-anchor:middle;}`;
-    svgClone.insertBefore(styleNode, svgClone.firstChild);
-    svgClone.setAttribute("viewBox", `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
-
-    const svgString = new XMLSerializer().serializeToString(svgClone);
-    const img = new Image();
-    img.onload = () => {
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const link = document.createElement('a');
-      link.download = `taxonomia_HD.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    };
-    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+    const s = Math.min(1.2, 0.85 / Math.max(b.width/window.innerWidth, b.height/window.innerHeight));
+    this.svg.transition().duration(800).call(this.zoom.transform, d3.zoomIdentity.translate(window.innerWidth/2 - (b.x + b.width/2)*s, 60).scale(s));
   }
 
   bindEvents() {
     document.getElementById('fileInput').onchange = e => this.loadOwl(e.target.files[0]);
-    document.getElementById('btnGenerate').onclick = () => this.render();
-    document.getElementById('btnExportPng').onclick = () => this.exportHighResPng();
-    document.getElementById('rootSelect').onchange = e => { this.uiState.rootB = e.target.value; this.updateBranchList(); };
-    
-    document.getElementById('btnToggleDrag').onclick = (e) => {
+    document.getElementById('btnGenerate').onclick = () => {
+      this.uiState.startA = document.getElementById('startSelect').value;
+      this.uiState.rootB = document.getElementById('rootSelect').value;
+      this.expandedNodes.clear();
+      this.render();
+    };
+    document.getElementById('layoutSelect').onchange = e => { this.uiState.layout = e.target.value; this.render(); };
+    document.getElementById('btnToggleDrag').onclick = e => {
       this.uiState.isDragEnabled = !this.uiState.isDragEnabled;
       e.target.textContent = `🖱️ Modo Arrastar: ${this.uiState.isDragEnabled ? 'ON' : 'OFF'}`;
       e.target.classList.toggle('active', this.uiState.isDragEnabled);
-      this.svg.classed('dragging-active', this.uiState.isDragEnabled);
     };
-
     document.getElementById('spacingRange').oninput = e => {
       this.uiState.spacing = e.target.value;
       document.getElementById('spacingLabel').textContent = e.target.value;
     };
-    
-    document.getElementById('searchInput').oninput = e => {
-      const q = e.target.value.toLowerCase();
-      this.gMain.selectAll('.node').classed('highlight', d => q && d.data.name.toLowerCase().includes(q));
-    };
-
     document.getElementById('themeSelect').onchange = e => document.body.dataset.theme = e.target.value;
+    document.getElementById('btnExportPng').onclick = () => {
+      const bbox = this.gMain.node().getBBox();
+      const pad = 80;
+      const canvas = document.createElement('canvas');
+      canvas.width = (bbox.width + pad*2)*2; canvas.height = (bbox.height + pad*2)*2;
+      const ctx = canvas.getContext('2d');
+      const svgStr = new XMLSerializer().serializeToString(document.getElementById('svg'));
+      const img = new Image();
+      img.onload = () => {
+        ctx.fillStyle = "white"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img, 0,0, canvas.width, canvas.height);
+        const a = document.createElement('a'); a.download = 'taxonomia_final.png'; a.href = canvas.toDataURL(); a.click();
+      };
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
+    };
   }
 }
-
 new OwlViz();
 </script>
 </body>
