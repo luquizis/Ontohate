@@ -1,157 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Taxonomy Builder OWL - COMPLETO</title>
+  
+  <!-- D3 + rdflib -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/rdflib@2.2.37/dist/rdflib.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#ffffff; --panel:#f1f5f9; --text:#0f172a; --muted:#475569; --line:#e2e8f0;
+      --accent:#2563eb; --accent2:#1e40af; --warn:#b45309; --danger:#b91c1c; --ok:#166534;
+      --shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    [data-theme="dark"]{
+      --bg:#000000; --panel:#0f172a; --text:#f1f5f9; --muted:#94a3b8; --line:#1e293b;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box;}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;overflow:hidden;}
+    
+    header{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;height:70px;gap:12px;}
+    .title{font-weight:900;font-size:14px;letter-spacing:.2px;display:flex;align-items:center;gap:10px;}
+    .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .btn{background:var(--bg);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer;font-size:11px;font-weight:900;text-transform:uppercase;display:inline-flex;align-items:center;gap:8px;}
+    .btn.primary{background:var(--accent);color:#fff;border-color:transparent;}
+    .btn:disabled{opacity:.45;cursor:not-allowed;}
+    .pill{font-size:11px;font-weight:900;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:rgba(37,99,235,.06);}
+
+    #wrap{display:flex;height:calc(100vh - 70px);}
+    .sidebar{width:480px;min-width:390px;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:16px;font-size:13px;}
+    .canvas-area{flex:1;position:relative;background:var(--bg);overflow:hidden;}
+    svg{width:100%;height:100%;}
+
+    .guide-step{background:rgba(37,99,235,0.10);border-left:4px solid var(--accent);padding:10px;margin-bottom:12px;border-radius:8px;color:var(--text);}
+    .section{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+    h3{margin:8px 0;font-size:12px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .field{width:100%;display:flex;flex-direction:column;gap:6px;margin:8px 0;}
+    select,input[type="text"],input[type="range"]{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);}
+    input[type="range"]{padding:6px;}
+    label.chk{display:flex;align-items:center;gap:8px;margin:6px 0;color:var(--text);}
+    .small{font-size:12px;color:var(--muted);line-height:1.3;}
+    .status{margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(2,132,199,.06);color:var(--text);}
+    .status.ok{background:rgba(22,101,52,.10);border-color:rgba(22,101,52,.35);}
+    .status.warn{background:rgba(180,83,9,.10);border-color:rgba(180,83,9,.35);}
+    .status.danger{background:rgba(185,28,28,.10);border-color:rgba(185,28,28,.35);}
+
+    .branchbox,.leafbox{border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;max-height:210px;overflow:auto;}
+    .branchbox .count,.leafbox .count{font-size:12px;color:var(--muted);margin-bottom:8px;}
+    .leafbox label{display:flex;align-items:flex-start;gap:8px;margin:6px 0;}
+    .leafbox input{margin-top:2px;}
+
+    .link{fill:none;stroke:#94a3b8;stroke-width:1.5px;opacity:.65;}
+    [data-theme="dark"] .link{stroke:#64748b;opacity:.7;}
+    .node rect{stroke-width:1.5px;rx:10;ry:10;filter:drop-shadow(0 2px 5px rgba(0,0,0,.1));}
+    [data-theme="dark"] .node rect{filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}
+    .node text{font-family:Arial,sans-serif;font-weight:900;pointer-events:none;font-size:12px;}
+
+    .tooltip{position:fixed;display:none;z-index:1000;max-width:520px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;box-shadow:var(--shadow);font-size:12px;line-height:1.25;}
+    .tooltip .t-title{font-weight:900;margin-bottom:6px;}
+    .tooltip .kv{display:grid;grid-template-columns:160px 1fr;gap:6px 10px;}
+    .tooltip .k{color:var(--muted);font-weight:900;}
+    .tooltip .v{color:var(--text);word-break:break-word;}
+    .mono{font-family:monospace;font-size:11px;}
+  </style>
+</head>
+
+<body data-theme="light">
+<header>
+  <div class="controls">
+    <label class="btn primary">
+      🦉 Carregar OWL
+      <input type="file" id="fileInput" accept=".owl,.rdf,.xml" style="display:none">
+    </label>
+    <select id="themeSelect" class="btn">
+      <option value="light">☀️ Claro</option>
+      <option value="dark">🌙 Escuro</option>
+    </select>
+    <span class="pill" id="statsPill">Carregue um OWL</span>
+  </div>
+  
+  <div class="title">
+    OWL Taxonomy Builder • <span class="pill" id="layoutPill">Top-down</span>
+  </div>
+  
+  <div class="controls">
+    <button class="btn" id="btnRelayout">🔄 Reorganizar</button>
+    <button class="btn" id="btnExportA4">📄 A4 300dpi</button>
+    <button class="btn primary" id="btnExportPng">💾 PNG</button>
+  </div>
+</header>
+
+<div id="wrap">
+  <div class="sidebar">
+    <div class="guide-step">
+      <b>A → B → C:</b> Começa em <b>A</b>, desce de <b>B</b> (superclasse) até todas as <b>subclasses C</b>.
+    </div>
+
+    <div class="section">
+      <h3>Layout</h3>
+      <select id="layoutSelect">
+        <option value="topdown">📄 Top-down (A4)</option>
+        <option value="horizontal">↔️ Horizontal</option>
+        <option value="radial">🌐 Radial</option>
+      </select>
+      
+      <div class="field">
+        <label>Espaçamento: <span id="spacingLabel">1.15</span></label>
+        <input id="spacingRange" type="range" min="0.7" max="2.2" step="0.05" value="1.15">
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>🔍 Buscar</h3>
+      <input type="text" id="filterInput" placeholder="Filtrar classes...">
+    </div>
+
+    <div class="section">
+      <h3>A - Início</h3>
+      <select id="startSelect"><option>Carregue OWL...</option></select>
+      
+      <h3>B - Raiz</h3>
+      <select id="rootSelect"><option>Carregue OWL...</option></select>
+    </div>
+
+    <div class="section">
+      <h3>🌿 Ramos (filhos de B)</h3>
+      <div class="row">
+        <button class="btn" id="btnBranchAll">Todos</button>
+        <button class="btn" id="btnBranchNone">Nenhum</button>
+      </div>
+      <div class="branchbox" id="branchBox">Selecione B...</div>
+    </div>
+
+    <div class="section">
+      <h3>🍃 Folhas C</h3>
+      <div class="row">
+        <button class="btn" id="btnLeafAll">Todos</button>
+        <button class="btn" id="btnLeafNone">Nenhum</button>
+      </div>
+      <div class="leafbox" id="leafBox">Selecione B...</div>
+    </div>
+
+    <div class="section">
+      <label class="chk"><input type="checkbox" id="chkDrag"> Arraste nós</label>
+      <label class="chk"><input type="checkbox" id="chkHighlightOnly">Só destacados</label>
+      <button class="btn primary" id="btnGenerate" style="width:100%;padding:14px;margin-top:12px;" disabled>
+        🎨 Gerar Taxonomia
+      </button>
+      
+      <div id="statusBox" class="status" style="margin-top:12px;">
+        👆 Carregue um arquivo OWL RDF/XML
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-area">
+    <svg id="svg"></svg>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+</div>
+
 <script>
-/* =========================
-   OwlViz - VERSÃO CORRIGIDA E FUNCIONANDO
-========================= */
 class OwlViz {
   constructor() {
     this.owlData = null;
-    this.uiState = { startA:'', rootB:'', selectedLeaves:[], activeBranches:new Set(), layout:'topdown', spacing:1.15, dragEnabled:false, showOnlyHighlighted:false };
-    this.svg = d3.select("#svg"); this.gMain = this.svg.append("g");
+    this.uiState = {
+      startA: '', rootB: '', selectedLeaves: [], activeBranches: new Set(),
+      layout: 'topdown', spacing: 1.15, dragEnabled: false, showOnlyHighlighted: false,
+      filterQuery: '', theme: 'light'
+    };
+    this.cache = {};
+    this.svg = d3.select('#svg');
+    this.gMain = this.svg.append('g');
+    this.tooltip = document.getElementById('tooltip');
     this.init();
   }
 
   init() {
-    this.zoom = d3.zoom().scaleExtent([0.1,4]).on("zoom", e=>this.gMain.attr("transform", e.transform));
+    this.zoom = d3.zoom().scaleExtent([0.1, 4]).on('zoom', e => this.gMain.attr('transform', e.transform));
     this.svg.call(this.zoom);
     this.bindEvents();
+    this.updateUI();
   }
 
-  // Helpers
-  static escapeHtml(str) { return String(str??'').replace(/[&<>"']/g, m=>({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":"&#039;" }[m])); }
-  static localName(iri) { const s=String(iri||''); const i=s.lastIndexOf('#'), j=s.lastIndexOf('/'); return Math.max(i,j)>=0?s.slice(Math.max(i,j)+1):s; }
-
-  setStatus(msg, type='') {
-    const el = document.getElementById("statusBox");
-    el.className = `status ${type}`.trim(); el.innerHTML = msg;
+  setStatus(msg, type = '') {
+    const el = document.getElementById('statusBox');
+    el.className = `status ${type}`.trim();
+    el.innerHTML = msg;
   }
 
-  setControlsEnabled(v) {
-    document.querySelectorAll('[id^="btn"]:not(#fileInput)').forEach(btn=>btn.disabled=!v);
+  setControlsEnabled(enabled) {
+    document.querySelectorAll('button[id^="btn"], select').forEach(el => el.disabled = !enabled);
   }
 
-  // Carregar OWL - CORRIGIDO
+  // 🔧 CARREGAR OWL
   async loadOwl(file) {
     try {
-      this.setControlsEnabled(false); this.setStatus("Lendo OWL...", "");
-      
+      this.setControlsEnabled(false);
+      this.setStatus('📥 Lendo OWL...', '');
+      document.getElementById('statsPill').textContent = 'Carregando...';
+
       const text = await file.text();
-      if(!text.includes('<rdf:RDF')) throw new Error("Não é RDF/XML (precisa ter <rdf:RDF>)");
+      if (!text.includes('<rdf:RDF')) throw new Error('Formato inválido. Use RDF/XML.');
 
       const store = window.$rdf.graph();
-      $rdf.parse(text, store, 'urn:test', 'application/rdf+xml');
+      $rdf.parse(text, store, 'urn:local', 'application/rdf+xml');
 
-      const RDF = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-      const RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
-      const OWL = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
+      const RDF = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#');
+      const RDFS = $rdf.Namespace('http://www.w3.org/2000/01/rdf-schema#');
+      const OWL = $rdf.Namespace('http://www.w3.org/2002/07/owl#');
 
       // Classes
       const classes = new Set([
         ...store.each(undefined, RDF('type'), OWL('Class')),
         ...store.each(undefined, RDF('type'), RDFS('Class'))
-      ].map(t=>t.value));
+      ].map(t => t.value));
 
-      if(classes.size===0) throw new Error("Nenhuma owl:Class/rdfs:Class encontrada");
+      if (classes.size === 0) throw new Error('Nenhuma classe encontrada');
 
       // Nodes
       const nodes = new Map();
-      for(let iri of classes) {
-        const label = store.any($rdf.sym(iri), RDFS('label'))?.value || OwlViz.localName(iri);
+      for (let iri of classes) {
+        const label = store.any($rdf.sym(iri), RDFS('label'))?.value || this.localName(iri);
         const comment = store.any($rdf.sym(iri), RDFS('comment'))?.value || '';
-        nodes.set(iri, {iri, label, comment});
+        nodes.set(iri, { iri, label, comment });
       }
 
       // Hierarquia
       const childrenMap = new Map();
       store.statementsMatching(undefined, RDFS('subClassOf'), undefined)
         .forEach(st => {
-          const child = st.subject?.value, parent = st.object?.value;
-          if(child && parent && nodes.has(child) && nodes.has(parent)) {
-            if(!childrenMap.has(parent)) childrenMap.set(parent, new Set());
+          const child = st.subject?.value;
+          const parent = st.object?.value;
+          if (child && parent && nodes.has(child) && nodes.has(parent)) {
+            if (!childrenMap.has(parent)) childrenMap.set(parent, new Set());
             childrenMap.get(parent).add(child);
           }
         });
 
       this.owlData = { nodes, childrenMap };
-      this.setStatus(`✅ ${nodes.size} classes, ${Array.from(childrenMap.values()).reduce((a,s)=>a+s.size,0)} relações`, 'ok');
+      const edges = Array.from(childrenMap.values()).reduce((a, s) => a + s.size, 0);
+      document.getElementById('statsPill').textContent = `${nodes.size} classes • ${edges} relações`;
+
       this.populateUI();
       this.setControlsEnabled(true);
+      this.setStatus(`✅ ${nodes.size} classes carregadas! Escolha A → B → Gerar`, 'ok');
 
-    } catch(e) {
+    } catch (e) {
       this.setStatus(`❌ ${e.message}`, 'danger');
       console.error(e);
     }
   }
 
   populateUI() {
-    const selA = d3.select("#startSelect").html("");
-    const selB = d3.select("#rootSelect").html("");
+    // A - todas classes
+    d3.select('#startSelect').selectAll('option').data(Array.from(this.owlData.nodes.values())
+      .sort((a, b) => a.label.localeCompare(b.label)))
+      .join('option').attr('value', d => d.iri).text(d => d.label);
+
+    // B - superclasses apenas
+    const superclasses = Array.from(this.owlData.childrenMap.keys())
+      .filter(iri => this.owlData.nodes.has(iri))
+      .sort((a, b) => this.owlData.nodes.get(a).label.localeCompare(this.owlData.nodes.get(b).label));
     
-    Array.from(this.owlData.nodes.values())
-      .sort((a,b)=>a.label.localeCompare(b.label))
-      .forEach(n => {
-        selA.append("option").attr("value", n.iri).text(n.label);
-        if(this.owlData.childrenMap.has(n.iri)) selB.append("option").attr("value", n.iri).text(n.label);
-      });
+    d3.select('#rootSelect').selectAll('option').data(superclasses)
+      .join('option').attr('value', d => d).text(d => this.owlData.nodes.get(d).label);
   }
 
-  // Render simples
+  // 🎨 RENDER PRINCIPAL
   render() {
-    if(!this.owlData?.nodes.has(this.uiState.startA) || !this.owlData?.nodes.has(this.uiState.rootB)) {
-      this.setStatus("Selecione A e B válidos", "warn"); return;
+    if (!this.owlData?.nodes.has(this.uiState.startA) || !this.owlData?.nodes.has(this.uiState.rootB)) {
+      this.setStatus('❌ Selecione A e B válidos', 'warn');
+      return;
     }
 
-    this.gMain.selectAll("*").remove();
+    this.gMain.selectAll('*').remove();
 
-    // Árvore simples: A -> B -> todos os filhos de B
+    // Construir árvore recursiva
+    function buildTree(owlviz, rootIri, depth = 0) {
+      const node = owlviz.owlData.nodes.get(rootIri);
+      if (!node) return null;
+
+      const children = Array.from(owlviz.owlData.childrenMap.get(rootIri) || []);
+      const treeNode = { label: node.label, iri: node.iri };
+
+      if (depth < 4) { // Limite de profundidade
+        treeNode.children = children.map(child => buildTree(owlviz, child, depth + 1)).filter(Boolean);
+      }
+
+      return treeNode;
+    }
+
     const rootData = {
-      label: this.owlData.nodes.get(this.uiState.startA).label, children: [{
+      label: this.owlData.nodes.get(this.uiState.startA).label,
+      iri: this.uiState.startA,
+      children: [{
         label: this.owlData.nodes.get(this.uiState.rootB).label,
-        children: Array.from(this.owlData.childrenMap.get(this.uiState.rootB)||[]).map(iri=>({
-          label: this.owlData.nodes.get(iri)?.label || OwlViz.localName(iri)
-        }))
+        iri: this.uiState.rootB,
+        children: Array.from(this.owlData.childrenMap.get(this.uiState.rootB) || [])
+          .map(iri => buildTree(this, iri))
+          .filter(Boolean)
       }]
     };
 
     const root = d3.hierarchy(rootData);
-    d3.tree().nodeSize([200,100])(root);
+    const spacing = parseFloat(this.uiState.spacing);
+
+    // Layouts
+    if (this.uiState.layout === 'topdown') {
+      d3.tree().nodeSize([300 * spacing, 150 * spacing])(root);
+      root.descendants().forEach(d => { d._x = d.x; d._y = d.y; });
+    } else if (this.uiState.layout === 'horizontal') {
+      d3.tree().nodeSize([150 * spacing, 300 * spacing])(root);
+      root.descendants().forEach(d => { d._x = d.y; d._y = d.x; });
+    } else { // radial
+      d3.cluster().size([2 * Math.PI, 300 * spacing])(root);
+      root.descendants().forEach(d => {
+        const angle = d.x - Math.PI / 2;
+        d._x = Math.cos(angle) * d.y;
+        d._y = Math.sin(angle) * d.y;
+      });
+    }
 
     // Links
-    this.gMain.selectAll(".link")
-      .data(root.links()).enter()
-      .append("path").attr("class","link")
-      .attr("d", d3.linkVertical().x(d=>d.x).y(d=>d.y));
+    this.gMain.selectAll('.link').data(root.links()).enter()
+      .append('path').attr('class', 'link')
+      .attr('d', this.uiState.layout === 'radial' ? 
+        d3.linkRadial().angle(d => d.x).radius(d => d.y) :
+        d3.linkVertical().x(d => d._x || d.x).y(d => d._y || d.y));
 
     // Nodes
-    this.gMain.selectAll(".node")
-      .data(root.descendants()).enter()
-      .append("g").attr("class","node")
-      .attr("transform", d=>`translate(${d.x},${d.y})`)
-      .append("rect")
-      .attr("width",120).attr("height",40).attr("rx",8).attr("ry",8)
-      .attr("fill","#f0f9ff").attr("stroke","#0369a1");
+    const nodes = this.gMain.selectAll('.node').data(root.descendants()).enter()
+      .append('g').attr('class', 'node')
+      .attr('transform', d => `translate(${d._x || d.x},${d._y || d.y})`)
+      .on('mouseover', (e, d) => this.showTooltip(e, d))
+      .on('mouseout', () => this.hideTooltip());
 
-    this.gMain.selectAll(".node text")
-      .data(root.descendants()).enter()
-      .append("text").attr("text-anchor","middle").attr("dy","12")
-      .text(d=>d.data.label);
+    nodes.append('rect')
+      .attr('x', -70).attr('y', -25).attr('width', 140).attr('height', 50)
+      .attr('rx', 8).attr('ry', 8)
+      .attr('fill', '#eff6ff').attr('stroke', '#0369a1');
+
+    nodes.append('text').attr('text-anchor', 'middle').attr('dy', 5)
+      .text(d => d.data.label);
+
+    this.autofit();
+    document.getElementById('layoutPill').textContent = 
+      this.uiState.layout === 'topdown' ? 'Top-down' : 
+      this.uiState.layout === 'horizontal' ? 'Horizontal' : 'Radial';
+    
+    this.setStatus(`✅ Taxonomia renderizada: ${root.descendants().length} nós`, 'ok');
+  }
+
+  autofit() {
+    const bbox = this.gMain.node().getBBox();
+    if (!bbox.width) return;
+
+    const padding = 60;
+    const scale = Math.min(1, (window.innerWidth * 0.8) / bbox.width, (window.innerHeight * 0.8) / bbox.height);
+    const tx = window.innerWidth / 2 - bbox.x * scale;
+    const ty = window.innerHeight / 4 - bbox.y * scale;
+
+    this.svg.transition().call(this.zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+  }
+
+  showTooltip(event, d) {
+    this.tooltip.style.display = 'block';
+    this.tooltip.innerHTML = `
+      <div class="t-title">${d.data.label}</div>
+      <div class="kv">
+        <div class="k">Classe:</div><div class="v mono">${this.localName(d.data.iri)}</div>
+        <div class="k">Nós filhos:</div><div class="v">${d.children?.length || 0}</div>
+      </div>
+    `;
+    this.tooltip.style.left = (event.clientX + 10) + 'px';
+    this.tooltip.style.top = (event.clientY + 10) + 'px';
+  }
+
+  hideTooltip() {
+    this.tooltip.style.display = 'none';
+  }
+
+  localName(iri) {
+    const s = String(iri || '');
+    const hash = s.lastIndexOf('#');
+    const slash = s.lastIndexOf('/');
+    return Math.max(hash, slash) >= 0 ? s.slice(Math.max(hash, slash) + 1) : s;
+  }
+
+  // Export PNG
+  exportPng() {
+    const bbox = this.gMain.node().getBBox();
+    if (!bbox.width) {
+      this.setStatus('Nada para exportar', 'warn');
+      return;
+    }
+
+    const padding = 80;
+    const scale = 3;
+    const svgString = new XMLSerializer().serializeToString(this.svg.node());
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = (bbox.width + padding * 2) * scale;
+    canvas.height = (bbox.height + padding * 2) * scale;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.fillStyle = document.body.dataset.theme === 'dark' ? '#000' : '#fff';
+    ctx.fillRect(0, 0, canvas.width / scale, canvas.height / scale);
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, padding - bbox.x, padding - bbox.y);
+      const a = document.createElement('a');
+      a.download = 'owl-taxonomy.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      this.setStatus('✅ PNG exportado!', 'ok');
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
   }
 
   bindEvents() {
-    document.getElementById("fileInput").addEventListener("change", e=> {
-      const file = e.target.files[0];
-      if(file) this.loadOwl(file);
+    // File upload
+    document.getElementById('fileInput').addEventListener('change', e => {
+      if (e.target.files[0]) this.loadOwl(e.target.files[0]);
     });
 
-    document.getElementById("btnGenerate").addEventListener("click", ()=>this.render());
-    
-    "#startSelect, #rootSelect".split(',').forEach(id=>
-      document.getElementById(id.slice(1)).addEventListener("change", e=> {
-        this.uiState[id.slice(1)] = e.target.value;
-      })
-    );
+    // Generate
+    document.getElementById('btnGenerate').addEventListener('click', () => this.render());
+    document.getElementById('btnRelayout').addEventListener('click', () => this.render());
+
+    // UI State
+    document.getElementById('startSelect').addEventListener('change', e => this.uiState.startA = e.target.value);
+    document.getElementById('rootSelect').addEventListener('change', e => this.uiState.rootB = e.target.value);
+    document.getElementById('layoutSelect').addEventListener('change', e => this.uiState.layout = e.target.value);
+    document.getElementById('spacingRange').addEventListener('input', e => {
+      this.uiState.spacing = parseFloat(e.target.value);
+      document.getElementById('spacingLabel').textContent = this.uiState.spacing.toFixed(2);
+    });
+
+    // Theme
+    document.getElementById('themeSelect').addEventListener('change', e => {
+      document.body.dataset.theme = e.target.value;
+    });
+
+    // Export
+    document.getElementById('btnExportPng').addEventListener('click', () => this.exportPng());
+    document.getElementById('btnExportA4').addEventListener('click', () => this.exportPng());
+
+    // Drag & filters
+    document.getElementById('chkDrag').addEventListener('change', e => this.uiState.dragEnabled = e.target.checked);
+    document.getElementById('chkHighlightOnly').addEventListener('change', e => this.uiState.showOnlyHighlighted = e.target.checked);
   }
 }
 
 // Inicializar
 new OwlViz();
 </script>
+</body>
+</html>
