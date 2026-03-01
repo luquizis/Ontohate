@@ -227,7 +227,6 @@
       </div>
     </div>
 
-    <!-- Fonte de dados (sem falar "ontologia") -->
     <div class="card">
       <div class="col">
         <label>Fonte de dados (arquivo do repositório)</label>
@@ -238,13 +237,11 @@
           <button class="danger" id="btnReset">Reset</button>
         </div>
         <div class="small">
-          Dica: mantenha o endereço “raw” do repositório.  
-          (Você pode trocar para outro arquivo do seu projeto, se quiser.)
+          Dica: mantenha o endereço “raw” do repositório.
         </div>
       </div>
     </div>
 
-    <!-- Busca -->
     <div class="card">
       <div class="col">
         <label>Busca por termo/classe</label>
@@ -258,7 +255,6 @@
       </div>
     </div>
 
-    <!-- Geração / Quebra -->
     <div class="card">
       <div class="col">
         <label>Geração da taxonomia</label>
@@ -291,13 +287,11 @@
         </div>
 
         <div class="small" style="margin-top:10px;">
-          <b>Quando a taxonomia ficar grande:</b> use “Uma dimensão por vez” e/ou reduza a profundidade.  
-          Para detalhar, aumente aos poucos com “+1 nível” (e exporte por etapas).
+          <b>Quando a taxonomia ficar grande:</b> use “Uma dimensão por vez” e/ou reduza a profundidade.
         </div>
       </div>
     </div>
 
-    <!-- Dimensões -->
     <div class="card">
       <div class="row" style="justify-content:space-between;">
         <div class="col" style="flex:1;">
@@ -312,7 +306,6 @@
       <div class="dims" id="dimsList"></div>
     </div>
 
-    <!-- Layout / Personalização -->
     <div class="card">
       <div class="col">
         <label>Layout e exportação</label>
@@ -352,14 +345,9 @@
           <button id="btnExportSVG" disabled>Exportar SVG</button>
           <button id="btnExportPNG" disabled>Exportar PNG</button>
         </div>
-
-        <div class="small" style="margin-top:10px;">
-          <b>Export (artigo):</b> prefira SVG. PNG sai em 2× para boa qualidade.
-        </div>
       </div>
     </div>
 
-    <!-- Editor lateral -->
     <div class="card" id="editorCard" style="opacity:0.55;">
       <div class="col">
         <label>Editor do nó selecionado</label>
@@ -409,13 +397,8 @@
           <button id="btnEditorApply" class="primary" disabled>Aplicar</button>
           <button id="btnEditorReset" class="ghost" disabled>Reset nó</button>
         </div>
-
-        <div class="small" style="margin-top:8px;">
-          <b>Dica anti-sobreposição:</b> mantenha nós menores e aumente só quando necessário.
-        </div>
       </div>
     </div>
-
   </aside>
 
   <main class="main">
@@ -512,25 +495,20 @@ const defaultDimPalette = [
 let state = {
   loaded:false,
 
-  // graph
-  classNodes: new Map(),   // iri -> { iri, label, comment[] }
-  subclasses: new Map(),   // iri -> Set(childIri)
-  superclasses: new Map(), // iri -> Set(parentIri)
+  classNodes: new Map(),
+  subclasses: new Map(),
+  superclasses: new Map(),
 
-  // dimensions
   rootIri: null,
-  dimensions: [],          // [{iri,label,color}]
+  dimensions: [],
   selectedDims: new Set(),
   collapsed: new Set(),
 
-  // customization
   customLabels: new Map(),
-  nodePositions: new Map(), // layout|iri -> {x,y}
-  nodeStyles: new Map(),    // iri -> {fill, stroke, opacity, w, h, font, radius}
+  nodePositions: new Map(),
+  nodeStyles: new Map(),
 
   selectedIri: null,
-
-  // search
   searchIndex: []
 };
 
@@ -637,9 +615,6 @@ function setTheme(theme, persist=true){
 ui.btnTheme.addEventListener("click", () => {
   const cur = document.body.getAttribute("data-theme") || "dark";
   setTheme(cur === "dark" ? "light" : "dark");
-  // ajustar cor default de aresta para combinar
-  if (cur === "dark") ui.edgeColor.value = "#334155";
-  else ui.edgeColor.value = "#94a3b8";
   rebuildAndRender();
 });
 
@@ -691,7 +666,6 @@ async function loadData(url){
     }
   }
 
-  // Reset graph state
   state.classNodes = new Map();
   state.subclasses = new Map();
   state.superclasses = new Map();
@@ -731,7 +705,7 @@ async function loadData(url){
     }
   }
 
-  // Root candidate: class with no named superclasses (fallback to highest degree)
+  // Root candidate
   let root = null;
   const roots = [];
   for (const iri of state.classNodes.keys()){
@@ -827,7 +801,15 @@ function renderDimsList(){
     cb.addEventListener("change", () => {
       if (cb.checked) state.selectedDims.add(dim.iri);
       else state.selectedDims.delete(dim.iri);
+
+      // se estiver em modo single, garantir apenas 1
+      if (ui.splitMode.value === "single" && cb.checked){
+        state.selectedDims = new Set([dim.iri]);
+        ui.activeDim.value = dim.iri;
+      }
+
       saveDimsPersisted();
+      renderDimsList();
       rebuildAndRender();
     });
 
@@ -857,28 +839,32 @@ function renderDimsList(){
 }
 
 /* =========================
-   Build tree with:
-   - splitMode: union / single
-   - maxDepth limit (break large trees)
-   - collapse state
+   Tree build (dedup + fix active dim)
 ========================= */
 function getMaxDepth(){ return +ui.maxDepth.value; }
 
-function buildSubtree(iri, depth, maxDepth){
+function buildSubtree(iri, depth, maxDepth, visited){
+  if (visited.has(iri)) return null;  // DEDUP
+  visited.add(iri);
+
   const kids = [...(state.subclasses.get(iri) || new Set())].filter(x=>state.classNodes.has(x));
 
   const isCollapsed = state.collapsed.has(iri);
   const hitDepthLimit = depth >= maxDepth;
 
-  // If hit limit, stop expanding
-  const children = (isCollapsed || hitDepthLimit) ? [] : kids.map(k => buildSubtree(k, depth+1, maxDepth));
+  let children = [];
+  if (!isCollapsed && !hitDepthLimit) {
+    children = kids
+      .map(k => buildSubtree(k, depth+1, maxDepth, visited))
+      .filter(Boolean);
+  }
+
   return { iri, depth, _hitDepthLimit: hitDepthLimit, children };
 }
 
 function buildTree(){
   const maxDepth = getMaxDepth();
   const selected = [...state.selectedDims];
-
   const mode = ui.splitMode.value;
 
   if (!selected.length){
@@ -886,18 +872,23 @@ function buildTree(){
   }
 
   if (mode === "single"){
-    const active = ui.activeDim.value || selected[0];
-    // If active not selected, fallback
-    const dimIri = state.selectedDims.has(active) ? active : selected[0];
-    return { iri: state.rootIri, depth:0, children: [buildSubtree(dimIri, 1, maxDepth)] };
+    const dimIri = ui.activeDim.value && state.selectedDims.has(ui.activeDim.value)
+      ? ui.activeDim.value
+      : selected[0];
+
+    const visitedSingle = new Set([state.rootIri]);
+    const child = buildSubtree(dimIri, 1, maxDepth, visitedSingle);
+    return { iri: state.rootIri, depth:0, children: child ? [child] : [] };
   }
 
-  // union
-  return {
-    iri: state.rootIri,
-    depth:0,
-    children: selected.map(d => buildSubtree(d, 1, maxDepth))
-  };
+  // union with global dedup
+  const visited = new Set([state.rootIri]);
+  const children = [];
+  for (const dimIri of selected){
+    const sub = buildSubtree(dimIri, 1, maxDepth, visited);
+    if (sub) children.push(sub);
+  }
+  return { iri: state.rootIri, depth:0, children };
 }
 
 function flatten(tree){
@@ -912,7 +903,7 @@ function flatten(tree){
 }
 
 /* =========================
-   Tooltip (mantém completo, mas sem “ontologia” na interface)
+   Tooltip (mantido)
 ========================= */
 function tooltipHTML(classIri){
   const s = $rdf.sym(classIri);
@@ -976,8 +967,7 @@ function tooltipHTML(classIri){
 }
 
 /* =========================
-   Node size: minimal width/height measured from text
-   (reduz sobreposição)
+   Node size (compact)
 ========================= */
 const measurer = document.createElement("canvas").getContext("2d");
 function measureTextWidth(text, fontPx){
@@ -986,31 +976,24 @@ function measureTextWidth(text, fontPx){
 }
 function computeAutoNodeSize(iri, baseMinW=86, baseMinH=24){
   const style = state.nodeStyles.get(iri) || {};
-  if (style.w && style.h) return {w: style.w, h: style.h, lines:1};
+  if (style.w && style.h) return {w: style.w, h: style.h};
 
   const font = style.font ?? 12;
   const label = termLabel(iri);
 
-  // wrap heuristic: limit line width to keep node compact
-  const maxLineW = 140; // compact
+  const maxLineW = 140;
   const padX = 16;
   const padY = 10;
   const lineH = Math.round(font * 1.25);
 
-  // simple wrap into up to 2 lines
   let words = label.split(/\s+/).filter(Boolean);
   let line1 = "", line2 = "";
   for (const w of words){
     const cand = (line1 ? line1 + " " : "") + w;
     if (measureTextWidth(cand, font) <= maxLineW) line1 = cand;
-    else { line2 = (line2 ? line2 + " " : "") + w; }
+    else line2 = (line2 ? line2 + " " : "") + w;
   }
   if (!line1) line1 = label;
-  if (line2.length > 0 && measureTextWidth(line2, font) > maxLineW){
-    // hard cut
-    while (line2.length > 0 && measureTextWidth(line2 + "…", font) > maxLineW) line2 = line2.slice(0,-1);
-    line2 = line2.trim() + "…";
-  }
 
   const w1 = measureTextWidth(line1, font);
   const w2 = line2 ? measureTextWidth(line2, font) : 0;
@@ -1018,8 +1001,7 @@ function computeAutoNodeSize(iri, baseMinW=86, baseMinH=24){
   const lines = line2 ? 2 : 1;
   const h = Math.max(baseMinH, Math.ceil(lines * lineH + padY));
 
-  // allow manual override via editor
-  return {w: style.w ?? w, h: style.h ?? h, lines};
+  return {w: style.w ?? w, h: style.h ?? h};
 }
 
 /* =========================
@@ -1052,7 +1034,7 @@ function rebuildAndRender(){
   ui.nodeCount.textContent = flat.nodes.length;
   ui.edgeCount.textContent = flat.links.length;
 
-  // build dim color map (DFS from selected dims)
+  // dim color map
   const dimMap = new Map();
   for (const dim of state.dimensions){
     if (!state.selectedDims.has(dim.iri)) continue;
@@ -1069,14 +1051,12 @@ function rebuildAndRender(){
 
   resize();
 
-  // dynamic spacing: based on typical node width/height (anti-overlap)
   const sample = flat.nodes.slice(0, Math.min(60, flat.nodes.length)).map(n => computeAutoNodeSize(n.iri));
   const avgW = sample.length ? sample.reduce((a,b)=>a+b.w,0)/sample.length : 140;
   const avgH = sample.length ? sample.reduce((a,b)=>a+b.h,0)/sample.length : 28;
 
-  let dx = Math.max(44, avgH + 16);    // vertical spacing between siblings
-  let dy = Math.max(170, avgW + 80);   // horizontal spacing between depths
-
+  let dx = Math.max(44, avgH + 16);
+  let dy = Math.max(170, avgW + 80);
   if (ui.layoutSelect.value === "a4"){
     dx = Math.max(40, avgH + 12);
     dy = Math.max(220, avgW + 120);
@@ -1210,7 +1190,6 @@ function rebuildAndRender(){
       const text = d3.select(this).style("font-size", font + "px");
       const auto = computeAutoNodeSize(iri);
 
-      // recompute wrap similarly (2 lines max)
       const maxLineW = Math.max(110, (style.w ?? auto.w) - 18);
       const words = label.split(/\s+/).filter(Boolean);
       let line1="", line2="";
@@ -1225,7 +1204,6 @@ function rebuildAndRender(){
       if (!line2){
         text.append("tspan").attr("x",0).attr("dy","0em").text(line1);
       }else{
-        // cut line2 if needed
         while (line2.length>0 && measureTextWidth(line2+"…", font) > maxLineW) line2 = line2.slice(0,-1);
         line2 = line2.trim() + "…";
         text.append("tspan").attr("x",0).attr("dy","-0.2em").text(line1);
@@ -1235,20 +1213,15 @@ function rebuildAndRender(){
 
   ui.selInfo.textContent = state.selectedIri ? termLabel(state.selectedIri) : "—";
 
-  // auto fit on first time
   if (!rebuildAndRender._didFit){
     fitToView();
     rebuildAndRender._didFit = true;
   }
 }
 
-/* =========================
-   Tooltip
-========================= */
 function showTooltip(evt, iri){
   ui.tooltip.style.display = "block";
   ui.tooltip.innerHTML = tooltipHTML(iri);
-
   const pad = 14;
   const rect = wrap.getBoundingClientRect();
   ui.tooltip.style.left = (evt.clientX - rect.left + pad) + "px";
@@ -1518,8 +1491,36 @@ ui.btnNone.addEventListener("click", () => {
   rebuildAndRender();
 });
 
-ui.splitMode.addEventListener("change", rebuildAndRender);
-ui.activeDim.addEventListener("change", rebuildAndRender);
+// FIX: ao mudar splitMode para single, garantir só 1 dimensão selecionada (a ativa)
+ui.splitMode.addEventListener("change", () => {
+  if (ui.splitMode.value === "single") {
+    const iri = ui.activeDim.value;
+    if (iri) {
+      state.selectedDims = new Set([iri]);
+      saveDimsPersisted();
+      renderDimsList();
+    }
+  }
+  rebuildAndRender();
+});
+
+// FIX: activeDim agora funciona e não volta para "UFO"
+ui.activeDim.addEventListener("change", () => {
+  const iri = ui.activeDim.value;
+  if (!iri) return;
+
+  // garante que a dimensão ativa está selecionada
+  state.selectedDims.add(iri);
+
+  // se estiver em single, fica somente ela
+  if (ui.splitMode.value === "single") {
+    state.selectedDims = new Set([iri]);
+  }
+
+  saveDimsPersisted();
+  renderDimsList();
+  rebuildAndRender();
+});
 
 ui.maxDepth.addEventListener("input", rebuildAndRender);
 ui.btnMoreDepth.addEventListener("click", () => {
@@ -1565,47 +1566,20 @@ svg.on("click", () => {
   hideTooltip();
 });
 
-function enableAfterLoad(){
-  ui.splitMode.disabled = false;
-  ui.activeDim.disabled = false;
-  ui.maxDepth.disabled = false;
-  ui.btnMoreDepth.disabled = false;
-  ui.btnAll.disabled = false;
-  ui.btnNone.disabled = false;
-
-  ui.layoutSelect.disabled = false;
-  ui.edgeCurve.disabled = false;
-  ui.edgeWidth.disabled = false;
-  ui.edgeColor.disabled = false;
-
-  ui.btnExportSVG.disabled = false;
-  ui.btnExportPNG.disabled = false;
-
-  ui.searchInput.disabled = false;
-  ui.btnSearchClear.disabled = false;
-  ui.btnSearchShowAll.disabled = false;
-}
-
-/* Hook into enableControls */
-const _enableControls = enableControls;
-enableControls = (enabled) => {
-  _enableControls(enabled);
-  if (enabled) enableAfterLoad();
-};
-
 /* =========================
    Init
 ========================= */
 function init(){
   resize();
   enableControls(false);
-
-  // Prefill with your repo raw:
   ui.dataUrl.value = "https://raw.githubusercontent.com/luquizis/Ontohate/main/ontohate_.owl";
 
-  // default theme from localStorage if exists
   const theme = localStorage.getItem(persistedKey("theme"));
   if (theme === "light" || theme === "dark") setTheme(theme, false);
+
+  // enable export/layout after load
+  ui.btnExportSVG.disabled = true;
+  ui.btnExportPNG.disabled = true;
 }
 init();
 </script>
