@@ -25,7 +25,6 @@
       --link:#94a3b8;
     }
 
-    /* Tema CLARO */
     [data-theme="light"]{
       --bg:#ffffff;
       --panel:#f7fafc;
@@ -83,9 +82,7 @@
       color:var(--text);
       outline:none;
     }
-    input[type="color"]{
-      width:34px; height:34px; border:none; background:transparent; padding:0;
-    }
+    input[type="color"]{width:34px; height:34px; border:none; background:transparent; padding:0;}
     input[type="range"]{width:170px}
     button{
       padding:9px 12px;
@@ -114,7 +111,6 @@
       background:color-mix(in srgb, var(--bg) 70%, transparent);
       color:var(--text);
     }
-
     .dims{display:flex; flex-direction:column; gap:8px; margin-top:8px;}
     .dimItem{
       display:flex; align-items:center; justify-content:space-between;
@@ -131,7 +127,6 @@
     svg{width:100%; height:100%; display:block;}
 
     .node rect{
-      rx:10; ry:10;
       stroke: var(--nodeStroke);
       stroke-width:1;
       filter: drop-shadow(0px 6px 14px rgba(0,0,0,0.18));
@@ -139,24 +134,13 @@
     [data-theme="light"] .node rect{
       filter: drop-shadow(0px 6px 14px rgba(15,23,42,0.10));
     }
-
-    .node text{
-      font-size:12px;
-      pointer-events:none;
-      fill: var(--nodeText);
-    }
+    .node text{pointer-events:none; fill: var(--nodeText);}
     .node.selected rect{
       stroke: color-mix(in srgb, var(--accent) 85%, #ffffff);
       stroke-width:2.2;
       filter: drop-shadow(0px 8px 18px color-mix(in srgb, var(--accent) 25%, transparent));
     }
-
-    .link{
-      fill:none;
-      stroke: var(--link);
-      stroke-width:1.8;
-      opacity:0.65;
-    }
+    .link{fill:none; stroke: var(--link); stroke-width:1.8; opacity:0.65;}
 
     .tooltip{
       position:absolute;
@@ -213,10 +197,10 @@
 
       <div class="small" style="margin-top:10px;">
         <b>Como usar (rápido):</b><br/>
-        1) Selecione <b>dimensões</b> → a taxonomia se forma automaticamente.<br/>
-        2) <span class="kbd">Alt</span> + clique no nó para <b>abrir/fechar</b> subclasses.<br/>
-        3) Clique no nó para <b>editar</b> (nome, tamanho, cor).<br/>
-        4) Escolha layout (Top-down / L→R / Radial / A4) e exporte (SVG/PNG).
+        1) Marque dimensões (ou use “uma por vez”).<br/>
+        2) <span class="kbd">Alt</span>+clique abre/fecha subclasses.<br/>
+        3) Clique no nó para editar (nome, tamanho, cor).<br/>
+        4) Export: SVG/PNG (PNG exporta a árvore inteira).
       </div>
 
       <div class="row" style="margin-top:10px;">
@@ -236,9 +220,7 @@
           <button class="ghost" id="btnFit">Ajustar na tela</button>
           <button class="danger" id="btnReset">Reset</button>
         </div>
-        <div class="small">
-          Dica: mantenha o endereço “raw” do repositório.
-        </div>
+        <div class="small">Use o link “raw” do arquivo.</div>
       </div>
     </div>
 
@@ -250,7 +232,7 @@
           <button id="btnSearchClear" class="ghost" disabled>Limpar</button>
           <button id="btnSearchShowAll" class="ghost" disabled>Ver lista</button>
         </div>
-        <div class="small">Clique no resultado para ir direto ao nó (quando ele estiver visível na taxonomia atual).</div>
+        <div class="small">Clique no resultado para centralizar o nó (se ele estiver visível na taxonomia atual).</div>
         <div id="searchResults" class="searchResults" style="display:none;"></div>
       </div>
     </div>
@@ -261,7 +243,7 @@
 
         <div class="row">
           <div class="col" style="flex:1;">
-            <label>Modo de visualização do conjunto</label>
+            <label>Modo</label>
             <select id="splitMode" disabled>
               <option value="union">Unir dimensões selecionadas (uma árvore)</option>
               <option value="single">Uma dimensão por vez (quebra por partes)</option>
@@ -269,16 +251,16 @@
           </div>
 
           <div class="col" style="flex:1;">
-            <label>Dimensão ativa (modo “uma por vez”)</label>
+            <label>Dimensão ativa (no modo “uma por vez”)</label>
             <select id="activeDim" disabled></select>
           </div>
         </div>
 
         <div class="row" style="margin-top:10px;">
           <div class="col" style="flex:1;">
-            <label>Quebra por profundidade (evita árvores gigantes)</label>
-            <input id="maxDepth" type="range" min="1" max="12" value="6" disabled />
-            <div class="small">Nível máximo atual: <span id="depthLabel">6</span></div>
+            <label>Profundidade máxima</label>
+            <input id="maxDepth" type="range" min="1" max="16" value="7" disabled />
+            <div class="small">Nível: <span id="depthLabel">7</span></div>
           </div>
           <div class="col">
             <label>&nbsp;</label>
@@ -286,8 +268,15 @@
           </div>
         </div>
 
+        <div class="row" style="margin-top:10px;">
+          <div class="col" style="flex:1;">
+            <label>Compactação (mais compacto →)</label>
+            <input id="compact" type="range" min="0" max="100" value="70" disabled />
+          </div>
+        </div>
+
         <div class="small" style="margin-top:10px;">
-          <b>Quando a taxonomia ficar grande:</b> use “Uma dimensão por vez” e/ou reduza a profundidade.
+          Para árvores grandes: use “Uma dimensão por vez” + profundidade.
         </div>
       </div>
     </div>
@@ -295,8 +284,8 @@
     <div class="card">
       <div class="row" style="justify-content:space-between;">
         <div class="col" style="flex:1;">
-          <label>Dimensões (selecione 1+)</label>
-          <div class="small">Cada dimensão tem uma cor. Selecione várias para compor a taxonomia.</div>
+          <label>Dimensões</label>
+          <div class="small">No modo “unir”, as marcadas entram na árvore. No modo “uma por vez”, o dropdown manda.</div>
         </div>
         <div class="row">
           <button id="btnAll" disabled>Todas</button>
@@ -319,7 +308,7 @@
         <div class="row" style="margin-top:10px;">
           <div class="col">
             <label>Curvatura das arestas</label>
-            <input id="edgeCurve" type="range" min="0" max="100" value="25" disabled />
+            <input id="edgeCurve" type="range" min="0" max="100" value="18" disabled />
           </div>
           <div class="col">
             <label>Espessura</label>
@@ -333,7 +322,7 @@
             <input id="edgeColor" type="color" value="#94a3b8" disabled />
           </div>
           <div class="col">
-            <label>Persistir alterações (navegador)</label>
+            <label>Persistir alterações</label>
             <select id="persistSelect">
               <option value="on" selected>Ligado</option>
               <option value="off">Desligado</option>
@@ -374,11 +363,11 @@
         <div class="row" style="margin-top:8px;">
           <div class="col">
             <label>Largura</label>
-            <input id="edW" type="range" min="80" max="520" value="140" disabled />
+            <input id="edW" type="range" min="70" max="520" value="140" disabled />
           </div>
           <div class="col">
             <label>Altura</label>
-            <input id="edH" type="range" min="22" max="90" value="30" disabled />
+            <input id="edH" type="range" min="20" max="100" value="30" disabled />
           </div>
         </div>
 
@@ -396,6 +385,10 @@
         <div class="row" style="margin-top:10px;">
           <button id="btnEditorApply" class="primary" disabled>Aplicar</button>
           <button id="btnEditorReset" class="ghost" disabled>Reset nó</button>
+        </div>
+
+        <div class="small" style="margin-top:8px;">
+          Dica: para ficar compacto, mantenha largura/altura pequenas e aumente só quando necessário.
         </div>
       </div>
     </div>
@@ -450,6 +443,7 @@ const ui = {
   maxDepth: document.getElementById("maxDepth"),
   depthLabel: document.getElementById("depthLabel"),
   btnMoreDepth: document.getElementById("btnMoreDepth"),
+  compact: document.getElementById("compact"),
 
   dimsList: document.getElementById("dimsList"),
   btnAll: document.getElementById("btnAll"),
@@ -486,11 +480,7 @@ const ui = {
 };
 
 const persistedKey = (suffix) => `hate_taxo_${suffix}`;
-
-const defaultDimPalette = [
-  "#60a5fa","#34d399","#fbbf24","#fb7185","#a78bfa",
-  "#22c55e","#f472b6","#38bdf8","#f97316","#e879f9"
-];
+const defaultDimPalette = ["#60a5fa","#34d399","#fbbf24","#fb7185","#a78bfa","#22c55e","#f472b6","#38bdf8","#f97316","#e879f9"];
 
 let state = {
   loaded:false,
@@ -505,11 +495,12 @@ let state = {
   collapsed: new Set(),
 
   customLabels: new Map(),
-  nodePositions: new Map(),
-  nodeStyles: new Map(),
+  nodePositions: new Map(), // key=layout|iri -> {x,y}
+  nodeStyles: new Map(),    // iri -> {fill,stroke,opacity,w,h,font,radius}
 
   selectedIri: null,
-  searchIndex: []
+  searchIndex: [],
+  labelCount: new Map()
 };
 
 /* =========================
@@ -525,7 +516,7 @@ const gNodes = gRoot.append("g").attr("class","nodes");
 let width=1000, height=800;
 
 const zoom = d3.zoom()
-  .scaleExtent([0.2, 3.5])
+  .scaleExtent([0.15, 4])
   .on("zoom", (event) => {
     gRoot.attr("transform", event.transform);
     ui.zoomInfo.textContent = Math.round(event.transform.k * 100) + "%";
@@ -544,8 +535,7 @@ function persistEnabled(){ return ui.persistSelect.value === "on"; }
 function uniq(arr){ return [...new Set(arr)]; }
 
 function escapeHTML(s){
-  return String(s)
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
 function shrinkIri(iri){
@@ -569,7 +559,10 @@ function getFirstLiteral(subject, predicate){
 function termLabel(iri){
   if (state.customLabels.has(iri)) return state.customLabels.get(iri);
   const node = state.classNodes.get(iri);
-  return node?.label || shrinkIri(iri);
+  const base = node?.label || shrinkIri(iri);
+  // Se o label for repetido entre IRIs diferentes, desambigua com o fragmento
+  const count = state.labelCount.get(base) || 0;
+  return count > 1 ? `${base} · ${shrinkIri(iri)}` : base;
 }
 
 /* =========================
@@ -630,6 +623,7 @@ function enableControls(enabled){
   ui.activeDim.disabled = !enabled;
   ui.maxDepth.disabled = !enabled;
   ui.btnMoreDepth.disabled = !enabled;
+  ui.compact.disabled = !enabled;
 
   ui.btnAll.disabled = !enabled;
   ui.btnNone.disabled = !enabled;
@@ -662,7 +656,7 @@ async function loadData(url){
     try{
       $rdf.parse(data, STORE, base, "text/turtle");
     }catch(e2){
-      throw new Error("Não consegui ler o arquivo. Verifique o formato do arquivo no repositório.");
+      throw new Error("Não consegui ler o arquivo. Verifique se é RDF/XML ou Turtle.");
     }
   }
 
@@ -672,8 +666,9 @@ async function loadData(url){
   state.dimensions = [];
   state.selectedDims = new Set();
   state.selectedIri = null;
+  state.labelCount = new Map();
 
-  // Collect classes
+  // classes
   const classSet = new Set();
   STORE.each(null, RDF("type"), OWL("Class")).forEach(s => classSet.add(s.value));
   STORE.each(null, RDF("type"), RDFS("Class")).forEach(s => classSet.add(s.value));
@@ -682,14 +677,17 @@ async function loadData(url){
 
   for (const iri of classSet){
     const s = $rdf.sym(iri);
-    const label = getFirstLiteral(s, RDFS("label")) || getFirstLiteral(s, $rdf.sym("http://www.w3.org/2004/02/skos/core#prefLabel"));
+    const label = getFirstLiteral(s, RDFS("label")) || getFirstLiteral(s, $rdf.sym("http://www.w3.org/2004/02/skos/core#prefLabel")) || "";
     const comment = getLiterals(s, RDFS("comment"));
     state.classNodes.set(iri, { iri, label, comment });
     if (!state.subclasses.has(iri)) state.subclasses.set(iri, new Set());
     if (!state.superclasses.has(iri)) state.superclasses.set(iri, new Set());
+
+    const key = label || shrinkIri(iri);
+    state.labelCount.set(key, (state.labelCount.get(key)||0) + 1);
   }
 
-  // Named subclass links
+  // subclass links
   const subclassTriples = STORE.statementsMatching(null, RDFS("subClassOf"), null);
   for (const st of subclassTriples){
     const child = st.subject;
@@ -705,21 +703,15 @@ async function loadData(url){
     }
   }
 
-  // Root candidate
+  // root: no named superclasses
   let root = null;
   const roots = [];
   for (const iri of state.classNodes.keys()){
     const supers = [...(state.superclasses.get(iri) || new Set())].filter(x => state.classNodes.has(x));
     if (supers.length === 0) roots.push(iri);
   }
-  if (roots.length) root = roots[0];
-  if (!root){
-    root = [...state.classNodes.keys()].sort((a,b)=>{
-      const da = (state.subclasses.get(a)||new Set()).size * 3 + (state.superclasses.get(a)||new Set()).size;
-      const db = (state.subclasses.get(b)||new Set()).size * 3 + (state.superclasses.get(b)||new Set()).size;
-      return db-da;
-    })[0];
-  }
+  root = roots[0] || [...state.classNodes.keys()][0] || null;
+  if (!root) throw new Error("Nenhuma classe encontrada.");
   state.rootIri = root;
 
   buildDimensions();
@@ -728,7 +720,7 @@ async function loadData(url){
   state.loaded = true;
   enableControls(true);
   setStatus("carregado", true);
-  ui.graphInfo.textContent = "taxonomia pronta (selecione dimensões)";
+  ui.graphInfo.textContent = "taxonomia pronta";
   rebuildAndRender();
 }
 
@@ -760,7 +752,6 @@ function buildDimensions(){
 
   state.dimensions = dims;
 
-  // active dim selector
   ui.activeDim.innerHTML = "";
   for (const d of dims){
     const opt = document.createElement("option");
@@ -768,7 +759,11 @@ function buildDimensions(){
     opt.textContent = d.label;
     ui.activeDim.appendChild(opt);
   }
-  if (dims.length) ui.activeDim.value = dims[0].iri;
+  if (dims.length) {
+    // não “force” UFO: respeita a seleção salva se existir
+    const firstSelected = [...state.selectedDims][0];
+    ui.activeDim.value = (firstSelected && dims.some(x=>x.iri===firstSelected)) ? firstSelected : dims[0].iri;
+  }
 
   renderDimsList();
 }
@@ -788,6 +783,7 @@ function renderDimsList(){
     ui.dimsList.innerHTML = `<div class="small">Nenhuma dimensão detectada.</div>`;
     return;
   }
+
   for (const dim of state.dimensions){
     const row = document.createElement("div");
     row.className = "dimItem";
@@ -802,9 +798,8 @@ function renderDimsList(){
       if (cb.checked) state.selectedDims.add(dim.iri);
       else state.selectedDims.delete(dim.iri);
 
-      // se estiver em modo single, garantir apenas 1
+      // no modo single, o checklist não manda: mas se marcar uma, atualiza o dropdown pra ela
       if (ui.splitMode.value === "single" && cb.checked){
-        state.selectedDims = new Set([dim.iri]);
         ui.activeDim.value = dim.iri;
       }
 
@@ -839,21 +834,22 @@ function renderDimsList(){
 }
 
 /* =========================
-   Tree build (dedup + fix active dim)
+   Tree build (dedup GLOBAL)
+   - union: usa selectedDims
+   - single: usa SEMPRE activeDim (corrige “fica em UFO”)
 ========================= */
 function getMaxDepth(){ return +ui.maxDepth.value; }
 
 function buildSubtree(iri, depth, maxDepth, visited){
-  if (visited.has(iri)) return null;  // DEDUP
+  if (visited.has(iri)) return null;
   visited.add(iri);
 
   const kids = [...(state.subclasses.get(iri) || new Set())].filter(x=>state.classNodes.has(x));
-
   const isCollapsed = state.collapsed.has(iri);
   const hitDepthLimit = depth >= maxDepth;
 
   let children = [];
-  if (!isCollapsed && !hitDepthLimit) {
+  if (!isCollapsed && !hitDepthLimit){
     children = kids
       .map(k => buildSubtree(k, depth+1, maxDepth, visited))
       .filter(Boolean);
@@ -864,24 +860,23 @@ function buildSubtree(iri, depth, maxDepth, visited){
 
 function buildTree(){
   const maxDepth = getMaxDepth();
-  const selected = [...state.selectedDims];
   const mode = ui.splitMode.value;
 
+  // SINGLE: sempre o dropdown manda
+  if (mode === "single"){
+    const dimIri = ui.activeDim.value;
+    if (!dimIri) return { iri: state.rootIri, depth:0, children: [] };
+    const visited = new Set([state.rootIri]);
+    const child = buildSubtree(dimIri, 1, maxDepth, visited);
+    return { iri: state.rootIri, depth:0, children: child ? [child] : [] };
+  }
+
+  // UNION
+  const selected = [...state.selectedDims];
   if (!selected.length){
     return { iri: state.rootIri, depth:0, children: [] };
   }
 
-  if (mode === "single"){
-    const dimIri = ui.activeDim.value && state.selectedDims.has(ui.activeDim.value)
-      ? ui.activeDim.value
-      : selected[0];
-
-    const visitedSingle = new Set([state.rootIri]);
-    const child = buildSubtree(dimIri, 1, maxDepth, visitedSingle);
-    return { iri: state.rootIri, depth:0, children: child ? [child] : [] };
-  }
-
-  // union with global dedup
   const visited = new Set([state.rootIri]);
   const children = [];
   for (const dimIri of selected){
@@ -891,23 +886,11 @@ function buildTree(){
   return { iri: state.rootIri, depth:0, children };
 }
 
-function flatten(tree){
-  const nodes=[], links=[];
-  function rec(n, parent=null){
-    nodes.push(n);
-    if (parent) links.push({source: parent, target: n});
-    for (const ch of (n.children||[])) rec(ch, n);
-  }
-  rec(tree);
-  return {nodes, links};
-}
-
 /* =========================
-   Tooltip (mantido)
+   Tooltip (completo)
 ========================= */
 function tooltipHTML(classIri){
   const s = $rdf.sym(classIri);
-
   const label = termLabel(classIri);
   const comments = uniq(getLiterals(s, RDFS("comment")));
   const supers = uniq([...(state.superclasses.get(classIri)||new Set())]).map(termLabel).sort();
@@ -957,7 +940,6 @@ function tooltipHTML(classIri){
 
   section("Termos acima (superclasses)", supers.map(x=>escapeHTML(x)));
   section("Termos abaixo (subclasses diretas)", subs.map(x=>escapeHTML(x)));
-
   section("Relações (ObjectProperties) onde este termo é Domain", asDomainObj.map(propLine));
   section("Relações (ObjectProperties) onde este termo é Range", asRangeObj.map(propLine));
   section("Atributos (DatatypeProperties) onde este termo é Domain", asDomainDt.map(propLine));
@@ -974,7 +956,7 @@ function measureTextWidth(text, fontPx){
   measurer.font = `${fontPx}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial`;
   return measurer.measureText(text).width;
 }
-function computeAutoNodeSize(iri, baseMinW=86, baseMinH=24){
+function computeAutoNodeSize(iri, baseMinW=78, baseMinH=22){
   const style = state.nodeStyles.get(iri) || {};
   if (style.w && style.h) return {w: style.w, h: style.h};
 
@@ -982,9 +964,9 @@ function computeAutoNodeSize(iri, baseMinW=86, baseMinH=24){
   const label = termLabel(iri);
 
   const maxLineW = 140;
-  const padX = 16;
-  const padY = 10;
-  const lineH = Math.round(font * 1.25);
+  const padX = 14;
+  const padY = 8;
+  const lineH = Math.round(font * 1.22);
 
   let words = label.split(/\s+/).filter(Boolean);
   let line1 = "", line2 = "";
@@ -1000,12 +982,15 @@ function computeAutoNodeSize(iri, baseMinW=86, baseMinH=24){
   const w = Math.max(baseMinW, Math.ceil(Math.max(w1, w2) + padX));
   const lines = line2 ? 2 : 1;
   const h = Math.max(baseMinH, Math.ceil(lines * lineH + padY));
-
-  return {w: style.w ?? w, h: style.h ?? h};
+  return {w, h};
 }
 
 /* =========================
-   Render
+   Layout + Render
+   IMPORTANT:
+   d3.tree => x = breadth, y = depth
+   - topdown:   screenX = x, screenY = y
+   - leftright: screenX = y, screenY = x
 ========================= */
 function resize(){
   const r = wrap.getBoundingClientRect();
@@ -1014,8 +999,8 @@ function resize(){
 }
 window.addEventListener("resize", () => { resize(); if (state.loaded) rebuildAndRender(); });
 
-function linkPath(a, b, c){
-  const x1=a.x, y1=a.y, x2=b.x, y2=b.y;
+function linkPath(p1, p2, c){
+  const x1=p1.x, y1=p1.y, x2=p2.x, y2=p2.y;
   const cx1 = x1 + (x2-x1)*c;
   const cy1 = y1 + (y2-y1)*(1-c);
   const cx2 = x1 + (x2-x1)*(1-c);
@@ -1023,24 +1008,21 @@ function linkPath(a, b, c){
   return `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`;
 }
 
-function rebuildAndRender(){
-  if (!state.loaded) return;
-
-  ui.depthLabel.textContent = String(getMaxDepth());
-
-  const tree = buildTree();
-  const flat = flatten(tree);
-
-  ui.nodeCount.textContent = flat.nodes.length;
-  ui.edgeCount.textContent = flat.links.length;
-
-  // dim color map
+function buildDimColorMap(treeRoot){
   const dimMap = new Map();
   for (const dim of state.dimensions){
-    if (!state.selectedDims.has(dim.iri)) continue;
+    const color = dim.color;
+
+    // no modo single: só pinta o ramo ativo
+    const mode = ui.splitMode.value;
+    if (mode === "single" && dim.iri !== ui.activeDim.value) continue;
+
+    // no mode union: pinta os selecionados
+    if (mode === "union" && !state.selectedDims.has(dim.iri)) continue;
+
     (function dfs(i){
       if (dimMap.has(i)) return;
-      dimMap.set(i, dim.color);
+      dimMap.set(i, color);
       for (const k of (state.subclasses.get(i) || new Set())){
         if (!state.classNodes.has(k)) continue;
         dfs(k);
@@ -1048,56 +1030,98 @@ function rebuildAndRender(){
     })(dim.iri);
   }
   dimMap.set(state.rootIri, "#64748b");
+  return dimMap;
+}
+
+function flatten(tree){
+  const nodes=[], links=[];
+  function rec(n, parent=null){
+    nodes.push(n);
+    if (parent) links.push({source: parent, target: n});
+    for (const ch of (n.children||[])) rec(ch, n);
+  }
+  rec(tree);
+  return {nodes, links};
+}
+
+function rebuildAndRender(){
+  if (!state.loaded) return;
+  ui.depthLabel.textContent = String(getMaxDepth());
+
+  const tree = buildTree();
+  const flat = flatten(tree);
+  ui.nodeCount.textContent = flat.nodes.length;
+
+  const dimMap = buildDimColorMap(tree);
 
   resize();
 
-  const sample = flat.nodes.slice(0, Math.min(60, flat.nodes.length)).map(n => computeAutoNodeSize(n.iri));
+  // compactness: 0..100 => 0 menos compacto, 100 mais compacto
+  const compact = +ui.compact.value / 100;
+  const gapX = Math.round(40 - 28*compact);  // siblings
+  const gapY = Math.round(56 - 36*compact);  // depth
+
+  const sample = flat.nodes.slice(0, Math.min(80, flat.nodes.length)).map(n => computeAutoNodeSize(n.iri));
   const avgW = sample.length ? sample.reduce((a,b)=>a+b.w,0)/sample.length : 140;
   const avgH = sample.length ? sample.reduce((a,b)=>a+b.h,0)/sample.length : 28;
 
-  let dx = Math.max(44, avgH + 16);
-  let dy = Math.max(170, avgW + 80);
+  // sepX: distância horizontal entre irmãos (x)
+  // sepY: distância vertical entre níveis (y)
+  // (para ficar compacto, usamos o mínimo baseado no tamanho médio)
+  let sepX = Math.max(70, Math.round(avgW + gapX));
+  let sepY = Math.max(60, Math.round(avgH + gapY));
+
+  // A4: privilegia vertical, mas ainda compacto
   if (ui.layoutSelect.value === "a4"){
-    dx = Math.max(40, avgH + 12);
-    dy = Math.max(220, avgW + 120);
+    sepX = Math.max(70, Math.round(avgW + gapX + 10));
+    sepY = Math.max(70, Math.round(avgH + gapY + 14));
   }
 
   const root = d3.hierarchy(tree, d=>d.children);
-  const padTop = 30;
-  const centerX = width/2, centerY = (height+padTop)/2;
 
+  // Calcula layout base
   if (ui.layoutSelect.value === "radial"){
-    const layout = d3.tree().size([2*Math.PI, Math.min(width,height)/2 - 100]);
-    layout(root);
+    const radius = Math.min(width,height)/2 - 80;
+    d3.tree().size([2*Math.PI, Math.max(120, radius)])(root);
+    // converte polar => cartesiano
+    const cx = width/2, cy = height/2;
     root.descendants().forEach(d=>{
       const r=d.y, a=d.x;
-      d.x = centerX + r*Math.cos(a - Math.PI/2);
-      d.y = centerY + r*Math.sin(a - Math.PI/2);
-    });
-  } else if (ui.layoutSelect.value === "leftright"){
-    const layout = d3.tree().nodeSize([dx, dy]);
-    layout(root);
-    root.descendants().forEach(d=>{
-      d.x = (height/2) + d.x;
-      d.y = padTop + d.y;
+      d.sx = cx + r*Math.cos(a - Math.PI/2);
+      d.sy = cy + r*Math.sin(a - Math.PI/2);
     });
   } else {
-    const layout = d3.tree().nodeSize([dx, dy]);
-    layout(root);
-    root.descendants().forEach(d=>{
-      d.x = centerX + d.x;
-      d.y = padTop + d.y;
-    });
+    d3.tree().nodeSize([sepX, sepY])(root);
+
+    const padTop = 40, padLeft = 40;
+    const cx = width/2, cy = height/2;
+
+    if (ui.layoutSelect.value === "leftright"){
+      // esquerda -> direita: depth (y) vira X, breadth (x) vira Y
+      root.descendants().forEach(d=>{
+        d.sx = padLeft + d.y;
+        d.sy = cy + d.x;
+      });
+    } else {
+      // topdown / a4: breadth (x) vira X, depth (y) vira Y
+      root.descendants().forEach(d=>{
+        d.sx = cx + d.x;
+        d.sy = padTop + d.y;
+      });
+    }
   }
 
-  // apply manual positions
+  // aplica posições manuais
   const lk = ui.layoutSelect.value;
   root.descendants().forEach(d=>{
     const key = `${lk}|${d.data.iri}`;
     if (state.nodePositions.has(key)){
       const p = state.nodePositions.get(key);
-      d.x = p.x; d.y = p.y;
+      d.sx = p.x; d.sy = p.y;
     }
+    // padroniza campos usados no render
+    d.x = d.sx;
+    d.y = d.sy;
   });
 
   // links
@@ -1105,8 +1129,11 @@ function rebuildAndRender(){
   const strokeW = +ui.edgeWidth.value;
   const edgeCol = ui.edgeColor.value;
 
+  const linksData = root.links();
+  ui.edgeCount.textContent = linksData.length;
+
   const linkSel = gLinks.selectAll("path.link")
-    .data(root.links(), d => d.target.data.iri);
+    .data(linksData, d => d.target.data.iri);
 
   linkSel.exit().remove();
 
@@ -1142,18 +1169,17 @@ function rebuildAndRender(){
         const key = `${ui.layoutSelect.value}|${d.data.iri}`;
         state.nodePositions.set(key, {x:d.x, y:d.y});
         savePersisted();
-        gNodes.selectAll("g.node")
-          .filter(n => n.data.iri === d.data.iri)
+
+        d3.select(event.sourceEvent.target.closest("g.node"))
           .attr("transform", `translate(${d.x},${d.y})`);
+
         gLinks.selectAll("path.link")
           .attr("d", l => linkPath(l.source, l.target, curve));
       })
     );
 
   nodeEnter.append("rect");
-  nodeEnter.append("text")
-    .attr("text-anchor","middle")
-    .attr("dominant-baseline","middle");
+  nodeEnter.append("text").attr("text-anchor","middle");
 
   const nodeMerge = nodeEnter.merge(nodeSel)
     .attr("transform", d => `translate(${d.x},${d.y})`)
@@ -1170,10 +1196,8 @@ function rebuildAndRender(){
       const r = style.radius ?? 10;
 
       d3.select(this)
-        .attr("width", w)
-        .attr("height", h)
-        .attr("x", -w/2)
-        .attr("y", -h/2)
+        .attr("width", w).attr("height", h)
+        .attr("x", -w/2).attr("y", -h/2)
         .attr("rx", r).attr("ry", r)
         .attr("fill", style.fill ?? (dimMap.get(iri) || "#64748b"))
         .attr("opacity", iri === state.rootIri ? 0.45 : ((style.opacity ?? 92)/100))
@@ -1187,10 +1211,14 @@ function rebuildAndRender(){
       const font = style.font ?? 12;
       const label = termLabel(iri);
 
-      const text = d3.select(this).style("font-size", font + "px");
-      const auto = computeAutoNodeSize(iri);
+      // IMPORTANTE: sempre limpar antes (evita duplicação)
+      const text = d3.select(this);
+      text.selectAll("*").remove();
+      text.style("font-size", font + "px");
 
-      const maxLineW = Math.max(110, (style.w ?? auto.w) - 18);
+      const auto = computeAutoNodeSize(iri);
+      const maxLineW = Math.max(95, (style.w ?? auto.w) - 16);
+
       const words = label.split(/\s+/).filter(Boolean);
       let line1="", line2="";
       for (const w of words){
@@ -1200,25 +1228,34 @@ function rebuildAndRender(){
       }
       if (!line1) line1 = label;
 
-      text.text(null);
+      // corta line2 se precisar
+      if (line2 && measureTextWidth(line2, font) > maxLineW){
+        while (line2.length>0 && measureTextWidth(line2+"…", font) > maxLineW) line2 = line2.slice(0,-1);
+        line2 = line2.trim()+"…";
+      }
+
       if (!line2){
+        text.attr("dominant-baseline","middle");
         text.append("tspan").attr("x",0).attr("dy","0em").text(line1);
       }else{
-        while (line2.length>0 && measureTextWidth(line2+"…", font) > maxLineW) line2 = line2.slice(0,-1);
-        line2 = line2.trim() + "…";
-        text.append("tspan").attr("x",0).attr("dy","-0.2em").text(line1);
-        text.append("tspan").attr("x",0).attr("dy","1.2em").text(line2);
+        text.attr("dominant-baseline","middle");
+        text.append("tspan").attr("x",0).attr("dy","-0.25em").text(line1);
+        text.append("tspan").attr("x",0).attr("dy","1.25em").text(line2);
       }
     });
 
   ui.selInfo.textContent = state.selectedIri ? termLabel(state.selectedIri) : "—";
 
+  // auto fit 1ª vez
   if (!rebuildAndRender._didFit){
     fitToView();
     rebuildAndRender._didFit = true;
   }
 }
 
+/* =========================
+   Tooltip
+========================= */
 function showTooltip(evt, iri){
   ui.tooltip.style.display = "block";
   ui.tooltip.innerHTML = tooltipHTML(iri);
@@ -1238,13 +1275,11 @@ function toggleCollapse(iri){
   savePersisted();
   rebuildAndRender();
 }
-
 function selectNode(iri){
   state.selectedIri = iri;
   openEditorFor(iri);
   rebuildAndRender();
 }
-
 function openEditorFor(iri){
   ui.editorCard.style.opacity = "1";
   ui.editorHint.textContent = shrinkIri(iri);
@@ -1263,7 +1298,10 @@ function openEditorFor(iri){
   const style = state.nodeStyles.get(iri) || {};
   const auto = computeAutoNodeSize(iri);
 
-  ui.edLabel.value = state.customLabels.get(iri) || (state.classNodes.get(iri)?.label || shrinkIri(iri));
+  // label salvo tem prioridade
+  const base = state.customLabels.get(iri) || state.classNodes.get(iri)?.label || shrinkIri(iri);
+  ui.edLabel.value = base;
+
   ui.edFill.value = style.fill || "#64748b";
   ui.edStroke.value = (style.stroke && style.stroke.startsWith("#")) ? style.stroke : "#111827";
   ui.edOpacity.value = style.opacity ?? 92;
@@ -1308,29 +1346,26 @@ ui.btnEditorReset.addEventListener("click", () => {
 /* =========================
    Fit / Reset
 ========================= */
+function getContentBBox(){
+  // getBBox não inclui o transform do próprio gRoot (ótimo: bbox em coords “base”)
+  try{
+    const bb = gRoot.node().getBBox();
+    return {x:bb.x, y:bb.y, w:bb.width, h:bb.height};
+  }catch(e){
+    return {x:0,y:0,w:width,h:height};
+  }
+}
+
 function fitToView(){
-  const nodes = gNodes.selectAll("g.node").nodes();
-  if (!nodes.length) return;
+  const bb = getContentBBox();
+  if (!isFinite(bb.w) || !isFinite(bb.h) || bb.w<=0 || bb.h<=0) return;
 
-  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
-  nodes.forEach(n=>{
-    const box = n.getBBox();
-    const tr = n.getCTM();
-    const x = tr.e + box.x, y = tr.f + box.y;
-    minX = Math.min(minX, x);
-    minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x + box.width);
-    maxY = Math.max(maxY, y + box.height);
-  });
+  const pad = 60;
+  const scale = Math.min(0.95, Math.max(0.15, Math.min(width/(bb.w+pad), height/(bb.h+pad))));
+  const tx = (width/2) - scale * (bb.x + bb.w/2);
+  const ty = (height/2) - scale * (bb.y + bb.h/2);
 
-  const w = maxX-minX, h = maxY-minY;
-  if (!isFinite(w) || !isFinite(h) || w<=0 || h<=0) return;
-
-  const scale = Math.min(0.95, Math.max(0.2, Math.min(width/(w+100), height/(h+120))));
-  const tx = (width/2) - scale * (minX + w/2);
-  const ty = (height/2) - scale * (minY + h/2);
-
-  svg.transition().duration(320).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+  svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
 }
 
 function resetAll(){
@@ -1340,10 +1375,12 @@ function resetAll(){
   state.nodePositions.clear();
   state.nodeStyles.clear();
   state.selectedIri = null;
+
   ui.selInfo.textContent = "—";
   ui.editorCard.style.opacity = "0.55";
   ui.editorHint.textContent = "Clique em um nó para editar.";
   rebuildAndRender._didFit = false;
+
   buildDimensions();
   rebuildAndRender();
 }
@@ -1389,15 +1426,16 @@ function zoomToNode(iri){
   const x = tr.e + box.x + box.width/2;
   const y = tr.f + box.y + box.height/2;
 
-  const scale = Math.max(0.7, Math.min(2.2, d3.zoomTransform(svg.node()).k));
+  const current = d3.zoomTransform(svg.node());
+  const scale = Math.max(0.7, Math.min(2.4, current.k));
   const tx = (width/2) - scale * x;
   const ty = (height/2) - scale * y;
 
-  svg.transition().duration(320).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+  svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
 }
 
 /* =========================
-   Export
+   Export (SVG + PNG) — EXPORTA A ÁRVORE INTEIRA
 ========================= */
 function downloadBlob(blob, filename){
   const url = URL.createObjectURL(blob);
@@ -1408,49 +1446,67 @@ function downloadBlob(blob, filename){
 }
 
 function exportSVG(){
-  const svgNode = svg.node().cloneNode(true);
-  svgNode.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  svgNode.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+  const bb = getContentBBox();
+  const margin = 40;
+  const w = Math.max(10, bb.w + margin*2);
+  const h = Math.max(10, bb.h + margin*2);
 
-  const vb = svgNode.getAttribute("viewBox") || `0 0 ${width} ${height}`;
-  const [x,y,w,h] = vb.split(" ").map(Number);
+  const clone = svg.node().cloneNode(true);
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+  // fundo
   const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  bg.setAttribute("x", x); bg.setAttribute("y", y);
+  bg.setAttribute("x", 0); bg.setAttribute("y", 0);
   bg.setAttribute("width", w); bg.setAttribute("height", h);
   bg.setAttribute("fill", getComputedStyle(document.body).getPropertyValue("--bg").trim());
-  svgNode.insertBefore(bg, svgNode.firstChild);
+  clone.insertBefore(bg, clone.firstChild);
+
+  // reposiciona o gRoot (remove zoom/pan)
+  const g = clone.querySelector("g.gRoot");
+  if (g){
+    g.setAttribute("transform", `translate(${margin - bb.x}, ${margin - bb.y})`);
+  }
 
   const serializer = new XMLSerializer();
-  const text = serializer.serializeToString(svgNode);
+  const text = serializer.serializeToString(clone);
   downloadBlob(new Blob([text], {type:"image/svg+xml;charset=utf-8"}), `taxonomia_${ui.layoutSelect.value}.svg`);
 }
 
 function exportPNG(){
-  const serializer = new XMLSerializer();
-  const vb = svg.attr("viewBox");
-  const [vx, vy, vw, vh] = vb.split(" ").map(Number);
+  const bb = getContentBBox();
+  const margin = 40;
+  const w = Math.max(10, bb.w + margin*2);
+  const h = Math.max(10, bb.h + margin*2);
 
-  const cloned = svg.node().cloneNode(true);
-  cloned.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const clone = svg.node().cloneNode(true);
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
 
   const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  bg.setAttribute("x", vx); bg.setAttribute("y", vy);
-  bg.setAttribute("width", vw); bg.setAttribute("height", vh);
+  bg.setAttribute("x", 0); bg.setAttribute("y", 0);
+  bg.setAttribute("width", w); bg.setAttribute("height", h);
   bg.setAttribute("fill", getComputedStyle(document.body).getPropertyValue("--bg").trim());
-  cloned.insertBefore(bg, cloned.firstChild);
+  clone.insertBefore(bg, clone.firstChild);
 
-  const svgText = serializer.serializeToString(cloned);
+  const g = clone.querySelector("g.gRoot");
+  if (g){
+    g.setAttribute("transform", `translate(${margin - bb.x}, ${margin - bb.y})`);
+  }
+
+  const serializer = new XMLSerializer();
+  const svgText = serializer.serializeToString(clone);
   const svgBlob = new Blob([svgText], {type:"image/svg+xml;charset=utf-8"});
   const url = URL.createObjectURL(svgBlob);
 
   const img = new Image();
   img.onload = () => {
     const canvas = document.createElement("canvas");
-    const scale = 2;
-    canvas.width = Math.floor(vw * scale);
-    canvas.height = Math.floor(vh * scale);
+    const scale = 2; // qualidade
+    canvas.width = Math.ceil(w * scale);
+    canvas.height = Math.ceil(h * scale);
     const ctx = canvas.getContext("2d");
-    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.setTransform(scale,0,0,scale,0,0);
     ctx.drawImage(img, 0, 0);
     canvas.toBlob((pngBlob) => {
       downloadBlob(pngBlob, `taxonomia_${ui.layoutSelect.value}.png`);
@@ -1462,7 +1518,7 @@ function exportPNG(){
 }
 
 /* =========================
-   UI events
+   Events
 ========================= */
 ui.btnLoad.addEventListener("click", async () => {
   try{
@@ -1491,34 +1547,20 @@ ui.btnNone.addEventListener("click", () => {
   rebuildAndRender();
 });
 
-// FIX: ao mudar splitMode para single, garantir só 1 dimensão selecionada (a ativa)
+// Modo
 ui.splitMode.addEventListener("change", () => {
-  if (ui.splitMode.value === "single") {
-    const iri = ui.activeDim.value;
-    if (iri) {
-      state.selectedDims = new Set([iri]);
-      saveDimsPersisted();
-      renderDimsList();
-    }
-  }
+  // no single, o dropdown manda (não precisa “forçar” check)
   rebuildAndRender();
 });
 
-// FIX: activeDim agora funciona e não volta para "UFO"
+// Active dim (fix definitivo: dropdown manda no single)
 ui.activeDim.addEventListener("change", () => {
-  const iri = ui.activeDim.value;
-  if (!iri) return;
-
-  // garante que a dimensão ativa está selecionada
-  state.selectedDims.add(iri);
-
-  // se estiver em single, fica somente ela
-  if (ui.splitMode.value === "single") {
-    state.selectedDims = new Set([iri]);
+  if (ui.splitMode.value === "single"){
+    // opcional: marca no checklist para refletir visualmente
+    state.selectedDims.add(ui.activeDim.value);
+    saveDimsPersisted();
+    renderDimsList();
   }
-
-  saveDimsPersisted();
-  renderDimsList();
   rebuildAndRender();
 });
 
@@ -1528,7 +1570,9 @@ ui.btnMoreDepth.addEventListener("click", () => {
   rebuildAndRender();
 });
 
-ui.layoutSelect.addEventListener("change", rebuildAndRender);
+ui.compact.addEventListener("input", rebuildAndRender);
+
+ui.layoutSelect.addEventListener("change", () => { rebuildAndRender._didFit=false; rebuildAndRender(); });
 ui.edgeCurve.addEventListener("input", rebuildAndRender);
 ui.edgeWidth.addEventListener("input", rebuildAndRender);
 ui.edgeColor.addEventListener("input", rebuildAndRender);
@@ -1570,16 +1614,14 @@ svg.on("click", () => {
    Init
 ========================= */
 function init(){
-  resize();
-  enableControls(false);
-  ui.dataUrl.value = "https://raw.githubusercontent.com/luquizis/Ontohate/main/ontohate_.owl";
-
   const theme = localStorage.getItem(persistedKey("theme"));
   if (theme === "light" || theme === "dark") setTheme(theme, false);
 
-  // enable export/layout after load
-  ui.btnExportSVG.disabled = true;
-  ui.btnExportPNG.disabled = true;
+  resize();
+  enableControls(false);
+
+  // seu repo raw
+  ui.dataUrl.value = "https://raw.githubusercontent.com/luquizis/Ontohate/main/ontohate_.owl";
 }
 init();
 </script>
