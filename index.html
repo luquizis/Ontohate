@@ -3,409 +3,749 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Taxonomia do Discurso de Ódio Online</title>
+  <title>OntoHate — Taxonomia do Discurso de Ódio Online</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/rdflib@2.2.37/dist/rdflib.min.js"></script>
 
   <style>
+    /* ===== DESIGN TOKENS ===== */
     :root{
-      --bg:#0b1220;
-      --panel:#121c2f;
-      --panel2:#0f172a;
-      --text:#e5e7eb;
-      --muted:#94a3b8;
-      --stroke:#24324f;
-      --accent:#60a5fa;
-      --danger:#fb7185;
-      --ok:#34d399;
+      --bg:          #07090f;
+      --bg2:         #0d1117;
+      --panel:       #111827;
+      --panel2:      #0d1117;
+      --border:      #1e2d45;
+      --border2:     #253347;
+      --text:        #e2e8f0;
+      --muted:       #64748b;
+      --muted2:      #94a3b8;
+      --accent:      #38bdf8;
+      --accent2:     #0ea5e9;
+      --danger:      #f43f5e;
+      --ok:          #10b981;
+      --warn:        #f59e0b;
 
-      --nodeText:#e5e7eb;
-      --nodeStroke: rgba(0,0,0,0.35);
-      --link:#94a3b8;
+      --node-text:   #f1f5f9;
+      --node-stroke: rgba(0,0,0,0.5);
+      --link-col:    #1e3a5f;
+
+      --font-display: 'Syne', sans-serif;
+      --font-mono:    'DM Mono', monospace;
+
+      --sidebar-w: 380px;
+      --topbar-h:  52px;
+      --radius:    10px;
+      --radius-sm: 6px;
     }
 
     [data-theme="light"]{
-      --bg:#ffffff;
-      --panel:#f7fafc;
-      --panel2:#ffffff;
-      --text:#0f172a;
-      --muted:#475569;
-      --stroke:#e2e8f0;
-      --accent:#2563eb;
-      --danger:#e11d48;
-      --ok:#16a34a;
+      --bg:          #f8fafc;
+      --bg2:         #ffffff;
+      --panel:       #ffffff;
+      --panel2:      #f1f5f9;
+      --border:      #e2e8f0;
+      --border2:     #cbd5e1;
+      --text:        #0f172a;
+      --muted:       #64748b;
+      --muted2:      #475569;
+      --accent:      #0284c7;
+      --accent2:     #0369a1;
+      --danger:      #e11d48;
+      --ok:          #059669;
+      --warn:        #d97706;
 
-      --nodeText:#0f172a;
-      --nodeStroke: rgba(15,23,42,0.18);
-      --link:#334155;
+      --node-text:   #0f172a;
+      --node-stroke: rgba(15,23,42,0.15);
+      --link-col:    #94a3b8;
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%; margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;}
-    body{background:var(--bg); color:var(--text); overflow:hidden;}
-    .app{display:grid; grid-template-columns: 400px 1fr; height:100%;}
-    .sidebar{
-      background:linear-gradient(180deg, color-mix(in srgb, var(--panel) 88%, transparent), color-mix(in srgb, var(--panel2) 88%, transparent));
-      border-right:1px solid var(--stroke);
-      padding:14px;
-      overflow:auto;
-    }
-    .main{position:relative;}
-    .topbar{
-      position:absolute; left:0; right:0; top:0;
-      display:flex; gap:10px; align-items:center;
-      padding:10px 12px;
-      background:color-mix(in srgb, var(--panel2) 80%, transparent);
-      backdrop-filter: blur(8px);
-      border-bottom:1px solid var(--stroke);
-      z-index:10;
-      flex-wrap:wrap;
-    }
-    .card{
-      background:color-mix(in srgb, var(--panel) 92%, transparent);
-      border:1px solid var(--stroke);
-      border-radius:16px;
-      padding:12px;
-      margin-bottom:12px;
-      box-shadow: 0 8px 26px rgba(0,0,0,0.10);
-    }
-    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
-    .col{display:flex; flex-direction:column; gap:6px;}
-    label{font-size:12px; color:var(--muted);}
-    input[type="text"], select{
-      width:100%;
-      padding:9px 10px;
-      border-radius:12px;
-      border:1px solid var(--stroke);
-      background:color-mix(in srgb, var(--bg) 88%, transparent);
-      color:var(--text);
-      outline:none;
-    }
-    input[type="color"]{width:34px; height:34px; border:none; background:transparent; padding:0;}
-    input[type="range"]{width:170px}
-    button{
-      padding:9px 12px;
-      border-radius:12px;
-      border:1px solid var(--stroke);
-      background:color-mix(in srgb, var(--accent) 12%, transparent);
-      color:var(--text);
-      cursor:pointer;
-    }
-    button:hover{border-color:color-mix(in srgb, var(--accent) 55%, var(--stroke))}
-    button.primary{background:color-mix(in srgb, var(--accent) 22%, transparent); border-color:color-mix(in srgb, var(--accent) 55%, var(--stroke))}
-    button.ghost{background:color-mix(in srgb, var(--bg) 70%, transparent)}
-    button.danger{background:color-mix(in srgb, var(--danger) 14%, transparent); border-color:color-mix(in srgb, var(--danger) 55%, var(--stroke))}
-    .small{font-size:12px; color:var(--muted); line-height:1.35}
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      border:1px solid var(--stroke);
-      background:color-mix(in srgb, var(--bg) 75%, transparent);
-      padding:8px 10px; border-radius:999px;
-    }
-    .status{font-size:12px; color:var(--muted);}
-    .kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:11px; padding:2px 6px; border-radius:8px;
-      border:1px solid var(--stroke);
-      background:color-mix(in srgb, var(--bg) 70%, transparent);
-      color:var(--text);
-    }
-    .dims{display:flex; flex-direction:column; gap:8px; margin-top:8px;}
-    .dimItem{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
-      padding:8px 10px;
-      border:1px solid var(--stroke);
-      border-radius:14px;
-      background:color-mix(in srgb, var(--bg) 72%, transparent);
-    }
-    .dimLeft{display:flex; align-items:center; gap:10px; min-width:0;}
-    .dimName{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px;}
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
 
-    #svgWrap{position:absolute; inset:0; padding-top:70px;}
-    svg{width:100%; height:100%; display:block;}
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-display);
+      font-size: 13px;
+      line-height: 1.5;
+    }
 
-    .node rect{
-      stroke: var(--nodeStroke);
-      stroke-width:1;
-      filter: drop-shadow(0px 6px 14px rgba(0,0,0,0.18));
+    /* ===== LAYOUT ===== */
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      height: 100vh;
     }
-    [data-theme="light"] .node rect{
-      filter: drop-shadow(0px 6px 14px rgba(15,23,42,0.10));
-    }
-    .node text{pointer-events:none; fill: var(--nodeText);}
-    .node.selected rect{
-      stroke: color-mix(in srgb, var(--accent) 85%, #ffffff);
-      stroke-width:2.2;
-      filter: drop-shadow(0px 8px 18px color-mix(in srgb, var(--accent) 25%, transparent));
-    }
-    .link{fill:none; stroke: var(--link); stroke-width:1.8; opacity:0.65;}
 
-    .tooltip{
-      position:absolute;
-      max-width: 420px;
-      pointer-events:none;
-      background:color-mix(in srgb, var(--panel2) 92%, transparent);
-      border:1px solid var(--stroke);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:14px;
-      font-size:12px;
-      line-height:1.35;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
-      z-index:50;
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
-    .tooltip .tTitle{font-weight:800; font-size:13px;}
-    .tooltip .tMeta{color:var(--muted)}
-    .tooltip hr{border:none; border-top:1px solid var(--stroke); margin:8px 0;}
 
-    .searchResults{
-      margin-top:8px;
-      border:1px solid var(--stroke);
-      border-radius:14px;
-      overflow:hidden;
-      background:color-mix(in srgb, var(--bg) 80%, transparent);
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
-    .searchItem{
-      padding:8px 10px;
-      border-top:1px solid var(--stroke);
-      cursor:pointer;
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
+
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      margin-bottom: 4px;
     }
-    .searchItem:hover{background:color-mix(in srgb, var(--accent) 10%, transparent)}
-    .searchItem:first-child{border-top:none}
-    .tag{font-size:11px; color:var(--muted); white-space:nowrap;}
+
+    .sidebar-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-body::-webkit-scrollbar { width: 4px; }
+    .sidebar-body::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card-header:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted2);
+    }
+
+    .card-toggle {
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+
+    .card-body {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card.collapsed .card-body { display: none; }
+    .card.collapsed .card-toggle { transform: rotate(-90deg); }
+
+    /* ===== FORM ELEMENTS ===== */
+    label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input[type="text"], input[type="url"], select, textarea {
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border2);
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus,
+    input[type="url"]:focus,
+    select:focus { border-color: var(--accent); }
+
+    input[type="color"] {
+      width: 30px; height: 30px;
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      padding: 2px;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%; height: 4px;
+      background: var(--border2);
+      border-radius: 4px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid var(--bg);
+    }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .row   { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+    .row .field { flex: 1; min-width: 80px; }
+
+    /* ===== BUTTONS ===== */
+    button {
+      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 6px 11px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border2);
+      background: var(--panel);
+      color: var(--text);
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      letter-spacing: 0.03em;
+    }
+    button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    button:disabled { opacity: 0.38; cursor: not-allowed; }
+
+    button.primary {
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+      border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
+      color: var(--accent);
+    }
+    button.primary:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--accent) 25%, transparent);
+    }
+    button.danger {
+      background: color-mix(in srgb, var(--danger) 10%, transparent);
+      border-color: color-mix(in srgb, var(--danger) 45%, var(--border2));
+      color: var(--danger);
+    }
+    button.danger:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--danger) 22%, transparent);
+    }
+    button.icon { padding: 5px 7px; }
+
+    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      position: absolute; left: 0; right: 0; top: 0;
+      height: var(--topbar-h);
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 14px;
+      background: color-mix(in srgb, var(--panel) 85%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 20;
+      overflow: hidden;
+    }
+
+    .stat-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--bg) 60%, transparent);
+      font-size: 11px;
+      color: var(--muted2);
+      white-space: nowrap;
+    }
+    .stat-pill .val { color: var(--text); font-weight: 600; }
+    .stat-pill .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--ok);
+      flex-shrink: 0;
+    }
+    .stat-pill .dot.loading { background: var(--warn); animation: pulse 1s infinite; }
+    .stat-pill .dot.error   { background: var(--danger); }
+    .stat-pill .dot.idle    { background: var(--border2); }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .topbar-spacer { flex: 1; }
+
+    .kbd {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      border: 1px solid var(--border2);
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
+      color: var(--muted2);
+    }
+
+    /* ===== MAIN ===== */
+    .main { position: relative; overflow: hidden; }
+
+    #svgWrap {
+      position: absolute;
+      inset: 0;
+      padding-top: var(--topbar-h);
+    }
+
+    svg { width: 100%; height: 100%; display: block; }
+
+    /* ===== NODE STYLES ===== */
+    .node rect {
+      stroke: var(--node-stroke);
+      stroke-width: 1px;
+      transition: filter 0.15s;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
+    }
+    [data-theme="light"] .node rect {
+      filter: drop-shadow(0 2px 8px rgba(15,23,42,0.12));
+    }
+    .node text { pointer-events: none; fill: var(--node-text); }
+    .node.selected rect {
+      stroke: var(--accent) !important;
+      stroke-width: 2px !important;
+      filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 40%, transparent));
+    }
+
+    .link {
+      fill: none;
+      stroke: var(--link-col);
+      stroke-width: 1.6;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* ===== TOOLTIP ===== */
+    .tooltip {
+      position: absolute;
+      max-width: 340px;
+      pointer-events: none;
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 11.5px;
+      line-height: 1.45;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+      z-index: 50;
+      transition: opacity 0.1s;
+    }
+    .tooltip .t-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+    .tooltip .t-iri   { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+    .tooltip hr       { border: none; border-top: 1px solid var(--border); margin: 7px 0; }
+    .tooltip .t-sec   { font-size: 10px; font-weight: 700; text-transform: uppercase;
+                        letter-spacing: 0.06em; color: var(--muted); margin-bottom: 3px; }
+    .tooltip .t-item  { padding: 1px 0 1px 10px; position: relative; }
+    .tooltip .t-item::before { content: '·'; position: absolute; left: 2px; color: var(--muted); }
+
+    /* ===== SEARCH RESULTS ===== */
+    .search-results {
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--bg);
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .search-results::-webkit-scrollbar { width: 3px; }
+    .search-results::-webkit-scrollbar-thumb { background: var(--border2); }
+
+    .search-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 10px;
+      border-top: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .search-item:first-child { border-top: none; }
+    .search-item:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+    .search-item .s-label { font-size: 12px; }
+    .search-item .s-tag   { font-family: var(--font-mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+    /* ===== DIMS LIST ===== */
+    .dims-list { display: flex; flex-direction: column; gap: 4px; }
+    .dim-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 9px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      transition: border-color 0.15s;
+    }
+    .dim-item:hover { border-color: var(--border2); }
+    .dim-item.active { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+    .dim-name { flex: 1; font-size: 12px; font-weight: 600; min-width: 0;
+                overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dim-count { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+
+    input[type="checkbox"] {
+      width: 14px; height: 14px; accent-color: var(--accent);
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ===== RANGE WITH VALUE ===== */
+    .range-group { display: flex; flex-direction: column; gap: 4px; }
+    .range-row { display: flex; align-items: center; gap: 8px; }
+    .range-val {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted2);
+      min-width: 24px;
+      text-align: right;
+    }
+
+    /* ===== EDITOR ===== */
+    #editorCard { transition: opacity 0.2s; }
+    #editorCard.locked { opacity: 0.45; pointer-events: none; }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-svg {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; pointer-events: none;
+      padding-top: var(--topbar-h);
+    }
+    .empty-icon { font-size: 40px; opacity: 0.18; }
+    .empty-text { font-size: 13px; color: var(--muted); text-align: center; max-width: 240px; line-height: 1.5; }
+    .empty-hint { font-family: var(--font-mono); font-size: 11px; color: var(--muted); opacity: 0.6; }
+
+    /* ===== LOADING OVERLAY ===== */
+    .loading-bar {
+      position: absolute; top: var(--topbar-h); left: 0; right: 0;
+      height: 2px; background: transparent; z-index: 30; overflow: hidden;
+    }
+    .loading-bar::after {
+      content: '';
+      display: block; height: 100%;
+      background: var(--accent);
+      animation: loading 1.2s ease-in-out infinite;
+    }
+    .loading-bar.hidden { display: none; }
+
+    @keyframes loading {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
   </style>
 </head>
 
 <body data-theme="dark">
 <div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
   <aside class="sidebar">
-    <div class="card">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <div>
-          <div style="font-weight:900; font-size:16px;">Taxonomia do Discurso de Ódio Online</div>
-          <div class="small">
-            Ferramenta interativa para explorar dimensões e subclasses, gerando taxonomias personalizadas para análise e documentação.
-          </div>
-        </div>
-        <div class="pill"><span class="status" id="loadStatus">pronto</span></div>
-      </div>
+    <div class="sidebar-header">
+      <div class="sidebar-title">OntoHate</div>
+      <div class="sidebar-subtitle">Taxonomia interativa do discurso de ódio online. Carregue uma ontologia OWL/Turtle e explore a hierarquia de classes.</div>
 
-      <div class="small" style="margin-top:10px;">
-        <b>Como usar (rápido):</b><br/>
-        1) Marque dimensões (ou use “uma por vez”).<br/>
-        2) <span class="kbd">Alt</span>+clique abre/fecha subclasses.<br/>
-        3) Clique no nó para editar (nome, tamanho, cor).<br/>
-        4) Export: SVG/PNG (PNG exporta a árvore inteira).
-      </div>
-
-      <div class="row" style="margin-top:10px;">
-        <div class="pill">
-          <span class="status">Tema:</span>
-          <button class="ghost" id="btnTheme">Escuro</button>
-        </div>
+      <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
+        <button class="icon" id="btnTheme" title="Alternar tema">☀</button>
+        <button class="primary" id="btnFit">Ajustar tela</button>
+        <button class="danger" id="btnReset">Reset</button>
       </div>
     </div>
 
-    <div class="card">
-      <div class="col">
-        <label>Fonte de dados (arquivo do repositório)</label>
-        <input id="dataUrl" type="text" />
-        <div class="row">
-          <button class="primary" id="btnLoad">Carregar dados</button>
-          <button class="ghost" id="btnFit">Ajustar na tela</button>
-          <button class="danger" id="btnReset">Reset</button>
+    <div class="sidebar-body">
+
+      <!-- Fonte de dados -->
+      <div class="card">
+        <div class="card-header" data-card="source">
+          <span class="card-title">Fonte de dados</span>
+          <span class="card-toggle">▾</span>
         </div>
-        <div class="small">Use o link “raw” do arquivo.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="col">
-        <label>Busca por termo/classe</label>
-        <input id="searchInput" type="text" placeholder="Digite parte do nome (ex.: natureza, ameaça, moderação…)" disabled />
-        <div class="row">
-          <button id="btnSearchClear" class="ghost" disabled>Limpar</button>
-          <button id="btnSearchShowAll" class="ghost" disabled>Ver lista</button>
-        </div>
-        <div class="small">Clique no resultado para centralizar o nó (se ele estiver visível na taxonomia atual).</div>
-        <div id="searchResults" class="searchResults" style="display:none;"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="col">
-        <label>Geração da taxonomia</label>
-
-        <div class="row">
-          <div class="col" style="flex:1;">
-            <label>Modo</label>
-            <select id="splitMode" disabled>
-              <option value="union">Unir dimensões selecionadas (uma árvore)</option>
-              <option value="single">Uma dimensão por vez (quebra por partes)</option>
-            </select>
+        <div class="card-body">
+          <div class="field">
+            <label>URL (raw do repositório)</label>
+            <input id="dataUrl" type="text" placeholder="https://raw.githubusercontent.com/…" />
           </div>
-
-          <div class="col" style="flex:1;">
-            <label>Dimensão ativa (no modo “uma por vez”)</label>
-            <select id="activeDim" disabled></select>
+          <div class="btn-group">
+            <button class="primary" id="btnLoad">Carregar</button>
+          </div>
+          <div style="font-size:11px; color:var(--muted);">
+            Use o link "raw" do arquivo. Formatos aceitos: RDF/XML e Turtle.
           </div>
         </div>
+      </div>
 
-        <div class="row" style="margin-top:10px;">
-          <div class="col" style="flex:1;">
+      <!-- Busca -->
+      <div class="card">
+        <div class="card-header" data-card="search">
+          <span class="card-title">Busca</span>
+          <span class="card-toggle">▾</span>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <input id="searchInput" type="text" placeholder="Digite parte do nome ou classe…" disabled />
+          </div>
+          <div class="btn-group">
+            <button id="btnSearchClear" disabled>Limpar</button>
+            <button id="btnSearchShowAll" disabled>Ver todos</button>
+          </div>
+          <div id="searchResults" class="search-results" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Taxonomia -->
+      <div class="card">
+        <div class="card-header" data-card="taxonomy">
+          <span class="card-title">Taxonomia</span>
+          <span class="card-toggle">▾</span>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="field">
+              <label>Modo</label>
+              <select id="splitMode" disabled>
+                <option value="union">Unir dimensões</option>
+                <option value="single">Uma por vez</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Dimensão ativa</label>
+              <select id="activeDim" disabled></select>
+            </div>
+          </div>
+
+          <div class="range-group">
             <label>Profundidade máxima</label>
-            <input id="maxDepth" type="range" min="1" max="16" value="7" disabled />
-            <div class="small">Nível: <span id="depthLabel">7</span></div>
+            <div class="range-row">
+              <input id="maxDepth" type="range" min="1" max="16" value="7" disabled />
+              <span class="range-val" id="depthLabel">7</span>
+              <button id="btnMoreDepth" class="icon" disabled title="+1 nível">+</button>
+            </div>
           </div>
-          <div class="col">
-            <label>&nbsp;</label>
-            <button id="btnMoreDepth" class="ghost" disabled>+1 nível</button>
-          </div>
-        </div>
 
-        <div class="row" style="margin-top:10px;">
-          <div class="col" style="flex:1;">
-            <label>Compactação (mais compacto →)</label>
-            <input id="compact" type="range" min="0" max="100" value="70" disabled />
+          <div class="range-group">
+            <label>Compactação</label>
+            <div class="range-row">
+              <input id="compact" type="range" min="0" max="100" value="70" disabled />
+              <span class="range-val" id="compactLabel">70</span>
+            </div>
           </div>
-        </div>
-
-        <div class="small" style="margin-top:10px;">
-          Para árvores grandes: use “Uma dimensão por vez” + profundidade.
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div class="col" style="flex:1;">
-          <label>Dimensões</label>
-          <div class="small">No modo “unir”, as marcadas entram na árvore. No modo “uma por vez”, o dropdown manda.</div>
+      <!-- Dimensões -->
+      <div class="card">
+        <div class="card-header" data-card="dims">
+          <span class="card-title">Dimensões</span>
+          <span class="card-toggle">▾</span>
         </div>
-        <div class="row">
-          <button id="btnAll" disabled>Todas</button>
-          <button id="btnNone" disabled>Nenhuma</button>
+        <div class="card-body">
+          <div class="btn-group">
+            <button id="btnAll" disabled>Todas</button>
+            <button id="btnNone" disabled>Nenhuma</button>
+          </div>
+          <div class="dims-list" id="dimsList">
+            <div style="font-size:11px; color:var(--muted);">Carregue uma ontologia para ver as dimensões.</div>
+          </div>
         </div>
       </div>
-      <div class="dims" id="dimsList"></div>
-    </div>
 
-    <div class="card">
-      <div class="col">
-        <label>Layout e exportação</label>
-        <select id="layoutSelect" disabled>
-          <option value="topdown">Top-down</option>
-          <option value="leftright">Esquerda → Direita</option>
-          <option value="radial">Radial</option>
-          <option value="a4">A4 (vertical)</option>
-        </select>
-
-        <div class="row" style="margin-top:10px;">
-          <div class="col">
-            <label>Curvatura das arestas</label>
-            <input id="edgeCurve" type="range" min="0" max="100" value="18" disabled />
-          </div>
-          <div class="col">
-            <label>Espessura</label>
-            <input id="edgeWidth" type="range" min="1" max="6" value="2" disabled />
-          </div>
+      <!-- Layout e exportação -->
+      <div class="card">
+        <div class="card-header" data-card="layout">
+          <span class="card-title">Layout e exportação</span>
+          <span class="card-toggle">▾</span>
         </div>
-
-        <div class="row" style="margin-top:10px;">
-          <div class="col">
-            <label>Cor das arestas</label>
-            <input id="edgeColor" type="color" value="#94a3b8" disabled />
-          </div>
-          <div class="col">
-            <label>Persistir alterações</label>
-            <select id="persistSelect">
-              <option value="on" selected>Ligado</option>
-              <option value="off">Desligado</option>
+        <div class="card-body">
+          <div class="field">
+            <label>Layout</label>
+            <select id="layoutSelect" disabled>
+              <option value="topdown">Top-down</option>
+              <option value="leftright">Esquerda → Direita</option>
+              <option value="radial">Radial</option>
+              <option value="a4">A4 (vertical)</option>
             </select>
           </div>
-        </div>
 
-        <div class="row" style="margin-top:10px;">
-          <button id="btnExportSVG" disabled>Exportar SVG</button>
-          <button id="btnExportPNG" disabled>Exportar PNG</button>
+          <div class="row">
+            <div class="range-group" style="flex:1;">
+              <label>Curvatura das arestas</label>
+              <div class="range-row">
+                <input id="edgeCurve" type="range" min="0" max="100" value="18" disabled />
+                <span class="range-val" id="curveLabel">18</span>
+              </div>
+            </div>
+            <div class="range-group" style="flex:1;">
+              <label>Espessura</label>
+              <div class="range-row">
+                <input id="edgeWidth" type="range" min="1" max="6" value="2" disabled />
+                <span class="range-val" id="widthLabel">2</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Cor das arestas</label>
+              <input id="edgeColor" type="color" value="#1e3a5f" disabled />
+            </div>
+            <div class="field">
+              <label>Persistência</label>
+              <select id="persistSelect">
+                <option value="on">Ligada</option>
+                <option value="off">Desligada</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button id="btnExportSVG" disabled>Exportar SVG</button>
+            <button id="btnExportPNG" disabled>Exportar PNG</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card" id="editorCard" style="opacity:0.55;">
-      <div class="col">
-        <label>Editor do nó selecionado</label>
-        <div class="small" id="editorHint">Clique em um nó para editar.</div>
-
-        <label style="margin-top:6px;">Nome (local)</label>
-        <input id="edLabel" type="text" disabled />
-
-        <div class="row" style="margin-top:8px;">
-          <div class="col">
-            <label>Cor (fill)</label>
-            <input id="edFill" type="color" value="#64748b" disabled />
-          </div>
-          <div class="col">
-            <label>Borda</label>
-            <input id="edStroke" type="color" value="#111827" disabled />
-          </div>
-          <div class="col">
-            <label>Opacidade</label>
-            <input id="edOpacity" type="range" min="10" max="100" value="92" disabled />
-          </div>
+      <!-- Editor do nó -->
+      <div class="card" id="editorCard">
+        <div class="card-header" data-card="editor">
+          <span class="card-title">Editor do nó</span>
+          <span class="card-toggle">▾</span>
         </div>
+        <div class="card-body" id="editorBody">
+          <div id="editorHint" style="font-size:11px; color:var(--muted);">Clique em um nó para editar.</div>
 
-        <div class="row" style="margin-top:8px;">
-          <div class="col">
-            <label>Largura</label>
-            <input id="edW" type="range" min="70" max="520" value="140" disabled />
-          </div>
-          <div class="col">
-            <label>Altura</label>
-            <input id="edH" type="range" min="20" max="100" value="30" disabled />
-          </div>
-        </div>
+          <div class="field" style="display:none;" id="editorFields">
+            <label>Nome (local)</label>
+            <input id="edLabel" type="text" />
 
-        <div class="row" style="margin-top:8px;">
-          <div class="col">
-            <label>Fonte</label>
-            <input id="edFont" type="range" min="10" max="18" value="12" disabled />
-          </div>
-          <div class="col">
-            <label>Raio</label>
-            <input id="edRadius" type="range" min="0" max="22" value="10" disabled />
-          </div>
-        </div>
+            <div class="row" style="margin-top:8px;">
+              <div class="field">
+                <label>Cor (fill)</label>
+                <input id="edFill" type="color" value="#334155" />
+              </div>
+              <div class="field">
+                <label>Borda</label>
+                <input id="edStroke" type="color" value="#111827" />
+              </div>
+              <div class="field">
+                <label>Opacidade</label>
+                <input id="edOpacity" type="range" min="10" max="100" value="92" />
+              </div>
+            </div>
 
-        <div class="row" style="margin-top:10px;">
-          <button id="btnEditorApply" class="primary" disabled>Aplicar</button>
-          <button id="btnEditorReset" class="ghost" disabled>Reset nó</button>
-        </div>
+            <div class="row" style="margin-top:6px;">
+              <div class="range-group" style="flex:1;">
+                <label>Largura</label>
+                <div class="range-row">
+                  <input id="edW" type="range" min="70" max="520" value="140" />
+                  <span class="range-val" id="edWVal">140</span>
+                </div>
+              </div>
+              <div class="range-group" style="flex:1;">
+                <label>Altura</label>
+                <div class="range-row">
+                  <input id="edH" type="range" min="20" max="100" value="30" />
+                  <span class="range-val" id="edHVal">30</span>
+                </div>
+              </div>
+            </div>
 
-        <div class="small" style="margin-top:8px;">
-          Dica: para ficar compacto, mantenha largura/altura pequenas e aumente só quando necessário.
+            <div class="row" style="margin-top:6px;">
+              <div class="range-group" style="flex:1;">
+                <label>Fonte (px)</label>
+                <div class="range-row">
+                  <input id="edFont" type="range" min="10" max="18" value="12" />
+                  <span class="range-val" id="edFontVal">12</span>
+                </div>
+              </div>
+              <div class="range-group" style="flex:1;">
+                <label>Raio</label>
+                <div class="range-row">
+                  <input id="edRadius" type="range" min="0" max="22" value="10" />
+                  <span class="range-val" id="edRadiusVal">10</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="btn-group" style="margin-top:8px;">
+              <button class="primary" id="btnEditorApply">Aplicar</button>
+              <button id="btnEditorReset">Reset nó</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- Atalhos -->
+      <div class="card">
+        <div class="card-header" data-card="help">
+          <span class="card-title">Atalhos</span>
+          <span class="card-toggle">▾</span>
+        </div>
+        <div class="card-body" style="font-size:11px; color:var(--muted); line-height:1.7;">
+          <kbd class="kbd">Alt</kbd> + clique — abrir/fechar subclasses<br>
+          Clique simples — selecionar e editar nó<br>
+          Arrastar nó — reposicionar<br>
+          Scroll — zoom<br>
+          Arrastar fundo — pan
+        </div>
+      </div>
+
+    </div><!-- /sidebar-body -->
   </aside>
 
+  <!-- ===== MAIN ===== -->
   <main class="main">
     <div class="topbar">
-      <div class="pill"><span class="status" id="graphInfo">sem árvore</span></div>
-      <div class="pill"><span class="status">Zoom: <span id="zoomInfo">100%</span></span></div>
-      <div class="pill"><span class="status">Nós: <span id="nodeCount">0</span> • Arestas: <span id="edgeCount">0</span></span></div>
-      <div class="pill"><span class="status">Selecionado: <span id="selInfo">—</span></span></div>
-      <div style="margin-left:auto" class="pill">
-        <span class="status"><span class="kbd">Alt</span>+clique abre/fecha • arrastar move</span>
+      <div class="stat-pill">
+        <div class="dot idle" id="statusDot"></div>
+        <span id="loadStatus">pronto</span>
+      </div>
+      <div class="stat-pill">Zoom <span class="val" id="zoomInfo">100%</span></div>
+      <div class="stat-pill">Nós <span class="val" id="nodeCount">0</span></div>
+      <div class="stat-pill">Arestas <span class="val" id="edgeCount">0</span></div>
+      <div class="stat-pill" id="selPill" style="display:none;">
+        Sel: <span class="val" id="selInfo">—</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="stat-pill">
+        <kbd class="kbd">Alt</kbd>+clique abre/fecha
       </div>
     </div>
 
+    <div class="loading-bar hidden" id="loadingBar"></div>
+
     <div id="svgWrap">
+      <!-- Empty state -->
+      <div class="empty-svg" id="emptyState">
+        <div class="empty-icon">🕸</div>
+        <div class="empty-text">Cole a URL da ontologia OWL/Turtle e clique em <strong>Carregar</strong>.</div>
+        <div class="empty-hint">RDF/XML ou Turtle • subClassOf • rdfs:label</div>
+      </div>
+
       <svg id="svg"></svg>
       <div id="tooltip" class="tooltip" style="display:none;"></div>
     </div>
@@ -413,131 +753,114 @@
 </div>
 
 <script>
-/* =========================
-   RDF
-========================= */
+/* =========================================================
+   RDF NAMESPACES
+========================================================= */
 const RDF  = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 const RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
 const OWL  = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
+const SKOS = $rdf.Namespace("http://www.w3.org/2004/02/skos/core#");
 const STORE = $rdf.graph();
 
-/* =========================
-   UI
-========================= */
+/* =========================================================
+   UI REFS
+========================================================= */
 const ui = {
-  btnTheme: document.getElementById("btnTheme"),
-
-  dataUrl: document.getElementById("dataUrl"),
-  btnLoad: document.getElementById("btnLoad"),
-  btnFit: document.getElementById("btnFit"),
-  btnReset: document.getElementById("btnReset"),
-  loadStatus: document.getElementById("loadStatus"),
-
-  searchInput: document.getElementById("searchInput"),
-  btnSearchClear: document.getElementById("btnSearchClear"),
-  btnSearchShowAll: document.getElementById("btnSearchShowAll"),
-  searchResults: document.getElementById("searchResults"),
-
-  splitMode: document.getElementById("splitMode"),
-  activeDim: document.getElementById("activeDim"),
-  maxDepth: document.getElementById("maxDepth"),
-  depthLabel: document.getElementById("depthLabel"),
-  btnMoreDepth: document.getElementById("btnMoreDepth"),
-  compact: document.getElementById("compact"),
-
-  dimsList: document.getElementById("dimsList"),
-  btnAll: document.getElementById("btnAll"),
-  btnNone: document.getElementById("btnNone"),
-
-  layoutSelect: document.getElementById("layoutSelect"),
-  edgeCurve: document.getElementById("edgeCurve"),
-  edgeWidth: document.getElementById("edgeWidth"),
-  edgeColor: document.getElementById("edgeColor"),
-  persistSelect: document.getElementById("persistSelect"),
-
-  btnExportSVG: document.getElementById("btnExportSVG"),
-  btnExportPNG: document.getElementById("btnExportPNG"),
-
-  editorCard: document.getElementById("editorCard"),
-  editorHint: document.getElementById("editorHint"),
-  edLabel: document.getElementById("edLabel"),
-  edFill: document.getElementById("edFill"),
-  edStroke: document.getElementById("edStroke"),
-  edOpacity: document.getElementById("edOpacity"),
-  edW: document.getElementById("edW"),
-  edH: document.getElementById("edH"),
-  edFont: document.getElementById("edFont"),
-  edRadius: document.getElementById("edRadius"),
-  btnEditorApply: document.getElementById("btnEditorApply"),
-  btnEditorReset: document.getElementById("btnEditorReset"),
-
-  graphInfo: document.getElementById("graphInfo"),
-  zoomInfo: document.getElementById("zoomInfo"),
-  nodeCount: document.getElementById("nodeCount"),
-  edgeCount: document.getElementById("edgeCount"),
-  selInfo: document.getElementById("selInfo"),
-  tooltip: document.getElementById("tooltip")
+  btnTheme:        document.getElementById("btnTheme"),
+  dataUrl:         document.getElementById("dataUrl"),
+  btnLoad:         document.getElementById("btnLoad"),
+  btnFit:          document.getElementById("btnFit"),
+  btnReset:        document.getElementById("btnReset"),
+  loadStatus:      document.getElementById("loadStatus"),
+  statusDot:       document.getElementById("statusDot"),
+  loadingBar:      document.getElementById("loadingBar"),
+  emptyState:      document.getElementById("emptyState"),
+  searchInput:     document.getElementById("searchInput"),
+  btnSearchClear:  document.getElementById("btnSearchClear"),
+  btnSearchShowAll:document.getElementById("btnSearchShowAll"),
+  searchResults:   document.getElementById("searchResults"),
+  splitMode:       document.getElementById("splitMode"),
+  activeDim:       document.getElementById("activeDim"),
+  maxDepth:        document.getElementById("maxDepth"),
+  depthLabel:      document.getElementById("depthLabel"),
+  btnMoreDepth:    document.getElementById("btnMoreDepth"),
+  compact:         document.getElementById("compact"),
+  compactLabel:    document.getElementById("compactLabel"),
+  dimsList:        document.getElementById("dimsList"),
+  btnAll:          document.getElementById("btnAll"),
+  btnNone:         document.getElementById("btnNone"),
+  layoutSelect:    document.getElementById("layoutSelect"),
+  edgeCurve:       document.getElementById("edgeCurve"),
+  curveLabel:      document.getElementById("curveLabel"),
+  edgeWidth:       document.getElementById("edgeWidth"),
+  widthLabel:      document.getElementById("widthLabel"),
+  edgeColor:       document.getElementById("edgeColor"),
+  persistSelect:   document.getElementById("persistSelect"),
+  btnExportSVG:    document.getElementById("btnExportSVG"),
+  btnExportPNG:    document.getElementById("btnExportPNG"),
+  editorCard:      document.getElementById("editorCard"),
+  editorHint:      document.getElementById("editorHint"),
+  editorFields:    document.getElementById("editorFields"),
+  edLabel:         document.getElementById("edLabel"),
+  edFill:          document.getElementById("edFill"),
+  edStroke:        document.getElementById("edStroke"),
+  edOpacity:       document.getElementById("edOpacity"),
+  edW:             document.getElementById("edW"),
+  edWVal:          document.getElementById("edWVal"),
+  edH:             document.getElementById("edH"),
+  edHVal:          document.getElementById("edHVal"),
+  edFont:          document.getElementById("edFont"),
+  edFontVal:       document.getElementById("edFontVal"),
+  edRadius:        document.getElementById("edRadius"),
+  edRadiusVal:     document.getElementById("edRadiusVal"),
+  btnEditorApply:  document.getElementById("btnEditorApply"),
+  btnEditorReset:  document.getElementById("btnEditorReset"),
+  zoomInfo:        document.getElementById("zoomInfo"),
+  nodeCount:       document.getElementById("nodeCount"),
+  edgeCount:       document.getElementById("edgeCount"),
+  selInfo:         document.getElementById("selInfo"),
+  selPill:         document.getElementById("selPill"),
+  tooltip:         document.getElementById("tooltip"),
+  svgWrap:         document.getElementById("svgWrap"),
 };
 
-const persistedKey = (suffix) => `hate_taxo_${suffix}`;
-const defaultDimPalette = ["#60a5fa","#34d399","#fbbf24","#fb7185","#a78bfa","#22c55e","#f472b6","#38bdf8","#f97316","#e879f9"];
-
-let state = {
-  loaded:false,
-
-  classNodes: new Map(),
-  subclasses: new Map(),
+/* =========================================================
+   STATE — centralizado, sem anti-padrões
+========================================================= */
+const state = {
+  loaded: false,
+  didFit: false,           // FIX: era rebuildAndRender._didFit
+  classNodes:   new Map(),
+  subclasses:   new Map(),
   superclasses: new Map(),
-
-  rootIri: null,
-  dimensions: [],
+  rootIri:      null,
+  dimensions:   [],
   selectedDims: new Set(),
-  collapsed: new Set(),
-
-  customLabels: new Map(),
-  nodePositions: new Map(), // key=layout|iri -> {x,y}
-  nodeStyles: new Map(),    // iri -> {fill,stroke,opacity,w,h,font,radius}
-
-  selectedIri: null,
-  searchIndex: [],
-  labelCount: new Map()
+  collapsed:    new Set(),
+  customLabels:  new Map(),
+  nodePositions: new Map(),
+  nodeStyles:    new Map(),
+  selectedIri:   null,
+  searchIndex:   [],
+  labelCount:    new Map(),
+  tooltipCache:  new Map(), // FIX: memoização de tooltips por IRI
 };
 
-/* =========================
-   SVG
-========================= */
-const svg = d3.select("#svg");
-const wrap = document.getElementById("svgWrap");
+const DIM_PALETTE = [
+  "#38bdf8","#34d399","#fbbf24","#f87171",
+  "#a78bfa","#22d3ee","#fb923c","#e879f9",
+  "#86efac","#67e8f9","#fca5a5","#c4b5fd"
+];
+const P = (s) => "hate_taxo_" + s;
 
-const gRoot = svg.append("g").attr("class","gRoot");
-const gLinks = gRoot.append("g").attr("class","links");
-const gNodes = gRoot.append("g").attr("class","nodes");
+/* =========================================================
+   HELPERS
+========================================================= */
+const uniq = arr => [...new Set(arr)];
+const escapeHTML = s => String(s)
+  .replaceAll("&","&amp;").replaceAll("<","&lt;")
+  .replaceAll(">","&gt;").replaceAll('"',"&quot;");
 
-let width=1000, height=800;
-
-const zoom = d3.zoom()
-  .scaleExtent([0.15, 4])
-  .on("zoom", (event) => {
-    gRoot.attr("transform", event.transform);
-    ui.zoomInfo.textContent = Math.round(event.transform.k * 100) + "%";
-  });
-
-svg.call(zoom);
-
-/* =========================
-   Helpers
-========================= */
-function setStatus(text, ok=true){
-  ui.loadStatus.textContent = text;
-  ui.loadStatus.style.color = ok ? "var(--ok)" : "var(--danger)";
-}
-function persistEnabled(){ return ui.persistSelect.value === "on"; }
-function uniq(arr){ return [...new Set(arr)]; }
-
-function escapeHTML(s){
-  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
 function shrinkIri(iri){
   try{
     const u = new URL(iri);
@@ -545,1085 +868,664 @@ function shrinkIri(iri){
     if (frag) return frag;
     const parts = u.pathname.split("/").filter(Boolean);
     return parts[parts.length-1] || iri;
-  }catch(e){
-    return iri;
-  }
+  }catch{ return iri; }
 }
-function getLiterals(subject, predicate){
-  return STORE.each(subject, predicate, null).filter(o => o.termType==="Literal").map(o=>o.value);
-}
-function getFirstLiteral(subject, predicate){
-  const lits = getLiterals(subject, predicate);
-  return lits[0] || "";
-}
+function getLiterals(s,p){ return STORE.each(s,p,null).filter(o=>o.termType==="Literal").map(o=>o.value); }
+function getFirstLiteral(s,p){ return getLiterals(s,p)[0]||""; }
 function termLabel(iri){
   if (state.customLabels.has(iri)) return state.customLabels.get(iri);
-  const node = state.classNodes.get(iri);
-  const base = node?.label || shrinkIri(iri);
-  // Se o label for repetido entre IRIs diferentes, desambigua com o fragmento
-  const count = state.labelCount.get(base) || 0;
-  return count > 1 ? `${base} · ${shrinkIri(iri)}` : base;
+  const n = state.classNodes.get(iri);
+  const base = n?.label || shrinkIri(iri);
+  return (state.labelCount.get(base)||0) > 1 ? `${base} · ${shrinkIri(iri)}` : base;
+}
+function persistEnabled(){ return ui.persistSelect.value==="on"; }
+
+/* =========================================================
+   THEME
+========================================================= */
+function setTheme(theme, persist=true){
+  document.body.setAttribute("data-theme", theme);
+  ui.btnTheme.textContent = theme==="dark" ? "☀" : "☾";
+  if (persist) localStorage.setItem(P("theme"), theme);
+}
+ui.btnTheme.addEventListener("click", ()=>{
+  const cur = document.body.getAttribute("data-theme")||"dark";
+  setTheme(cur==="dark"?"light":"dark");
+  state.tooltipCache.clear();
+  renderGraph(_lastD3Root);
+});
+
+/* =========================================================
+   STATUS / LOADING
+========================================================= */
+function setStatus(text, mode="ok"){
+  ui.loadStatus.textContent = text;
+  ui.statusDot.className = "dot " + (mode==="ok"?"":mode==="loading"?"loading":"error");
+}
+function setLoading(on){
+  ui.loadingBar.classList.toggle("hidden",!on);
+  if(on) setStatus("carregando…","loading");
 }
 
-/* =========================
-   Persist
-========================= */
+const CONTROLS = [
+  "searchInput","btnSearchClear","btnSearchShowAll",
+  "splitMode","activeDim","maxDepth","btnMoreDepth","compact",
+  "btnAll","btnNone","layoutSelect","edgeCurve","edgeWidth","edgeColor",
+  "btnExportSVG","btnExportPNG"
+];
+function enableControls(on){ CONTROLS.forEach(id=>{ ui[id].disabled=!on; }); }
+
+/* =========================================================
+   PERSISTENCE
+========================================================= */
 function loadPersisted(){
   if (!persistEnabled()) return;
   try{
-    state.customLabels = new Map(Object.entries(JSON.parse(localStorage.getItem(persistedKey("labels")) || "{}")));
-    state.collapsed = new Set(JSON.parse(localStorage.getItem(persistedKey("collapsed")) || "[]"));
-    state.nodePositions = new Map(Object.entries(JSON.parse(localStorage.getItem(persistedKey("positions")) || "{}")).map(([k,v]) => [k, v]));
-    state.nodeStyles = new Map(Object.entries(JSON.parse(localStorage.getItem(persistedKey("styles")) || "{}")).map(([k,v]) => [k, v]));
-    const theme = localStorage.getItem(persistedKey("theme"));
-    if (theme === "light" || theme === "dark") setTheme(theme, false);
-  }catch(e){}
+    state.customLabels  = new Map(Object.entries(JSON.parse(localStorage.getItem(P("labels"))||"{}")));
+    state.collapsed     = new Set(JSON.parse(localStorage.getItem(P("collapsed"))||"[]"));
+    state.nodePositions = new Map(Object.entries(JSON.parse(localStorage.getItem(P("positions"))||"{}")));
+    state.nodeStyles    = new Map(Object.entries(JSON.parse(localStorage.getItem(P("styles"))||"{}")));
+    const t = localStorage.getItem(P("theme"));
+    if (t==="light"||t==="dark") setTheme(t,false);
+  }catch(e){ console.warn("Persist load failed:",e); }
 }
 function savePersisted(){
   if (!persistEnabled()) return;
   try{
-    localStorage.setItem(persistedKey("labels"), JSON.stringify(Object.fromEntries(state.customLabels)));
-    localStorage.setItem(persistedKey("collapsed"), JSON.stringify([...state.collapsed]));
-    localStorage.setItem(persistedKey("positions"), JSON.stringify(Object.fromEntries(state.nodePositions)));
-    localStorage.setItem(persistedKey("styles"), JSON.stringify(Object.fromEntries(state.nodeStyles)));
+    localStorage.setItem(P("labels"),    JSON.stringify(Object.fromEntries(state.customLabels)));
+    localStorage.setItem(P("collapsed"), JSON.stringify([...state.collapsed]));
+    localStorage.setItem(P("positions"), JSON.stringify(Object.fromEntries(state.nodePositions)));
+    localStorage.setItem(P("styles"),    JSON.stringify(Object.fromEntries(state.nodeStyles)));
   }catch(e){}
 }
-function clearPersisted(){
-  localStorage.removeItem(persistedKey("labels"));
-  localStorage.removeItem(persistedKey("collapsed"));
-  localStorage.removeItem(persistedKey("positions"));
-  localStorage.removeItem(persistedKey("styles"));
-  localStorage.removeItem(persistedKey("dims"));
-  localStorage.removeItem(persistedKey("theme"));
-}
-
-/* =========================
-   Theme
-========================= */
-function setTheme(theme, persist=true){
-  document.body.setAttribute("data-theme", theme);
-  ui.btnTheme.textContent = theme === "dark" ? "Escuro" : "Claro";
-  if (persist) localStorage.setItem(persistedKey("theme"), theme);
-}
-ui.btnTheme.addEventListener("click", () => {
-  const cur = document.body.getAttribute("data-theme") || "dark";
-  setTheme(cur === "dark" ? "light" : "dark");
-  rebuildAndRender();
-});
-
-/* =========================
-   Enable/disable controls
-========================= */
-function enableControls(enabled){
-  ui.searchInput.disabled = !enabled;
-  ui.btnSearchClear.disabled = !enabled;
-  ui.btnSearchShowAll.disabled = !enabled;
-
-  ui.splitMode.disabled = !enabled;
-  ui.activeDim.disabled = !enabled;
-  ui.maxDepth.disabled = !enabled;
-  ui.btnMoreDepth.disabled = !enabled;
-  ui.compact.disabled = !enabled;
-
-  ui.btnAll.disabled = !enabled;
-  ui.btnNone.disabled = !enabled;
-
-  ui.layoutSelect.disabled = !enabled;
-  ui.edgeCurve.disabled = !enabled;
-  ui.edgeWidth.disabled = !enabled;
-  ui.edgeColor.disabled = !enabled;
-
-  ui.btnExportSVG.disabled = !enabled;
-  ui.btnExportPNG.disabled = !enabled;
-}
-
-/* =========================
-   Load data
-========================= */
-async function loadData(url){
-  setStatus("carregando dados…");
-  ui.graphInfo.textContent = "carregando…";
-  STORE.statements.length = 0;
-
-  const res = await fetch(url, {cache:"no-store"});
-  if(!res.ok) throw new Error(`Falha HTTP ${res.status}`);
-  const data = await res.text();
-
-  const base = url;
-  try{
-    $rdf.parse(data, STORE, base, "application/rdf+xml");
-  }catch(e1){
-    try{
-      $rdf.parse(data, STORE, base, "text/turtle");
-    }catch(e2){
-      throw new Error("Não consegui ler o arquivo. Verifique se é RDF/XML ou Turtle.");
-    }
-  }
-
-  state.classNodes = new Map();
-  state.subclasses = new Map();
-  state.superclasses = new Map();
-  state.dimensions = [];
-  state.selectedDims = new Set();
-  state.selectedIri = null;
-  state.labelCount = new Map();
-
-  // classes
-  const classSet = new Set();
-  STORE.each(null, RDF("type"), OWL("Class")).forEach(s => classSet.add(s.value));
-  STORE.each(null, RDF("type"), RDFS("Class")).forEach(s => classSet.add(s.value));
-  STORE.each(null, RDFS("subClassOf"), null).forEach(s => classSet.add(s.value));
-  STORE.each(null, RDFS("subClassOf"), null).forEach(o => { if (o.termType === "NamedNode") classSet.add(o.value); });
-
-  for (const iri of classSet){
-    const s = $rdf.sym(iri);
-    const label = getFirstLiteral(s, RDFS("label")) || getFirstLiteral(s, $rdf.sym("http://www.w3.org/2004/02/skos/core#prefLabel")) || "";
-    const comment = getLiterals(s, RDFS("comment"));
-    state.classNodes.set(iri, { iri, label, comment });
-    if (!state.subclasses.has(iri)) state.subclasses.set(iri, new Set());
-    if (!state.superclasses.has(iri)) state.superclasses.set(iri, new Set());
-
-    const key = label || shrinkIri(iri);
-    state.labelCount.set(key, (state.labelCount.get(key)||0) + 1);
-  }
-
-  // subclass links
-  const subclassTriples = STORE.statementsMatching(null, RDFS("subClassOf"), null);
-  for (const st of subclassTriples){
-    const child = st.subject;
-    const parent = st.object;
-    if (child.termType !== "NamedNode") continue;
-    const cIri = child.value;
-    if (parent.termType === "NamedNode"){
-      const pIri = parent.value;
-      if (!state.subclasses.has(pIri)) state.subclasses.set(pIri, new Set());
-      if (!state.superclasses.has(cIri)) state.superclasses.set(cIri, new Set());
-      state.subclasses.get(pIri).add(cIri);
-      state.superclasses.get(cIri).add(pIri);
-    }
-  }
-
-  // root: no named superclasses
-  let root = null;
-  const roots = [];
-  for (const iri of state.classNodes.keys()){
-    const supers = [...(state.superclasses.get(iri) || new Set())].filter(x => state.classNodes.has(x));
-    if (supers.length === 0) roots.push(iri);
-  }
-  root = roots[0] || [...state.classNodes.keys()][0] || null;
-  if (!root) throw new Error("Nenhuma classe encontrada.");
-  state.rootIri = root;
-
-  buildDimensions();
-  buildSearchIndex();
-
-  state.loaded = true;
-  enableControls(true);
-  setStatus("carregado", true);
-  ui.graphInfo.textContent = "taxonomia pronta";
-  rebuildAndRender();
-}
-
-/* =========================
-   Dimensions
-========================= */
-function buildDimensions(){
-  const kids = [...(state.subclasses.get(state.rootIri) || new Set())].filter(iri=>state.classNodes.has(iri));
-  let dims = kids.map((iri, idx) => ({
-    iri,
-    label: termLabel(iri),
-    color: defaultDimPalette[idx % defaultDimPalette.length]
-  })).sort((a,b)=>a.label.localeCompare(b.label,"pt-BR"));
-
-  // restore colors/selection
-  if (persistEnabled()){
-    try{
-      const saved = JSON.parse(localStorage.getItem(persistedKey("dims")) || "{}");
-      for (const d of dims){
-        if (saved[d.iri]?.color) d.color = saved[d.iri].color;
-      }
-      state.selectedDims = new Set(Object.entries(saved).filter(([k,v])=>v.selected).map(([k])=>k));
-    }catch(e){
-      state.selectedDims = new Set();
-    }
-  }else{
-    state.selectedDims = new Set();
-  }
-
-  state.dimensions = dims;
-
-  ui.activeDim.innerHTML = "";
-  for (const d of dims){
-    const opt = document.createElement("option");
-    opt.value = d.iri;
-    opt.textContent = d.label;
-    ui.activeDim.appendChild(opt);
-  }
-  if (dims.length) {
-    // não “force” UFO: respeita a seleção salva se existir
-    const firstSelected = [...state.selectedDims][0];
-    ui.activeDim.value = (firstSelected && dims.some(x=>x.iri===firstSelected)) ? firstSelected : dims[0].iri;
-  }
-
-  renderDimsList();
-}
-
 function saveDimsPersisted(){
   if (!persistEnabled()) return;
-  const obj = {};
-  for (const d of state.dimensions){
-    obj[d.iri] = { color:d.color, selected: state.selectedDims.has(d.iri) };
+  const obj={};
+  state.dimensions.forEach(d=>{ obj[d.iri]={color:d.color, selected:state.selectedDims.has(d.iri)}; });
+  localStorage.setItem(P("dims"), JSON.stringify(obj));
+}
+function clearPersisted(){
+  ["labels","collapsed","positions","styles","dims","theme"].forEach(k=>localStorage.removeItem(P(k)));
+}
+
+/* =========================================================
+   COLLAPSIBLE CARDS
+========================================================= */
+document.querySelectorAll(".card-header").forEach(h=>{
+  h.addEventListener("click", ()=>h.closest(".card").classList.toggle("collapsed"));
+});
+
+/* =========================================================
+   RANGE LIVE VALUES
+========================================================= */
+[["maxDepth","depthLabel"],["compact","compactLabel"],
+ ["edgeCurve","curveLabel"],["edgeWidth","widthLabel"],
+ ["edW","edWVal"],["edH","edHVal"],["edFont","edFontVal"],["edRadius","edRadiusVal"],
+].forEach(([inp,lbl])=>{
+  const i=document.getElementById(inp), l=document.getElementById(lbl);
+  if(i&&l) i.addEventListener("input",()=>l.textContent=i.value);
+});
+
+/* =========================================================
+   SVG + ZOOM
+========================================================= */
+const svg   = d3.select("#svg");
+const svgEl = document.getElementById("svg");
+const wrap  = ui.svgWrap;
+const gRoot  = svg.append("g").attr("class","gRoot");
+const gLinks = gRoot.append("g").attr("class","links");
+const gNodes = gRoot.append("g").attr("class","nodes");
+let viewW=1000, viewH=800;
+let _lastD3Root = null; // guarda o último root para re-render sem rebuild
+
+const zoom = d3.zoom().scaleExtent([0.12,5]).on("zoom",(e)=>{
+  gRoot.attr("transform",e.transform);
+  ui.zoomInfo.textContent = Math.round(e.transform.k*100)+"%";
+});
+svg.call(zoom);
+
+function resize(){
+  const r=wrap.getBoundingClientRect();
+  viewW=r.width||1000; viewH=r.height||800;
+  svg.attr("viewBox",`0 0 ${viewW} ${viewH}`);
+}
+window.addEventListener("resize",()=>{ resize(); if(state.loaded) rebuildAndRender(); });
+
+/* =========================================================
+   TEXT MEASUREMENT — com font correta e cache
+   FIX: font resetada antes de cada batch de medições
+========================================================= */
+const _mCtx  = document.createElement("canvas").getContext("2d");
+const _mCache = new Map();
+function measureTextWidth(text, fontPx){
+  const key=`${fontPx}|${text}`;
+  if(_mCache.has(key)) return _mCache.get(key);
+  // FIX: define a fonte explicitamente, sem depender de estado anterior do canvas
+  _mCtx.font = `600 ${fontPx}px Syne, ui-sans-serif, sans-serif`;
+  const w=_mCtx.measureText(text).width;
+  _mCache.set(key,w);
+  return w;
+}
+function computeAutoNodeSize(iri){
+  const st=state.nodeStyles.get(iri)||{};
+  if(st.w&&st.h) return {w:st.w,h:st.h};
+  const font=st.font??12, label=termLabel(iri);
+  const maxLW=140, padX=16, padY=10, lineH=Math.round(font*1.25);
+  const words=label.split(/\s+/).filter(Boolean);
+  let l1="",l2="";
+  for(const w of words){
+    const c=(l1?l1+" ":"")+w;
+    if(measureTextWidth(c,font)<=maxLW) l1=c; else l2=(l2?l2+" ":"")+w;
   }
-  localStorage.setItem(persistedKey("dims"), JSON.stringify(obj));
+  if(!l1) l1=label;
+  const w=Math.max(80,Math.ceil(Math.max(measureTextWidth(l1,font),l2?measureTextWidth(l2,font):0)+padX));
+  const h=Math.max(24,Math.ceil((l2?2:1)*lineH+padY));
+  return {w,h};
+}
+
+/* =========================================================
+   RDF LOADING
+========================================================= */
+async function loadData(url){
+  setLoading(true);
+  ui.emptyState.style.display="none";
+  while(STORE.statements.length) STORE.statements.pop();
+
+  const res=await fetch(url,{cache:"no-store"});
+  if(!res.ok) throw new Error(`HTTP ${res.status} ao buscar ${url}`);
+  const data=await res.text();
+
+  let parsed=false;
+  for(const fmt of ["application/rdf+xml","text/turtle"]){
+    try{ $rdf.parse(data,STORE,url,fmt); parsed=true; break; }catch{}
+  }
+  if(!parsed) throw new Error("Formato não reconhecido. Use RDF/XML ou Turtle.");
+
+  state.classNodes.clear(); state.subclasses.clear();
+  state.superclasses.clear(); state.labelCount.clear(); state.tooltipCache.clear();
+
+  const classSet=new Set();
+  STORE.each(null,RDF("type"),OWL("Class")).forEach(s=>classSet.add(s.value));
+  STORE.each(null,RDF("type"),RDFS("Class")).forEach(s=>classSet.add(s.value));
+  STORE.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>{
+    classSet.add(st.subject.value);
+    if(st.object.termType==="NamedNode") classSet.add(st.object.value);
+  });
+
+  for(const iri of classSet){
+    const s=$rdf.sym(iri);
+    const label=getFirstLiteral(s,RDFS("label"))||getFirstLiteral(s,SKOS("prefLabel"))||"";
+    state.classNodes.set(iri,{iri,label,comment:getLiterals(s,RDFS("comment"))});
+    state.subclasses.set(iri,new Set());
+    state.superclasses.set(iri,new Set());
+    const key=label||shrinkIri(iri);
+    state.labelCount.set(key,(state.labelCount.get(key)||0)+1);
+  }
+
+  STORE.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>{
+    if(st.subject.termType!=="NamedNode"||st.object.termType!=="NamedNode") return;
+    const c=st.subject.value, p=st.object.value;
+    if(!state.classNodes.has(c)||!state.classNodes.has(p)) return;
+    state.subclasses.get(p).add(c);
+    state.superclasses.get(c).add(p);
+  });
+
+  const roots=[];
+  for(const iri of state.classNodes.keys()){
+    const supers=[...(state.superclasses.get(iri)||new Set())].filter(x=>state.classNodes.has(x));
+    if(!supers.length) roots.push(iri);
+  }
+  state.rootIri=roots[0]||[...state.classNodes.keys()][0]||null;
+  if(!state.rootIri) throw new Error("Nenhuma classe encontrada.");
+
+  buildDimensions(); buildSearchIndex();
+  state.loaded=true; state.didFit=false;
+  enableControls(true);
+  setStatus(`${state.classNodes.size} classes`,"ok");
+  setLoading(false);
+  rebuildAndRender();
+}
+
+/* =========================================================
+   DIMENSIONS
+========================================================= */
+function countDescendants(iri){
+  let n=0; const q=[...(state.subclasses.get(iri)||new Set())], vis=new Set([iri]);
+  while(q.length){ const x=q.shift(); if(vis.has(x)) continue; vis.add(x); n++;
+    (state.subclasses.get(x)||new Set()).forEach(c=>q.push(c)); }
+  return n;
+}
+
+function buildDimensions(){
+  let saved={};
+  if(persistEnabled()){ try{ saved=JSON.parse(localStorage.getItem(P("dims"))||"{}"); }catch{} }
+
+  const kids=[...(state.subclasses.get(state.rootIri)||new Set())].filter(i=>state.classNodes.has(i));
+  state.dimensions=kids.map((iri,idx)=>({
+    iri, label:termLabel(iri),
+    color:saved[iri]?.color||DIM_PALETTE[idx%DIM_PALETTE.length],
+    count:countDescendants(iri),
+  })).sort((a,b)=>a.label.localeCompare(b.label,"pt-BR"));
+
+  state.selectedDims=Object.keys(saved).length
+    ? new Set(Object.entries(saved).filter(([,v])=>v.selected).map(([k])=>k))
+    : new Set();
+
+  ui.activeDim.innerHTML="";
+  state.dimensions.forEach(d=>{
+    const opt=document.createElement("option");
+    opt.value=d.iri; opt.textContent=d.label;
+    ui.activeDim.appendChild(opt);
+  });
+  if(state.dimensions.length){
+    const fs=[...state.selectedDims][0];
+    ui.activeDim.value=(fs&&state.dimensions.some(x=>x.iri===fs))?fs:state.dimensions[0].iri;
+  }
+  renderDimsList();
 }
 
 function renderDimsList(){
-  ui.dimsList.innerHTML = "";
-  if (!state.dimensions.length){
-    ui.dimsList.innerHTML = `<div class="small">Nenhuma dimensão detectada.</div>`;
-    return;
+  ui.dimsList.innerHTML="";
+  if(!state.dimensions.length){
+    ui.dimsList.innerHTML=`<div style="font-size:11px;color:var(--muted)">Nenhuma dimensão.</div>`; return;
   }
+  state.dimensions.forEach(dim=>{
+    const isOn=state.selectedDims.has(dim.iri);
+    const row=document.createElement("div"); row.className="dim-item"+(isOn?" active":"");
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=isOn;
+    cb.addEventListener("change",()=>{
+      if(cb.checked) state.selectedDims.add(dim.iri); else state.selectedDims.delete(dim.iri);
+      if(ui.splitMode.value==="single"&&cb.checked) ui.activeDim.value=dim.iri;
+      saveDimsPersisted(); renderDimsList(); rebuildAndRender();
+    });
+    const sw=document.createElement("input"); sw.type="color"; sw.value=dim.color;
+    sw.style.cssText="width:20px;height:20px;padding:1px;border-radius:4px;border:1px solid var(--border2);";
+    sw.addEventListener("input",()=>{ dim.color=sw.value; saveDimsPersisted(); state.tooltipCache.clear(); rebuildAndRender(); });
+    const nm=document.createElement("div"); nm.className="dim-name"; nm.textContent=dim.label;
+    const ct=document.createElement("div"); ct.className="dim-count"; ct.textContent=dim.count;
+    row.append(cb,sw,nm,ct); ui.dimsList.appendChild(row);
+  });
+}
 
-  for (const dim of state.dimensions){
-    const row = document.createElement("div");
-    row.className = "dimItem";
+/* =========================================================
+   TREE BUILD — iterativo (FIX: sem recursão profunda)
+========================================================= */
+function buildTreeData(){
+  const maxDepth=+ui.maxDepth.value, mode=ui.splitMode.value;
+  const dimRoots=mode==="single"
+    ? (ui.activeDim.value?[ui.activeDim.value]:[])
+    : [...state.selectedDims];
 
-    const left = document.createElement("div");
-    left.className = "dimLeft";
-
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = state.selectedDims.has(dim.iri);
-    cb.addEventListener("change", () => {
-      if (cb.checked) state.selectedDims.add(dim.iri);
-      else state.selectedDims.delete(dim.iri);
-
-      // no modo single, o checklist não manda: mas se marcar uma, atualiza o dropdown pra ela
-      if (ui.splitMode.value === "single" && cb.checked){
-        ui.activeDim.value = dim.iri;
+  // FIX: BFS iterativo em vez de recursão — evita stack overflow em ontologias profundas
+  function buildSubBFS(startIri, startDepth, globalVisited){
+    const rootNode={iri:startIri,depth:startDepth,children:[]};
+    const queue=[{iri:startIri,depth:startDepth,node:rootNode}];
+    globalVisited.add(startIri);
+    while(queue.length){
+      const {iri,depth,node}=queue.shift();
+      if(state.collapsed.has(iri)||depth>=maxDepth) continue;
+      const kids=[...(state.subclasses.get(iri)||new Set())]
+        .filter(k=>state.classNodes.has(k)&&!globalVisited.has(k));
+      for(const kid of kids){
+        globalVisited.add(kid);
+        const childNode={iri:kid,depth:depth+1,children:[]};
+        node.children.push(childNode);
+        queue.push({iri:kid,depth:depth+1,node:childNode});
       }
-
-      saveDimsPersisted();
-      renderDimsList();
-      rebuildAndRender();
-    });
-
-    const name = document.createElement("div");
-    name.className = "dimName";
-    name.textContent = dim.label;
-
-    const right = document.createElement("div");
-    right.className = "row";
-
-    const color = document.createElement("input");
-    color.type = "color";
-    color.value = dim.color;
-    color.addEventListener("input", () => {
-      dim.color = color.value;
-      saveDimsPersisted();
-      rebuildAndRender();
-    });
-
-    left.appendChild(cb);
-    left.appendChild(name);
-    right.appendChild(color);
-    row.appendChild(left);
-    row.appendChild(right);
-    ui.dimsList.appendChild(row);
+    }
+    return rootNode;
   }
+
+  const visited=new Set([state.rootIri]);
+  const children=[];
+  for(const dimIri of dimRoots){
+    if(!state.classNodes.has(dimIri)||visited.has(dimIri)) continue;
+    children.push(buildSubBFS(dimIri,1,visited));
+  }
+  return {iri:state.rootIri,depth:0,children};
 }
 
-/* =========================
-   Tree build (dedup GLOBAL)
-   - union: usa selectedDims
-   - single: usa SEMPRE activeDim (corrige “fica em UFO”)
-========================= */
-function getMaxDepth(){ return +ui.maxDepth.value; }
-
-function buildSubtree(iri, depth, maxDepth, visited){
-  if (visited.has(iri)) return null;
-  visited.add(iri);
-
-  const kids = [...(state.subclasses.get(iri) || new Set())].filter(x=>state.classNodes.has(x));
-  const isCollapsed = state.collapsed.has(iri);
-  const hitDepthLimit = depth >= maxDepth;
-
-  let children = [];
-  if (!isCollapsed && !hitDepthLimit){
-    children = kids
-      .map(k => buildSubtree(k, depth+1, maxDepth, visited))
-      .filter(Boolean);
+/* =========================================================
+   DIM COLOR MAP
+========================================================= */
+function buildDimColorMap(){
+  const map=new Map(), mode=ui.splitMode.value;
+  for(const dim of state.dimensions){
+    if(mode==="union"&&!state.selectedDims.has(dim.iri)) continue;
+    if(mode==="single"&&dim.iri!==ui.activeDim.value) continue;
+    const q=[dim.iri];
+    while(q.length){ const i=q.shift(); if(map.has(i)) continue; map.set(i,dim.color);
+      (state.subclasses.get(i)||new Set()).forEach(c=>{ if(state.classNodes.has(c)) q.push(c); }); }
   }
-
-  return { iri, depth, _hitDepthLimit: hitDepthLimit, children };
+  map.set(state.rootIri,"#475569"); return map;
 }
 
-function buildTree(){
-  const maxDepth = getMaxDepth();
-  const mode = ui.splitMode.value;
+/* =========================================================
+   LAYOUT COMPUTATION — função pura, separada do render
+========================================================= */
+function computeLayout(treeData){
+  const layout=ui.layoutSelect.value;
+  const compact=+ui.compact.value/100;
+  const gapX=Math.round(40-28*compact), gapY=Math.round(60-38*compact);
+  const root=d3.hierarchy(treeData,d=>d.children);
+  const sample=root.descendants().slice(0,Math.min(60,root.descendants().length))
+    .map(d=>computeAutoNodeSize(d.data.iri));
+  const avgW=sample.length?sample.reduce((a,b)=>a+b.w,0)/sample.length:120;
+  const avgH=sample.length?sample.reduce((a,b)=>a+b.h,0)/sample.length:28;
+  let sepX=Math.max(70,Math.round(avgW+gapX));
+  let sepY=Math.max(60,Math.round(avgH+gapY));
+  if(layout==="a4"){ sepX+=10; sepY+=14; }
 
-  // SINGLE: sempre o dropdown manda
-  if (mode === "single"){
-    const dimIri = ui.activeDim.value;
-    if (!dimIri) return { iri: state.rootIri, depth:0, children: [] };
-    const visited = new Set([state.rootIri]);
-    const child = buildSubtree(dimIri, 1, maxDepth, visited);
-    return { iri: state.rootIri, depth:0, children: child ? [child] : [] };
-  }
-
-  // UNION
-  const selected = [...state.selectedDims];
-  if (!selected.length){
-    return { iri: state.rootIri, depth:0, children: [] };
-  }
-
-  const visited = new Set([state.rootIri]);
-  const children = [];
-  for (const dimIri of selected){
-    const sub = buildSubtree(dimIri, 1, maxDepth, visited);
-    if (sub) children.push(sub);
-  }
-  return { iri: state.rootIri, depth:0, children };
-}
-
-/* =========================
-   Tooltip (completo)
-========================= */
-function tooltipHTML(classIri){
-  const s = $rdf.sym(classIri);
-  const label = termLabel(classIri);
-  const comments = uniq(getLiterals(s, RDFS("comment")));
-  const supers = uniq([...(state.superclasses.get(classIri)||new Set())]).map(termLabel).sort();
-  const subs = uniq([...(state.subclasses.get(classIri)||new Set())]).map(termLabel).sort();
-
-  const objProps = STORE.each(null, RDF("type"), OWL("ObjectProperty")).map(x=>x.value);
-  const dtProps  = STORE.each(null, RDF("type"), OWL("DatatypeProperty")).map(x=>x.value);
-
-  const asDomainObj=[], asRangeObj=[], asDomainDt=[], asRangeDt=[];
-  for (const pIri of objProps){
-    const p = $rdf.sym(pIri);
-    const domains = STORE.each(p, RDFS("domain"), null).filter(x=>x.termType==="NamedNode").map(x=>x.value);
-    const ranges  = STORE.each(p, RDFS("range"), null).filter(x=>x.termType==="NamedNode").map(x=>x.value);
-    if (domains.includes(classIri)) asDomainObj.push(pIri);
-    if (ranges.includes(classIri)) asRangeObj.push(pIri);
-  }
-  for (const pIri of dtProps){
-    const p = $rdf.sym(pIri);
-    const domains = STORE.each(p, RDFS("domain"), null).filter(x=>x.termType==="NamedNode").map(x=>x.value);
-    const ranges  = STORE.each(p, RDFS("range"), null).map(x=>x.value);
-    if (domains.includes(classIri)) asDomainDt.push(pIri);
-    if (ranges.includes(classIri)) asRangeDt.push(pIri);
-  }
-
-  function propLine(pIri){
-    const p = $rdf.sym(pIri);
-    const plabel = getFirstLiteral(p, RDFS("label")) || shrinkIri(pIri);
-    return `${escapeHTML(plabel)} <span class="tMeta">(${escapeHTML(shrinkIri(pIri))})</span>`;
-  }
-
-  const parts = [];
-  parts.push(`<div class="tTitle">${escapeHTML(label)}</div>`);
-  parts.push(`<div class="tMeta">${escapeHTML(shrinkIri(classIri))}</div>`);
-
-  const section = (title, items) => {
-    if (!items?.length) return;
-    parts.push(`<hr/>`);
-    parts.push(`<div><b>${escapeHTML(title)}</b></div>`);
-    parts.push(items.slice(0, 18).map(it => `<div>• ${it}</div>`).join(""));
-    if (items.length > 18) parts.push(`<div class="tMeta">(+ ${items.length-18} itens)</div>`);
-  };
-
-  if (comments.length){
-    parts.push(`<hr/><div><b>Descrição</b></div>`);
-    parts.push(comments.slice(0,3).map(c=>`<div>${escapeHTML(c)}</div>`).join(""));
-  }
-
-  section("Termos acima (superclasses)", supers.map(x=>escapeHTML(x)));
-  section("Termos abaixo (subclasses diretas)", subs.map(x=>escapeHTML(x)));
-  section("Relações (ObjectProperties) onde este termo é Domain", asDomainObj.map(propLine));
-  section("Relações (ObjectProperties) onde este termo é Range", asRangeObj.map(propLine));
-  section("Atributos (DatatypeProperties) onde este termo é Domain", asDomainDt.map(propLine));
-  section("Atributos (DatatypeProperties) onde este termo é Range", asRangeDt.map(propLine));
-
-  return parts.join("");
-}
-
-/* =========================
-   Node size (compact)
-========================= */
-const measurer = document.createElement("canvas").getContext("2d");
-function measureTextWidth(text, fontPx){
-  measurer.font = `${fontPx}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-  return measurer.measureText(text).width;
-}
-function computeAutoNodeSize(iri, baseMinW=78, baseMinH=22){
-  const style = state.nodeStyles.get(iri) || {};
-  if (style.w && style.h) return {w: style.w, h: style.h};
-
-  const font = style.font ?? 12;
-  const label = termLabel(iri);
-
-  const maxLineW = 140;
-  const padX = 14;
-  const padY = 8;
-  const lineH = Math.round(font * 1.22);
-
-  let words = label.split(/\s+/).filter(Boolean);
-  let line1 = "", line2 = "";
-  for (const w of words){
-    const cand = (line1 ? line1 + " " : "") + w;
-    if (measureTextWidth(cand, font) <= maxLineW) line1 = cand;
-    else line2 = (line2 ? line2 + " " : "") + w;
-  }
-  if (!line1) line1 = label;
-
-  const w1 = measureTextWidth(line1, font);
-  const w2 = line2 ? measureTextWidth(line2, font) : 0;
-  const w = Math.max(baseMinW, Math.ceil(Math.max(w1, w2) + padX));
-  const lines = line2 ? 2 : 1;
-  const h = Math.max(baseMinH, Math.ceil(lines * lineH + padY));
-  return {w, h};
-}
-
-/* =========================
-   Layout + Render
-   IMPORTANT:
-   d3.tree => x = breadth, y = depth
-   - topdown:   screenX = x, screenY = y
-   - leftright: screenX = y, screenY = x
-========================= */
-function resize(){
-  const r = wrap.getBoundingClientRect();
-  width = r.width; height = r.height;
-  svg.attr("viewBox", `0 0 ${width} ${height}`);
-}
-window.addEventListener("resize", () => { resize(); if (state.loaded) rebuildAndRender(); });
-
-function linkPath(p1, p2, c){
-  const x1=p1.x, y1=p1.y, x2=p2.x, y2=p2.y;
-  const cx1 = x1 + (x2-x1)*c;
-  const cy1 = y1 + (y2-y1)*(1-c);
-  const cx2 = x1 + (x2-x1)*(1-c);
-  const cy2 = y1 + (y2-y1)*c;
-  return `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`;
-}
-
-function buildDimColorMap(treeRoot){
-  const dimMap = new Map();
-  for (const dim of state.dimensions){
-    const color = dim.color;
-
-    // no modo single: só pinta o ramo ativo
-    const mode = ui.splitMode.value;
-    if (mode === "single" && dim.iri !== ui.activeDim.value) continue;
-
-    // no mode union: pinta os selecionados
-    if (mode === "union" && !state.selectedDims.has(dim.iri)) continue;
-
-    (function dfs(i){
-      if (dimMap.has(i)) return;
-      dimMap.set(i, color);
-      for (const k of (state.subclasses.get(i) || new Set())){
-        if (!state.classNodes.has(k)) continue;
-        dfs(k);
-      }
-    })(dim.iri);
-  }
-  dimMap.set(state.rootIri, "#64748b");
-  return dimMap;
-}
-
-function flatten(tree){
-  const nodes=[], links=[];
-  function rec(n, parent=null){
-    nodes.push(n);
-    if (parent) links.push({source: parent, target: n});
-    for (const ch of (n.children||[])) rec(ch, n);
-  }
-  rec(tree);
-  return {nodes, links};
-}
-
-function rebuildAndRender(){
-  if (!state.loaded) return;
-  ui.depthLabel.textContent = String(getMaxDepth());
-
-  const tree = buildTree();
-  const flat = flatten(tree);
-  ui.nodeCount.textContent = flat.nodes.length;
-
-  const dimMap = buildDimColorMap(tree);
-
-  resize();
-
-  // compactness: 0..100 => 0 menos compacto, 100 mais compacto
-  const compact = +ui.compact.value / 100;
-  const gapX = Math.round(40 - 28*compact);  // siblings
-  const gapY = Math.round(56 - 36*compact);  // depth
-
-  const sample = flat.nodes.slice(0, Math.min(80, flat.nodes.length)).map(n => computeAutoNodeSize(n.iri));
-  const avgW = sample.length ? sample.reduce((a,b)=>a+b.w,0)/sample.length : 140;
-  const avgH = sample.length ? sample.reduce((a,b)=>a+b.h,0)/sample.length : 28;
-
-  // sepX: distância horizontal entre irmãos (x)
-  // sepY: distância vertical entre níveis (y)
-  // (para ficar compacto, usamos o mínimo baseado no tamanho médio)
-  let sepX = Math.max(70, Math.round(avgW + gapX));
-  let sepY = Math.max(60, Math.round(avgH + gapY));
-
-  // A4: privilegia vertical, mas ainda compacto
-  if (ui.layoutSelect.value === "a4"){
-    sepX = Math.max(70, Math.round(avgW + gapX + 10));
-    sepY = Math.max(70, Math.round(avgH + gapY + 14));
-  }
-
-  const root = d3.hierarchy(tree, d=>d.children);
-
-  // Calcula layout base
-  if (ui.layoutSelect.value === "radial"){
-    const radius = Math.min(width,height)/2 - 80;
-    d3.tree().size([2*Math.PI, Math.max(120, radius)])(root);
-    // converte polar => cartesiano
-    const cx = width/2, cy = height/2;
-    root.descendants().forEach(d=>{
-      const r=d.y, a=d.x;
-      d.sx = cx + r*Math.cos(a - Math.PI/2);
-      d.sy = cy + r*Math.sin(a - Math.PI/2);
-    });
+  if(layout==="radial"){
+    const radius=Math.min(viewW,viewH)/2-80;
+    d3.tree().size([2*Math.PI,Math.max(120,radius)])(root);
+    const cx=viewW/2,cy=viewH/2;
+    root.descendants().forEach(d=>{ const r=d.y,a=d.x; d.x=cx+r*Math.cos(a-Math.PI/2); d.y=cy+r*Math.sin(a-Math.PI/2); });
   } else {
-    d3.tree().nodeSize([sepX, sepY])(root);
-
-    const padTop = 40, padLeft = 40;
-    const cx = width/2, cy = height/2;
-
-    if (ui.layoutSelect.value === "leftright"){
-      // esquerda -> direita: depth (y) vira X, breadth (x) vira Y
-      root.descendants().forEach(d=>{
-        d.sx = padLeft + d.y;
-        d.sy = cy + d.x;
-      });
-    } else {
-      // topdown / a4: breadth (x) vira X, depth (y) vira Y
-      root.descendants().forEach(d=>{
-        d.sx = cx + d.x;
-        d.sy = padTop + d.y;
-      });
-    }
+    d3.tree().nodeSize([sepX,sepY])(root);
+    const cx=viewW/2,cy=viewH/2;
+    root.descendants().forEach(d=>{
+      if(layout==="leftright"){ const tx=d.x; d.x=40+d.y; d.y=cy+tx; }
+      else { d.x=cx+d.x; d.y=40+d.y; }
+    });
   }
 
-  // aplica posições manuais
-  const lk = ui.layoutSelect.value;
+  // Posições manuais (drag)
   root.descendants().forEach(d=>{
-    const key = `${lk}|${d.data.iri}`;
-    if (state.nodePositions.has(key)){
-      const p = state.nodePositions.get(key);
-      d.sx = p.x; d.sy = p.y;
-    }
-    // padroniza campos usados no render
-    d.x = d.sx;
-    d.y = d.sy;
+    const key=`${layout}|${d.data.iri}`;
+    if(state.nodePositions.has(key)){ const p=state.nodePositions.get(key); d.x=p.x; d.y=p.y; }
   });
+  return root;
+}
 
-  // links
-  const curve = +ui.edgeCurve.value / 100;
-  const strokeW = +ui.edgeWidth.value;
-  const edgeCol = ui.edgeColor.value;
+/* =========================================================
+   TOOLTIP — memoizado por IRI
+   FIX: recalcula apenas na primeira chamada, invalida ao editar/mudar tema
+========================================================= */
+function getTooltipHTML(iri){
+  if(state.tooltipCache.has(iri)) return state.tooltipCache.get(iri);
+  const s=$rdf.sym(iri);
+  const label=termLabel(iri);
+  const comments=uniq(getLiterals(s,RDFS("comment")));
+  const supers=uniq([...(state.superclasses.get(iri)||new Set())]).map(termLabel).sort();
+  const subs=uniq([...(state.subclasses.get(iri)||new Set())]).map(termLabel).sort();
+  const objProps=STORE.each(null,RDF("type"),OWL("ObjectProperty")).map(x=>x.value);
+  const dtProps =STORE.each(null,RDF("type"),OWL("DatatypeProperty")).map(x=>x.value);
+  function getConn(props){ const dom=[],rng=[];
+    props.forEach(pIri=>{ const p=$rdf.sym(pIri);
+      STORE.each(p,RDFS("domain"),null).filter(x=>x.termType==="NamedNode").map(x=>x.value).forEach(v=>{ if(v===iri) dom.push(pIri); });
+      STORE.each(p,RDFS("range"),null).filter(x=>x.termType==="NamedNode").map(x=>x.value).forEach(v=>{ if(v===iri) rng.push(pIri); });
+    }); return {dom,rng}; }
+  const {dom:dObj,rng:rObj}=getConn(objProps);
+  const {dom:dDt}=getConn(dtProps);
+  function pLine(pIri){ const p=$rdf.sym(pIri); const pl=getFirstLiteral(p,RDFS("label"))||shrinkIri(pIri);
+    return `<div class="t-item">${escapeHTML(pl)}</div>`; }
+  const parts=[`<div class="t-title">${escapeHTML(label)}</div>`,`<div class="t-iri">${escapeHTML(shrinkIri(iri))}</div>`];
+  const sec=(title,items)=>{ if(!items?.length) return; parts.push(`<hr/><div class="t-sec">${escapeHTML(title)}</div>`);
+    items.slice(0,12).forEach(it=>parts.push(it));
+    if(items.length>12) parts.push(`<div style="color:var(--muted);font-size:10px">+${items.length-12}</div>`); };
+  if(comments.length){ parts.push(`<hr/><div class="t-sec">Descrição</div>`);
+    comments.slice(0,2).forEach(c=>parts.push(`<div style="font-size:11px">${escapeHTML(c)}</div>`)); }
+  sec("Superclasses",supers.map(x=>`<div class="t-item">${escapeHTML(x)}</div>`));
+  sec("Subclasses",subs.map(x=>`<div class="t-item">${escapeHTML(x)}</div>`));
+  sec("ObjectProp · Domain",dObj.map(pLine)); sec("ObjectProp · Range",rObj.map(pLine));
+  sec("DatatypeProp · Domain",dDt.map(pLine));
+  const html=parts.join(""); state.tooltipCache.set(iri,html); return html;
+}
 
-  const linksData = root.links();
-  ui.edgeCount.textContent = linksData.length;
+/* =========================================================
+   RENDER — recebe d3Root pré-calculado
+========================================================= */
+function renderGraph(d3Root){
+  if(!d3Root) return;
+  _lastD3Root=d3Root;
+  const layout=ui.layoutSelect.value;
+  const curve=+ui.edgeCurve.value/100, strokeW=+ui.edgeWidth.value, edgeCol=ui.edgeColor.value;
+  const dimMap=buildDimColorMap();
+  const allNodes=d3Root.descendants(), allLinks=d3Root.links();
+  ui.nodeCount.textContent=allNodes.length; ui.edgeCount.textContent=allLinks.length;
 
-  const linkSel = gLinks.selectAll("path.link")
-    .data(linksData, d => d.target.data.iri);
+  function lp(s,t){ const dx=t.x-s.x,dy=t.y-s.y;
+    return `M${s.x},${s.y} C${s.x+dx*curve},${s.y+dy*(1-curve)} ${s.x+dx*(1-curve)},${s.y+dy*curve} ${t.x},${t.y}`; }
 
+  // LINKS
+  const linkSel=gLinks.selectAll("path.link").data(allLinks,d=>d.target.data.iri);
   linkSel.exit().remove();
+  linkSel.enter().append("path").attr("class","link").merge(linkSel)
+    .attr("stroke",edgeCol).attr("stroke-width",strokeW).attr("d",d=>lp(d.source,d.target));
 
-  linkSel.enter().append("path")
-    .attr("class","link")
-    .merge(linkSel)
-    .attr("stroke", edgeCol)
-    .attr("stroke-width", strokeW)
-    .attr("d", d => linkPath(d.source, d.target, curve));
-
-  // nodes
-  const nodeSel = gNodes.selectAll("g.node")
-    .data(root.descendants(), d => d.data.iri);
-
+  // NODES
+  const nodeSel=gNodes.selectAll("g.node").data(allNodes,d=>d.data.iri);
   nodeSel.exit().remove();
-
-  const nodeEnter = nodeSel.enter()
-    .append("g")
-    .attr("class","node")
-    .style("cursor","pointer")
-    .on("mousemove", (event, d) => showTooltip(event, d.data.iri))
-    .on("mouseleave", hideTooltip)
-    .on("click", (event, d) => {
-      event.stopPropagation();
-      const iri = d.data.iri;
-      if (event.altKey) toggleCollapse(iri);
-      else selectNode(iri);
+  const nodeEnter=nodeSel.enter().append("g").attr("class","node").style("cursor","pointer")
+    .on("mousemove",(event,d)=>{
+      const r=wrap.getBoundingClientRect();
+      ui.tooltip.innerHTML=getTooltipHTML(d.data.iri); // FIX: memoizado
+      ui.tooltip.style.cssText=`display:block;left:${event.clientX-r.left+14}px;top:${event.clientY-r.top+14}px;`;
     })
+    .on("mouseleave",()=>{ ui.tooltip.style.display="none"; })
+    .on("click",(event,d)=>{ event.stopPropagation(); if(event.altKey) toggleCollapse(d.data.iri); else selectNode(d.data.iri); })
     .call(d3.drag()
-      .on("start", (event) => event.sourceEvent?.stopPropagation())
-      .on("drag", (event, d) => {
-        d.x = event.x; d.y = event.y;
-        const key = `${ui.layoutSelect.value}|${d.data.iri}`;
-        state.nodePositions.set(key, {x:d.x, y:d.y});
-        savePersisted();
+      .on("start",e=>e.sourceEvent?.stopPropagation())
+      .on("drag",(event,d)=>{
+        d.x=event.x; d.y=event.y;
+        state.nodePositions.set(`${layout}|${d.data.iri}`,{x:d.x,y:d.y}); savePersisted();
+        d3.select(event.sourceEvent.target.closest("g.node")).attr("transform",`translate(${d.x},${d.y})`);
+        gLinks.selectAll("path.link").attr("d",l=>lp(l.source,l.target));
+      }));
+  nodeEnter.append("rect"); nodeEnter.append("text").attr("text-anchor","middle");
 
-        d3.select(event.sourceEvent.target.closest("g.node"))
-          .attr("transform", `translate(${d.x},${d.y})`);
+  const nm=nodeEnter.merge(nodeSel)
+    .attr("transform",d=>`translate(${d.x},${d.y})`)
+    .classed("selected",d=>d.data.iri===state.selectedIri);
 
-        gLinks.selectAll("path.link")
-          .attr("d", l => linkPath(l.source, l.target, curve));
-      })
-    );
-
-  nodeEnter.append("rect");
-  nodeEnter.append("text").attr("text-anchor","middle");
-
-  const nodeMerge = nodeEnter.merge(nodeSel)
-    .attr("transform", d => `translate(${d.x},${d.y})`)
-    .classed("selected", d => d.data.iri === state.selectedIri);
-
-  nodeMerge.select("rect")
-    .each(function(d){
-      const iri = d.data.iri;
-      const style = state.nodeStyles.get(iri) || {};
-      const auto = computeAutoNodeSize(iri);
-
-      const w = style.w ?? auto.w;
-      const h = style.h ?? auto.h;
-      const r = style.radius ?? 10;
-
-      d3.select(this)
-        .attr("width", w).attr("height", h)
-        .attr("x", -w/2).attr("y", -h/2)
-        .attr("rx", r).attr("ry", r)
-        .attr("fill", style.fill ?? (dimMap.get(iri) || "#64748b"))
-        .attr("opacity", iri === state.rootIri ? 0.45 : ((style.opacity ?? 92)/100))
-        .attr("stroke", style.stroke ?? getComputedStyle(document.body).getPropertyValue("--nodeStroke"));
-    });
-
-  nodeMerge.select("text")
-    .each(function(d){
-      const iri = d.data.iri;
-      const style = state.nodeStyles.get(iri) || {};
-      const font = style.font ?? 12;
-      const label = termLabel(iri);
-
-      // IMPORTANTE: sempre limpar antes (evita duplicação)
-      const text = d3.select(this);
-      text.selectAll("*").remove();
-      text.style("font-size", font + "px");
-
-      const auto = computeAutoNodeSize(iri);
-      const maxLineW = Math.max(95, (style.w ?? auto.w) - 16);
-
-      const words = label.split(/\s+/).filter(Boolean);
-      let line1="", line2="";
-      for (const w of words){
-        const cand = (line1 ? line1+" " : "") + w;
-        if (measureTextWidth(cand, font) <= maxLineW) line1 = cand;
-        else line2 = (line2 ? line2+" " : "") + w;
-      }
-      if (!line1) line1 = label;
-
-      // corta line2 se precisar
-      if (line2 && measureTextWidth(line2, font) > maxLineW){
-        while (line2.length>0 && measureTextWidth(line2+"…", font) > maxLineW) line2 = line2.slice(0,-1);
-        line2 = line2.trim()+"…";
-      }
-
-      if (!line2){
-        text.attr("dominant-baseline","middle");
-        text.append("tspan").attr("x",0).attr("dy","0em").text(line1);
-      }else{
-        text.attr("dominant-baseline","middle");
-        text.append("tspan").attr("x",0).attr("dy","-0.25em").text(line1);
-        text.append("tspan").attr("x",0).attr("dy","1.25em").text(line2);
-      }
-    });
-
-  ui.selInfo.textContent = state.selectedIri ? termLabel(state.selectedIri) : "—";
-
-  // auto fit 1ª vez
-  if (!rebuildAndRender._didFit){
-    fitToView();
-    rebuildAndRender._didFit = true;
-  }
-}
-
-/* =========================
-   Tooltip
-========================= */
-function showTooltip(evt, iri){
-  ui.tooltip.style.display = "block";
-  ui.tooltip.innerHTML = tooltipHTML(iri);
-  const pad = 14;
-  const rect = wrap.getBoundingClientRect();
-  ui.tooltip.style.left = (evt.clientX - rect.left + pad) + "px";
-  ui.tooltip.style.top  = (evt.clientY - rect.top + pad) + "px";
-}
-function hideTooltip(){ ui.tooltip.style.display = "none"; }
-
-/* =========================
-   Collapse / Select / Editor
-========================= */
-function toggleCollapse(iri){
-  if (state.collapsed.has(iri)) state.collapsed.delete(iri);
-  else state.collapsed.add(iri);
-  savePersisted();
-  rebuildAndRender();
-}
-function selectNode(iri){
-  state.selectedIri = iri;
-  openEditorFor(iri);
-  rebuildAndRender();
-}
-function openEditorFor(iri){
-  ui.editorCard.style.opacity = "1";
-  ui.editorHint.textContent = shrinkIri(iri);
-
-  ui.edLabel.disabled = false;
-  ui.edFill.disabled = false;
-  ui.edStroke.disabled = false;
-  ui.edOpacity.disabled = false;
-  ui.edW.disabled = false;
-  ui.edH.disabled = false;
-  ui.edFont.disabled = false;
-  ui.edRadius.disabled = false;
-  ui.btnEditorApply.disabled = false;
-  ui.btnEditorReset.disabled = false;
-
-  const style = state.nodeStyles.get(iri) || {};
-  const auto = computeAutoNodeSize(iri);
-
-  // label salvo tem prioridade
-  const base = state.customLabels.get(iri) || state.classNodes.get(iri)?.label || shrinkIri(iri);
-  ui.edLabel.value = base;
-
-  ui.edFill.value = style.fill || "#64748b";
-  ui.edStroke.value = (style.stroke && style.stroke.startsWith("#")) ? style.stroke : "#111827";
-  ui.edOpacity.value = style.opacity ?? 92;
-  ui.edW.value = style.w ?? auto.w;
-  ui.edH.value = style.h ?? auto.h;
-  ui.edFont.value = style.font ?? 12;
-  ui.edRadius.value = style.radius ?? 10;
-}
-
-ui.btnEditorApply.addEventListener("click", () => {
-  const iri = state.selectedIri;
-  if (!iri) return;
-
-  const newLabel = ui.edLabel.value.trim();
-  if (newLabel) state.customLabels.set(iri, newLabel);
-  else state.customLabels.delete(iri);
-
-  state.nodeStyles.set(iri, {
-    fill: ui.edFill.value,
-    stroke: ui.edStroke.value,
-    opacity: +ui.edOpacity.value,
-    w: +ui.edW.value,
-    h: +ui.edH.value,
-    font: +ui.edFont.value,
-    radius: +ui.edRadius.value
+  nm.select("rect").each(function(d){
+    const iri=d.data.iri, st=state.nodeStyles.get(iri)||{}, auto=computeAutoNodeSize(iri);
+    const w=st.w??auto.w, h=st.h??auto.h, r=st.radius??8;
+    d3.select(this).attr("width",w).attr("height",h).attr("x",-w/2).attr("y",-h/2)
+      .attr("rx",r).attr("ry",r).attr("fill",st.fill??(dimMap.get(iri)||"#475569"))
+      .attr("opacity",iri===state.rootIri?0.4:((st.opacity??92)/100))
+      .attr("stroke",st.stroke||"var(--node-stroke)");
   });
 
-  savePersisted();
-  rebuildAndRender();
-});
+  // FIX: limpa tspans antes de renderizar
+  nm.select("text").each(function(d){
+    const iri=d.data.iri, st=state.nodeStyles.get(iri)||{};
+    const font=st.font??12, auto=computeAutoNodeSize(iri);
+    const maxLW=Math.max(90,(st.w??auto.w)-16), label=termLabel(iri);
+    const text=d3.select(this);
+    text.selectAll("*").remove(); // FIX: limpa antes de re-render
+    text.style("font-size",font+"px").style("font-family","var(--font-display)");
+    const words=label.split(/\s+/).filter(Boolean); let l1="",l2="";
+    for(const w of words){ const c=(l1?l1+" ":"")+w; if(measureTextWidth(c,font)<=maxLW) l1=c; else l2=(l2?l2+" ":"")+w; }
+    if(!l1) l1=label;
+    if(l2&&measureTextWidth(l2,font)>maxLW){ while(l2.length&&measureTextWidth(l2+"…",font)>maxLW) l2=l2.slice(0,-1); l2=l2.trim()+"…"; }
+    text.attr("dominant-baseline","middle");
+    if(!l2){ text.append("tspan").attr("x",0).attr("dy","0em").text(l1); }
+    else { text.append("tspan").attr("x",0).attr("dy","-0.3em").text(l1);
+           text.append("tspan").attr("x",0).attr("dy","1.35em").text(l2); }
+  });
+}
 
-ui.btnEditorReset.addEventListener("click", () => {
-  const iri = state.selectedIri;
-  if (!iri) return;
-  state.customLabels.delete(iri);
-  state.nodeStyles.delete(iri);
-  savePersisted();
-  openEditorFor(iri);
-  rebuildAndRender();
-});
+/* =========================================================
+   REBUILD AND RENDER — orquestra as 3 fases
+========================================================= */
+function rebuildAndRender(){
+  if(!state.loaded) return;
+  ui.depthLabel.textContent=ui.maxDepth.value;
+  const treeData=buildTreeData();        // Fase 1: dados
+  const d3Root=computeLayout(treeData);  // Fase 2: layout
+  renderGraph(d3Root);                   // Fase 3: DOM
+  // FIX: state.didFit em vez de _didFit na função
+  if(!state.didFit){ fitToView(); state.didFit=true; }
+}
 
-/* =========================
-   Fit / Reset
-========================= */
+/* =========================================================
+   FIT / RESET
+========================================================= */
 function getContentBBox(){
-  // getBBox não inclui o transform do próprio gRoot (ótimo: bbox em coords “base”)
-  try{
-    const bb = gRoot.node().getBBox();
-    return {x:bb.x, y:bb.y, w:bb.width, h:bb.height};
-  }catch(e){
-    return {x:0,y:0,w:width,h:height};
-  }
+  try{ const b=gRoot.node().getBBox(); return {x:b.x,y:b.y,w:b.width,h:b.height}; }
+  catch{ return {x:0,y:0,w:viewW,h:viewH}; }
 }
-
 function fitToView(){
-  const bb = getContentBBox();
-  if (!isFinite(bb.w) || !isFinite(bb.h) || bb.w<=0 || bb.h<=0) return;
-
-  const pad = 60;
-  const scale = Math.min(0.95, Math.max(0.15, Math.min(width/(bb.w+pad), height/(bb.h+pad))));
-  const tx = (width/2) - scale * (bb.x + bb.w/2);
-  const ty = (height/2) - scale * (bb.y + bb.h/2);
-
-  svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+  const bb=getContentBBox(); if(!isFinite(bb.w)||bb.w<=0) return;
+  const pad=60, s=Math.min(0.95,Math.max(0.12,Math.min(viewW/(bb.w+pad),(viewH-52)/(bb.h+pad))));
+  svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity
+    .translate(viewW/2-s*(bb.x+bb.w/2),viewH/2-s*(bb.y+bb.h/2)).scale(s));
 }
-
 function resetAll(){
   clearPersisted();
-  state.customLabels.clear();
-  state.collapsed.clear();
-  state.nodePositions.clear();
-  state.nodeStyles.clear();
-  state.selectedIri = null;
-
-  ui.selInfo.textContent = "—";
-  ui.editorCard.style.opacity = "0.55";
-  ui.editorHint.textContent = "Clique em um nó para editar.";
-  rebuildAndRender._didFit = false;
-
-  buildDimensions();
-  rebuildAndRender();
+  state.customLabels.clear(); state.collapsed.clear();
+  state.nodePositions.clear(); state.nodeStyles.clear();
+  state.tooltipCache.clear(); state.selectedIri=null; state.didFit=false;
+  ui.selPill.style.display="none";
+  ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
+  ui.editorHint.textContent="Clique em um nó para editar.";
+  buildDimensions(); rebuildAndRender();
 }
 
-/* =========================
-   Search
-========================= */
-function buildSearchIndex(){
-  state.searchIndex = [...state.classNodes.keys()].map(iri => ({
-    iri,
-    label: termLabel(iri),
-    iriShort: shrinkIri(iri)
-  })).sort((a,b)=>a.label.localeCompare(b.label,"pt-BR"));
+/* =========================================================
+   COLLAPSE / SELECT / EDITOR
+========================================================= */
+function toggleCollapse(iri){ if(state.collapsed.has(iri)) state.collapsed.delete(iri); else state.collapsed.add(iri); savePersisted(); rebuildAndRender(); }
+function selectNode(iri){ state.selectedIri=iri; ui.selPill.style.display=""; ui.selInfo.textContent=termLabel(iri); openEditorFor(iri); rebuildAndRender(); }
+function openEditorFor(iri){
+  ui.editorCard.classList.remove("locked");
+  ui.editorHint.textContent=shrinkIri(iri);
+  ui.editorFields.style.display="flex"; ui.editorFields.style.flexDirection="column"; ui.editorFields.style.gap="6px";
+  const st=state.nodeStyles.get(iri)||{}, auto=computeAutoNodeSize(iri);
+  ui.edLabel.value=state.customLabels.get(iri)||state.classNodes.get(iri)?.label||shrinkIri(iri);
+  ui.edFill.value=st.fill||"#334155";
+  ui.edStroke.value=(st.stroke&&st.stroke.startsWith("#"))?st.stroke:"#111827";
+  ui.edOpacity.value=st.opacity??92;
+  ui.edW.value=st.w??auto.w; ui.edWVal.textContent=ui.edW.value;
+  ui.edH.value=st.h??auto.h; ui.edHVal.textContent=ui.edH.value;
+  ui.edFont.value=st.font??12; ui.edFontVal.textContent=ui.edFont.value;
+  ui.edRadius.value=st.radius??8; ui.edRadiusVal.textContent=ui.edRadius.value;
 }
+ui.btnEditorApply.addEventListener("click",()=>{
+  const iri=state.selectedIri; if(!iri) return;
+  const lbl=ui.edLabel.value.trim(); if(lbl) state.customLabels.set(iri,lbl); else state.customLabels.delete(iri);
+  state.nodeStyles.set(iri,{fill:ui.edFill.value,stroke:ui.edStroke.value,opacity:+ui.edOpacity.value,w:+ui.edW.value,h:+ui.edH.value,font:+ui.edFont.value,radius:+ui.edRadius.value});
+  state.tooltipCache.delete(iri); _mCache.clear(); // invalida cache de medição ao mudar font
+  savePersisted(); rebuildAndRender();
+});
+ui.btnEditorReset.addEventListener("click",()=>{
+  const iri=state.selectedIri; if(!iri) return;
+  state.customLabels.delete(iri); state.nodeStyles.delete(iri); state.tooltipCache.delete(iri);
+  savePersisted(); openEditorFor(iri); rebuildAndRender();
+});
+
+/* =========================================================
+   SEARCH
+========================================================= */
+function buildSearchIndex(){ state.searchIndex=[...state.classNodes.keys()]
+  .map(iri=>({iri,label:termLabel(iri),iriShort:shrinkIri(iri)}))
+  .sort((a,b)=>a.label.localeCompare(b.label,"pt-BR")); }
 
 function renderSearchResults(items){
-  const box = ui.searchResults;
-  box.innerHTML = "";
-  if (!items.length){
-    box.innerHTML = `<div class="searchItem"><div class="small">Nenhum resultado</div></div>`;
-    box.style.display = "block";
-    return;
-  }
-  for (const it of items.slice(0, 30)){
-    const row = document.createElement("div");
-    row.className = "searchItem";
-    row.innerHTML = `<div>${escapeHTML(it.label)}</div><div class="tag">${escapeHTML(it.iriShort)}</div>`;
-    row.addEventListener("click", () => {
-      selectNode(it.iri);
-      zoomToNode(it.iri);
-    });
-    box.appendChild(row);
-  }
-  box.style.display = "block";
+  const box=ui.searchResults; box.innerHTML="";
+  if(!items.length){ box.innerHTML=`<div class="search-item"><span class="s-label" style="color:var(--muted)">Nenhum resultado</span></div>`; }
+  else { items.slice(0,40).forEach(it=>{
+    const r=document.createElement("div"); r.className="search-item";
+    r.innerHTML=`<span class="s-label">${escapeHTML(it.label)}</span><span class="s-tag">${escapeHTML(it.iriShort)}</span>`;
+    r.addEventListener("click",()=>{ selectNode(it.iri); zoomToNode(it.iri); }); box.appendChild(r); }); }
+  box.style.display="block";
 }
-
 function zoomToNode(iri){
-  const node = gNodes.selectAll("g.node").filter(d => d.data.iri === iri).node();
-  if (!node) return;
-
-  const box = node.getBBox();
-  const tr = node.getCTM();
-  const x = tr.e + box.x + box.width/2;
-  const y = tr.f + box.y + box.height/2;
-
-  const current = d3.zoomTransform(svg.node());
-  const scale = Math.max(0.7, Math.min(2.4, current.k));
-  const tx = (width/2) - scale * x;
-  const ty = (height/2) - scale * y;
-
-  svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+  const node=gNodes.selectAll("g.node").filter(d=>d.data.iri===iri).node(); if(!node) return;
+  const tr=node.getCTM(), bb=node.getBBox();
+  const x=tr.e+bb.x+bb.width/2, y=tr.f+bb.y+bb.height/2;
+  const k=Math.max(0.8,Math.min(2.5,d3.zoomTransform(svgEl).k));
+  svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity.translate(viewW/2-k*x,viewH/2-k*y).scale(k));
 }
 
-/* =========================
-   Export (SVG + PNG) — EXPORTA A ÁRVORE INTEIRA
-========================= */
-function downloadBlob(blob, filename){
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
+/* =========================================================
+   EXPORT — FIX: PX_RATIO como constante configurável
+========================================================= */
+const EXPORT_PX_RATIO = 2; // Mude para 3-4 para qualidade de impressão
+
+function downloadBlob(blob,filename){ const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
+function buildExportClone(){
+  const bb=getContentBBox(), m=48;
+  const w=Math.max(10,bb.w+m*2), h=Math.max(10,bb.h+m*2);
+  const clone=svgEl.cloneNode(true);
+  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  clone.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  const bg=document.createElementNS("http://www.w3.org/2000/svg","rect");
+  bg.setAttribute("x",0); bg.setAttribute("y",0); bg.setAttribute("width",w); bg.setAttribute("height",h);
+  bg.setAttribute("fill",getComputedStyle(document.body).getPropertyValue("--bg").trim()||"#07090f");
+  clone.insertBefore(bg,clone.firstChild);
+  const g=clone.querySelector("g.gRoot"); if(g) g.setAttribute("transform",`translate(${m-bb.x},${m-bb.y})`);
+  return {clone,w,h};
 }
-
-function exportSVG(){
-  const bb = getContentBBox();
-  const margin = 40;
-  const w = Math.max(10, bb.w + margin*2);
-  const h = Math.max(10, bb.h + margin*2);
-
-  const clone = svg.node().cloneNode(true);
-  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
-
-  // fundo
-  const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  bg.setAttribute("x", 0); bg.setAttribute("y", 0);
-  bg.setAttribute("width", w); bg.setAttribute("height", h);
-  bg.setAttribute("fill", getComputedStyle(document.body).getPropertyValue("--bg").trim());
-  clone.insertBefore(bg, clone.firstChild);
-
-  // reposiciona o gRoot (remove zoom/pan)
-  const g = clone.querySelector("g.gRoot");
-  if (g){
-    g.setAttribute("transform", `translate(${margin - bb.x}, ${margin - bb.y})`);
-  }
-
-  const serializer = new XMLSerializer();
-  const text = serializer.serializeToString(clone);
-  downloadBlob(new Blob([text], {type:"image/svg+xml;charset=utf-8"}), `taxonomia_${ui.layoutSelect.value}.svg`);
-}
-
+function exportSVG(){ const {clone}=buildExportClone();
+  downloadBlob(new Blob([new XMLSerializer().serializeToString(clone)],{type:"image/svg+xml;charset=utf-8"}),`ontohate_${ui.layoutSelect.value}.svg`); }
 function exportPNG(){
-  const bb = getContentBBox();
-  const margin = 40;
-  const w = Math.max(10, bb.w + margin*2);
-  const h = Math.max(10, bb.h + margin*2);
-
-  const clone = svg.node().cloneNode(true);
-  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
-
-  const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  bg.setAttribute("x", 0); bg.setAttribute("y", 0);
-  bg.setAttribute("width", w); bg.setAttribute("height", h);
-  bg.setAttribute("fill", getComputedStyle(document.body).getPropertyValue("--bg").trim());
-  clone.insertBefore(bg, clone.firstChild);
-
-  const g = clone.querySelector("g.gRoot");
-  if (g){
-    g.setAttribute("transform", `translate(${margin - bb.x}, ${margin - bb.y})`);
-  }
-
-  const serializer = new XMLSerializer();
-  const svgText = serializer.serializeToString(clone);
-  const svgBlob = new Blob([svgText], {type:"image/svg+xml;charset=utf-8"});
-  const url = URL.createObjectURL(svgBlob);
-
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement("canvas");
-    const scale = 2; // qualidade
-    canvas.width = Math.ceil(w * scale);
-    canvas.height = Math.ceil(h * scale);
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(scale,0,0,scale,0,0);
-    ctx.drawImage(img, 0, 0);
-    canvas.toBlob((pngBlob) => {
-      downloadBlob(pngBlob, `taxonomia_${ui.layoutSelect.value}.png`);
-      URL.revokeObjectURL(url);
-    }, "image/png");
+  const {clone,w,h}=buildExportClone();
+  const url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)],{type:"image/svg+xml;charset=utf-8"}));
+  const img=new Image();
+  img.onload=()=>{
+    const c=document.createElement("canvas"); c.width=Math.ceil(w*EXPORT_PX_RATIO); c.height=Math.ceil(h*EXPORT_PX_RATIO);
+    const ctx=c.getContext("2d"); ctx.setTransform(EXPORT_PX_RATIO,0,0,EXPORT_PX_RATIO,0,0); ctx.drawImage(img,0,0);
+    c.toBlob(b=>{ downloadBlob(b,`ontohate_${ui.layoutSelect.value}.png`); URL.revokeObjectURL(url); },"image/png");
   };
-  img.onerror = () => { URL.revokeObjectURL(url); alert("Falha ao exportar PNG. Use SVG."); };
-  img.src = url;
+  img.onerror=()=>{ URL.revokeObjectURL(url); alert("Falha ao exportar PNG. Tente SVG."); };
+  img.src=url;
 }
 
-/* =========================
-   Events
-========================= */
-ui.btnLoad.addEventListener("click", async () => {
-  try{
-    loadPersisted();
-    await loadData(ui.dataUrl.value.trim());
-  }catch(e){
-    setStatus("erro", false);
-    ui.graphInfo.textContent = "erro";
-    alert(e.message || String(e));
-  }
+/* =========================================================
+   EVENT BINDINGS
+========================================================= */
+ui.btnLoad.addEventListener("click",async()=>{
+  try{ loadPersisted(); await loadData(ui.dataUrl.value.trim()); }
+  catch(e){ setStatus("erro","error"); setLoading(false); alert(e.message||String(e)); }
 });
-
-ui.btnFit.addEventListener("click", fitToView);
-ui.btnReset.addEventListener("click", resetAll);
-
-ui.btnAll.addEventListener("click", () => {
-  state.dimensions.forEach(d => state.selectedDims.add(d.iri));
-  saveDimsPersisted();
-  renderDimsList();
+ui.btnFit.addEventListener("click",fitToView);
+ui.btnReset.addEventListener("click",resetAll);
+ui.btnAll.addEventListener("click",()=>{ state.dimensions.forEach(d=>state.selectedDims.add(d.iri)); saveDimsPersisted(); renderDimsList(); rebuildAndRender(); });
+ui.btnNone.addEventListener("click",()=>{ state.selectedDims.clear(); saveDimsPersisted(); renderDimsList(); rebuildAndRender(); });
+ui.splitMode.addEventListener("change",rebuildAndRender);
+ui.activeDim.addEventListener("change",()=>{
+  if(ui.splitMode.value==="single"){ state.selectedDims.add(ui.activeDim.value); saveDimsPersisted(); renderDimsList(); }
   rebuildAndRender();
 });
-ui.btnNone.addEventListener("click", () => {
-  state.selectedDims.clear();
-  saveDimsPersisted();
-  renderDimsList();
-  rebuildAndRender();
+ui.maxDepth.addEventListener("input",rebuildAndRender);
+ui.btnMoreDepth.addEventListener("click",()=>{ ui.maxDepth.value=String(Math.min(+ui.maxDepth.max,+ui.maxDepth.value+1)); rebuildAndRender(); });
+ui.compact.addEventListener("input",rebuildAndRender);
+ui.layoutSelect.addEventListener("change",()=>{ state.didFit=false; rebuildAndRender(); });
+ui.edgeCurve.addEventListener("input",rebuildAndRender);
+ui.edgeWidth.addEventListener("input",rebuildAndRender);
+ui.edgeColor.addEventListener("input",rebuildAndRender);
+ui.btnExportSVG.addEventListener("click",exportSVG);
+ui.btnExportPNG.addEventListener("click",exportPNG);
+ui.persistSelect.addEventListener("change",()=>{ if(!persistEnabled()) clearPersisted(); else savePersisted(); });
+ui.searchInput.addEventListener("input",()=>{
+  const q=ui.searchInput.value.trim().toLowerCase();
+  if(!q){ ui.searchResults.style.display="none"; return; }
+  renderSearchResults(state.searchIndex.filter(it=>it.label.toLowerCase().includes(q)||it.iriShort.toLowerCase().includes(q)));
+});
+ui.btnSearchClear.addEventListener("click",()=>{ ui.searchInput.value=""; ui.searchResults.style.display="none"; });
+ui.btnSearchShowAll.addEventListener("click",()=>renderSearchResults(state.searchIndex));
+svg.on("click",()=>{
+  state.selectedIri=null; ui.selPill.style.display="none";
+  ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
+  ui.editorHint.textContent="Clique em um nó para editar.";
+  rebuildAndRender(); ui.tooltip.style.display="none";
 });
 
-// Modo
-ui.splitMode.addEventListener("change", () => {
-  // no single, o dropdown manda (não precisa “forçar” check)
-  rebuildAndRender();
-});
-
-// Active dim (fix definitivo: dropdown manda no single)
-ui.activeDim.addEventListener("change", () => {
-  if (ui.splitMode.value === "single"){
-    // opcional: marca no checklist para refletir visualmente
-    state.selectedDims.add(ui.activeDim.value);
-    saveDimsPersisted();
-    renderDimsList();
-  }
-  rebuildAndRender();
-});
-
-ui.maxDepth.addEventListener("input", rebuildAndRender);
-ui.btnMoreDepth.addEventListener("click", () => {
-  ui.maxDepth.value = String(Math.min(+ui.maxDepth.max, +ui.maxDepth.value + 1));
-  rebuildAndRender();
-});
-
-ui.compact.addEventListener("input", rebuildAndRender);
-
-ui.layoutSelect.addEventListener("change", () => { rebuildAndRender._didFit=false; rebuildAndRender(); });
-ui.edgeCurve.addEventListener("input", rebuildAndRender);
-ui.edgeWidth.addEventListener("input", rebuildAndRender);
-ui.edgeColor.addEventListener("input", rebuildAndRender);
-
-ui.btnExportSVG.addEventListener("click", exportSVG);
-ui.btnExportPNG.addEventListener("click", exportPNG);
-
-ui.persistSelect.addEventListener("change", () => {
-  if (!persistEnabled()) clearPersisted();
-  else savePersisted();
-});
-
-// Search
-ui.searchInput.addEventListener("input", () => {
-  const q = ui.searchInput.value.trim().toLowerCase();
-  if (!q){ ui.searchResults.style.display = "none"; return; }
-  const hits = state.searchIndex.filter(it =>
-    it.label.toLowerCase().includes(q) || it.iriShort.toLowerCase().includes(q)
-  );
-  renderSearchResults(hits);
-});
-ui.btnSearchClear.addEventListener("click", () => {
-  ui.searchInput.value = "";
-  ui.searchResults.style.display = "none";
-});
-ui.btnSearchShowAll.addEventListener("click", () => renderSearchResults(state.searchIndex));
-
-// background click unselect
-svg.on("click", () => {
-  state.selectedIri = null;
-  ui.selInfo.textContent = "—";
-  ui.editorCard.style.opacity = "0.55";
-  ui.editorHint.textContent = "Clique em um nó para editar.";
-  rebuildAndRender();
-  hideTooltip();
-});
-
-/* =========================
-   Init
-========================= */
-function init(){
-  const theme = localStorage.getItem(persistedKey("theme"));
-  if (theme === "light" || theme === "dark") setTheme(theme, false);
-
-  resize();
-  enableControls(false);
-
-  // seu repo raw
-  ui.dataUrl.value = "https://raw.githubusercontent.com/luquizis/Ontohate/main/ontohate_.owl";
-}
-init();
+/* =========================================================
+   INIT
+========================================================= */
+(function init(){
+  const t=localStorage.getItem(P("theme"));
+  if(t==="light"||t==="dark") setTheme(t,false);
+  ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
+  resize(); enableControls(false);
+  ui.dataUrl.value="https://raw.githubusercontent.com/luquizis/Ontohate/main/ontohate_.owl";
+})();
 </script>
 </body>
 </html>
