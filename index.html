@@ -1,1256 +1,954 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>OntoHate — Taxonomia do Discurso de Ódio Online</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OntoHate — Taxonomia Interativa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/rdflib@2.2.37/dist/rdflib.min.js"></script>
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--panel:#111827;--panel2:#0d1117;
+  --border:#1e2d45;--border2:#253347;--text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;
+  --accent:#38bdf8;--danger:#f43f5e;--ok:#10b981;--warn:#f59e0b;
+  --node-text:#f1f5f9;--node-stroke:rgba(0,0,0,0.5);
+  --fd:Syne,sans-serif;--fm:'DM Mono',monospace;
+  --sw:400px;--th:52px;--r:10px;--rs:6px;
+}
+[data-theme=light]{
+  --bg:#f8fafc;--bg2:#fff;--panel:#fff;--panel2:#f1f5f9;
+  --border:#e2e8f0;--border2:#cbd5e1;--text:#0f172a;--muted:#64748b;--muted2:#475569;
+  --accent:#0284c7;--danger:#e11d48;--ok:#059669;--warn:#d97706;
+  --node-text:#0f172a;--node-stroke:rgba(15,23,42,0.15);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px;line-height:1.5}
+.app{display:grid;grid-template-columns:var(--sw) 1fr;height:100vh}
+.sidebar{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-head{padding:14px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-title{font-size:15px;font-weight:800;letter-spacing:.01em}
+.sb-sub{font-size:11px;color:var(--muted);line-height:1.4;margin-top:3px}
+.sb-head-btns{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.sb-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px}
+.sb-body::-webkit-scrollbar{width:3px}.sb-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;cursor:pointer;user-select:none;border-bottom:1px solid transparent}
+.ch:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.card.open .ch{border-bottom-color:var(--border)}
+.ctitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2)}
+.ctoggle{font-size:10px;color:var(--muted);transition:transform .15s}
+.card:not(.open) .cb{display:none}
+.card:not(.open) .ctoggle{transform:rotate(-90deg)}
+.cb{padding:10px 11px;display:flex;flex-direction:column;gap:8px}
+label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+input[type=text],input[type=url],select,textarea{
+  width:100%;padding:6px 9px;border-radius:var(--rs);border:1px solid var(--border2);
+  background:var(--bg);color:var(--text);font-family:var(--fm);font-size:12px;outline:none;transition:border-color .15s}
+input[type=text]:focus,select:focus{border-color:var(--accent)}
+input[type=color]{width:28px;height:28px;border:1px solid var(--border2);border-radius:var(--rs);background:transparent;padding:2px;cursor:pointer}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border2);border-radius:4px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg)}
+input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.field{display:flex;flex-direction:column;gap:3px}
+.row{display:flex;gap:7px;align-items:flex-end;flex-wrap:wrap}
+.row .field{flex:1;min-width:70px}
+.rg{display:flex;flex-direction:column;gap:3px}
+.rrow{display:flex;align-items:center;gap:7px}
+.rval{font-family:var(--fm);font-size:10px;color:var(--muted2);min-width:22px;text-align:right}
+button{
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:5px 10px;border-radius:var(--rs);border:1px solid var(--border2);
+  background:var(--panel);color:var(--text);font-family:var(--fd);font-size:11px;
+  font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.02em}
+button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.primary{background:color-mix(in srgb,var(--accent) 13%,transparent);border-color:color-mix(in srgb,var(--accent) 45%,var(--border2));color:var(--accent)}
+button.primary:hover:not(:disabled){background:color-mix(in srgb,var(--accent) 22%,transparent)}
+button.danger{background:color-mix(in srgb,var(--danger) 10%,transparent);border-color:color-mix(in srgb,var(--danger) 40%,var(--border2));color:var(--danger)}
+button.ok{background:color-mix(in srgb,var(--ok) 10%,transparent);border-color:color-mix(in srgb,var(--ok) 40%,var(--border2));color:var(--ok)}
+button.warn{background:color-mix(in srgb,var(--warn) 10%,transparent);border-color:color-mix(in srgb,var(--warn) 40%,var(--border2));color:var(--warn)}
+.btns{display:flex;gap:5px;flex-wrap:wrap}
+.topbar{
+  position:absolute;left:0;right:0;top:0;height:var(--th);
+  display:flex;align-items:center;gap:7px;padding:0 13px;
+  background:color-mix(in srgb,var(--panel) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--border);z-index:20;overflow:hidden}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;
+  border:1px solid var(--border);border-radius:999px;
+  background:color-mix(in srgb,var(--bg) 60%,transparent);
+  font-size:11px;color:var(--muted2);white-space:nowrap}
+.pill .v{color:var(--text);font-weight:600}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0}
+.dot.loading{background:var(--warn);animation:pulse 1s infinite}
+.dot.error{background:var(--danger)}
+.dot.idle{background:var(--border2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.tsp{flex:1}
+.kbd{font-family:var(--fm);font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid var(--border2);background:color-mix(in srgb,var(--bg) 70%,transparent);color:var(--muted2)}
+.main{position:relative;overflow:hidden}
+#svgWrap{position:absolute;inset:0;padding-top:var(--th)}
+svg{width:100%;height:100%;display:block}
+.node rect{stroke:var(--node-stroke);stroke-width:1px;filter:drop-shadow(0 3px 10px rgba(0,0,0,.22))}
+[data-theme=light] .node rect{filter:drop-shadow(0 2px 7px rgba(15,23,42,.10))}
+.node text{pointer-events:none;fill:var(--node-text)}
+.node.selected rect{stroke:var(--accent)!important;stroke-width:2px!important;filter:drop-shadow(0 0 11px color-mix(in srgb,var(--accent) 38%,transparent))}
+.node.hovered rect{stroke:color-mix(in srgb,var(--accent) 55%,var(--border2))!important;stroke-width:1.5px!important}
+.node.dimmed rect{opacity:.15!important}
+.node.dimmed text{opacity:.15}
+.link{fill:none;stroke-width:1.6;opacity:.7;pointer-events:none}
+.link.dimmed{opacity:.05}
+.link.multi-parent{stroke-dasharray:5,3;opacity:.55}
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+/* Tooltip */
+.tooltip{
+  position:absolute;max-width:330px;pointer-events:none;
+  background:var(--panel);border:1px solid var(--border2);border-radius:var(--r);
+  padding:10px 12px;font-size:11.5px;line-height:1.45;
+  box-shadow:0 14px 36px rgba(0,0,0,.28);z-index:50}
+.tt{font-size:13px;font-weight:700;margin-bottom:2px}
+.ti{font-family:var(--fm);font-size:10px;color:var(--muted)}
+.ts{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:6px 0 2px}
+.tx{padding:1px 0 1px 9px;position:relative}.tx::before{content:'·';position:absolute;left:2px;color:var(--muted)}
 
-  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/rdflib@2.2.37/dist/rdflib.min.js"></script>
+/* Breadcrumb */
+#breadcrumb{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:6px 14px;font-family:var(--fm);font-size:11px;color:var(--muted2);
+  background:color-mix(in srgb,var(--panel) 88%,transparent);
+  backdrop-filter:blur(8px);border-top:1px solid var(--border);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none}
+#breadcrumb .bc-sep{color:var(--muted);margin:0 4px}
+#breadcrumb .bc-item{color:var(--accent);cursor:pointer}
+#breadcrumb .bc-item:hover{text-decoration:underline}
 
-  <style>
-    /* ===== DESIGN TOKENS ===== */
-    :root{
-      --bg:          #07090f;
-      --bg2:         #0d1117;
-      --panel:       #111827;
-      --panel2:      #0d1117;
-      --border:      #1e2d45;
-      --border2:     #253347;
-      --text:        #e2e8f0;
-      --muted:       #64748b;
-      --muted2:      #94a3b8;
-      --accent:      #38bdf8;
-      --accent2:     #0ea5e9;
-      --danger:      #f43f5e;
-      --ok:          #10b981;
-      --warn:        #f59e0b;
+/* Stats panel modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.modal{background:var(--panel);border:1px solid var(--border2);border-radius:var(--r);padding:20px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.modal h2{font-size:15px;font-weight:800;margin-bottom:14px}
+.modal hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px}
+.stat-box .sv{font-size:22px;font-weight:800;color:var(--accent)}
+.stat-box .sl{font-size:11px;color:var(--muted);margin-top:2px}
+.anomaly-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px solid var(--border);font-size:12px}
+.anomaly-item .ai{font-weight:600}
+.anomaly-item .ad{color:var(--muted);font-size:11px}
+.badge{display:inline-flex;align-items:center;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:700}
+.badge.warn{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.badge.danger{background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger)}
+.badge.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
 
-      --node-text:   #f1f5f9;
-      --node-stroke: rgba(0,0,0,0.5);
-      --link-col:    #1e3a5f;
+/* Diff mode */
+.node.diff-added rect{stroke:#10b981!important;stroke-width:2px!important}
+.node.diff-removed rect{stroke:#f43f5e!important;stroke-width:2px!important;opacity:.5!important}
+.node.diff-changed rect{stroke:#f59e0b!important;stroke-width:2px!important}
 
-      --font-display: 'Syne', sans-serif;
-      --font-mono:    'DM Mono', monospace;
+/* Compare panel */
+#comparePanel{
+  position:absolute;bottom:0;left:0;right:0;max-height:38vh;
+  background:var(--panel);border-top:1px solid var(--border2);
+  overflow-y:auto;padding:12px 16px;display:none;z-index:15}
+#comparePanel h3{font-size:12px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cmp-col h4{font-size:13px;font-weight:700;margin-bottom:6px}
+.cmp-row{font-size:11.5px;color:var(--muted);margin-bottom:3px}
+.cmp-row span{color:var(--text)}
+.cmp-common{font-size:11.5px;margin-bottom:3px}
 
-      --sidebar-w: 380px;
-      --topbar-h:  52px;
-      --radius:    10px;
-      --radius-sm: 6px;
-    }
+/* Search results */
+.sr{border:1px solid var(--border2);border-radius:var(--rs);overflow:hidden;background:var(--bg);max-height:200px;overflow-y:auto}
+.sr::-webkit-scrollbar{width:3px}.sr::-webkit-scrollbar-thumb{background:var(--border2)}
+.sri{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-top:1px solid var(--border);cursor:pointer;transition:background .1s}
+.sri:first-child{border-top:none}.sri:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.sri .sl{font-size:12px}.sri .st{font-family:var(--fm);font-size:10px;color:var(--muted);white-space:nowrap}
+.sri .sb{font-size:10px;color:var(--muted);font-family:var(--fm)}
 
-    [data-theme="light"]{
-      --bg:          #f8fafc;
-      --bg2:         #ffffff;
-      --panel:       #ffffff;
-      --panel2:      #f1f5f9;
-      --border:      #e2e8f0;
-      --border2:     #cbd5e1;
-      --text:        #0f172a;
-      --muted:       #64748b;
-      --muted2:      #475569;
-      --accent:      #0284c7;
-      --accent2:     #0369a1;
-      --danger:      #e11d48;
-      --ok:          #059669;
-      --warn:        #d97706;
+/* Dims list */
+.dims{display:flex;flex-direction:column;gap:4px}
+.di{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);transition:border-color .15s}
+.di:hover{border-color:var(--border2)}.di.active{border-color:color-mix(in srgb,var(--accent) 38%,var(--border))}
+.dn{flex:1;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dc{font-family:var(--fm);font-size:10px;color:var(--muted)}
 
-      --node-text:   #0f172a;
-      --node-stroke: rgba(15,23,42,0.15);
-      --link-col:    #94a3b8;
-    }
+/* Loading bar */
+.lbar{position:absolute;top:var(--th);left:0;right:0;height:2px;background:transparent;z-index:30;overflow:hidden}
+.lbar::after{content:'';display:block;height:100%;background:var(--accent);animation:loading 1.1s ease-in-out infinite}
+.lbar.hidden{display:none}
+@keyframes loading{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
 
-    /* ===== RESET ===== */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
+/* Empty state */
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none;padding-top:var(--th)}
+.empty-icon{font-size:42px;opacity:.16}
+.empty-txt{font-size:13px;color:var(--muted);text-align:center;max-width:230px;line-height:1.5}
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-display);
-      font-size: 13px;
-      line-height: 1.5;
-    }
+/* Scientific mode badge */
+#sciModeBadge{
+  position:absolute;top:calc(var(--th) + 10px);right:14px;
+  background:color-mix(in srgb,var(--warn) 15%,transparent);
+  border:1px solid color-mix(in srgb,var(--warn) 40%,var(--border2));
+  color:var(--warn);font-size:11px;font-weight:700;padding:4px 10px;
+  border-radius:999px;display:none;z-index:18;pointer-events:none}
 
-    /* ===== LAYOUT ===== */
-    .app {
-      display: grid;
-      grid-template-columns: var(--sidebar-w) 1fr;
-      height: 100vh;
-    }
+/* Neighborhood highlight cursor */
+body.hl-mode{cursor:crosshair}
 
-    /* ===== SIDEBAR ===== */
-    .sidebar {
-      background: var(--panel);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+/* Diff legend */
+#diffLegend{
+  position:absolute;top:calc(var(--th)+10px);left:14px;
+  background:var(--panel);border:1px solid var(--border2);border-radius:var(--rs);
+  padding:8px 12px;font-size:11px;display:none;z-index:18;line-height:1.8}
+.dl-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
 
-    .sidebar-header {
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .sidebar-title {
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .sidebar-subtitle {
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .sidebar-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .sidebar-body::-webkit-scrollbar { width: 4px; }
-    .sidebar-body::-webkit-scrollbar-track { background: transparent; }
-    .sidebar-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-    /* ===== CARDS ===== */
-    .card {
-      background: var(--panel2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .card-header:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
-
-    .card-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted2);
-    }
-
-    .card-toggle {
-      font-size: 10px;
-      color: var(--muted);
-      transition: transform 0.2s;
-    }
-
-    .card-body {
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .card.collapsed .card-body { display: none; }
-    .card.collapsed .card-toggle { transform: rotate(-90deg); }
-
-    /* ===== FORM ELEMENTS ===== */
-    label {
-      display: block;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    input[type="text"], input[type="url"], select, textarea {
-      width: 100%;
-      padding: 7px 10px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border2);
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    input[type="text"]:focus,
-    input[type="url"]:focus,
-    select:focus { border-color: var(--accent); }
-
-    input[type="color"] {
-      width: 30px; height: 30px;
-      border: 1px solid var(--border2);
-      border-radius: var(--radius-sm);
-      background: transparent;
-      padding: 2px;
-      cursor: pointer;
-    }
-
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%; height: 4px;
-      background: var(--border2);
-      border-radius: 4px;
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      border: 2px solid var(--bg);
-    }
-
-    .field { display: flex; flex-direction: column; gap: 4px; }
-    .row   { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
-    .row .field { flex: 1; min-width: 80px; }
-
-    /* ===== BUTTONS ===== */
-    button {
-      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-      padding: 6px 11px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border2);
-      background: var(--panel);
-      color: var(--text);
-      font-family: var(--font-display);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-      letter-spacing: 0.03em;
-    }
-    button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-    button:disabled { opacity: 0.38; cursor: not-allowed; }
-
-    button.primary {
-      background: color-mix(in srgb, var(--accent) 15%, transparent);
-      border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
-      color: var(--accent);
-    }
-    button.primary:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--accent) 25%, transparent);
-    }
-    button.danger {
-      background: color-mix(in srgb, var(--danger) 10%, transparent);
-      border-color: color-mix(in srgb, var(--danger) 45%, var(--border2));
-      color: var(--danger);
-    }
-    button.danger:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--danger) 22%, transparent);
-    }
-    button.icon { padding: 5px 7px; }
-
-    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
-
-    /* ===== TOPBAR ===== */
-    .topbar {
-      position: absolute; left: 0; right: 0; top: 0;
-      height: var(--topbar-h);
-      display: flex; align-items: center; gap: 8px;
-      padding: 0 14px;
-      background: color-mix(in srgb, var(--panel) 85%, transparent);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-      z-index: 20;
-      overflow: hidden;
-    }
-
-    .stat-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 10px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--bg) 60%, transparent);
-      font-size: 11px;
-      color: var(--muted2);
-      white-space: nowrap;
-    }
-    .stat-pill .val { color: var(--text); font-weight: 600; }
-    .stat-pill .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--ok);
-      flex-shrink: 0;
-    }
-    .stat-pill .dot.loading { background: var(--warn); animation: pulse 1s infinite; }
-    .stat-pill .dot.error   { background: var(--danger); }
-    .stat-pill .dot.idle    { background: var(--border2); }
-
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    .topbar-spacer { flex: 1; }
-
-    .kbd {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      padding: 2px 5px;
-      border-radius: 4px;
-      border: 1px solid var(--border2);
-      background: color-mix(in srgb, var(--bg) 70%, transparent);
-      color: var(--muted2);
-    }
-
-    /* ===== MAIN ===== */
-    .main { position: relative; overflow: hidden; }
-
-    #svgWrap {
-      position: absolute;
-      inset: 0;
-      padding-top: var(--topbar-h);
-    }
-
-    svg { width: 100%; height: 100%; display: block; }
-
-    /* ===== NODE STYLES ===== */
-    .node rect {
-      stroke: var(--node-stroke);
-      stroke-width: 1px;
-      transition: filter 0.15s;
-      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
-    }
-    [data-theme="light"] .node rect {
-      filter: drop-shadow(0 2px 8px rgba(15,23,42,0.12));
-    }
-    .node text { pointer-events: none; fill: var(--node-text); }
-    .node.selected rect {
-      stroke: var(--accent) !important;
-      stroke-width: 2px !important;
-      filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 40%, transparent));
-    }
-
-    .link {
-      fill: none;
-      stroke: var(--link-col);
-      stroke-width: 1.6;
-      opacity: 0.7;
-      pointer-events: none;
-    }
-
-    /* ===== TOOLTIP ===== */
-    .tooltip {
-      position: absolute;
-      max-width: 340px;
-      pointer-events: none;
-      background: var(--panel);
-      border: 1px solid var(--border2);
-      border-radius: var(--radius);
-      padding: 10px 12px;
-      font-size: 11.5px;
-      line-height: 1.45;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
-      z-index: 50;
-      transition: opacity 0.1s;
-    }
-    .tooltip .t-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
-    .tooltip .t-iri   { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
-    .tooltip hr       { border: none; border-top: 1px solid var(--border); margin: 7px 0; }
-    .tooltip .t-sec   { font-size: 10px; font-weight: 700; text-transform: uppercase;
-                        letter-spacing: 0.06em; color: var(--muted); margin-bottom: 3px; }
-    .tooltip .t-item  { padding: 1px 0 1px 10px; position: relative; }
-    .tooltip .t-item::before { content: '·'; position: absolute; left: 2px; color: var(--muted); }
-
-    /* ===== SEARCH RESULTS ===== */
-    .search-results {
-      border: 1px solid var(--border2);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      background: var(--bg);
-      max-height: 220px;
-      overflow-y: auto;
-    }
-    .search-results::-webkit-scrollbar { width: 3px; }
-    .search-results::-webkit-scrollbar-thumb { background: var(--border2); }
-
-    .search-item {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      padding: 7px 10px;
-      border-top: 1px solid var(--border);
-      cursor: pointer;
-      transition: background 0.1s;
-    }
-    .search-item:first-child { border-top: none; }
-    .search-item:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
-    .search-item .s-label { font-size: 12px; }
-    .search-item .s-tag   { font-family: var(--font-mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
-
-    /* ===== DIMS LIST ===== */
-    .dims-list { display: flex; flex-direction: column; gap: 4px; }
-    .dim-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 7px 9px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--bg);
-      transition: border-color 0.15s;
-    }
-    .dim-item:hover { border-color: var(--border2); }
-    .dim-item.active { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
-    .dim-name { flex: 1; font-size: 12px; font-weight: 600; min-width: 0;
-                overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .dim-count { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
-
-    input[type="checkbox"] {
-      width: 14px; height: 14px; accent-color: var(--accent);
-      cursor: pointer; flex-shrink: 0;
-    }
-
-    /* ===== RANGE WITH VALUE ===== */
-    .range-group { display: flex; flex-direction: column; gap: 4px; }
-    .range-row { display: flex; align-items: center; gap: 8px; }
-    .range-val {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--muted2);
-      min-width: 24px;
-      text-align: right;
-    }
-
-    /* ===== EDITOR ===== */
-    #editorCard { transition: opacity 0.2s; }
-    #editorCard.locked { opacity: 0.45; pointer-events: none; }
-
-    /* ===== EMPTY STATE ===== */
-    .empty-svg {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 12px; pointer-events: none;
-      padding-top: var(--topbar-h);
-    }
-    .empty-icon { font-size: 40px; opacity: 0.18; }
-    .empty-text { font-size: 13px; color: var(--muted); text-align: center; max-width: 240px; line-height: 1.5; }
-    .empty-hint { font-family: var(--font-mono); font-size: 11px; color: var(--muted); opacity: 0.6; }
-
-    /* ===== LOADING OVERLAY ===== */
-    .loading-bar {
-      position: absolute; top: var(--topbar-h); left: 0; right: 0;
-      height: 2px; background: transparent; z-index: 30; overflow: hidden;
-    }
-    .loading-bar::after {
-      content: '';
-      display: block; height: 100%;
-      background: var(--accent);
-      animation: loading 1.2s ease-in-out infinite;
-    }
-    .loading-bar.hidden { display: none; }
-
-    @keyframes loading {
-      0%   { transform: translateX(-100%); }
-      100% { transform: translateX(200%); }
-    }
-  </style>
+/* Editor locked */
+#editorCard.locked{opacity:.42;pointer-events:none}
+</style>
 </head>
-
 <body data-theme="dark">
 <div class="app">
 
-  <!-- ===== SIDEBAR ===== -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-title">OntoHate</div>
-      <div class="sidebar-subtitle">Taxonomia interativa do discurso de ódio online. Carregue uma ontologia OWL/Turtle e explore a hierarquia de classes.</div>
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+<div class="sb-head">
+  <div class="sb-title">OntoHate</div>
+  <div class="sb-sub">Taxonomia interativa do discurso de ódio online. Carregue uma ontologia OWL/Turtle para começar.</div>
+  <div class="sb-head-btns">
+    <button id="btnTheme" class="icon" title="Tema">☀</button>
+    <button class="primary" id="btnFit">Ajustar</button>
+    <button id="btnStats" disabled>📊 Stats</button>
+    <button class="danger" id="btnReset">Reset</button>
+  </div>
+</div>
 
-      <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
-        <button class="icon" id="btnTheme" title="Alternar tema">☀</button>
-        <button class="primary" id="btnFit">Ajustar tela</button>
-        <button class="danger" id="btnReset">Reset</button>
+<div class="sb-body">
+
+<!-- DADOS -->
+<div class="card open">
+  <div class="ch"><span class="ctitle">Fonte de dados</span><span class="ctoggle">▾</span></div>
+  <div class="cb">
+    <div class="field"><label>URL (raw)</label><input id="dataUrl" type="text" placeholder="https://raw.githubusercontent.com/…"/></div>
+    <div class="btns">
+      <button class="primary" id="btnLoad">Carregar</button>
+      <button id="btnDiff" disabled title="Carregar 2ª ontologia para comparar versões">⚖ Diff</button>
+    </div>
+    <div id="diffUrlWrap" style="display:none">
+      <div class="field" style="margin-top:4px"><label>URL da 2ª versão (para Diff)</label><input id="dataUrl2" type="text"/></div>
+      <div class="btns" style="margin-top:4px"><button class="warn" id="btnLoadDiff">Carregar Diff</button><button id="btnCloseDiff">Cancelar</button></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">RDF/XML ou Turtle • link "raw" do repositório</div>
+  </div>
+</div>
+
+<!-- BUSCA -->
+<div class="card open">
+  <div class="ch"><span class="ctitle">Busca avançada</span><span class="ctoggle">▾</span></div>
+  <div class="cb">
+    <div class="field"><input id="searchInput" type="text" placeholder="Nome, IRI, subontologia, comentário…" disabled/></div>
+    <div class="row">
+      <div class="field"><label>Filtrar por subontologia</label>
+        <select id="subontoFilter" disabled><option value="">— todas —</option></select>
+      </div>
+      <div class="field"><label>Profundidade</label>
+        <select id="depthFilter" disabled>
+          <option value="">— qualquer —</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="5+">5+</option>
+        </select>
       </div>
     </div>
+    <div class="btns">
+      <button id="btnSrClear" disabled>Limpar</button>
+      <button id="btnSrAll" disabled>Ver todos</button>
+    </div>
+    <div id="searchResults" class="sr" style="display:none"></div>
+  </div>
+</div>
 
-    <div class="sidebar-body">
-
-      <!-- Fonte de dados -->
-      <div class="card">
-        <div class="card-header" data-card="source">
-          <span class="card-title">Fonte de dados</span>
-          <span class="card-toggle">▾</span>
-        </div>
-        <div class="card-body">
-          <div class="field">
-            <label>URL (raw do repositório)</label>
-            <input id="dataUrl" type="text" placeholder="https://raw.githubusercontent.com/…" />
-          </div>
-          <div class="btn-group">
-            <button class="primary" id="btnLoad">Carregar</button>
-          </div>
-          <div style="font-size:11px; color:var(--muted);">
-            Use o link "raw" do arquivo. Formatos aceitos: RDF/XML e Turtle.
-          </div>
-        </div>
+<!-- TAXONOMIA -->
+<div class="card open">
+  <div class="ch"><span class="ctitle">Taxonomia</span><span class="ctoggle">▾</span></div>
+  <div class="cb">
+    <div class="row">
+      <div class="field"><label>Modo</label>
+        <select id="splitMode" disabled>
+          <option value="union">Unir selecionadas</option>
+          <option value="single">Uma por vez</option>
+        </select>
       </div>
+      <div class="field"><label>Dimensão ativa</label><select id="activeDim" disabled></select></div>
+    </div>
+    <div class="rg"><label>Profundidade máx.</label>
+      <div class="rrow"><input id="maxDepth" type="range" min="1" max="16" value="7" disabled/><span class="rval" id="depthLbl">7</span><button id="btnMoreDepth" class="icon" disabled>+</button></div>
+    </div>
+    <div class="rg"><label>Compactação</label>
+      <div class="rrow"><input id="compact" type="range" min="0" max="100" value="70" disabled/><span class="rval" id="compactLbl">70</span></div>
+    </div>
+    <div class="btns">
+      <button id="btnHlMode" disabled title="Modo vizinhança: hover ilumina só o nó e seus vizinhos">👁 Vizinhança</button>
+      <button id="btnCropSubtree" disabled title="Exportar apenas a subárvore do nó selecionado">✂ Subárvore</button>
+    </div>
+  </div>
+</div>
 
-      <!-- Busca -->
-      <div class="card">
-        <div class="card-header" data-card="search">
-          <span class="card-title">Busca</span>
-          <span class="card-toggle">▾</span>
-        </div>
-        <div class="card-body">
-          <div class="field">
-            <input id="searchInput" type="text" placeholder="Digite parte do nome ou classe…" disabled />
-          </div>
-          <div class="btn-group">
-            <button id="btnSearchClear" disabled>Limpar</button>
-            <button id="btnSearchShowAll" disabled>Ver todos</button>
-          </div>
-          <div id="searchResults" class="search-results" style="display:none;"></div>
-        </div>
+<!-- DIMENSÕES -->
+<div class="card open">
+  <div class="ch"><span class="ctitle">Dimensões</span><span class="ctoggle">▾</span></div>
+  <div class="cb">
+    <div class="btns"><button id="btnAll" disabled>Todas</button><button id="btnNone" disabled>Nenhuma</button></div>
+    <div class="dims" id="dimsList"><div style="font-size:11px;color:var(--muted)">Carregue uma ontologia.</div></div>
+  </div>
+</div>
+
+<!-- COMPARADOR -->
+<div class="card">
+  <div class="ch"><span class="ctitle">Comparar dois nós</span><span class="ctoggle">▾</span></div>
+  <div class="cb">
+    <div style="font-size:11px;color:var(--muted)">Selecione o 1º nó clicando na árvore, depois clique em "Fixar A". Faça o mesmo para B.</div>
+    <div class="row">
+      <div class="field"><label>Nó A</label><div id="cmpA" style="font-size:11px;color:var(--muted2);font-family:var(--fm);padding:4px 0">—</div></div>
+      <div class="field"><label>Nó B</label><div id="cmpB" style="font-size:11px;color:var(--muted2);font-family:var(--fm);padding:4px 0">—</div></div>
+    </div>
+    <div class="btns">
+      <button id="btnFixA" disabled>Fixar A</button>
+      <button id="btnFixB" disabled>Fixar B</button>
+      <button id="btnCompare" disabled class="primary">Comparar</button>
+      <button id="btnCmpClose" disabled>Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="card open">
+  <div class="ch"><span class="ctitle">Layout e visualização</span><span class="ctoggle">▾</span></div>
+  <div class="cb">
+    <div class="field"><label>Layout</label>
+      <select id="layoutSelect" disabled>
+        <option value="topdown">Top-down</option>
+        <option value="leftright">Esquerda → Direita</option>
+        <option value="radial">Radial</option>
+        <option value="a4">A4 (vertical)</option>
+      </select>
+    </div>
+    <div class="row">
+      <div class="rg" style="flex:1"><label>Curvatura</label>
+        <div class="rrow"><input id="edgeCurve" type="range" min="0" max="100" value="18" disabled/><span class="rval" id="curveLbl">18</span></div>
       </div>
-
-      <!-- Taxonomia -->
-      <div class="card">
-        <div class="card-header" data-card="taxonomy">
-          <span class="card-title">Taxonomia</span>
-          <span class="card-toggle">▾</span>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="field">
-              <label>Modo</label>
-              <select id="splitMode" disabled>
-                <option value="union">Unir dimensões</option>
-                <option value="single">Uma por vez</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Dimensão ativa</label>
-              <select id="activeDim" disabled></select>
-            </div>
-          </div>
-
-          <div class="range-group">
-            <label>Profundidade máxima</label>
-            <div class="range-row">
-              <input id="maxDepth" type="range" min="1" max="16" value="7" disabled />
-              <span class="range-val" id="depthLabel">7</span>
-              <button id="btnMoreDepth" class="icon" disabled title="+1 nível">+</button>
-            </div>
-          </div>
-
-          <div class="range-group">
-            <label>Compactação</label>
-            <div class="range-row">
-              <input id="compact" type="range" min="0" max="100" value="70" disabled />
-              <span class="range-val" id="compactLabel">70</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Dimensões -->
-      <div class="card">
-        <div class="card-header" data-card="dims">
-          <span class="card-title">Dimensões</span>
-          <span class="card-toggle">▾</span>
-        </div>
-        <div class="card-body">
-          <div class="btn-group">
-            <button id="btnAll" disabled>Todas</button>
-            <button id="btnNone" disabled>Nenhuma</button>
-          </div>
-          <div class="dims-list" id="dimsList">
-            <div style="font-size:11px; color:var(--muted);">Carregue uma ontologia para ver as dimensões.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Layout e exportação -->
-      <div class="card">
-        <div class="card-header" data-card="layout">
-          <span class="card-title">Layout e exportação</span>
-          <span class="card-toggle">▾</span>
-        </div>
-        <div class="card-body">
-          <div class="field">
-            <label>Layout</label>
-            <select id="layoutSelect" disabled>
-              <option value="topdown">Top-down</option>
-              <option value="leftright">Esquerda → Direita</option>
-              <option value="radial">Radial</option>
-              <option value="a4">A4 (vertical)</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <div class="range-group" style="flex:1;">
-              <label>Curvatura das arestas</label>
-              <div class="range-row">
-                <input id="edgeCurve" type="range" min="0" max="100" value="18" disabled />
-                <span class="range-val" id="curveLabel">18</span>
-              </div>
-            </div>
-            <div class="range-group" style="flex:1;">
-              <label>Espessura</label>
-              <div class="range-row">
-                <input id="edgeWidth" type="range" min="1" max="6" value="2" disabled />
-                <span class="range-val" id="widthLabel">2</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label>Cor das arestas</label>
-              <input id="edgeColor" type="color" value="#1e3a5f" disabled />
-            </div>
-            <div class="field">
-              <label>Persistência</label>
-              <select id="persistSelect">
-                <option value="on">Ligada</option>
-                <option value="off">Desligada</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="btn-group">
-            <button id="btnExportSVG" disabled>Exportar SVG</button>
-            <button id="btnExportPNG" disabled>Exportar PNG</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Editor do nó -->
-      <div class="card" id="editorCard">
-        <div class="card-header" data-card="editor">
-          <span class="card-title">Editor do nó</span>
-          <span class="card-toggle">▾</span>
-        </div>
-        <div class="card-body" id="editorBody">
-          <div id="editorHint" style="font-size:11px; color:var(--muted);">Clique em um nó para editar.</div>
-
-          <div class="field" style="display:none;" id="editorFields">
-            <label>Nome (local)</label>
-            <input id="edLabel" type="text" />
-
-            <div class="row" style="margin-top:8px;">
-              <div class="field">
-                <label>Cor (fill)</label>
-                <input id="edFill" type="color" value="#334155" />
-              </div>
-              <div class="field">
-                <label>Borda</label>
-                <input id="edStroke" type="color" value="#111827" />
-              </div>
-              <div class="field">
-                <label>Opacidade</label>
-                <input id="edOpacity" type="range" min="10" max="100" value="92" />
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:6px;">
-              <div class="range-group" style="flex:1;">
-                <label>Largura</label>
-                <div class="range-row">
-                  <input id="edW" type="range" min="70" max="520" value="140" />
-                  <span class="range-val" id="edWVal">140</span>
-                </div>
-              </div>
-              <div class="range-group" style="flex:1;">
-                <label>Altura</label>
-                <div class="range-row">
-                  <input id="edH" type="range" min="20" max="100" value="30" />
-                  <span class="range-val" id="edHVal">30</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:6px;">
-              <div class="range-group" style="flex:1;">
-                <label>Fonte (px)</label>
-                <div class="range-row">
-                  <input id="edFont" type="range" min="10" max="18" value="12" />
-                  <span class="range-val" id="edFontVal">12</span>
-                </div>
-              </div>
-              <div class="range-group" style="flex:1;">
-                <label>Raio</label>
-                <div class="range-row">
-                  <input id="edRadius" type="range" min="0" max="22" value="10" />
-                  <span class="range-val" id="edRadiusVal">10</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="btn-group" style="margin-top:8px;">
-              <button class="primary" id="btnEditorApply">Aplicar</button>
-              <button id="btnEditorReset">Reset nó</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Atalhos -->
-      <div class="card">
-        <div class="card-header" data-card="help">
-          <span class="card-title">Atalhos</span>
-          <span class="card-toggle">▾</span>
-        </div>
-        <div class="card-body" style="font-size:11px; color:var(--muted); line-height:1.7;">
-          <kbd class="kbd">Alt</kbd> + clique — abrir/fechar subclasses<br>
-          Clique simples — selecionar e editar nó<br>
-          Arrastar nó — reposicionar<br>
-          Scroll — zoom<br>
-          Arrastar fundo — pan
-        </div>
-      </div>
-
-    </div><!-- /sidebar-body -->
-  </aside>
-
-  <!-- ===== MAIN ===== -->
-  <main class="main">
-    <div class="topbar">
-      <div class="stat-pill">
-        <div class="dot idle" id="statusDot"></div>
-        <span id="loadStatus">pronto</span>
-      </div>
-      <div class="stat-pill">Zoom <span class="val" id="zoomInfo">100%</span></div>
-      <div class="stat-pill">Nós <span class="val" id="nodeCount">0</span></div>
-      <div class="stat-pill">Arestas <span class="val" id="edgeCount">0</span></div>
-      <div class="stat-pill" id="selPill" style="display:none;">
-        Sel: <span class="val" id="selInfo">—</span>
-      </div>
-      <div class="topbar-spacer"></div>
-      <div class="stat-pill">
-        <kbd class="kbd">Alt</kbd>+clique abre/fecha
+      <div class="rg" style="flex:1"><label>Espessura</label>
+        <div class="rrow"><input id="edgeWidth" type="range" min="1" max="6" value="2" disabled/><span class="rval" id="ewLbl">2</span></div>
       </div>
     </div>
-
-    <div class="loading-bar hidden" id="loadingBar"></div>
-
-    <div id="svgWrap">
-      <!-- Empty state -->
-      <div class="empty-svg" id="emptyState">
-        <div class="empty-icon">🕸</div>
-        <div class="empty-text">Cole a URL da ontologia OWL/Turtle e clique em <strong>Carregar</strong>.</div>
-        <div class="empty-hint">RDF/XML ou Turtle • subClassOf • rdfs:label</div>
+    <div class="row">
+      <div class="field"><label>Cor arestas</label><input id="edgeColor" type="color" value="#1e3a5f" disabled/></div>
+      <div class="field"><label>Herança múltipla</label>
+        <select id="multiParentMode" disabled>
+          <option value="hide">Ocultar arestas extra</option>
+          <option value="show">Mostrar tracejado</option>
+        </select>
       </div>
-
-      <svg id="svg"></svg>
-      <div id="tooltip" class="tooltip" style="display:none;"></div>
     </div>
-  </main>
+    <div class="field"><label>Templates visuais</label>
+      <select id="templateSelect" disabled>
+        <option value="">— nenhum —</option>
+        <option value="sci_bw">Figura científica (P&B)</option>
+        <option value="sci_color">Figura científica (cor)</option>
+        <option value="poster">Poster A0</option>
+        <option value="pres">Apresentação escura</option>
+        <option value="thesis">Tese/dissertação</option>
+      </select>
+    </div>
+    <div class="field"><label>Salvar / carregar template</label>
+      <div class="btns">
+        <input id="tplName" type="text" placeholder="nome do template" style="flex:1;min-width:0" disabled/>
+        <button id="btnTplSave" disabled class="ok">Salvar</button>
+        <button id="btnTplLoad" disabled>Usar</button>
+      </div>
+    </div>
+    <div class="field"><label>Persistência</label>
+      <select id="persistSelect"><option value="on">Ligada</option><option value="off">Desligada</option></select>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORTAÇÃO -->
+<div class="card open">
+  <div class="ch"><span class="ctitle">Exportação</span><span class="ctoggle">▾</span></div>
+  <div class="cb">
+    <div class="row">
+      <div class="rg" style="flex:1"><label>Resolução PNG</label>
+        <select id="dpiSelect" disabled>
+          <option value="1">72 dpi (web)</option>
+          <option value="1.5">150 dpi (apresentação)</option>
+          <option value="2" selected>2× (padrão)</option>
+          <option value="3">300 dpi (impressão)</option>
+          <option value="4">600 dpi (journal)</option>
+        </select>
+      </div>
+      <div class="field"><label>Modo</label>
+        <select id="exportScope" disabled>
+          <option value="full">Árvore inteira</option>
+          <option value="subtree">Subárvore selecionada</option>
+        </select>
+      </div>
+    </div>
+    <div class="btns">
+      <button id="btnExportSVG" disabled>SVG</button>
+      <button id="btnExportPNG" disabled>PNG</button>
+      <button id="btnExportPDF" disabled>PDF</button>
+      <button id="btnExportCSV" disabled>CSV</button>
+    </div>
+    <div id="legendPreview" style="display:none;font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+      <strong style="color:var(--text)">Legenda gerada:</strong><br/>
+      <span id="legendText"></span>
+      <div class="btns" style="margin-top:6px"><button id="btnCopyLegend">Copiar legenda</button><button id="btnCiteCopy">Copiar citação</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div class="card" id="editorCard">
+  <div class="ch"><span class="ctitle">Editor do nó</span><span class="ctoggle">▾</span></div>
+  <div class="cb">
+    <div id="editorHint" style="font-size:11px;color:var(--muted)">Clique em um nó para editar.</div>
+    <div id="editorFields" style="display:none;flex-direction:column;gap:7px">
+      <div class="field"><label>Nome (local)</label><input id="edLabel" type="text"/></div>
+      <div class="row">
+        <div class="field"><label>Fill</label><input id="edFill" type="color" value="#334155"/></div>
+        <div class="field"><label>Borda</label><input id="edStroke" type="color" value="#111827"/></div>
+        <div class="rg" style="flex:1"><label>Opac.</label><div class="rrow"><input id="edOpacity" type="range" min="10" max="100" value="92"/></div></div>
+      </div>
+      <div class="row">
+        <div class="rg" style="flex:1"><label>Largura</label><div class="rrow"><input id="edW" type="range" min="70" max="520" value="140"/><span class="rval" id="edWv">140</span></div></div>
+        <div class="rg" style="flex:1"><label>Altura</label><div class="rrow"><input id="edH" type="range" min="20" max="100" value="30"/><span class="rval" id="edHv">30</span></div></div>
+      </div>
+      <div class="row">
+        <div class="rg" style="flex:1"><label>Fonte px</label><div class="rrow"><input id="edFont" type="range" min="10" max="18" value="12"/><span class="rval" id="edFv">12</span></div></div>
+        <div class="rg" style="flex:1"><label>Raio</label><div class="rrow"><input id="edRadius" type="range" min="0" max="22" value="8"/><span class="rval" id="edRv">8</span></div></div>
+      </div>
+      <div class="btns"><button class="primary" id="btnEdApply">Aplicar</button><button id="btnEdReset">Reset nó</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ATALHOS -->
+<div class="card">
+  <div class="ch"><span class="ctitle">Atalhos</span><span class="ctoggle">▾</span></div>
+  <div class="cb" style="font-size:11px;color:var(--muted);line-height:1.8">
+    <kbd class="kbd">Alt</kbd>+clique — abrir/fechar subclasses<br>
+    Clique — selecionar / editar nó<br>
+    Clique duplo — exportar subárvore<br>
+    Drag nó — reposicionar<br>
+    Scroll — zoom &nbsp;|&nbsp; Drag fundo — pan<br>
+    <kbd class="kbd">Esc</kbd> — desselecionar
+  </div>
+</div>
+
+</div><!-- /sb-body -->
+</aside>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+  <div class="topbar">
+    <div class="pill"><div class="dot idle" id="statusDot"></div><span id="loadStatus">pronto</span></div>
+    <div class="pill">Zoom <span class="v" id="zoomInfo">100%</span></div>
+    <div class="pill">Nós <span class="v" id="nodeCount">0</span></div>
+    <div class="pill">Arestas <span class="v" id="edgeCount">0</span></div>
+    <div class="pill" id="selPill" style="display:none">Sel: <span class="v" id="selInfo">—</span></div>
+    <div class="tsp"></div>
+    <div class="pill"><kbd class="kbd">Alt</kbd>+clique abre/fecha &nbsp;|&nbsp; dblclique exporta subárvore</div>
+  </div>
+
+  <div class="lbar hidden" id="loadingBar"></div>
+  <div id="sciModeBadge">🔬 Modo Figura Científica</div>
+  <div id="diffLegend">
+    <span class="dl-dot" style="background:#10b981"></span>Adicionado&emsp;
+    <span class="dl-dot" style="background:#f43f5e"></span>Removido&emsp;
+    <span class="dl-dot" style="background:#f59e0b"></span>Modificado
+  </div>
+
+  <div id="svgWrap">
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">🕸</div>
+      <div class="empty-txt">Cole a URL da ontologia OWL/Turtle e clique em <strong>Carregar</strong>.</div>
+    </div>
+    <svg id="svg"></svg>
+    <div id="tooltip" class="tooltip" style="display:none"></div>
+  </div>
+
+  <div id="breadcrumb"></div>
+
+  <!-- Compare panel -->
+  <div id="comparePanel">
+    <button id="btnCmpClosePanel" style="float:right;margin-top:-2px">✕</button>
+    <h3>Comparação de nós</h3>
+    <div class="cmp-grid" id="cmpGrid"></div>
+    <div style="margin-top:10px"><strong style="font-size:12px">Ancestrais comuns:</strong> <span id="cmpCommon" style="font-size:11.5px;color:var(--muted2)"></span></div>
+  </div>
+</main>
+
+<!-- STATS MODAL -->
+<div id="statsModal" class="modal-bg" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2>📊 Estatísticas da Ontologia</h2>
+      <button onclick="document.getElementById('statsModal').style.display='none'">✕</button>
+    </div>
+    <div class="stat-grid" id="statGrid"></div>
+    <hr/>
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px">Distribuição por subontologia</div>
+    <div id="statSubonto"></div>
+    <hr/>
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px">⚠ Anomalias detectadas</div>
+    <div id="statAnomalies"></div>
+  </div>
 </div>
 
 <script>
 /* =========================================================
-   RDF NAMESPACES
+   RDF
 ========================================================= */
 const RDF  = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 const RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
 const OWL  = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
 const SKOS = $rdf.Namespace("http://www.w3.org/2004/02/skos/core#");
-const STORE = $rdf.graph();
+const ONTO = $rdf.Namespace("https://ontohate.org/ontohate-v2-ufo-rigor/");
+const STORE  = $rdf.graph();
+const STORE2 = $rdf.graph(); // para diff
 
 /* =========================================================
-   UI REFS
+   UI
 ========================================================= */
+const $ = id => document.getElementById(id);
 const ui = {
-  btnTheme:        document.getElementById("btnTheme"),
-  dataUrl:         document.getElementById("dataUrl"),
-  btnLoad:         document.getElementById("btnLoad"),
-  btnFit:          document.getElementById("btnFit"),
-  btnReset:        document.getElementById("btnReset"),
-  loadStatus:      document.getElementById("loadStatus"),
-  statusDot:       document.getElementById("statusDot"),
-  loadingBar:      document.getElementById("loadingBar"),
-  emptyState:      document.getElementById("emptyState"),
-  searchInput:     document.getElementById("searchInput"),
-  btnSearchClear:  document.getElementById("btnSearchClear"),
-  btnSearchShowAll:document.getElementById("btnSearchShowAll"),
-  searchResults:   document.getElementById("searchResults"),
-  splitMode:       document.getElementById("splitMode"),
-  activeDim:       document.getElementById("activeDim"),
-  maxDepth:        document.getElementById("maxDepth"),
-  depthLabel:      document.getElementById("depthLabel"),
-  btnMoreDepth:    document.getElementById("btnMoreDepth"),
-  compact:         document.getElementById("compact"),
-  compactLabel:    document.getElementById("compactLabel"),
-  dimsList:        document.getElementById("dimsList"),
-  btnAll:          document.getElementById("btnAll"),
-  btnNone:         document.getElementById("btnNone"),
-  layoutSelect:    document.getElementById("layoutSelect"),
-  edgeCurve:       document.getElementById("edgeCurve"),
-  curveLabel:      document.getElementById("curveLabel"),
-  edgeWidth:       document.getElementById("edgeWidth"),
-  widthLabel:      document.getElementById("widthLabel"),
-  edgeColor:       document.getElementById("edgeColor"),
-  persistSelect:   document.getElementById("persistSelect"),
-  btnExportSVG:    document.getElementById("btnExportSVG"),
-  btnExportPNG:    document.getElementById("btnExportPNG"),
-  editorCard:      document.getElementById("editorCard"),
-  editorHint:      document.getElementById("editorHint"),
-  editorFields:    document.getElementById("editorFields"),
-  edLabel:         document.getElementById("edLabel"),
-  edFill:          document.getElementById("edFill"),
-  edStroke:        document.getElementById("edStroke"),
-  edOpacity:       document.getElementById("edOpacity"),
-  edW:             document.getElementById("edW"),
-  edWVal:          document.getElementById("edWVal"),
-  edH:             document.getElementById("edH"),
-  edHVal:          document.getElementById("edHVal"),
-  edFont:          document.getElementById("edFont"),
-  edFontVal:       document.getElementById("edFontVal"),
-  edRadius:        document.getElementById("edRadius"),
-  edRadiusVal:     document.getElementById("edRadiusVal"),
-  btnEditorApply:  document.getElementById("btnEditorApply"),
-  btnEditorReset:  document.getElementById("btnEditorReset"),
-  zoomInfo:        document.getElementById("zoomInfo"),
-  nodeCount:       document.getElementById("nodeCount"),
-  edgeCount:       document.getElementById("edgeCount"),
-  selInfo:         document.getElementById("selInfo"),
-  selPill:         document.getElementById("selPill"),
-  tooltip:         document.getElementById("tooltip"),
-  svgWrap:         document.getElementById("svgWrap"),
+  btnTheme:$("btnTheme"), btnFit:$("btnFit"), btnStats:$("btnStats"), btnReset:$("btnReset"),
+  dataUrl:$("dataUrl"), btnLoad:$("btnLoad"), btnDiff:$("btnDiff"),
+  diffUrlWrap:$("diffUrlWrap"), dataUrl2:$("dataUrl2"), btnLoadDiff:$("btnLoadDiff"), btnCloseDiff:$("btnCloseDiff"),
+  searchInput:$("searchInput"), subontoFilter:$("subontoFilter"), depthFilter:$("depthFilter"),
+  btnSrClear:$("btnSrClear"), btnSrAll:$("btnSrAll"), searchResults:$("searchResults"),
+  splitMode:$("splitMode"), activeDim:$("activeDim"),
+  maxDepth:$("maxDepth"), depthLbl:$("depthLbl"), btnMoreDepth:$("btnMoreDepth"),
+  compact:$("compact"), compactLbl:$("compactLbl"),
+  btnHlMode:$("btnHlMode"), btnCropSubtree:$("btnCropSubtree"),
+  dimsList:$("dimsList"), btnAll:$("btnAll"), btnNone:$("btnNone"),
+  cmpA:$("cmpA"), cmpB:$("cmpB"), btnFixA:$("btnFixA"), btnFixB:$("btnFixB"),
+  btnCompare:$("btnCompare"), btnCmpClose:$("btnCmpClose"),
+  layoutSelect:$("layoutSelect"), edgeCurve:$("edgeCurve"), curveLbl:$("curveLbl"),
+  edgeWidth:$("edgeWidth"), ewLbl:$("ewLbl"), edgeColor:$("edgeColor"),
+  multiParentMode:$("multiParentMode"), templateSelect:$("templateSelect"),
+  tplName:$("tplName"), btnTplSave:$("btnTplSave"), btnTplLoad:$("btnTplLoad"),
+  persistSelect:$("persistSelect"),
+  dpiSelect:$("dpiSelect"), exportScope:$("exportScope"),
+  btnExportSVG:$("btnExportSVG"), btnExportPNG:$("btnExportPNG"),
+  btnExportPDF:$("btnExportPDF"), btnExportCSV:$("btnExportCSV"),
+  legendPreview:$("legendPreview"), legendText:$("legendText"),
+  btnCopyLegend:$("btnCopyLegend"), btnCiteCopy:$("btnCiteCopy"),
+  editorCard:$("editorCard"), editorHint:$("editorHint"), editorFields:$("editorFields"),
+  edLabel:$("edLabel"), edFill:$("edFill"), edStroke:$("edStroke"), edOpacity:$("edOpacity"),
+  edW:$("edW"), edWv:$("edWv"), edH:$("edH"), edHv:$("edHv"),
+  edFont:$("edFont"), edFv:$("edFv"), edRadius:$("edRadius"), edRv:$("edRv"),
+  btnEdApply:$("btnEdApply"), btnEdReset:$("btnEdReset"),
+  statusDot:$("statusDot"), loadStatus:$("loadStatus"), loadingBar:$("loadingBar"),
+  emptyState:$("emptyState"), tooltip:$("tooltip"), svgWrap:$("svgWrap"),
+  zoomInfo:$("zoomInfo"), nodeCount:$("nodeCount"), edgeCount:$("edgeCount"),
+  selPill:$("selPill"), selInfo:$("selInfo"),
+  breadcrumb:$("breadcrumb"), comparePanel:$("comparePanel"), cmpGrid:$("cmpGrid"),
+  btnCmpClosePanel:$("btnCmpClosePanel"), cmpCommon:$("cmpCommon"),
+  sciModeBadge:$("sciModeBadge"), diffLegend:$("diffLegend"),
+  statsModal:$("statsModal"), statGrid:$("statGrid"),
+  statSubonto:$("statSubonto"), statAnomalies:$("statAnomalies"),
 };
 
 /* =========================================================
-   STATE — centralizado, sem anti-padrões
+   STATE
 ========================================================= */
-const state = {
-  loaded: false,
-  didFit: false,           // FIX: era rebuildAndRender._didFit
-  classNodes:   new Map(),
-  subclasses:   new Map(),
-  superclasses: new Map(),
-  rootIris:     [],   // OPÇÃO B: todas as raízes reais (nós sem superclasse)
-  dimensions:   [],
-  selectedDims: new Set(),
-  collapsed:    new Set(),
-  customLabels:  new Map(),
-  nodePositions: new Map(),
-  nodeStyles:    new Map(),
-  selectedIri:   null,
-  searchIndex:   [],
-  labelCount:    new Map(),
-  tooltipCache:  new Map(), // FIX: memoização de tooltips por IRI
+const S = {
+  loaded:false, didFit:false,
+  classNodes:new Map(), subclasses:new Map(), superclasses:new Map(),
+  parentCount:new Map(), // IRI -> número de pais (para herança múltipla)
+  nodeDepth:new Map(),   // IRI -> profundidade real
+  subontoMap:new Map(),  // IRI -> inSubontologia string
+  subontoValues:new Set(), // valores únicos de inSubontologia
+  rootIris:[], dimensions:[], selectedDims:new Set(),
+  collapsed:new Set(), customLabels:new Map(),
+  nodePositions:new Map(), nodeStyles:new Map(),
+  selectedIri:null, searchIndex:[],
+  labelCount:new Map(), tooltipCache:new Map(),
+  hlMode:false,        // neighborhood highlight mode
+  sciMode:false,       // scientific figure mode
+  diffMode:false,      // diff mode
+  diffData:null,       // {added,removed,changed} sets of IRIs
+  compareA:null, compareB:null, // nós do comparador
+  subtreeRoot:null,    // raiz para crop de subárvore
+  savedTemplates:new Map(), // name -> config object
+  currentD3Root:null,  // último d3Root para re-render sem rebuild
 };
 
-const DIM_PALETTE = [
-  "#38bdf8","#34d399","#fbbf24","#f87171",
-  "#a78bfa","#22d3ee","#fb923c","#e879f9",
-  "#86efac","#67e8f9","#fca5a5","#c4b5fd"
-];
-const P = (s) => "hate_taxo_" + s;
+const DIM_PALETTE=["#38bdf8","#34d399","#fbbf24","#f87171","#a78bfa","#22d3ee","#fb923c","#e879f9","#86efac","#67e8f9","#fca5a5","#c4b5fd"];
+const P = k=>"hate_taxo_"+k;
+const uniq = a=>[...new Set(a)];
+const esc  = s=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 
 /* =========================================================
-   HELPERS
+   HELPERS RDF
 ========================================================= */
-const uniq = arr => [...new Set(arr)];
-const escapeHTML = s => String(s)
-  .replaceAll("&","&amp;").replaceAll("<","&lt;")
-  .replaceAll(">","&gt;").replaceAll('"',"&quot;");
-
+function getLiterals(store,s,p){ return store.each(s,p,null).filter(o=>o.termType==="Literal").map(o=>o.value); }
+function getFL(store,s,p){ return getLiterals(store,s,p)[0]||""; }
 function shrinkIri(iri){
-  try{
-    const u = new URL(iri);
-    const frag = u.hash ? u.hash.slice(1) : "";
-    if (frag) return frag;
-    const parts = u.pathname.split("/").filter(Boolean);
-    return parts[parts.length-1] || iri;
-  }catch{ return iri; }
+  try{ const u=new URL(iri); const f=u.hash?u.hash.slice(1):""; if(f) return f; const ps=u.pathname.split("/").filter(Boolean); return ps[ps.length-1]||iri; }catch{ return iri; }
 }
-function getLiterals(s,p){ return STORE.each(s,p,null).filter(o=>o.termType==="Literal").map(o=>o.value); }
-function getFirstLiteral(s,p){ return getLiterals(s,p)[0]||""; }
 function termLabel(iri){
-  if(iri==="__multi_root__") return ""; // nó raiz virtual — sem label
-  if (state.customLabels.has(iri)) return state.customLabels.get(iri);
-  const n = state.classNodes.get(iri);
-  const base = n?.label || shrinkIri(iri);
-  return (state.labelCount.get(base)||0) > 1 ? `${base} · ${shrinkIri(iri)}` : base;
+  if(iri==="__root__") return "";
+  if(S.customLabels.has(iri)) return S.customLabels.get(iri);
+  const n=S.classNodes.get(iri); const base=n?.label||shrinkIri(iri);
+  return (S.labelCount.get(base)||0)>1?`${base} · ${shrinkIri(iri)}`:base;
 }
 function persistEnabled(){ return ui.persistSelect.value==="on"; }
 
 /* =========================================================
-   THEME
+   STATUS
 ========================================================= */
-function setTheme(theme, persist=true){
-  document.body.setAttribute("data-theme", theme);
-  ui.btnTheme.textContent = theme==="dark" ? "☀" : "☾";
-  if (persist) localStorage.setItem(P("theme"), theme);
+function setStatus(t,mode="ok"){
+  ui.loadStatus.textContent=t;
+  ui.statusDot.className="dot "+(mode==="ok"?"":mode==="loading"?"loading":"error");
 }
-ui.btnTheme.addEventListener("click", ()=>{
-  const cur = document.body.getAttribute("data-theme")||"dark";
-  setTheme(cur==="dark"?"light":"dark");
-  state.tooltipCache.clear();
-  renderGraph(_lastD3Root);
-});
+function setLoading(on){ ui.loadingBar.classList.toggle("hidden",!on); if(on) setStatus("carregando…","loading"); }
 
 /* =========================================================
-   STATUS / LOADING
+   THEME
 ========================================================= */
-function setStatus(text, mode="ok"){
-  ui.loadStatus.textContent = text;
-  ui.statusDot.className = "dot " + (mode==="ok"?"":mode==="loading"?"loading":"error");
+function setTheme(t,persist=true){
+  document.body.setAttribute("data-theme",t);
+  ui.btnTheme.textContent=t==="dark"?"☀":"☾";
+  if(persist) localStorage.setItem(P("theme"),t);
+  S.tooltipCache.clear();
 }
-function setLoading(on){
-  ui.loadingBar.classList.toggle("hidden",!on);
-  if(on) setStatus("carregando…","loading");
-}
+ui.btnTheme.onclick=()=>{ setTheme(document.body.getAttribute("data-theme")==="dark"?"light":"dark"); if(S.currentD3Root) renderGraph(S.currentD3Root); };
 
-const CONTROLS = [
-  "searchInput","btnSearchClear","btnSearchShowAll",
-  "splitMode","activeDim","maxDepth","btnMoreDepth","compact",
-  "btnAll","btnNone","layoutSelect","edgeCurve","edgeWidth","edgeColor",
-  "btnExportSVG","btnExportPNG"
-];
-function enableControls(on){ CONTROLS.forEach(id=>{ ui[id].disabled=!on; }); }
+/* =========================================================
+   COLLAPSIBLE CARDS
+========================================================= */
+document.querySelectorAll(".ch").forEach(h=>h.onclick=()=>h.closest(".card").classList.toggle("open"));
+
+/* =========================================================
+   RANGE LIVE VALUES
+========================================================= */
+[["maxDepth","depthLbl"],["compact","compactLbl"],["edgeCurve","curveLbl"],
+ ["edgeWidth","ewLbl"],["edW","edWv"],["edH","edHv"],["edFont","edFv"],["edRadius","edRv"],
+].forEach(([i,l])=>{ const el=$(`${i}`),lb=$(`${l}`); if(el&&lb) el.addEventListener("input",()=>lb.textContent=el.value); });
+
+/* =========================================================
+   CONTROLS ENABLE/DISABLE
+========================================================= */
+const CTLS=["searchInput","subontoFilter","depthFilter","btnSrClear","btnSrAll",
+  "splitMode","activeDim","maxDepth","btnMoreDepth","compact","btnHlMode","btnCropSubtree",
+  "btnAll","btnNone","btnFixA","btnFixB","btnCompare","btnCmpClose",
+  "layoutSelect","edgeCurve","edgeWidth","edgeColor","multiParentMode","templateSelect",
+  "tplName","btnTplSave","btnTplLoad","dpiSelect","exportScope",
+  "btnExportSVG","btnExportPNG","btnExportPDF","btnExportCSV","btnStats","btnDiff"];
+function enableCtls(on){ CTLS.forEach(id=>{ if(ui[id]) ui[id].disabled=!on; }); }
 
 /* =========================================================
    PERSISTENCE
 ========================================================= */
 function loadPersisted(){
-  if (!persistEnabled()) return;
+  if(!persistEnabled()) return;
   try{
-    state.customLabels  = new Map(Object.entries(JSON.parse(localStorage.getItem(P("labels"))||"{}")));
-    state.collapsed     = new Set(JSON.parse(localStorage.getItem(P("collapsed"))||"[]"));
-    state.nodePositions = new Map(Object.entries(JSON.parse(localStorage.getItem(P("positions"))||"{}")));
-    state.nodeStyles    = new Map(Object.entries(JSON.parse(localStorage.getItem(P("styles"))||"{}")));
-    const t = localStorage.getItem(P("theme"));
-    if (t==="light"||t==="dark") setTheme(t,false);
-  }catch(e){ console.warn("Persist load failed:",e); }
+    S.customLabels =new Map(Object.entries(JSON.parse(localStorage.getItem(P("labels"))||"{}")));
+    S.collapsed    =new Set(JSON.parse(localStorage.getItem(P("collapsed"))||"[]"));
+    S.nodePositions=new Map(Object.entries(JSON.parse(localStorage.getItem(P("positions"))||"{}")));
+    S.nodeStyles   =new Map(Object.entries(JSON.parse(localStorage.getItem(P("styles"))||"{}")));
+    S.savedTemplates=new Map(Object.entries(JSON.parse(localStorage.getItem(P("templates"))||"{}")));
+    const t=localStorage.getItem(P("theme")); if(t==="light"||t==="dark") setTheme(t,false);
+  }catch(e){ console.warn(e); }
 }
 function savePersisted(){
-  if (!persistEnabled()) return;
+  if(!persistEnabled()) return;
   try{
-    localStorage.setItem(P("labels"),    JSON.stringify(Object.fromEntries(state.customLabels)));
-    localStorage.setItem(P("collapsed"), JSON.stringify([...state.collapsed]));
-    localStorage.setItem(P("positions"), JSON.stringify(Object.fromEntries(state.nodePositions)));
-    localStorage.setItem(P("styles"),    JSON.stringify(Object.fromEntries(state.nodeStyles)));
+    localStorage.setItem(P("labels"),    JSON.stringify(Object.fromEntries(S.customLabels)));
+    localStorage.setItem(P("collapsed"), JSON.stringify([...S.collapsed]));
+    localStorage.setItem(P("positions"), JSON.stringify(Object.fromEntries(S.nodePositions)));
+    localStorage.setItem(P("styles"),    JSON.stringify(Object.fromEntries(S.nodeStyles)));
+    localStorage.setItem(P("templates"), JSON.stringify(Object.fromEntries(S.savedTemplates)));
   }catch(e){}
 }
-function saveDimsPersisted(){
-  if (!persistEnabled()) return;
-  const obj={};
-  state.dimensions.forEach(d=>{ obj[d.iri]={color:d.color, selected:state.selectedDims.has(d.iri)}; });
-  localStorage.setItem(P("dims"), JSON.stringify(obj));
+function saveDimsPersist(){
+  if(!persistEnabled()) return;
+  const o={}; S.dimensions.forEach(d=>{ o[d.iri]={color:d.color,selected:S.selectedDims.has(d.iri)}; });
+  localStorage.setItem(P("dims"),JSON.stringify(o));
 }
-function clearPersisted(){
-  ["labels","collapsed","positions","styles","dims","theme"].forEach(k=>localStorage.removeItem(P(k)));
-}
-
-/* =========================================================
-   COLLAPSIBLE CARDS
-========================================================= */
-document.querySelectorAll(".card-header").forEach(h=>{
-  h.addEventListener("click", ()=>h.closest(".card").classList.toggle("collapsed"));
-});
-
-/* =========================================================
-   RANGE LIVE VALUES
-========================================================= */
-[["maxDepth","depthLabel"],["compact","compactLabel"],
- ["edgeCurve","curveLabel"],["edgeWidth","widthLabel"],
- ["edW","edWVal"],["edH","edHVal"],["edFont","edFontVal"],["edRadius","edRadiusVal"],
-].forEach(([inp,lbl])=>{
-  const i=document.getElementById(inp), l=document.getElementById(lbl);
-  if(i&&l) i.addEventListener("input",()=>l.textContent=i.value);
-});
+function clearPersisted(){ ["labels","collapsed","positions","styles","dims","theme","templates"].forEach(k=>localStorage.removeItem(P(k))); }
 
 /* =========================================================
    SVG + ZOOM
 ========================================================= */
-const svg   = d3.select("#svg");
-const svgEl = document.getElementById("svg");
-const wrap  = ui.svgWrap;
-const gRoot  = svg.append("g").attr("class","gRoot");
-const gLinks = gRoot.append("g").attr("class","links");
-const gNodes = gRoot.append("g").attr("class","nodes");
-let viewW=1000, viewH=800;
-let _lastD3Root = null; // guarda o último root para re-render sem rebuild
+const svg=d3.select("#svg"), svgEl=document.getElementById("svg");
+const wrap=ui.svgWrap;
+const gRoot=svg.append("g").attr("class","gRoot");
+const gLinks=gRoot.append("g").attr("class","links");
+const gNodes=gRoot.append("g").attr("class","nodes");
+let viewW=1000,viewH=800;
 
-const zoom = d3.zoom().scaleExtent([0.12,5]).on("zoom",(e)=>{
+const zoom=d3.zoom().scaleExtent([0.1,6]).on("zoom",e=>{
   gRoot.attr("transform",e.transform);
-  ui.zoomInfo.textContent = Math.round(e.transform.k*100)+"%";
+  ui.zoomInfo.textContent=Math.round(e.transform.k*100)+"%";
 });
 svg.call(zoom);
-
-function resize(){
-  const r=wrap.getBoundingClientRect();
-  viewW=r.width||1000; viewH=r.height||800;
-  svg.attr("viewBox",`0 0 ${viewW} ${viewH}`);
-}
-window.addEventListener("resize",()=>{ resize(); if(state.loaded) rebuildAndRender(); });
+function resize(){ const r=wrap.getBoundingClientRect(); viewW=r.width||1000; viewH=r.height||800; svg.attr("viewBox",`0 0 ${viewW} ${viewH}`); }
+window.addEventListener("resize",()=>{ resize(); if(S.loaded) rebuildAndRender(); });
 
 /* =========================================================
-   TEXT MEASUREMENT — com font correta e cache
-   FIX: font resetada antes de cada batch de medições
+   TEXT MEASUREMENT
 ========================================================= */
-const _mCtx  = document.createElement("canvas").getContext("2d");
-const _mCache = new Map();
-function measureTextWidth(text, fontPx){
-  const key=`${fontPx}|${text}`;
-  if(_mCache.has(key)) return _mCache.get(key);
-  // FIX: define a fonte explicitamente, sem depender de estado anterior do canvas
-  _mCtx.font = `600 ${fontPx}px Syne, ui-sans-serif, sans-serif`;
-  const w=_mCtx.measureText(text).width;
-  _mCache.set(key,w);
-  return w;
+const _mc=document.createElement("canvas").getContext("2d");
+const _mcache=new Map();
+function measureW(text,fpx){
+  const k=`${fpx}|${text}`; if(_mcache.has(k)) return _mcache.get(k);
+  _mc.font=`600 ${fpx}px Syne,ui-sans-serif,sans-serif`;
+  const w=_mc.measureText(text).width; _mcache.set(k,w); return w;
 }
-function computeAutoNodeSize(iri){
-  const st=state.nodeStyles.get(iri)||{};
-  if(st.w&&st.h) return {w:st.w,h:st.h};
-  const font=st.font??12, label=termLabel(iri);
-  const maxLW=140, padX=16, padY=10, lineH=Math.round(font*1.25);
-  const words=label.split(/\s+/).filter(Boolean);
-  let l1="",l2="";
-  for(const w of words){
-    const c=(l1?l1+" ":"")+w;
-    if(measureTextWidth(c,font)<=maxLW) l1=c; else l2=(l2?l2+" ":"")+w;
-  }
+function autoSize(iri){
+  const st=S.nodeStyles.get(iri)||{}; if(st.w&&st.h) return {w:st.w,h:st.h};
+  const font=st.font??12,label=termLabel(iri),maxLW=140,padX=16,padY=10,lineH=Math.round(font*1.25);
+  const words=label.split(/\s+/).filter(Boolean); let l1="",l2="";
+  for(const w of words){ const c=(l1?l1+" ":"")+w; if(measureW(c,font)<=maxLW) l1=c; else l2=(l2?l2+" ":"")+w; }
   if(!l1) l1=label;
-  const w=Math.max(80,Math.ceil(Math.max(measureTextWidth(l1,font),l2?measureTextWidth(l2,font):0)+padX));
+  const w=Math.max(80,Math.ceil(Math.max(measureW(l1,font),l2?measureW(l2,font):0)+padX));
   const h=Math.max(24,Math.ceil((l2?2:1)*lineH+padY));
   return {w,h};
 }
 
 /* =========================================================
-   RDF LOADING
+   LOAD DATA (OWL)
 ========================================================= */
-async function loadData(url){
-  setLoading(true);
-  ui.emptyState.style.display="none";
-  while(STORE.statements.length) STORE.statements.pop();
-
+async function parseStore(store,url){
   const res=await fetch(url,{cache:"no-store"});
-  if(!res.ok) throw new Error(`HTTP ${res.status} ao buscar ${url}`);
-  const data=await res.text();
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text=await res.text();
+  let ok=false;
+  for(const fmt of ["application/rdf+xml","text/turtle"]){ try{ $rdf.parse(text,store,url,fmt); ok=true; break; }catch{} }
+  if(!ok) throw new Error("Formato não reconhecido (RDF/XML ou Turtle).");
+}
 
-  let parsed=false;
-  for(const fmt of ["application/rdf+xml","text/turtle"]){
-    try{ $rdf.parse(data,STORE,url,fmt); parsed=true; break; }catch{}
-  }
-  if(!parsed) throw new Error("Formato não reconhecido. Use RDF/XML ou Turtle.");
+async function loadData(url){
+  setLoading(true); ui.emptyState.style.display="none";
+  while(STORE.statements.length) STORE.statements.pop();
+  await parseStore(STORE,url);
+  buildGraph(STORE);
+  S.loaded=true; S.didFit=false; S.diffMode=false; S.diffData=null;
+  ui.diffLegend.style.display="none";
+  enableCtls(true);
+  setStatus(`${S.classNodes.size} classes`,"ok"); setLoading(false);
+  updateSubontoFilter();
+  buildSearchIndex();
+  rebuildAndRender();
+  buildStats();
+  updateLegend();
+}
 
-  state.classNodes.clear(); state.subclasses.clear();
-  state.superclasses.clear(); state.labelCount.clear(); state.tooltipCache.clear();
+function buildGraph(store){
+  S.classNodes.clear(); S.subclasses.clear(); S.superclasses.clear();
+  S.labelCount.clear(); S.tooltipCache.clear(); S.parentCount.clear();
+  S.nodeDepth.clear(); S.subontoMap.clear(); S.subontoValues.clear();
 
   const classSet=new Set();
-  STORE.each(null,RDF("type"),OWL("Class")).forEach(s=>classSet.add(s.value));
-  STORE.each(null,RDF("type"),RDFS("Class")).forEach(s=>classSet.add(s.value));
-  STORE.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>{
+  store.each(null,RDF("type"),OWL("Class")).forEach(s=>classSet.add(s.value));
+  store.each(null,RDF("type"),RDFS("Class")).forEach(s=>classSet.add(s.value));
+  store.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>{
     classSet.add(st.subject.value);
     if(st.object.termType==="NamedNode") classSet.add(st.object.value);
   });
 
   for(const iri of classSet){
-    const s=$rdf.sym(iri);
-    const label=getFirstLiteral(s,RDFS("label"))||getFirstLiteral(s,SKOS("prefLabel"))||"";
-    state.classNodes.set(iri,{iri,label,comment:getLiterals(s,RDFS("comment"))});
-    state.subclasses.set(iri,new Set());
-    state.superclasses.set(iri,new Set());
-    const key=label||shrinkIri(iri);
-    state.labelCount.set(key,(state.labelCount.get(key)||0)+1);
+    const sym=$rdf.sym(iri);
+    const label=getFL(store,sym,RDFS("label"))||getFL(store,sym,SKOS("prefLabel"))||"";
+    const comment=getLiterals(store,sym,RDFS("comment"));
+    const subonto=getFL(store,sym,ONTO("inSubontologia"))||"";
+    S.classNodes.set(iri,{iri,label,comment,subonto});
+    S.subclasses.set(iri,new Set()); S.superclasses.set(iri,new Set());
+    if(subonto){ S.subontoMap.set(iri,subonto); S.subontoValues.add(subonto); }
+    const base=label||shrinkIri(iri); S.labelCount.set(base,(S.labelCount.get(base)||0)+1);
   }
 
-  STORE.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>{
+  store.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>{
     if(st.subject.termType!=="NamedNode"||st.object.termType!=="NamedNode") return;
-    const c=st.subject.value, p=st.object.value;
-    if(!state.classNodes.has(c)||!state.classNodes.has(p)) return;
-    state.subclasses.get(p).add(c);
-    state.superclasses.get(c).add(p);
+    const c=st.subject.value,p=st.object.value;
+    if(!S.classNodes.has(c)||!S.classNodes.has(p)) return;
+    S.subclasses.get(p).add(c); S.superclasses.get(c).add(p);
   });
 
-  // OPÇÃO B: coleta TODAS as raízes (nós sem nenhuma superclasse conhecida).
-  // Cada raiz vira uma dimensão de topo independente — nenhuma é descartada.
-  state.rootIris = [];
-  for(const iri of state.classNodes.keys()){
-    const supers=[...(state.superclasses.get(iri)||new Set())].filter(x=>state.classNodes.has(x));
-    if(!supers.length) state.rootIris.push(iri);
+  // Computa profundidade real e contagem de pais
+  S.rootIris=[];
+  for(const iri of S.classNodes.keys()){
+    const supers=[...(S.superclasses.get(iri)||new Set())].filter(x=>S.classNodes.has(x));
+    S.parentCount.set(iri,supers.length);
+    if(!supers.length) S.rootIris.push(iri);
   }
-  if(!state.rootIris.length) throw new Error("Nenhuma classe encontrada.");
 
-  buildDimensions(); buildSearchIndex();
-  state.loaded=true; state.didFit=false;
-  enableControls(true);
-  setStatus(`${state.classNodes.size} classes`,"ok");
-  setLoading(false);
-  rebuildAndRender();
+  // BFS para profundidade
+  const depthQ=[...S.rootIris.map(r=>({iri:r,d:0}))];
+  S.rootIris.forEach(r=>S.nodeDepth.set(r,0));
+  while(depthQ.length){
+    const {iri,d}=depthQ.shift();
+    (S.subclasses.get(iri)||new Set()).forEach(c=>{
+      if(!S.nodeDepth.has(c)||S.nodeDepth.get(c)>d+1){ S.nodeDepth.set(c,d+1); depthQ.push({iri:c,d:d+1}); }
+    });
+  }
+
+  buildDimensions();
 }
 
 /* =========================================================
    DIMENSIONS
 ========================================================= */
-function countDescendants(iri){
-  let n=0; const q=[...(state.subclasses.get(iri)||new Set())], vis=new Set([iri]);
-  while(q.length){ const x=q.shift(); if(vis.has(x)) continue; vis.add(x); n++;
-    (state.subclasses.get(x)||new Set()).forEach(c=>q.push(c)); }
+function countDesc(iri){
+  let n=0; const q=[...(S.subclasses.get(iri)||new Set())],vis=new Set([iri]);
+  while(q.length){ const x=q.shift(); if(vis.has(x)) continue; vis.add(x); n++; (S.subclasses.get(x)||new Set()).forEach(c=>q.push(c)); }
   return n;
 }
 
 function buildDimensions(){
-  let saved={};
-  if(persistEnabled()){ try{ saved=JSON.parse(localStorage.getItem(P("dims"))||"{}"); }catch{} }
-
-  // OPÇÃO B: dimensões = filhos diretos de TODAS as raízes detectadas.
-  // Raízes sem filhos entram elas mesmas como dimensão.
-  // Assim hierarquias paralelas (ex: UFO + domínio) ficam todas acessíveis.
-  const dimSet = new Set();
-  for(const rootIri of state.rootIris){
-    const kids=[...(state.subclasses.get(rootIri)||new Set())].filter(i=>state.classNodes.has(i));
-    if(kids.length > 0){
-      // Raiz com filhos: os filhos directos são as dimensões
-      kids.forEach(k=>dimSet.add(k));
-    } else {
-      // Raiz folha ou isolada: ela mesma é uma dimensão
-      dimSet.add(rootIri);
-    }
-    // A raiz em si também entra como dimensão de topo (para navegação)
+  let saved={}; if(persistEnabled()){ try{ saved=JSON.parse(localStorage.getItem(P("dims"))||"{}"); }catch{} }
+  const dimSet=new Set();
+  S.rootIris.forEach(rootIri=>{
+    const kids=[...(S.subclasses.get(rootIri)||new Set())].filter(i=>S.classNodes.has(i));
+    kids.length>0 ? kids.forEach(k=>dimSet.add(k)) : dimSet.add(rootIri);
     dimSet.add(rootIri);
-  }
-  state.dimensions=[...dimSet].filter(i=>state.classNodes.has(i)).map((iri,idx)=>({
-    iri, label:termLabel(iri),
+  });
+  S.dimensions=[...dimSet].filter(i=>S.classNodes.has(i)).map((iri,idx)=>({
+    iri,label:termLabel(iri),
     color:saved[iri]?.color||DIM_PALETTE[idx%DIM_PALETTE.length],
-    count:countDescendants(iri),
+    count:countDesc(iri),
   })).sort((a,b)=>a.label.localeCompare(b.label,"pt-BR"));
-
-  state.selectedDims=Object.keys(saved).length
+  S.selectedDims=Object.keys(saved).length
     ? new Set(Object.entries(saved).filter(([,v])=>v.selected).map(([k])=>k))
     : new Set();
-
   ui.activeDim.innerHTML="";
-  state.dimensions.forEach(d=>{
-    const opt=document.createElement("option");
-    opt.value=d.iri; opt.textContent=d.label;
-    ui.activeDim.appendChild(opt);
-  });
-  if(state.dimensions.length){
-    const fs=[...state.selectedDims][0];
-    ui.activeDim.value=(fs&&state.dimensions.some(x=>x.iri===fs))?fs:state.dimensions[0].iri;
+  S.dimensions.forEach(d=>{ const o=document.createElement("option"); o.value=d.iri; o.textContent=d.label; ui.activeDim.appendChild(o); });
+  if(S.dimensions.length){
+    const fs=[...S.selectedDims][0];
+    ui.activeDim.value=(fs&&S.dimensions.some(x=>x.iri===fs))?fs:S.dimensions[0].iri;
   }
   renderDimsList();
 }
 
 function renderDimsList(){
   ui.dimsList.innerHTML="";
-  if(!state.dimensions.length){
-    ui.dimsList.innerHTML=`<div style="font-size:11px;color:var(--muted)">Nenhuma dimensão.</div>`; return;
-  }
-  state.dimensions.forEach(dim=>{
-    const isOn=state.selectedDims.has(dim.iri);
-    const row=document.createElement("div"); row.className="dim-item"+(isOn?" active":"");
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=isOn;
+  S.dimensions.forEach(dim=>{
+    const on=S.selectedDims.has(dim.iri);
+    const row=document.createElement("div"); row.className="di"+(on?" active":"");
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=on;
     cb.addEventListener("change",()=>{
-      if(cb.checked) state.selectedDims.add(dim.iri); else state.selectedDims.delete(dim.iri);
+      if(cb.checked) S.selectedDims.add(dim.iri); else S.selectedDims.delete(dim.iri);
       if(ui.splitMode.value==="single"&&cb.checked) ui.activeDim.value=dim.iri;
-      saveDimsPersisted(); renderDimsList(); rebuildAndRender();
+      saveDimsPersist(); renderDimsList(); rebuildAndRender();
     });
     const sw=document.createElement("input"); sw.type="color"; sw.value=dim.color;
     sw.style.cssText="width:20px;height:20px;padding:1px;border-radius:4px;border:1px solid var(--border2);";
-    sw.addEventListener("input",()=>{ dim.color=sw.value; saveDimsPersisted(); state.tooltipCache.clear(); rebuildAndRender(); });
-    const nm=document.createElement("div"); nm.className="dim-name"; nm.textContent=dim.label;
-    const ct=document.createElement("div"); ct.className="dim-count"; ct.textContent=dim.count;
+    sw.addEventListener("input",()=>{ dim.color=sw.value; saveDimsPersist(); S.tooltipCache.clear(); rebuildAndRender(); });
+    const nm=document.createElement("div"); nm.className="dn"; nm.textContent=dim.label;
+    const ct=document.createElement("div"); ct.className="dc"; ct.textContent=dim.count;
     row.append(cb,sw,nm,ct); ui.dimsList.appendChild(row);
   });
 }
 
 /* =========================================================
-   TREE BUILD — iterativo (FIX: sem recursão profunda)
+   SUBONTO FILTER
 ========================================================= */
-function buildTreeData(){
-  const maxDepth=+ui.maxDepth.value, mode=ui.splitMode.value;
-  const dimRoots=mode==="single"
-    ? (ui.activeDim.value?[ui.activeDim.value]:[])
-    : [...state.selectedDims];
+function updateSubontoFilter(){
+  ui.subontoFilter.innerHTML="<option value=''>— todas —</option>";
+  [...S.subontoValues].sort().forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=v; ui.subontoFilter.appendChild(o); });
+}
 
-  // FIX: BFS iterativo em vez de recursão — evita stack overflow em ontologias profundas
-  function buildSubBFS(startIri, startDepth, globalVisited){
+/* =========================================================
+   TREE BUILD (BFS iterativo, multi-root)
+========================================================= */
+function buildTreeData(cropRoot=null){
+  const maxDepth=+ui.maxDepth.value, mode=ui.splitMode.value;
+  let dimRoots;
+  if(cropRoot){
+    // Modo subárvore: exporta só o ramo do nó selecionado
+    dimRoots=[cropRoot];
+  } else {
+    dimRoots=mode==="single"?(ui.activeDim.value?[ui.activeDim.value]:[]):[...S.selectedDims];
+  }
+
+  function buildSubBFS(startIri,startDepth,globalVisited){
     const rootNode={iri:startIri,depth:startDepth,children:[]};
     const queue=[{iri:startIri,depth:startDepth,node:rootNode}];
     globalVisited.add(startIri);
     while(queue.length){
       const {iri,depth,node}=queue.shift();
-      if(state.collapsed.has(iri)||depth>=maxDepth) continue;
-      const kids=[...(state.subclasses.get(iri)||new Set())]
-        .filter(k=>state.classNodes.has(k)&&!globalVisited.has(k));
+      if(S.collapsed.has(iri)||depth>=maxDepth) continue;
+      const kids=[...(S.subclasses.get(iri)||new Set())].filter(k=>S.classNodes.has(k)&&!globalVisited.has(k));
       for(const kid of kids){
         globalVisited.add(kid);
-        const childNode={iri:kid,depth:depth+1,children:[]};
-        node.children.push(childNode);
-        queue.push({iri:kid,depth:depth+1,node:childNode});
+        const cn={iri:kid,depth:depth+1,children:[]}; node.children.push(cn); queue.push({iri:kid,depth:depth+1,node:cn});
       }
     }
     return rootNode;
   }
 
-  // OPÇÃO B: visited começa com TODAS as raízes para evitar duplicação entre hierarquias.
-  // Um nó virtual "__root__" agrega todas as dimensões selecionadas como filhos de nível 0.
-  const VIRTUAL_ROOT = "__multi_root__";
-  const visited = new Set(state.rootIris); // bloqueia todas as raízes reais da deduplicação
-  const children = [];
+  const visited=new Set(S.rootIris);
+  const children=[];
   for(const dimIri of dimRoots){
-    if(!state.classNodes.has(dimIri)) continue;
-    // Se a própria raiz é uma das dimensões, começa dela (depth=0 relativo)
-    const isRoot = state.rootIris.includes(dimIri);
-    if(isRoot){
-      // Raiz real: seus filhos entram como filhos diretos do nó virtual
-      const rootKids = [...(state.subclasses.get(dimIri)||new Set())]
-        .filter(k=>state.classNodes.has(k)&&!visited.has(k));
-      // Adiciona a raiz em si como nó de profundidade 1 (com seus filhos)
-      if(!visited.has(dimIri)){
-        visited.add(dimIri);
-        children.push(buildSubBFS(dimIri, 1, visited));
-      }
-    } else {
-      if(visited.has(dimIri)) continue;
-      children.push(buildSubBFS(dimIri, 1, visited));
+    if(!S.classNodes.has(dimIri)) continue;
+    if(visited.has(dimIri)&&!S.rootIris.includes(dimIri)) continue;
+    if(S.rootIris.includes(dimIri)&&!visited.has(dimIri)) visited.add(dimIri);
+    if(!visited.has(dimIri)) visited.add(dimIri);
+    children.push(buildSubBFS(dimIri,1,visited));
+  }
+  return {iri:"__root__",depth:0,children};
+}
+
+/* =========================================================
+   SECONDARY EDGES (herança múltipla)
+========================================================= */
+function buildSecondaryEdges(d3Root){
+  if(ui.multiParentMode.value==="hide") return [];
+  const rendered=new Set(d3Root.descendants().map(d=>d.data.iri));
+  const edges=[];
+  for(const d of d3Root.descendants()){
+    const iri=d.data.iri; if(iri==="__root__") continue;
+    const allParents=[...(S.superclasses.get(iri)||new Set())].filter(p=>rendered.has(p));
+    // O pai "oficial" já está nas links normais; os extras são os secundários
+    const primaryParent=d.parent?.data?.iri;
+    for(const p of allParents){
+      if(p!==primaryParent&&p!=="__root__"){ edges.push({sourceIri:p,targetIri:iri}); }
     }
   }
-  return {iri:VIRTUAL_ROOT, label:"(raiz)", depth:0, children};
+  return edges;
 }
 
 /* =========================================================
    DIM COLOR MAP
 ========================================================= */
 function buildDimColorMap(){
-  const map=new Map(), mode=ui.splitMode.value;
-  for(const dim of state.dimensions){
-    if(mode==="union"&&!state.selectedDims.has(dim.iri)) continue;
-    if(mode==="single"&&dim.iri!==ui.activeDim.value) continue;
+  const map=new Map(),mode=ui.splitMode.value;
+  S.dimensions.forEach(dim=>{
+    if(mode==="union"&&!S.selectedDims.has(dim.iri)) return;
+    if(mode==="single"&&dim.iri!==ui.activeDim.value) return;
     const q=[dim.iri];
-    while(q.length){ const i=q.shift(); if(map.has(i)) continue; map.set(i,dim.color);
-      (state.subclasses.get(i)||new Set()).forEach(c=>{ if(state.classNodes.has(c)) q.push(c); }); }
-  }
-  // OPÇÃO B: o nó virtual não aparece no mapa de cores; raízes reais ganham cor própria via dimensões
-  state.rootIris.forEach(r => { if(!map.has(r)) map.set(r, "#475569"); });
+    while(q.length){ const i=q.shift(); if(map.has(i)) continue; map.set(i,dim.color); (S.subclasses.get(i)||new Set()).forEach(c=>{ if(S.classNodes.has(c)) q.push(c); }); }
+  });
+  S.rootIris.forEach(r=>{ if(!map.has(r)) map.set(r,"#475569"); });
   return map;
 }
 
 /* =========================================================
-   LAYOUT COMPUTATION — função pura, separada do render
+   LAYOUT
 ========================================================= */
 function computeLayout(treeData){
   const layout=ui.layoutSelect.value;
   const compact=+ui.compact.value/100;
-  const gapX=Math.round(40-28*compact), gapY=Math.round(60-38*compact);
+  const gapX=Math.round(40-28*compact),gapY=Math.round(60-38*compact);
   const root=d3.hierarchy(treeData,d=>d.children);
-  const sample=root.descendants().slice(0,Math.min(60,root.descendants().length))
-    .map(d=>computeAutoNodeSize(d.data.iri));
+  const sample=root.descendants().slice(0,Math.min(60,root.descendants().length)).map(d=>autoSize(d.data.iri));
   const avgW=sample.length?sample.reduce((a,b)=>a+b.w,0)/sample.length:120;
   const avgH=sample.length?sample.reduce((a,b)=>a+b.h,0)/sample.length:28;
-  let sepX=Math.max(70,Math.round(avgW+gapX));
-  let sepY=Math.max(60,Math.round(avgH+gapY));
-  if(layout==="a4"){ sepX+=10; sepY+=14; }
+  let sepX=Math.max(70,Math.round(avgW+gapX)),sepY=Math.max(60,Math.round(avgH+gapY));
+  if(layout==="a4"){sepX+=10;sepY+=14;}
 
   if(layout==="radial"){
     const radius=Math.min(viewW,viewH)/2-80;
@@ -1266,308 +964,663 @@ function computeLayout(treeData){
     });
   }
 
-  // Posições manuais (drag)
+  const lk=ui.layoutSelect.value;
   root.descendants().forEach(d=>{
-    const key=`${layout}|${d.data.iri}`;
-    if(state.nodePositions.has(key)){ const p=state.nodePositions.get(key); d.x=p.x; d.y=p.y; }
+    const key=`${lk}|${d.data.iri}`;
+    if(S.nodePositions.has(key)){ const p=S.nodePositions.get(key); d.x=p.x; d.y=p.y; }
   });
   return root;
 }
 
 /* =========================================================
-   TOOLTIP — memoizado por IRI
-   FIX: recalcula apenas na primeira chamada, invalida ao editar/mudar tema
+   TOOLTIP (memoizado)
 ========================================================= */
 function getTooltipHTML(iri){
-  if(iri==="__multi_root__") return "";
-  if(state.tooltipCache.has(iri)) return state.tooltipCache.get(iri);
-  const s=$rdf.sym(iri);
+  if(iri==="__root__") return "";
+  if(S.tooltipCache.has(iri)) return S.tooltipCache.get(iri);
+  const sym=$rdf.sym(iri);
   const label=termLabel(iri);
-  const comments=uniq(getLiterals(s,RDFS("comment")));
-  const supers=uniq([...(state.superclasses.get(iri)||new Set())]).map(termLabel).sort();
-  const subs=uniq([...(state.subclasses.get(iri)||new Set())]).map(termLabel).sort();
-  const objProps=STORE.each(null,RDF("type"),OWL("ObjectProperty")).map(x=>x.value);
-  const dtProps =STORE.each(null,RDF("type"),OWL("DatatypeProperty")).map(x=>x.value);
-  function getConn(props){ const dom=[],rng=[];
-    props.forEach(pIri=>{ const p=$rdf.sym(pIri);
-      STORE.each(p,RDFS("domain"),null).filter(x=>x.termType==="NamedNode").map(x=>x.value).forEach(v=>{ if(v===iri) dom.push(pIri); });
-      STORE.each(p,RDFS("range"),null).filter(x=>x.termType==="NamedNode").map(x=>x.value).forEach(v=>{ if(v===iri) rng.push(pIri); });
-    }); return {dom,rng}; }
-  const {dom:dObj,rng:rObj}=getConn(objProps);
-  const {dom:dDt}=getConn(dtProps);
-  function pLine(pIri){ const p=$rdf.sym(pIri); const pl=getFirstLiteral(p,RDFS("label"))||shrinkIri(pIri);
-    return `<div class="t-item">${escapeHTML(pl)}</div>`; }
-  const parts=[`<div class="t-title">${escapeHTML(label)}</div>`,`<div class="t-iri">${escapeHTML(shrinkIri(iri))}</div>`];
-  const sec=(title,items)=>{ if(!items?.length) return; parts.push(`<hr/><div class="t-sec">${escapeHTML(title)}</div>`);
-    items.slice(0,12).forEach(it=>parts.push(it));
-    if(items.length>12) parts.push(`<div style="color:var(--muted);font-size:10px">+${items.length-12}</div>`); };
-  if(comments.length){ parts.push(`<hr/><div class="t-sec">Descrição</div>`);
-    comments.slice(0,2).forEach(c=>parts.push(`<div style="font-size:11px">${escapeHTML(c)}</div>`)); }
-  sec("Superclasses",supers.map(x=>`<div class="t-item">${escapeHTML(x)}</div>`));
-  sec("Subclasses",subs.map(x=>`<div class="t-item">${escapeHTML(x)}</div>`));
-  sec("ObjectProp · Domain",dObj.map(pLine)); sec("ObjectProp · Range",rObj.map(pLine));
-  sec("DatatypeProp · Domain",dDt.map(pLine));
-  const html=parts.join(""); state.tooltipCache.set(iri,html); return html;
+  const comments=uniq(getLiterals(STORE,sym,RDFS("comment")));
+  const supers=uniq([...(S.superclasses.get(iri)||new Set())]).map(termLabel).sort();
+  const subs=uniq([...(S.subclasses.get(iri)||new Set())]).map(termLabel).sort();
+  const subonto=S.subontoMap.get(iri)||"";
+  const depth=S.nodeDepth.get(iri)??0;
+  const pCount=S.parentCount.get(iri)??0;
+  const obsV1=getFL(STORE,sym,ONTO("observacaoV1"));
+
+  const p=[];
+  p.push(`<div class="tt">${esc(label)}</div>`);
+  p.push(`<div class="ti">${esc(shrinkIri(iri))}</div>`);
+  if(subonto) p.push(`<div class="ti" style="margin-top:3px">📂 ${esc(subonto)} &nbsp;·&nbsp; prof. ${depth}${pCount>1?` &nbsp;·&nbsp; <strong style="color:var(--warn)">${pCount} pais</strong>`:""}</div>`);
+  const sec=(t,items)=>{ if(!items?.length) return; p.push(`<div class="ts">${esc(t)}</div>`); items.slice(0,12).forEach(i=>p.push(`<div class="tx">${i}</div>`)); if(items.length>12) p.push(`<div style="color:var(--muted);font-size:10px">+${items.length-12}</div>`); };
+  if(comments.length){ p.push(`<div class="ts">Descrição</div>`); comments.slice(0,2).forEach(c=>p.push(`<div style="font-size:11px">${esc(c)}</div>`)); }
+  if(obsV1){ p.push(`<div class="ts">Observação v1</div><div style="font-size:10.5px;color:var(--muted2)">${esc(obsV1.slice(0,200))}${obsV1.length>200?"…":""}</div>`); }
+  sec("Superclasses",supers.map(x=>`<div class="tx">${esc(x)}</div>`));
+  sec("Subclasses",subs.map(x=>`<div class="tx">${esc(x)}</div>`));
+  const html=p.join(""); S.tooltipCache.set(iri,html); return html;
 }
 
 /* =========================================================
-   RENDER — recebe d3Root pré-calculado
+   RENDER GRAPH
 ========================================================= */
 function renderGraph(d3Root){
   if(!d3Root) return;
-  _lastD3Root=d3Root;
+  S.currentD3Root=d3Root;
   const layout=ui.layoutSelect.value;
-  const curve=+ui.edgeCurve.value/100, strokeW=+ui.edgeWidth.value, edgeCol=ui.edgeColor.value;
+  const curve=+ui.edgeCurve.value/100,strokeW=+ui.edgeWidth.value,edgeCol=ui.edgeColor.value;
   const dimMap=buildDimColorMap();
-  const allNodes=d3Root.descendants(), allLinks=d3Root.links();
+  const allNodes=d3Root.descendants(),allLinks=d3Root.links();
   ui.nodeCount.textContent=allNodes.length; ui.edgeCount.textContent=allLinks.length;
 
-  function lp(s,t){ const dx=t.x-s.x,dy=t.y-s.y;
-    return `M${s.x},${s.y} C${s.x+dx*curve},${s.y+dy*(1-curve)} ${s.x+dx*(1-curve)},${s.y+dy*curve} ${t.x},${t.y}`; }
+  // Scientific mode overrides
+  const sci=S.sciMode;
 
-  // LINKS
-  // OPÇÃO B: esconde arestas que partem do nó virtual (raiz oculta)
-  const visibleLinks = allLinks.filter(l=>l.source.data.iri!=="__multi_root__");
-  const linkSel=gLinks.selectAll("path.link").data(visibleLinks,d=>d.target.data.iri);
-  linkSel.exit().remove();
-  linkSel.enter().append("path").attr("class","link").merge(linkSel)
-    .attr("stroke",edgeCol).attr("stroke-width",strokeW).attr("d",d=>lp(d.source,d.target));
+  function lp(s,t){ const dx=t.x-s.x,dy=t.y-s.y; return `M${s.x},${s.y} C${s.x+dx*curve},${s.y+dy*(1-curve)} ${s.x+dx*(1-curve)},${s.y+dy*curve} ${t.x},${t.y}`; }
 
-  // NODES
-  const nodeSel=gNodes.selectAll("g.node").data(allNodes,d=>d.data.iri);
-  nodeSel.exit().remove();
-  const nodeEnter=nodeSel.enter().append("g").attr("class","node").style("cursor","pointer")
+  // Primary links (hide virtual root links)
+  const visLinks=allLinks.filter(l=>l.source.data.iri!=="__root__");
+  const lkSel=gLinks.selectAll("path.link.primary").data(visLinks,d=>d.target.data.iri);
+  lkSel.exit().remove();
+  lkSel.enter().append("path").attr("class","link primary").merge(lkSel)
+    .attr("stroke",sci?"#333":edgeCol).attr("stroke-width",sci?1.2:strokeW)
+    .attr("d",d=>lp(d.source,d.target));
+
+  // Secondary edges (multi-parent)
+  const secEdges=buildSecondaryEdges(d3Root);
+  const nodeMap=new Map(d3Root.descendants().map(d=>[d.data.iri,d]));
+  const secData=secEdges.map(e=>({s:nodeMap.get(e.sourceIri),t:nodeMap.get(e.targetIri)})).filter(e=>e.s&&e.t);
+  const secSel=gLinks.selectAll("path.link.multi-parent").data(secData,d=>`${d.s.data.iri}|${d.t.data.iri}`);
+  secSel.exit().remove();
+  secSel.enter().append("path").attr("class","link multi-parent").merge(secSel)
+    .attr("stroke",sci?"#888":edgeCol).attr("stroke-width",1)
+    .attr("d",d=>lp(d.s,d.t));
+
+  // Nodes
+  const ndSel=gNodes.selectAll("g.node").data(allNodes,d=>d.data.iri);
+  ndSel.exit().remove();
+  const ndEnter=ndSel.enter().append("g").attr("class","node").style("cursor","pointer")
     .on("mousemove",(event,d)=>{
-      if(d.data.iri==="__multi_root__") return;
+      if(d.data.iri==="__root__") return;
+      if(S.hlMode) applyHL(d.data.iri,d3Root);
       const r=wrap.getBoundingClientRect();
-      ui.tooltip.innerHTML=getTooltipHTML(d.data.iri); // FIX: memoizado
-      ui.tooltip.style.cssText=`display:block;left:${event.clientX-r.left+14}px;top:${event.clientY-r.top+14}px;`;
+      ui.tooltip.innerHTML=getTooltipHTML(d.data.iri);
+      ui.tooltip.style.cssText=`display:block;left:${event.clientX-r.left+14}px;top:${event.clientY-r.top+14}px`;
+      showBreadcrumb(d.data.iri);
     })
-    .on("mouseleave",()=>{ ui.tooltip.style.display="none"; })
-    .on("click",(event,d)=>{ event.stopPropagation(); if(d.data.iri==="__multi_root__") return; if(event.altKey) toggleCollapse(d.data.iri); else selectNode(d.data.iri); })
+    .on("mouseleave",()=>{ ui.tooltip.style.display="none"; if(S.hlMode) clearHL(); })
+    .on("click",(event,d)=>{
+      event.stopPropagation();
+      if(d.data.iri==="__root__") return;
+      if(event.altKey) toggleCollapse(d.data.iri);
+      else selectNode(d.data.iri);
+    })
+    .on("dblclick",(event,d)=>{
+      event.stopPropagation();
+      if(d.data.iri==="__root__") return;
+      exportSubtree(d.data.iri);
+    })
     .call(d3.drag()
       .on("start",e=>e.sourceEvent?.stopPropagation())
       .on("drag",(event,d)=>{
         d.x=event.x; d.y=event.y;
-        state.nodePositions.set(`${layout}|${d.data.iri}`,{x:d.x,y:d.y}); savePersisted();
+        S.nodePositions.set(`${layout}|${d.data.iri}`,{x:d.x,y:d.y}); savePersisted();
         d3.select(event.sourceEvent.target.closest("g.node")).attr("transform",`translate(${d.x},${d.y})`);
-        gLinks.selectAll("path.link").attr("d",l=>lp(l.source,l.target));
+        gLinks.selectAll("path.link").attr("d",l=>{ if(l.s&&l.t) return lp(l.s,l.t); if(l.source&&l.target) return lp(l.source,l.target); return ""; });
       }));
-  nodeEnter.append("rect"); nodeEnter.append("text").attr("text-anchor","middle");
+  ndEnter.append("rect");
+  ndEnter.append("text").attr("text-anchor","middle");
 
-  const nm=nodeEnter.merge(nodeSel)
+  const ndMerge=ndEnter.merge(ndSel)
     .attr("transform",d=>`translate(${d.x},${d.y})`)
-    .classed("selected",d=>d.data.iri===state.selectedIri);
+    .classed("selected",d=>d.data.iri===S.selectedIri);
 
-  nm.select("rect").each(function(d){
+  // Apply diff classes
+  ndMerge.classed("diff-added",  d=>S.diffData?.added?.has(d.data.iri)||false)
+         .classed("diff-removed",d=>S.diffData?.removed?.has(d.data.iri)||false)
+         .classed("diff-changed",d=>S.diffData?.changed?.has(d.data.iri)||false);
+
+  ndMerge.select("rect").each(function(d){
     const iri=d.data.iri;
-    // OPÇÃO B: nó raiz virtual é invisível — serve só como âncora de layout
-    if(iri==="__multi_root__"){ d3.select(this).attr("width",0).attr("height",0).attr("opacity",0); return; }
-    const st=state.nodeStyles.get(iri)||{}, auto=computeAutoNodeSize(iri);
-    const w=st.w??auto.w, h=st.h??auto.h, r=st.radius??8;
+    if(iri==="__root__"){ d3.select(this).attr("width",0).attr("height",0).attr("opacity",0); return; }
+    const st=S.nodeStyles.get(iri)||{},auto=autoSize(iri);
+    const w=st.w??auto.w,h=st.h??auto.h,r=st.radius??8;
+    let fill=st.fill??(dimMap.get(iri)||"#475569");
+    if(sci){ fill=S.rootIris.includes(iri)?"#888":"#555"; }
     d3.select(this).attr("width",w).attr("height",h).attr("x",-w/2).attr("y",-h/2)
-      .attr("rx",r).attr("ry",r).attr("fill",st.fill??(dimMap.get(iri)||"#475569"))
-      .attr("opacity",state.rootIris.includes(iri)?0.55:((st.opacity??92)/100))
-      .attr("stroke",st.stroke||"var(--node-stroke)");
+      .attr("rx",r).attr("ry",r).attr("fill",fill)
+      .attr("opacity",S.rootIris.includes(iri)?0.5:((st.opacity??92)/100))
+      .attr("stroke",sci?"#111":(st.stroke||"var(--node-stroke)"));
   });
 
-  // FIX: limpa tspans antes de renderizar
-  nm.select("text").each(function(d){
-    const iri=d.data.iri, st=state.nodeStyles.get(iri)||{};
-    const font=st.font??12, auto=computeAutoNodeSize(iri);
-    const maxLW=Math.max(90,(st.w??auto.w)-16), label=termLabel(iri);
-    const text=d3.select(this);
-    text.selectAll("*").remove(); // FIX: limpa antes de re-render
-    text.style("font-size",font+"px").style("font-family","var(--font-display)");
+  ndMerge.select("text").each(function(d){
+    const iri=d.data.iri; if(iri==="__root__"){ d3.select(this).text(""); return; }
+    const st=S.nodeStyles.get(iri)||{},font=st.font??12,auto=autoSize(iri);
+    const maxLW=Math.max(90,(st.w??auto.w)-16),label=termLabel(iri);
+    const text=d3.select(this); text.selectAll("*").remove();
+    const sciFont=sci?"Times New Roman, Georgia, serif":"var(--fd)";
+    text.style("font-size",font+"px").style("font-family",sciFont);
     const words=label.split(/\s+/).filter(Boolean); let l1="",l2="";
-    for(const w of words){ const c=(l1?l1+" ":"")+w; if(measureTextWidth(c,font)<=maxLW) l1=c; else l2=(l2?l2+" ":"")+w; }
+    for(const w of words){ const c=(l1?l1+" ":"")+w; if(measureW(c,font)<=maxLW) l1=c; else l2=(l2?l2+" ":"")+w; }
     if(!l1) l1=label;
-    if(l2&&measureTextWidth(l2,font)>maxLW){ while(l2.length&&measureTextWidth(l2+"…",font)>maxLW) l2=l2.slice(0,-1); l2=l2.trim()+"…"; }
+    if(l2&&measureW(l2,font)>maxLW){ while(l2.length&&measureW(l2+"…",font)>maxLW) l2=l2.slice(0,-1); l2=l2.trim()+"…"; }
     text.attr("dominant-baseline","middle");
     if(!l2){ text.append("tspan").attr("x",0).attr("dy","0em").text(l1); }
-    else { text.append("tspan").attr("x",0).attr("dy","-0.3em").text(l1);
-           text.append("tspan").attr("x",0).attr("dy","1.35em").text(l2); }
+    else { text.append("tspan").attr("x",0).attr("dy","-0.3em").text(l1); text.append("tspan").attr("x",0).attr("dy","1.35em").text(l2); }
+    if(sci) text.style("fill","#000");
   });
 }
 
 /* =========================================================
-   REBUILD AND RENDER — orquestra as 3 fases
+   REBUILD AND RENDER
 ========================================================= */
 function rebuildAndRender(){
-  if(!state.loaded) return;
-  ui.depthLabel.textContent=ui.maxDepth.value;
-  const treeData=buildTreeData();        // Fase 1: dados
-  const d3Root=computeLayout(treeData);  // Fase 2: layout
-  renderGraph(d3Root);                   // Fase 3: DOM
-  // FIX: state.didFit em vez de _didFit na função
-  if(!state.didFit){ fitToView(); state.didFit=true; }
+  if(!S.loaded) return;
+  ui.depthLbl.textContent=ui.maxDepth.value;
+  const treeData=buildTreeData();
+  const d3Root=computeLayout(treeData);
+  renderGraph(d3Root);
+  if(!S.didFit){ fitToView(); S.didFit=true; }
 }
 
 /* =========================================================
    FIT / RESET
 ========================================================= */
-function getContentBBox(){
-  try{ const b=gRoot.node().getBBox(); return {x:b.x,y:b.y,w:b.width,h:b.height}; }
-  catch{ return {x:0,y:0,w:viewW,h:viewH}; }
-}
+function getContentBBox(){ try{ const b=gRoot.node().getBBox(); return{x:b.x,y:b.y,w:b.width,h:b.height}; }catch{ return{x:0,y:0,w:viewW,h:viewH}; } }
 function fitToView(){
   const bb=getContentBBox(); if(!isFinite(bb.w)||bb.w<=0) return;
-  const pad=60, s=Math.min(0.95,Math.max(0.12,Math.min(viewW/(bb.w+pad),(viewH-52)/(bb.h+pad))));
-  svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity
-    .translate(viewW/2-s*(bb.x+bb.w/2),viewH/2-s*(bb.y+bb.h/2)).scale(s));
+  const pad=60,s=Math.min(0.95,Math.max(0.1,Math.min(viewW/(bb.w+pad),(viewH-52)/(bb.h+pad))));
+  svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity.translate(viewW/2-s*(bb.x+bb.w/2),viewH/2-s*(bb.y+bb.h/2)).scale(s));
 }
 function resetAll(){
   clearPersisted();
-  state.customLabels.clear(); state.collapsed.clear();
-  state.nodePositions.clear(); state.nodeStyles.clear();
-  state.tooltipCache.clear(); state.selectedIri=null; state.didFit=false;
-  ui.selPill.style.display="none";
-  ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
-  ui.editorHint.textContent="Clique em um nó para editar.";
+  S.customLabels.clear();S.collapsed.clear();S.nodePositions.clear();S.nodeStyles.clear();
+  S.tooltipCache.clear();S.selectedIri=null;S.didFit=false;S.hlMode=false;S.sciMode=false;
+  S.compareA=null;S.compareB=null;S.diffMode=false;S.diffData=null;
+  ui.selPill.style.display="none"; ui.editorCard.classList.add("locked");
+  ui.editorFields.style.display="none"; ui.editorHint.textContent="Clique em um nó para editar.";
+  ui.cmpA.textContent="—"; ui.cmpB.textContent="—"; ui.comparePanel.style.display="none";
+  ui.breadcrumb.style.display="none"; ui.sciModeBadge.style.display="none";
+  ui.diffLegend.style.display="none"; document.body.classList.remove("hl-mode");
+  ui.btnHlMode.textContent="👁 Vizinhança"; _mcache.clear();
   buildDimensions(); rebuildAndRender();
 }
 
 /* =========================================================
    COLLAPSE / SELECT / EDITOR
 ========================================================= */
-function toggleCollapse(iri){ if(state.collapsed.has(iri)) state.collapsed.delete(iri); else state.collapsed.add(iri); savePersisted(); rebuildAndRender(); }
-function selectNode(iri){ state.selectedIri=iri; ui.selPill.style.display=""; ui.selInfo.textContent=termLabel(iri); openEditorFor(iri); rebuildAndRender(); }
+function toggleCollapse(iri){ if(S.collapsed.has(iri)) S.collapsed.delete(iri); else S.collapsed.add(iri); savePersisted(); rebuildAndRender(); }
+function selectNode(iri){
+  S.selectedIri=iri; ui.selPill.style.display=""; ui.selInfo.textContent=termLabel(iri);
+  S.subtreeRoot=iri;
+  openEditorFor(iri); rebuildAndRender(); showBreadcrumb(iri);
+  updateLegend();
+  // Enable comparator buttons
+  ui.btnFixA.disabled=false; ui.btnFixB.disabled=false;
+}
 function openEditorFor(iri){
   ui.editorCard.classList.remove("locked");
   ui.editorHint.textContent=shrinkIri(iri);
-  ui.editorFields.style.display="flex"; ui.editorFields.style.flexDirection="column"; ui.editorFields.style.gap="6px";
-  const st=state.nodeStyles.get(iri)||{}, auto=computeAutoNodeSize(iri);
-  ui.edLabel.value=state.customLabels.get(iri)||state.classNodes.get(iri)?.label||shrinkIri(iri);
+  ui.editorFields.style.display="flex"; ui.editorFields.style.flexDirection="column"; ui.editorFields.style.gap="7px";
+  const st=S.nodeStyles.get(iri)||{},auto=autoSize(iri);
+  ui.edLabel.value=S.customLabels.get(iri)||S.classNodes.get(iri)?.label||shrinkIri(iri);
   ui.edFill.value=st.fill||"#334155";
   ui.edStroke.value=(st.stroke&&st.stroke.startsWith("#"))?st.stroke:"#111827";
   ui.edOpacity.value=st.opacity??92;
-  ui.edW.value=st.w??auto.w; ui.edWVal.textContent=ui.edW.value;
-  ui.edH.value=st.h??auto.h; ui.edHVal.textContent=ui.edH.value;
-  ui.edFont.value=st.font??12; ui.edFontVal.textContent=ui.edFont.value;
-  ui.edRadius.value=st.radius??8; ui.edRadiusVal.textContent=ui.edRadius.value;
+  ui.edW.value=st.w??auto.w; ui.edWv.textContent=ui.edW.value;
+  ui.edH.value=st.h??auto.h; ui.edHv.textContent=ui.edH.value;
+  ui.edFont.value=st.font??12; ui.edFv.textContent=ui.edFont.value;
+  ui.edRadius.value=st.radius??8; ui.edRv.textContent=ui.edRadius.value;
 }
-ui.btnEditorApply.addEventListener("click",()=>{
-  const iri=state.selectedIri; if(!iri) return;
-  const lbl=ui.edLabel.value.trim(); if(lbl) state.customLabels.set(iri,lbl); else state.customLabels.delete(iri);
-  state.nodeStyles.set(iri,{fill:ui.edFill.value,stroke:ui.edStroke.value,opacity:+ui.edOpacity.value,w:+ui.edW.value,h:+ui.edH.value,font:+ui.edFont.value,radius:+ui.edRadius.value});
-  state.tooltipCache.delete(iri); _mCache.clear(); // invalida cache de medição ao mudar font
-  savePersisted(); rebuildAndRender();
-});
-ui.btnEditorReset.addEventListener("click",()=>{
-  const iri=state.selectedIri; if(!iri) return;
-  state.customLabels.delete(iri); state.nodeStyles.delete(iri); state.tooltipCache.delete(iri);
-  savePersisted(); openEditorFor(iri); rebuildAndRender();
-});
+ui.btnEdApply.onclick=()=>{
+  const iri=S.selectedIri; if(!iri) return;
+  const lbl=ui.edLabel.value.trim(); if(lbl) S.customLabels.set(iri,lbl); else S.customLabels.delete(iri);
+  S.nodeStyles.set(iri,{fill:ui.edFill.value,stroke:ui.edStroke.value,opacity:+ui.edOpacity.value,w:+ui.edW.value,h:+ui.edH.value,font:+ui.edFont.value,radius:+ui.edRadius.value});
+  S.tooltipCache.delete(iri); _mcache.clear(); savePersisted(); rebuildAndRender();
+};
+ui.btnEdReset.onclick=()=>{
+  const iri=S.selectedIri; if(!iri) return;
+  S.customLabels.delete(iri);S.nodeStyles.delete(iri);S.tooltipCache.delete(iri);
+  savePersisted();openEditorFor(iri);rebuildAndRender();
+};
 
 /* =========================================================
-   SEARCH
+   FEATURE 4: BREADCRUMB
 ========================================================= */
-function buildSearchIndex(){ state.searchIndex=[...state.classNodes.keys()]
-  .map(iri=>({iri,label:termLabel(iri),iriShort:shrinkIri(iri)}))
-  .sort((a,b)=>a.label.localeCompare(b.label,"pt-BR")); }
+function getAncestorPath(iri){
+  // BFS para encontrar o caminho mais curto até uma raiz
+  const q=[[iri]];
+  const vis=new Set([iri]);
+  while(q.length){
+    const path=q.shift();
+    const cur=path[0];
+    if(S.rootIris.includes(cur)) return path.reverse();
+    const parents=[...(S.superclasses.get(cur)||new Set())].filter(p=>S.classNodes.has(p)&&!vis.has(p));
+    if(!parents.length) return path.reverse();
+    for(const p of parents){ vis.add(p); q.push([p,...path]); }
+  }
+  return [iri];
+}
+function showBreadcrumb(iri){
+  const path=getAncestorPath(iri);
+  ui.breadcrumb.innerHTML=path.map((p,i)=>{
+    const label=esc(termLabel(p)||shrinkIri(p));
+    const isLast=i===path.length-1;
+    if(isLast) return `<span style="color:var(--text);font-weight:700">${label}</span>`;
+    return `<span class="bc-item" data-iri="${esc(p)}">${label}</span><span class="bc-sep">›</span>`;
+  }).join("");
+  ui.breadcrumb.style.display="block";
+  ui.breadcrumb.querySelectorAll(".bc-item").forEach(el=>el.onclick=()=>{ selectNode(el.dataset.iri); zoomToNode(el.dataset.iri); });
+}
+
+/* =========================================================
+   FEATURE 11: NEIGHBORHOOD HIGHLIGHT
+========================================================= */
+function applyHL(iri,d3Root){
+  const relevant=new Set([iri]);
+  (S.superclasses.get(iri)||new Set()).forEach(p=>relevant.add(p));
+  (S.subclasses.get(iri)||new Set()).forEach(c=>relevant.add(c));
+  gNodes.selectAll("g.node").classed("dimmed",d=>d.data.iri!=="__root__"&&!relevant.has(d.data.iri));
+  gLinks.selectAll("path.link").classed("dimmed",d=>{
+    if(!d.source||!d.target) return false;
+    return !relevant.has(d.source.data.iri)&&!relevant.has(d.target.data.iri);
+  });
+}
+function clearHL(){ gNodes.selectAll("g.node").classed("dimmed",false); gLinks.selectAll("path.link").classed("dimmed",false); }
+
+ui.btnHlMode.onclick=()=>{
+  S.hlMode=!S.hlMode;
+  ui.btnHlMode.textContent=S.hlMode?"👁 Normal":"👁 Vizinhança";
+  ui.btnHlMode.classList.toggle("primary",S.hlMode);
+  document.body.classList.toggle("hl-mode",S.hlMode);
+  if(!S.hlMode) clearHL();
+};
+
+/* =========================================================
+   FEATURE 7: SCIENTIFIC MODE (template presets)
+========================================================= */
+const TEMPLATES={
+  sci_bw:{ layout:"topdown",edgeCurve:10,edgeWidth:1,edgeColor:"#333333",compact:65,sci:true,bg:"#ffffff",nodeBase:"#555555" },
+  sci_color:{ layout:"topdown",edgeCurve:15,edgeWidth:1.5,edgeColor:"#334155",compact:65,sci:false },
+  poster:{ layout:"topdown",edgeCurve:20,edgeWidth:2.5,edgeColor:"#1e3a5f",compact:55,sci:false },
+  pres:{ layout:"leftright",edgeCurve:25,edgeWidth:2,edgeColor:"#1e3a5f",compact:70,sci:false },
+  thesis:{ layout:"topdown",edgeCurve:0,edgeWidth:1,edgeColor:"#475569",compact:60,sci:true,bg:"#ffffff" },
+};
+function applyTemplate(cfg){
+  if(!cfg) return;
+  if(cfg.layout)    ui.layoutSelect.value=cfg.layout;
+  if(cfg.edgeCurve!=null){ ui.edgeCurve.value=cfg.edgeCurve; ui.curveLbl.textContent=cfg.edgeCurve; }
+  if(cfg.edgeWidth!=null){ ui.edgeWidth.value=cfg.edgeWidth; ui.ewLbl.textContent=cfg.edgeWidth; }
+  if(cfg.edgeColor) ui.edgeColor.value=cfg.edgeColor;
+  if(cfg.compact!=null){ ui.compact.value=cfg.compact; ui.compactLbl.textContent=cfg.compact; }
+  S.sciMode=cfg.sci||false;
+  ui.sciModeBadge.style.display=S.sciMode?"block":"none";
+  S.didFit=false; rebuildAndRender();
+}
+ui.templateSelect.onchange=()=>{ const t=TEMPLATES[ui.templateSelect.value]; if(t) applyTemplate(t); ui.templateSelect.value=""; };
+ui.btnTplSave.onclick=()=>{
+  const name=ui.tplName.value.trim(); if(!name) return;
+  const cfg={ layout:ui.layoutSelect.value, edgeCurve:+ui.edgeCurve.value, edgeWidth:+ui.edgeWidth.value,
+    edgeColor:ui.edgeColor.value, compact:+ui.compact.value, sci:S.sciMode };
+  S.savedTemplates.set(name,cfg); savePersisted();
+  alert(`Template "${name}" salvo!`);
+};
+ui.btnTplLoad.onclick=()=>{
+  const name=ui.tplName.value.trim(); if(!name) return;
+  const cfg=S.savedTemplates.get(name); if(!cfg){ alert("Template não encontrado."); return; }
+  applyTemplate(cfg);
+};
+
+/* =========================================================
+   FEATURE 4 + CITATION: LEGEND + CITATION TEXT
+========================================================= */
+function updateLegend(){
+  if(!S.loaded) return;
+  const mode=ui.splitMode.value;
+  const dims=mode==="single"?[S.dimensions.find(d=>d.iri===ui.activeDim.value)].filter(Boolean)
+    :S.dimensions.filter(d=>S.selectedDims.has(d.iri));
+  const dimNames=dims.map(d=>d.label).join(", ");
+  const year=new Date().getFullYear();
+  const legend=`Figura X: Taxonomia do discurso de ódio online — dimensão(ões): ${dimNames||"todas"}. Profundidade máxima: ${ui.maxDepth.value}. Fonte: OntoHate v2 (${year}).`;
+  const citation=`SILVA, L. Q. OntoHate: Ontologia para classificação do discurso de ódio online. ${year}. Disponível em: https://github.com/luquizis/Ontohate`;
+  ui.legendText.textContent=legend;
+  ui.legendPreview.style.display="block";
+  ui.btnCopyLegend.onclick=()=>{ navigator.clipboard.writeText(legend); ui.btnCopyLegend.textContent="✓ Copiado"; setTimeout(()=>ui.btnCopyLegend.textContent="Copiar legenda",1800); };
+  ui.btnCiteCopy.onclick=()=>{ navigator.clipboard.writeText(citation); ui.btnCiteCopy.textContent="✓ Copiado"; setTimeout(()=>ui.btnCiteCopy.textContent="Copiar citação",1800); };
+}
+
+/* =========================================================
+   FEATURE 1: STATS PANEL
+========================================================= */
+function buildStats(){
+  if(!S.loaded) return;
+  const total=S.classNodes.size;
+  const maxD=Math.max(...[...S.nodeDepth.values()]);
+  const withComment=[...S.classNodes.values()].filter(n=>n.comment?.length).length;
+  const multiParent=[...S.parentCount.entries()].filter(([,c])=>c>1).length;
+  const noLabel=[...S.classNodes.values()].filter(n=>!n.label).length;
+  const leafs=[...S.classNodes.keys()].filter(iri=>(S.subclasses.get(iri)||new Set()).size===0).length;
+  const fanout=[...S.classNodes.keys()].filter(iri=>(S.subclasses.get(iri)||new Set()).size>10).length;
+
+  ui.statGrid.innerHTML=[
+    {v:total,l:"Classes total"},{v:maxD,l:"Profundidade máx."},
+    {v:S.rootIris.length,l:"Hierarquias (raízes)"},{v:multiParent,l:"Herança múltipla"},
+    {v:withComment,l:"Com rdfs:comment"},{v:leafs,l:"Classes folha"},
+    {v:S.subontoValues.size,l:"Subontologias"},{v:noLabel,l:"Sem rdfs:label"},
+  ].map(s=>`<div class="stat-box"><div class="sv">${s.v}</div><div class="sl">${s.l}</div></div>`).join("");
+
+  // Distribuição por subontologia
+  const subMap=new Map();
+  S.subontoMap.forEach((sub)=>subMap.set(sub,(subMap.get(sub)||0)+1));
+  ui.statSubonto.innerHTML=[...subMap.entries()].sort((a,b)=>b[1]-a[1])
+    .map(([sub,count])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--border);font-size:12px"><span>${esc(sub)}</span><span class="badge ok">${count}</span></div>`).join("");
+
+  // Anomalias
+  const anomalies=[];
+  if(noLabel>0) anomalies.push({t:"Classes sem rdfs:label",d:`${noLabel} classes sem label dificultam a leitura da taxonomia.`,badge:"warn"});
+  if(fanout>0) anomalies.push({t:"Nós com mais de 10 filhos diretos",d:`${fanout} nó(s) com muitos filhos — considere subdivisões.`,badge:"warn"});
+  if(multiParent>0) anomalias?.push({t:"Herança múltipla detectada",d:`${multiParent} classe(s) com mais de um pai. Ative "Mostrar tracejado" para visualizar.`,badge:"ok"});
+  const noComment=[...S.classNodes.values()].filter(n=>!n.comment?.length).length;
+  if(noComment>0) anomalies.push({t:"Classes sem rdfs:comment",d:`${noComment} classes sem descrição.`,badge:"warn"});
+  // Lonely leafs (folha sem irmãos)
+  const lonelyLeafs=[...S.classNodes.keys()].filter(iri=>{
+    if((S.subclasses.get(iri)||new Set()).size!==0) return false;
+    const parents=[...(S.superclasses.get(iri)||new Set())];
+    return parents.some(p=>(S.subclasses.get(p)||new Set()).size===1);
+  }).length;
+  if(lonelyLeafs>0) anomalies.push({t:"Classes folha sem irmãos",d:`${lonelyLeafs} nó(s) únicos no seu nível — possível lacuna conceitual.`,badge:"warn"});
+  ui.statAnomalies.innerHTML=anomalies.length?anomalies.map(a=>`<div class="anomaly-item"><div><div class="ai">${esc(a.t)} <span class="badge ${a.badge}">${a.badge==="ok"?"info":"aviso"}</span></div><div class="ad">${esc(a.d)}</div></div></div>`).join("")
+    :"<div style='font-size:12px;color:var(--ok)'>✓ Nenhuma anomalia detectada.</div>";
+}
+
+/* =========================================================
+   FEATURE 5: NODE COMPARATOR
+========================================================= */
+ui.btnFixA.onclick=()=>{ if(!S.selectedIri) return; S.compareA=S.selectedIri; ui.cmpA.textContent=termLabel(S.selectedIri); ui.btnCompare.disabled=!S.compareB; };
+ui.btnFixB.onclick=()=>{ if(!S.selectedIri) return; S.compareB=S.selectedIri; ui.cmpB.textContent=termLabel(S.selectedIri); ui.btnCompare.disabled=!S.compareA; };
+ui.btnCmpClose.onclick=()=>{ S.compareA=null;S.compareB=null; ui.cmpA.textContent="—";ui.cmpB.textContent="—"; ui.btnCompare.disabled=true; ui.comparePanel.style.display="none"; ui.btnCmpClosePanel.disabled=true; };
+ui.btnCmpClosePanel.onclick=()=>{ ui.comparePanel.style.display="none"; };
+ui.btnCompare.onclick=()=>{
+  const a=S.compareA,b=S.compareB; if(!a||!b) return;
+  const la=termLabel(a),lb=termLabel(b);
+  const getInfo=(iri)=>({
+    label:termLabel(iri), iri:shrinkIri(iri),
+    subonto:S.subontoMap.get(iri)||"—",
+    depth:S.nodeDepth.get(iri)??0,
+    parents:uniq([...(S.superclasses.get(iri)||new Set())]).map(termLabel).sort(),
+    children:uniq([...(S.subclasses.get(iri)||new Set())]).map(termLabel).sort(),
+    comment:S.classNodes.get(iri)?.comment?.[0]||"—",
+    pcount:S.parentCount.get(iri)??0,
+  });
+  const ia=getInfo(a),ib=getInfo(b);
+
+  // Ancestrais comuns
+  function ancestors(iri){ const set=new Set(); const q=[...(S.superclasses.get(iri)||new Set())]; while(q.length){ const x=q.shift(); if(set.has(x)) continue; set.add(x); (S.superclasses.get(x)||new Set()).forEach(p=>q.push(p)); } return set; }
+  const ancA=ancestors(a),ancB=ancestors(b);
+  const common=[...ancA].filter(x=>ancB.has(x)).map(termLabel).sort();
+
+  function row(label,va,vb){ return `<div class="cmp-row">${esc(label)}: <span>${esc(String(va))}</span></div><div class="cmp-row">${esc(label)}: <span>${esc(String(vb))}</span></div>`; }
+  ui.cmpGrid.innerHTML=`
+    <div class="cmp-col"><h4>${esc(la)}</h4>
+      <div class="cmp-row">IRI: <span>${esc(ia.iri)}</span></div>
+      <div class="cmp-row">Subontologia: <span>${esc(ia.subonto)}</span></div>
+      <div class="cmp-row">Profundidade: <span>${ia.depth}</span></div>
+      <div class="cmp-row">Pais (${ia.pcount}): <span>${ia.parents.slice(0,4).map(esc).join(", ")||"—"}</span></div>
+      <div class="cmp-row">Filhos: <span>${ia.children.length}</span></div>
+      <div class="cmp-row" style="margin-top:6px">Descrição: <span style="font-size:11px">${esc(ia.comment.slice(0,120))}${ia.comment.length>120?"…":""}</span></div>
+    </div>
+    <div class="cmp-col"><h4>${esc(lb)}</h4>
+      <div class="cmp-row">IRI: <span>${esc(ib.iri)}</span></div>
+      <div class="cmp-row">Subontologia: <span>${esc(ib.subonto)}</span></div>
+      <div class="cmp-row">Profundidade: <span>${ib.depth}</span></div>
+      <div class="cmp-row">Pais (${ib.pcount}): <span>${ib.parents.slice(0,4).map(esc).join(", ")||"—"}</span></div>
+      <div class="cmp-row">Filhos: <span>${ib.children.length}</span></div>
+      <div class="cmp-row" style="margin-top:6px">Descrição: <span style="font-size:11px">${esc(ib.comment.slice(0,120))}${ib.comment.length>120?"…":""}</span></div>
+    </div>`;
+  ui.cmpCommon.textContent=common.length?common.join(", "):"Nenhum ancestral comum encontrado";
+  ui.comparePanel.style.display="block"; ui.btnCmpClosePanel.disabled=false;
+};
+
+/* =========================================================
+   FEATURE 14: DIFF MODE
+========================================================= */
+async function loadDiff(url1,url2){
+  setLoading(true); setStatus("carregando diff…","loading");
+  while(STORE2.statements.length) STORE2.statements.pop();
+  await parseStore(STORE,url1); await parseStore(STORE2,url2);
+
+  const getIRIs=(store)=>{
+    const set=new Set();
+    store.each(null,RDF("type"),OWL("Class")).forEach(s=>set.add(s.value));
+    store.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>set.add(st.subject.value));
+    return set;
+  };
+  const getLabel=(store,iri)=>getFL(store,$rdf.sym(iri),RDFS("label"))||"";
+  const getComment=(store,iri)=>getFL(store,$rdf.sym(iri),RDFS("comment"))||"";
+
+  const iris1=getIRIs(STORE),iris2=getIRIs(STORE2);
+  const added=new Set([...iris2].filter(i=>!iris1.has(i)));
+  const removed=new Set([...iris1].filter(i=>!iris2.has(i)));
+  const changed=new Set([...iris1].filter(i=>iris2.has(i)&&(getLabel(STORE,i)!==getLabel(STORE2,i)||getComment(STORE,i)!==getComment(STORE2,i))));
+
+  S.diffData={added,removed,changed}; S.diffMode=true;
+  buildGraph(STORE);
+  enableCtls(true); setStatus(`Diff: +${added.size} −${removed.size} ~${changed.size}`,"ok");
+  setLoading(false); ui.diffLegend.style.display="block";
+  rebuildAndRender();
+}
+
+/* =========================================================
+   FEATURE 6 + 9: EXPORT (SVG, PNG, PDF, Subárvore)
+========================================================= */
+function downloadBlob(blob,name){ const url=URL.createObjectURL(blob),a=document.createElement("a"); a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url); }
+
+function buildExportClone(cropIri=null){
+  let targetRoot=S.currentD3Root;
+  if(cropIri){
+    const treeData=buildTreeData(cropIri);
+    targetRoot=computeLayout(treeData);
+  }
+
+  // Temporarily render to get bbox
+  if(cropIri){ renderGraph(targetRoot); }
+
+  const bb=getContentBBox(); const m=50;
+  const w=Math.max(10,bb.w+m*2),h=Math.max(10,bb.h+m*2);
+  const clone=svgEl.cloneNode(true);
+  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  clone.setAttribute("viewBox",`0 0 ${w} ${h}`);
+
+  const bg=document.createElementNS("http://www.w3.org/2000/svg","rect");
+  bg.setAttribute("x",0);bg.setAttribute("y",0);bg.setAttribute("width",w);bg.setAttribute("height",h);
+  const bgColor=S.sciMode?"#ffffff":(getComputedStyle(document.body).getPropertyValue("--bg").trim()||"#07090f");
+  bg.setAttribute("fill",bgColor);
+  clone.insertBefore(bg,clone.firstChild);
+
+  const g=clone.querySelector("g.gRoot"); if(g) g.setAttribute("transform",`translate(${m-bb.x},${m-bb.y})`);
+
+  // Restore original render if we changed it
+  if(cropIri) rebuildAndRender();
+
+  return {clone,w,h};
+}
+
+function doExportSVG(cropIri=null){
+  const {clone}=buildExportClone(cropIri);
+  const text=new XMLSerializer().serializeToString(clone);
+  downloadBlob(new Blob([text],{type:"image/svg+xml;charset=utf-8"}),`ontohate_${ui.layoutSelect.value}${cropIri?"_sub":""}.svg`);
+}
+
+function doExportPNG(cropIri=null){
+  const ratio=+ui.dpiSelect.value;
+  const {clone,w,h}=buildExportClone(cropIri);
+  const text=new XMLSerializer().serializeToString(clone);
+  const url=URL.createObjectURL(new Blob([text],{type:"image/svg+xml;charset=utf-8"}));
+  const img=new Image();
+  img.onload=()=>{
+    const c=document.createElement("canvas"); c.width=Math.ceil(w*ratio); c.height=Math.ceil(h*ratio);
+    const ctx=c.getContext("2d"); ctx.setTransform(ratio,0,0,ratio,0,0); ctx.drawImage(img,0,0);
+    c.toBlob(b=>{downloadBlob(b,`ontohate_${ui.layoutSelect.value}${cropIri?"_sub":""}.png`);URL.revokeObjectURL(url);},"image/png");
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);alert("Falha ao gerar PNG. Tente SVG.");};
+  img.src=url;
+}
+
+function doExportPDF(cropIri=null){
+  const {clone,w,h}=buildExportClone(cropIri);
+  const text=new XMLSerializer().serializeToString(clone);
+  // Use SVG in HTML-in-iframe print trick for PDF
+  const html=`<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{width:${w}px;height:${h}px}</style></head><body>${text}</body></html>`;
+  const blob=new Blob([html],{type:"text/html"});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,"_blank");
+  if(win){ setTimeout(()=>{ win.print(); URL.revokeObjectURL(url); },600); }
+  else { alert("Popup bloqueado. Use SVG ou PNG e converta para PDF com Inkscape/Illustrator."); URL.revokeObjectURL(url); }
+}
+
+function exportSubtree(iri){
+  const scope=ui.exportScope.value;
+  const cropIri=scope==="subtree"&&iri?iri:null;
+  const fmt=prompt("Formato: svg | png | pdf","png");
+  if(!fmt) return;
+  if(fmt==="svg") doExportSVG(cropIri);
+  else if(fmt==="png") doExportPNG(cropIri);
+  else if(fmt==="pdf") doExportPDF(cropIri);
+}
+
+ui.btnExportSVG.onclick=()=>{ const crop=ui.exportScope.value==="subtree"?S.subtreeRoot:null; doExportSVG(crop); };
+ui.btnExportPNG.onclick=()=>{ const crop=ui.exportScope.value==="subtree"?S.subtreeRoot:null; doExportPNG(crop); };
+ui.btnExportPDF.onclick=()=>{ const crop=ui.exportScope.value==="subtree"?S.subtreeRoot:null; doExportPDF(crop); };
+ui.btnCropSubtree.onclick=()=>{ if(S.selectedIri) exportSubtree(S.selectedIri); else alert("Selecione um nó primeiro."); };
+
+/* =========================================================
+   FEATURE 15: CSV EXPORT
+========================================================= */
+ui.btnExportCSV.onclick=()=>{
+  const rows=[["IRI","Label","Superclasses","Subclasses","Subontologia","Profundidade","Pais_count","rdfs:comment","observacaoV1"]];
+  for(const [iri,node] of S.classNodes){
+    const supers=[...(S.superclasses.get(iri)||new Set())].map(p=>termLabel(p)).join("; ");
+    const subs=[...(S.subclasses.get(iri)||new Set())].map(c=>termLabel(c)).join("; ");
+    const obs=getFL(STORE,$rdf.sym(iri),ONTO("observacaoV1"))||"";
+    rows.push([iri,termLabel(iri),supers,subs,S.subontoMap.get(iri)||"",S.nodeDepth.get(iri)??0,S.parentCount.get(iri)??0,(node.comment?.[0]||"").replace(/\n/g," "),obs.replace(/\n/g," ")]);
+  }
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+  downloadBlob(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}),"ontohate_classes.csv");
+};
+
+/* =========================================================
+   FEATURE 13: ADVANCED SEARCH
+========================================================= */
+function buildSearchIndex(){
+  S.searchIndex=[...S.classNodes.keys()].map(iri=>({
+    iri,label:termLabel(iri),iriShort:shrinkIri(iri),
+    subonto:S.subontoMap.get(iri)||"",
+    comment:S.classNodes.get(iri)?.comment?.[0]||"",
+    depth:S.nodeDepth.get(iri)??0,
+  })).sort((a,b)=>a.label.localeCompare(b.label,"pt-BR"));
+}
+
+function filterSearch(){
+  const q=ui.searchInput.value.trim().toLowerCase();
+  const sub=ui.subontoFilter.value;
+  const dep=ui.depthFilter.value;
+  let items=S.searchIndex;
+  if(q) items=items.filter(it=>it.label.toLowerCase().includes(q)||it.iriShort.toLowerCase().includes(q)||it.comment.toLowerCase().includes(q)||it.subonto.toLowerCase().includes(q));
+  if(sub) items=items.filter(it=>it.subonto===sub);
+  if(dep){ if(dep==="5+") items=items.filter(it=>it.depth>=5); else items=items.filter(it=>it.depth===+dep); }
+  renderSearchResults(items);
+}
 
 function renderSearchResults(items){
   const box=ui.searchResults; box.innerHTML="";
-  if(!items.length){ box.innerHTML=`<div class="search-item"><span class="s-label" style="color:var(--muted)">Nenhum resultado</span></div>`; }
-  else { items.slice(0,40).forEach(it=>{
-    const r=document.createElement("div"); r.className="search-item";
-    r.innerHTML=`<span class="s-label">${escapeHTML(it.label)}</span><span class="s-tag">${escapeHTML(it.iriShort)}</span>`;
-    r.addEventListener("click",()=>{ selectNode(it.iri); zoomToNode(it.iri); }); box.appendChild(r); }); }
+  if(!items.length){ box.innerHTML=`<div class="sri"><span class="sl" style="color:var(--muted)">Sem resultados</span></div>`; }
+  else {
+    items.slice(0,50).forEach(it=>{
+      const row=document.createElement("div"); row.className="sri";
+      row.innerHTML=`<span class="sl">${esc(it.label)}</span><span class="st">${esc(it.iriShort)}</span>${it.subonto?`<span class="sb">${esc(it.subonto.slice(0,20))}</span>`:""}`;
+      row.onclick=()=>{ selectNode(it.iri); zoomToNode(it.iri); };
+      box.appendChild(row);
+    });
+    if(items.length>50) box.innerHTML+=`<div class="sri"><span class="sl" style="color:var(--muted)">+${items.length-50} resultados — refine a busca</span></div>`;
+  }
   box.style.display="block";
 }
+
+ui.searchInput.oninput=filterSearch;
+ui.subontoFilter.onchange=filterSearch;
+ui.depthFilter.onchange=filterSearch;
+ui.btnSrClear.onclick=()=>{ ui.searchInput.value=""; ui.searchResults.style.display="none"; };
+ui.btnSrAll.onclick=()=>renderSearchResults(S.searchIndex);
+
+/* =========================================================
+   ZOOM TO NODE
+========================================================= */
 function zoomToNode(iri){
   const node=gNodes.selectAll("g.node").filter(d=>d.data.iri===iri).node(); if(!node) return;
-  const tr=node.getCTM(), bb=node.getBBox();
-  const x=tr.e+bb.x+bb.width/2, y=tr.f+bb.y+bb.height/2;
-  const k=Math.max(0.8,Math.min(2.5,d3.zoomTransform(svgEl).k));
+  const tr=node.getCTM(),bb=node.getBBox();
+  const x=tr.e+bb.x+bb.width/2,y=tr.f+bb.y+bb.height/2;
+  const k=Math.max(0.7,Math.min(2.5,d3.zoomTransform(svgEl).k));
   svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity.translate(viewW/2-k*x,viewH/2-k*y).scale(k));
 }
 
 /* =========================================================
-   EXPORT — FIX: PX_RATIO como constante configurável
+   KEYBOARD SHORTCUT
 ========================================================= */
-const EXPORT_PX_RATIO = 2; // Mude para 3-4 para qualidade de impressão
-
-function downloadBlob(blob,filename){ const url=URL.createObjectURL(blob),a=document.createElement("a");
-  a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
-
-function buildExportClone(){
-  const bb=getContentBBox(), m=48;
-  const w=Math.max(10,bb.w+m*2), h=Math.max(10,bb.h+m*2);
-  const clone=svgEl.cloneNode(true);
-  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
-  clone.setAttribute("viewBox",`0 0 ${w} ${h}`);
-  const bg=document.createElementNS("http://www.w3.org/2000/svg","rect");
-  bg.setAttribute("x",0); bg.setAttribute("y",0); bg.setAttribute("width",w); bg.setAttribute("height",h);
-  bg.setAttribute("fill",getComputedStyle(document.body).getPropertyValue("--bg").trim()||"#07090f");
-  clone.insertBefore(bg,clone.firstChild);
-  const g=clone.querySelector("g.gRoot"); if(g) g.setAttribute("transform",`translate(${m-bb.x},${m-bb.y})`);
-  return {clone,w,h};
-}
-function exportSVG(){ const {clone}=buildExportClone();
-  downloadBlob(new Blob([new XMLSerializer().serializeToString(clone)],{type:"image/svg+xml;charset=utf-8"}),`ontohate_${ui.layoutSelect.value}.svg`); }
-function exportPNG(){
-  const {clone,w,h}=buildExportClone();
-  const url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)],{type:"image/svg+xml;charset=utf-8"}));
-  const img=new Image();
-  img.onload=()=>{
-    const c=document.createElement("canvas"); c.width=Math.ceil(w*EXPORT_PX_RATIO); c.height=Math.ceil(h*EXPORT_PX_RATIO);
-    const ctx=c.getContext("2d"); ctx.setTransform(EXPORT_PX_RATIO,0,0,EXPORT_PX_RATIO,0,0); ctx.drawImage(img,0,0);
-    c.toBlob(b=>{ downloadBlob(b,`ontohate_${ui.layoutSelect.value}.png`); URL.revokeObjectURL(url); },"image/png");
-  };
-  img.onerror=()=>{ URL.revokeObjectURL(url); alert("Falha ao exportar PNG. Tente SVG."); };
-  img.src=url;
-}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ S.selectedIri=null; ui.selPill.style.display="none"; ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none"; ui.breadcrumb.style.display="none"; clearHL(); if(S.currentD3Root) rebuildAndRender(); }
+});
 
 /* =========================================================
-   EVENT BINDINGS
+   SVG CLICK (deselect)
 ========================================================= */
-ui.btnLoad.addEventListener("click",async()=>{
+svg.on("click",()=>{
+  S.selectedIri=null; ui.selPill.style.display="none";
+  ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
+  ui.tooltip.style.display="none"; ui.breadcrumb.style.display="none"; clearHL();
+  if(S.currentD3Root) rebuildAndRender();
+});
+
+/* =========================================================
+   EVENT BINDINGS (misc)
+========================================================= */
+ui.btnLoad.onclick=async()=>{
   try{ loadPersisted(); await loadData(ui.dataUrl.value.trim()); }
   catch(e){ setStatus("erro","error"); setLoading(false); alert(e.message||String(e)); }
-});
-ui.btnFit.addEventListener("click",fitToView);
-ui.btnReset.addEventListener("click",resetAll);
-ui.btnAll.addEventListener("click",()=>{ state.dimensions.forEach(d=>state.selectedDims.add(d.iri)); saveDimsPersisted(); renderDimsList(); rebuildAndRender(); });
-ui.btnNone.addEventListener("click",()=>{ state.selectedDims.clear(); saveDimsPersisted(); renderDimsList(); rebuildAndRender(); });
-ui.splitMode.addEventListener("change",rebuildAndRender);
-ui.activeDim.addEventListener("change",()=>{
-  if(ui.splitMode.value==="single"){ state.selectedDims.add(ui.activeDim.value); saveDimsPersisted(); renderDimsList(); }
-  rebuildAndRender();
-});
-ui.maxDepth.addEventListener("input",rebuildAndRender);
-ui.btnMoreDepth.addEventListener("click",()=>{ ui.maxDepth.value=String(Math.min(+ui.maxDepth.max,+ui.maxDepth.value+1)); rebuildAndRender(); });
-ui.compact.addEventListener("input",rebuildAndRender);
-ui.layoutSelect.addEventListener("change",()=>{ state.didFit=false; rebuildAndRender(); });
-ui.edgeCurve.addEventListener("input",rebuildAndRender);
-ui.edgeWidth.addEventListener("input",rebuildAndRender);
-ui.edgeColor.addEventListener("input",rebuildAndRender);
-ui.btnExportSVG.addEventListener("click",exportSVG);
-ui.btnExportPNG.addEventListener("click",exportPNG);
-ui.persistSelect.addEventListener("change",()=>{ if(!persistEnabled()) clearPersisted(); else savePersisted(); });
-ui.searchInput.addEventListener("input",()=>{
-  const q=ui.searchInput.value.trim().toLowerCase();
-  if(!q){ ui.searchResults.style.display="none"; return; }
-  renderSearchResults(state.searchIndex.filter(it=>it.label.toLowerCase().includes(q)||it.iriShort.toLowerCase().includes(q)));
-});
-ui.btnSearchClear.addEventListener("click",()=>{ ui.searchInput.value=""; ui.searchResults.style.display="none"; });
-ui.btnSearchShowAll.addEventListener("click",()=>renderSearchResults(state.searchIndex));
-svg.on("click",()=>{
-  state.selectedIri=null; ui.selPill.style.display="none";
-  ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
-  ui.editorHint.textContent="Clique em um nó para editar.";
-  rebuildAndRender(); ui.tooltip.style.display="none";
-});
+};
+ui.btnFit.onclick=fitToView;
+ui.btnReset.onclick=resetAll;
+ui.btnStats.onclick=()=>{ buildStats(); ui.statsModal.style.display="flex"; };
+ui.btnDiff.onclick=()=>{ ui.diffUrlWrap.style.display="block"; };
+ui.btnCloseDiff.onclick=()=>{ ui.diffUrlWrap.style.display="none"; };
+ui.btnLoadDiff.onclick=async()=>{
+  try{ await loadDiff(ui.dataUrl.value.trim(),ui.dataUrl2.value.trim()); ui.diffUrlWrap.style.display="none"; }
+  catch(e){ setStatus("erro diff","error"); setLoading(false); alert(e.message||String(e)); }
+};
+ui.btnAll.onclick=()=>{ S.dimensions.forEach(d=>S.selectedDims.add(d.iri)); saveDimsPersist(); renderDimsList(); rebuildAndRender(); };
+ui.btnNone.onclick=()=>{ S.selectedDims.clear(); saveDimsPersist(); renderDimsList(); rebuildAndRender(); };
+ui.splitMode.onchange=rebuildAndRender;
+ui.activeDim.onchange=()=>{ if(ui.splitMode.value==="single"){ S.selectedDims.add(ui.activeDim.value); saveDimsPersist(); renderDimsList(); } rebuildAndRender(); };
+ui.maxDepth.oninput=rebuildAndRender;
+ui.btnMoreDepth.onclick=()=>{ ui.maxDepth.value=String(Math.min(+ui.maxDepth.max,+ui.maxDepth.value+1)); rebuildAndRender(); };
+ui.compact.oninput=rebuildAndRender;
+ui.layoutSelect.onchange=()=>{ S.didFit=false; rebuildAndRender(); };
+ui.edgeCurve.oninput=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
+ui.edgeWidth.oninput=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
+ui.edgeColor.oninput=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
+ui.multiParentMode.onchange=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
+ui.persistSelect.onchange=()=>{ if(persistEnabled()) savePersisted(); else clearPersisted(); };
+ui.updateLegend=updateLegend;
+[ui.splitMode,ui.maxDepth,ui.layoutSelect].forEach(el=>el?.addEventListener("change",updateLegend));
 
 /* =========================================================
    INIT
 ========================================================= */
 (function init(){
-  const t=localStorage.getItem(P("theme"));
-  if(t==="light"||t==="dark") setTheme(t,false);
+  const t=localStorage.getItem(P("theme")); if(t==="light"||t==="dark") setTheme(t,false);
   ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
-  resize(); enableControls(false);
+  resize(); enableCtls(false);
   ui.dataUrl.value="https://raw.githubusercontent.com/luquizis/Ontohate/main/ontohate_.owl";
+  // Carrega templates salvos
+  try{ S.savedTemplates=new Map(Object.entries(JSON.parse(localStorage.getItem(P("templates"))||"{}"))); }catch{}
 })();
 </script>
 </body>
