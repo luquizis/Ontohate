@@ -1,1326 +1,975 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>OntoHate — Taxonomia Interativa</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OntoHate — Taxonomia / Ontologia / SPARQL</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/rdflib@2.2.37/dist/rdflib.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<style>
-:root{
-  --bg:#07090f;--bg2:#0d1117;--panel:#111827;--panel2:#0d1117;
-  --border:#1e2d45;--border2:#253347;--text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;
-  --accent:#38bdf8;--danger:#f43f5e;--ok:#10b981;--warn:#f59e0b;
-  --node-text:#f1f5f9;--node-stroke:rgba(0,0,0,0.5);
-  --fd:Syne,sans-serif;--fm:'DM Mono',monospace;
-  --sw:400px;--th:52px;--r:10px;--rs:6px;
-}
-[data-theme=light]{
-  --bg:#f8fafc;--bg2:#fff;--panel:#fff;--panel2:#f1f5f9;
-  --border:#e2e8f0;--border2:#cbd5e1;--text:#0f172a;--muted:#64748b;--muted2:#475569;
-  --accent:#0284c7;--danger:#e11d48;--ok:#059669;--warn:#d97706;
-  --node-text:#0f172a;--node-stroke:rgba(15,23,42,0.15);
-}
+  <style>
+    :root{
+      --bg:#0b0c10;
+      --panel:#11131a;
+      --panel2:#0f1117;
+      --border:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --muted2:rgba(255,255,255,.45);
+      --accent:#7dd3fc;
+      --accent2:#a78bfa;
+      --ok:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(167,139,250,.15), transparent 60%),
+                  radial-gradient(900px 700px at 90% 0%, rgba(125,211,252,.14), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,12,16,.72);
+      border-bottom: 1px solid var(--border);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:16px;}
+    .top{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .brand h1{
+      margin:0; font-size:18px; letter-spacing:.2px;
+    }
+    .brand small{color:var(--muted); font-family:var(--mono);}
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .tabbtn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      transition:.15s ease;
+      font-weight:600;
+      display:flex; align-items:center; gap:8px;
+    }
+    .tabbtn:hover{transform: translateY(-1px); background: rgba(255,255,255,.06);}
+    .tabbtn.active{
+      border-color: rgba(125,211,252,.45);
+      box-shadow: 0 0 0 4px rgba(125,211,252,.12);
+      background: rgba(125,211,252,.10);
+    }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:2px 8px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      color:var(--muted);
+      background: rgba(255,255,255,.03);
+    }
+    main .wrap{padding-top:18px; padding-bottom:26px;}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 14px 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card .hd h2{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+      color:rgba(255,255,255,.9);
+    }
+    .card .bd{padding:14px;}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .btn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight:600;
+      transition:.15s ease;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.07);}
+    .btn.primary{
+      border-color: rgba(167,139,250,.5);
+      background: rgba(167,139,250,.14);
+      box-shadow: 0 0 0 4px rgba(167,139,250,.10);
+    }
+    .btn.good{
+      border-color: rgba(52,211,153,.5);
+      background: rgba(52,211,153,.12);
+      box-shadow: 0 0 0 4px rgba(52,211,153,.10);
+    }
+    .input, select, textarea{
+      width:100%;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.15);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      outline:none;
+      font-family: var(--sans);
+    }
+    textarea{min-height: 180px; font-family: var(--mono); font-size: 12px; line-height: 1.4;}
+    .muted{color:var(--muted); font-size:13px; line-height:1.35;}
+    .small{color:var(--muted2); font-size:12px; font-family:var(--mono);}
+    .status{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      display:flex; align-items:center; gap:8px;
+    }
+    .dot{width:8px;height:8px;border-radius:999px;background:var(--muted2);}
+    .dot.ok{background:var(--ok)}
+    .dot.bad{background:var(--bad)}
+    .dot.warn{background:var(--warn)}
+    .list{
+      display:flex; flex-direction:column; gap:8px;
+      max-height: 560px;
+      overflow:auto;
+      padding-right:4px;
+    }
+    .item{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius: 12px;
+      padding:10px 12px;
+      cursor:pointer;
+      transition:.12s ease;
+    }
+    .item:hover{background: rgba(255,255,255,.05)}
+    .item.active{
+      border-color: rgba(125,211,252,.45);
+      background: rgba(125,211,252,.10);
+    }
+    .item .title{font-weight:700; font-size:13px;}
+    .item .sub{font-family:var(--mono); font-size:11px; color:var(--muted2); margin-top:2px;}
+    .tree{
+      border:1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(0,0,0,.12);
+      padding:10px 12px;
+      max-height: 560px;
+      overflow:auto;
+    }
+    .node{
+      display:flex; gap:8px; align-items:flex-start;
+      padding:6px 6px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+    .node:hover{background: rgba(255,255,255,.04)}
+    .node.active{background: rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.35);}
+    .twisty{
+      width:18px; height:18px;
+      border:1px solid var(--border);
+      border-radius: 6px;
+      display:flex; align-items:center; justify-content:center;
+      flex: 0 0 18px;
+      font-family:var(--mono);
+      color:var(--muted);
+      margin-top:1px;
+      user-select:none;
+    }
+    .twisty.empty{opacity:.35}
+    .label{
+      flex: 1;
+      min-width:0;
+    }
+    .label b{font-size:13px}
+    .label div{font-family:var(--mono); font-size:11px; color:var(--muted2); margin-top:2px; word-break:break-all;}
+    .children{margin-left: 22px; border-left:1px dashed rgba(255,255,255,.10); padding-left:10px;}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      overflow:hidden;
+      font-size:13px;
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align:top;
+    }
+    th{
+      text-align:left;
+      color:var(--muted);
+      background: rgba(255,255,255,.04);
+      font-family:var(--mono);
+      font-size:12px;
+    }
+    .hidden{display:none !important;}
+    .kbd{
+      font-family:var(--mono);
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      padding:2px 6px;
+      border-radius:8px;
+      font-size:12px;
+      color:var(--muted);
+    }
+  </style>
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
-body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px;line-height:1.5}
+  <!-- RDF parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/n3@1.17.3/browser/n3.min.js"></script>
 
-.app{display:grid;grid-template-columns:var(--sw) 1fr;height:100vh;min-width:0}
-.sidebar{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.sb-head{padding:14px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sb-title{font-size:15px;font-weight:800;letter-spacing:.01em}
-.sb-sub{font-size:11px;color:var(--muted);line-height:1.4;margin-top:3px}
-.sb-head-btns{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.sb-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px}
-.sb-body::-webkit-scrollbar{width:3px}.sb-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-
-.card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.ch{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;cursor:pointer;user-select:none;border-bottom:1px solid transparent}
-.ch:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
-.card.open .ch{border-bottom-color:var(--border)}
-.ctitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2)}
-.ctoggle{font-size:10px;color:var(--muted);transition:transform .15s}
-.card:not(.open) .cb{display:none}
-.card:not(.open) .ctoggle{transform:rotate(-90deg)}
-.cb{padding:10px 11px;display:flex;flex-direction:column;gap:8px}
-
-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
-input[type=text],select,textarea{
-  width:100%;padding:6px 9px;border-radius:var(--rs);border:1px solid var(--border2);
-  background:var(--bg);color:var(--text);font-family:var(--fm);font-size:12px;outline:none;transition:border-color .15s}
-input[type=text]:focus,select:focus{border-color:var(--accent)}
-input[type=color]{width:28px;height:28px;border:1px solid var(--border2);border-radius:var(--rs);background:transparent;padding:2px;cursor:pointer}
-input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border2);border-radius:4px;outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg)}
-input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
-
-.field{display:flex;flex-direction:column;gap:3px}
-.row{display:flex;gap:7px;align-items:flex-end;flex-wrap:wrap}
-.row .field{flex:1;min-width:120px}
-.rg{display:flex;flex-direction:column;gap:3px}
-.rrow{display:flex;align-items:center;gap:7px}
-.rval{font-family:var(--fm);font-size:10px;color:var(--muted2);min-width:22px;text-align:right}
-
-button{
-  display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  padding:5px 10px;border-radius:var(--rs);border:1px solid var(--border2);
-  background:var(--panel);color:var(--text);font-family:var(--fd);font-size:11px;
-  font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.02em}
-button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-button:disabled{opacity:.35;cursor:not-allowed}
-button.primary{background:color-mix(in srgb,var(--accent) 13%,transparent);border-color:color-mix(in srgb,var(--accent) 45%,var(--border2));color:var(--accent)}
-button.primary:hover:not(:disabled){background:color-mix(in srgb,var(--accent) 22%,transparent)}
-button.danger{background:color-mix(in srgb,var(--danger) 10%,transparent);border-color:color-mix(in srgb,var(--danger) 40%,var(--border2));color:var(--danger)}
-button.ok{background:color-mix(in srgb,var(--ok) 10%,transparent);border-color:color-mix(in srgb,var(--ok) 40%,var(--border2));color:var(--ok)}
-button.warn{background:color-mix(in srgb,var(--warn) 10%,transparent);border-color:color-mix(in srgb,var(--warn) 40%,var(--border2));color:var(--warn)}
-.btns{display:flex;gap:5px;flex-wrap:wrap}
-
-.topbar{
-  position:absolute;left:0;right:0;top:0;height:var(--th);
-  display:flex;align-items:center;gap:7px;padding:0 13px;
-  background:color-mix(in srgb,var(--panel) 88%,transparent);
-  backdrop-filter:blur(10px);border-bottom:1px solid var(--border);z-index:20;overflow:hidden}
-.pill{
-  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;
-  border:1px solid var(--border);border-radius:999px;
-  background:color-mix(in srgb,var(--bg) 60%,transparent);
-  font-size:11px;color:var(--muted2);white-space:nowrap}
-.pill .v{color:var(--text);font-weight:600}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0}
-.dot.loading{background:var(--warn);animation:pulse 1s infinite}
-.dot.error{background:var(--danger)}
-.dot.idle{background:var(--border2)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.tsp{flex:1}
-.kbd{font-family:var(--fm);font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid var(--border2);background:color-mix(in srgb,var(--bg) 70%,transparent);color:var(--muted2)}
-
-.main{position:relative;overflow:hidden;min-width:0}
-#svgWrap{position:absolute;inset:0;padding-top:var(--th)}
-svg{width:100%;height:100%;display:block}
-.node rect{stroke:var(--node-stroke);stroke-width:1px;filter:drop-shadow(0 3px 10px rgba(0,0,0,.22))}
-[data-theme=light] .node rect{filter:drop-shadow(0 2px 7px rgba(15,23,42,.10))}
-.node text{pointer-events:none;fill:var(--node-text)}
-.node.selected rect{stroke:var(--accent)!important;stroke-width:2px!important;filter:drop-shadow(0 0 11px color-mix(in srgb,var(--accent) 38%,transparent))}
-.node.dimmed rect{opacity:.15!important}
-.node.dimmed text{opacity:.15}
-.link{fill:none;stroke-width:1.6;opacity:.7;pointer-events:none}
-.link.dimmed{opacity:.05}
-.link.multi-parent{stroke-dasharray:5,3;opacity:.55}
-
-/* Tooltip */
-.tooltip{
-  position:absolute;max-width:330px;pointer-events:none;
-  background:var(--panel);border:1px solid var(--border2);border-radius:var(--r);
-  padding:10px 12px;font-size:11.5px;line-height:1.45;
-  box-shadow:0 14px 36px rgba(0,0,0,.28);z-index:50}
-.tt{font-size:13px;font-weight:700;margin-bottom:2px}
-.ti{font-family:var(--fm);font-size:10px;color:var(--muted)}
-.ts{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:6px 0 2px}
-.tx{padding:1px 0 1px 9px;position:relative}.tx::before{content:'·';position:absolute;left:2px;color:var(--muted)}
-
-/* Breadcrumb */
-#breadcrumb{
-  position:absolute;bottom:0;left:0;right:0;
-  padding:6px 14px;font-family:var(--fm);font-size:11px;color:var(--muted2);
-  background:color-mix(in srgb,var(--panel) 88%,transparent);
-  backdrop-filter:blur(8px);border-top:1px solid var(--border);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none}
-#breadcrumb .bc-sep{color:var(--muted);margin:0 4px}
-#breadcrumb .bc-item{color:var(--accent);cursor:pointer}
-#breadcrumb .bc-item:hover{text-decoration:underline}
-
-/* Loading bar */
-.lbar{position:absolute;top:var(--th);left:0;right:0;height:2px;background:transparent;z-index:30;overflow:hidden}
-.lbar::after{content:'';display:block;height:100%;background:var(--accent);animation:loading 1.1s ease-in-out infinite}
-.lbar.hidden{display:none}
-@keyframes loading{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
-
-/* Empty state */
-.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none;padding-top:var(--th)}
-.empty-icon{font-size:42px;opacity:.16}
-.empty-txt{font-size:13px;color:var(--muted);text-align:center;max-width:300px;line-height:1.5}
-
-/* Dimensions list */
-.dims{display:flex;flex-direction:column;gap:4px}
-.di{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);transition:border-color .15s}
-.di:hover{border-color:var(--border2)}.di.active{border-color:color-mix(in srgb,var(--accent) 38%,var(--border))}
-.dn{flex:1;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dc{font-family:var(--fm);font-size:10px;color:var(--muted)}
-
-/* Responsive drawer for small screens */
-#drawerToggle{display:none}
-.drawer-backdrop{display:none}
-@media (max-width: 980px){
-  :root{--sw:100vw}
-  .app{grid-template-columns:1fr}
-  .sidebar{
-    position:fixed;top:0;bottom:0;left:0;width:min(92vw,420px);
-    transform:translateX(-105%);transition:transform .2s ease;
-    z-index:200;box-shadow:0 30px 80px rgba(0,0,0,.35)
-  }
-  body.drawer-open .sidebar{transform:translateX(0)}
-  .drawer-backdrop{
-    display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);
-    z-index:199;opacity:0;pointer-events:none;transition:opacity .2s ease
-  }
-  body.drawer-open .drawer-backdrop{opacity:1;pointer-events:auto}
-  #drawerToggle{display:inline-flex}
-  .topbar .pill{display:none}
-  .topbar .pill.keep{display:inline-flex}
-}
-</style>
+  <!-- Comunica SPARQL over in-memory sources -->
+  <script src="https://cdn.jsdelivr.net/npm/@comunica/query-sparql@3.1.0/browser/query-sparql.min.js"></script>
 </head>
 
-<body data-theme="dark">
-<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <h1>OntoHate <span class="pill">UI</span></h1>
+        <small>Taxonomia • Ontologia • SPARQL</small>
+      </div>
 
-<div class="app">
+      <div class="tabs">
+        <button class="tabbtn active" data-tab="tax"><span>Taxonomia</span><span class="pill">A</span></button>
+        <button class="tabbtn" data-tab="onto"><span>Ontologia</span><span class="pill">B</span></button>
+        <button class="tabbtn" data-tab="sparql"><span>SPARQL</span><span class="pill">C</span></button>
+      </div>
 
-<!-- ===== SIDEBAR ===== -->
-<aside class="sidebar" aria-label="Painel">
-  <div class="sb-head">
-    <div class="sb-title">OntoHate</div>
-    <div class="sb-sub">Taxonomia interativa do discurso de ódio online. Cole a URL RAW do GitHub e carregue.</div>
-    <div class="sb-head-btns">
-      <button id="btnTheme" title="Tema">☀</button>
-      <button class="primary" id="btnFit">Ajustar</button>
-      <button id="btnStats" disabled>📊 Stats</button>
-      <button class="danger" id="btnReset">Reset</button>
-    </div>
-  </div>
-
-  <div class="sb-body">
-
-    <!-- DADOS -->
-    <div class="card open">
-      <div class="ch"><span class="ctitle">Fonte de dados</span><span class="ctoggle">▾</span></div>
-      <div class="cb">
-        <div class="field"><label>URL (raw)</label><input id="dataUrl" type="text" placeholder="https://raw.githubusercontent.com/…/Ontohate_V.owl"/></div>
-        <div class="btns">
-          <button class="primary" id="btnLoad">Carregar</button>
-        </div>
-        <div style="font-size:11px;color:var(--muted)">RDF/XML ou Turtle • use o link <b>raw</b> do GitHub</div>
+      <div class="row">
+        <div class="status" id="loadStatus"><span class="dot warn" id="statusDot"></span><span id="statusText">Carregando ontologia…</span></div>
+        <button class="btn" id="reloadBtn" title="Recarregar OWL (Ctrl/Cmd+R também funciona)">Recarregar</button>
       </div>
     </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
 
     <!-- TAXONOMIA -->
-    <div class="card open">
-      <div class="ch"><span class="ctitle">Taxonomia</span><span class="ctoggle">▾</span></div>
-      <div class="cb">
-        <div class="row">
-          <div class="field">
-            <label>Modo</label>
-            <select id="splitMode" disabled>
-              <option value="single">Por dimensão (uma)</option>
-              <option value="union">Por dimensões (unir)</option>
-              <option value="cross">Cruzamento (liga pelo caminho)</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Dimensão ativa</label>
-            <select id="activeDim" disabled></select>
-          </div>
+    <section id="tab-tax">
+      <div class="card">
+        <div class="hd">
+          <h2>Aba Taxonomia</h2>
+          <div class="small">Cole aqui o seu código atual da taxonomia</div>
         </div>
-
-        <div class="rg">
-          <label>Profundidade máx.</label>
-          <div class="rrow">
-            <input id="maxDepth" type="range" min="1" max="16" value="7" disabled/>
-            <span class="rval" id="depthLbl">7</span>
-            <button id="btnMoreDepth" disabled>+</button>
+        <div class="bd">
+          <div class="muted">
+            Você disse que essa aba já existe. Para não quebrar nada, deixei um placeholder.
+            <br><br>
+            ✅ Onde integrar: substitua o bloco abaixo pelo seu HTML/JS atual da taxonomia (ou mantenha em arquivo separado e carregue via iframe/import).
           </div>
-        </div>
-
-        <div class="rg">
-          <label>Compactação</label>
-          <div class="rrow">
-            <input id="compact" type="range" min="0" max="100" value="70" disabled/>
-            <span class="rval" id="compactLbl">70</span>
-          </div>
-        </div>
-
-        <div class="btns">
-          <button id="btnHlMode" disabled title="Hover ilumina só o nó e seus vizinhos">👁 Vizinhança</button>
-        </div>
-
-        <div class="field" style="margin-top:6px">
-          <div style="font-size:11px;color:var(--muted)">
-            <b>Regra do cruzamento:</b> sempre preserva o tronco
-            <span style="font-family:var(--fm)">Universo de evento → Evento de discurso de odio → Discurso de odio</span>
-            e conecta as dimensões abaixo dele (sem filtrar “só o comum”).
+          <div style="height:12px"></div>
+          <div class="card" style="background:rgba(0,0,0,.12); border:1px dashed rgba(255,255,255,.12); box-shadow:none;">
+            <div class="bd">
+              <div class="muted">[ Placeholder da Taxonomia ]</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- DIMENSÕES -->
-    <div class="card open">
-      <div class="ch"><span class="ctitle">Dimensões</span><span class="ctoggle">▾</span></div>
-      <div class="cb">
-        <div class="btns">
-          <button id="btnAll" disabled>Todas</button>
-          <button id="btnNone" disabled>Nenhuma</button>
-        </div>
-        <div class="dims" id="dimsList">
-          <div style="font-size:11px;color:var(--muted)">Carregue uma ontologia.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LAYOUT -->
-    <div class="card open">
-      <div class="ch"><span class="ctitle">Layout e visualização</span><span class="ctoggle">▾</span></div>
-      <div class="cb">
-        <div class="field">
-          <label>Layout</label>
-          <select id="layoutSelect" disabled>
-            <option value="topdown">Top-down</option>
-            <option value="leftright">Esquerda → Direita</option>
-            <option value="radial">Radial</option>
-            <option value="a4">A4 (vertical)</option>
-          </select>
-        </div>
-
-        <div class="row">
-          <div class="rg" style="flex:1">
-            <label>Curvatura</label>
-            <div class="rrow"><input id="edgeCurve" type="range" min="0" max="100" value="18" disabled/><span class="rval" id="curveLbl">18</span></div>
+    <!-- ONTOLOGIA -->
+    <section id="tab-onto" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <div class="hd">
+            <h2>Dimensões (superclasses) e navegação</h2>
+            <div class="row" style="flex:1; justify-content:flex-end;">
+              <input id="classSearch" class="input" placeholder="Buscar classe (label/IRI)…" style="max-width:360px;">
+            </div>
           </div>
-          <div class="rg" style="flex:1">
-            <label>Espessura</label>
-            <div class="rrow"><input id="edgeWidth" type="range" min="1" max="6" value="2" disabled/><span class="rval" id="ewLbl">2</span></div>
+          <div class="bd">
+            <div class="row">
+              <div style="flex:1; min-width:240px;">
+                <label class="small">Dimensão (superclasse)</label>
+                <select id="dimensionSelect"></select>
+              </div>
+              <div style="flex:1; min-width:240px;">
+                <label class="small">Raiz dentro da dimensão</label>
+                <select id="rootSelect"></select>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+            <div class="tree" id="classTree"></div>
           </div>
         </div>
 
-        <div class="row">
-          <div class="field"><label>Cor arestas</label><input id="edgeColor" type="color" value="#1e3a5f" disabled/></div>
-          <div class="field"><label>Herança múltipla</label>
-            <select id="multiParentMode" disabled>
-              <option value="hide">Ocultar arestas extra</option>
-              <option value="show">Mostrar tracejado</option>
-            </select>
+        <div class="card">
+          <div class="hd">
+            <h2>Detalhes da classe</h2>
+            <div class="pill" id="detailPill">—</div>
+          </div>
+          <div class="bd" id="classDetail">
+            <div class="muted">Selecione uma classe na árvore para ver detalhes.</div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- ATALHOS -->
-    <div class="card">
-      <div class="ch"><span class="ctitle">Atalhos</span><span class="ctoggle">▾</span></div>
-      <div class="cb" style="font-size:11px;color:var(--muted);line-height:1.8">
-        <kbd class="kbd">Alt</kbd>+clique — abrir/fechar subclasses<br>
-        Clique — selecionar nó<br>
-        Drag nó — reposicionar<br>
-        Scroll — zoom &nbsp;|&nbsp; Drag fundo — pan<br>
-        <kbd class="kbd">Esc</kbd> — desselecionar
+    <!-- SPARQL -->
+    <section id="tab-sparql" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <div class="hd">
+            <h2>Perguntas prontas</h2>
+            <div class="small">Clique para preencher a consulta</div>
+          </div>
+          <div class="bd">
+            <div class="list" id="presetList"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <h2>Consulta SPARQL</h2>
+            <div class="row">
+              <button class="btn good" id="runBtn">Executar</button>
+              <button class="btn" id="clearBtn">Limpar</button>
+              <span class="small">Dica: <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> + <span class="kbd">Enter</span></span>
+            </div>
+          </div>
+          <div class="bd">
+            <textarea id="sparqlText"></textarea>
+            <div style="height:10px"></div>
+            <div class="card" style="box-shadow:none; background: rgba(0,0,0,.12);">
+              <div class="hd"><h2>Resultado</h2><div class="small" id="resultMeta">—</div></div>
+              <div class="bd" id="resultBox"><div class="muted">Execute uma consulta para ver os resultados aqui.</div></div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
   </div>
-</aside>
-
-<!-- ===== MAIN ===== -->
-<main class="main">
-  <div class="topbar">
-    <button id="drawerToggle" class="primary" title="Abrir painel">☰ Painel</button>
-
-    <div class="pill keep"><div class="dot idle" id="statusDot"></div><span id="loadStatus">pronto</span></div>
-    <div class="pill">Zoom <span class="v" id="zoomInfo">100%</span></div>
-    <div class="pill">Nós <span class="v" id="nodeCount">0</span></div>
-    <div class="pill">Arestas <span class="v" id="edgeCount">0</span></div>
-    <div class="tsp"></div>
-    <div class="pill keep"><kbd class="kbd">Alt</kbd>+clique abre/fecha</div>
-  </div>
-
-  <div class="lbar hidden" id="loadingBar"></div>
-
-  <div id="svgWrap">
-    <div class="empty" id="emptyState">
-      <div class="empty-icon">🕸</div>
-      <div class="empty-txt">Cole a URL RAW da ontologia e clique em <strong>Carregar</strong>.</div>
-    </div>
-    <svg id="svg"></svg>
-    <div id="tooltip" class="tooltip" style="display:none"></div>
-  </div>
-
-  <div id="breadcrumb"></div>
 </main>
 
-</div><!-- /app -->
-
 <script>
-/* =========================================================
-   RDF
-========================================================= */
-const RDF  = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-const RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
-const OWL  = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
-const SKOS = $rdf.Namespace("http://www.w3.org/2004/02/skos/core#");
+/** ===========================
+ *  CONFIG
+ *  =========================== */
+const OWL_URL = "./Ontohate_V.owl"; // <-- AJUSTE AQUI (arquivo no mesmo diretório do index.html)
 
-const STORE  = $rdf.graph();
-
-/* =========================================================
-   UI
-========================================================= */
-const $ = id => document.getElementById(id);
-const ui = {
-  btnTheme:$("btnTheme"), btnFit:$("btnFit"), btnStats:$("btnStats"), btnReset:$("btnReset"),
-  dataUrl:$("dataUrl"), btnLoad:$("btnLoad"),
-  splitMode:$("splitMode"), activeDim:$("activeDim"),
-  maxDepth:$("maxDepth"), depthLbl:$("depthLbl"), btnMoreDepth:$("btnMoreDepth"),
-  compact:$("compact"), compactLbl:$("compactLbl"),
-  btnHlMode:$("btnHlMode"),
-  dimsList:$("dimsList"), btnAll:$("btnAll"), btnNone:$("btnNone"),
-  layoutSelect:$("layoutSelect"), edgeCurve:$("edgeCurve"), curveLbl:$("curveLbl"),
-  edgeWidth:$("edgeWidth"), ewLbl:$("ewLbl"), edgeColor:$("edgeColor"),
-  multiParentMode:$("multiParentMode"),
-  statusDot:$("statusDot"), loadStatus:$("loadStatus"), loadingBar:$("loadingBar"),
-  emptyState:$("emptyState"), tooltip:$("tooltip"), svgWrap:$("svgWrap"),
-  zoomInfo:$("zoomInfo"), nodeCount:$("nodeCount"), edgeCount:$("edgeCount"),
-  breadcrumb:$("breadcrumb"),
-  drawerToggle:$("drawerToggle"), drawerBackdrop:$("drawerBackdrop"),
+/** namespaces úteis */
+const NS = {
+  rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+  owl:  "http://www.w3.org/2002/07/owl#",
 };
 
-/* =========================================================
-   STATE
-========================================================= */
-const S = {
-  loaded:false, didFit:false,
-  classNodes:new Map(), subclasses:new Map(), superclasses:new Map(),
-  parentCount:new Map(), nodeDepth:new Map(),
-  rootIris:[],
-  // Spine IRIs
-  spine:{ universo:null, evento:null, discurso:null },
-  // Dimensions: direct children of Discurso de odio
-  dimensions:[], selectedDims:new Set(),
-  collapsed:new Set(),
-  selectedIri:null,
-  hlMode:false,
-  currentD3Root:null,
-  tooltipCache:new Map(),
+/** estado global */
+const state = {
+  store: null,             // N3.Store
+  terms: {
+    classes: new Set(),    // IRIs de classes (owl:Class + rdfs:Class)
+    subclassOf: new Map(), // child -> Set(parents)
+    childrenOf: new Map(), // parent -> Set(children)
+    labels: new Map(),     // iri -> string
+    comments: new Map(),   // iri -> string
+  },
+  dimensions: [],          // lista de superclasses "candidatas"
+  selectedDimension: null,
+  selectedRoot: null,
+  selectedClass: null,
+  comunica: null,          // Comunica QueryEngine
+  sources: [],             // fontes RDF para SPARQL
 };
 
-const DIM_PALETTE=["#38bdf8","#34d399","#fbbf24","#f87171","#a78bfa","#22d3ee","#fb923c","#e879f9","#86efac","#67e8f9","#fca5a5","#c4b5fd"];
-const uniq = a=>[...new Set(a)];
-const esc  = s=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+/** ===========================
+ *  UI helpers
+ *  =========================== */
+const $ = (id) => document.getElementById(id);
 
-/* =========================================================
-   THEME + DRAWER
-========================================================= */
-function setTheme(t){
-  document.body.setAttribute("data-theme",t);
-  ui.btnTheme.textContent=t==="dark"?"☀":"☾";
-  localStorage.setItem("ontohate_theme",t);
-  S.tooltipCache.clear();
-}
-ui.btnTheme.onclick=()=>setTheme(document.body.getAttribute("data-theme")==="dark"?"light":"dark");
-
-function openDrawer(on){
-  document.body.classList.toggle("drawer-open", !!on);
-}
-ui.drawerToggle.onclick=()=>openDrawer(!document.body.classList.contains("drawer-open"));
-ui.drawerBackdrop.onclick=()=>openDrawer(false);
-
-/* =========================================================
-   COLLAPSIBLE CARDS
-========================================================= */
-document.querySelectorAll(".ch").forEach(h=>h.onclick=()=>h.closest(".card").classList.toggle("open"));
-
-/* =========================================================
-   RANGE LIVE VALUES
-========================================================= */
-[["maxDepth","depthLbl"],["compact","compactLbl"],["edgeCurve","curveLbl"],["edgeWidth","ewLbl"]]
-.forEach(([i,l])=>{
-  const el=$(i),lb=$(l);
-  if(el&&lb) el.addEventListener("input",()=>lb.textContent=el.value);
-});
-
-/* =========================================================
-   STATUS
-========================================================= */
-function setStatus(t,mode="ok"){
-  ui.loadStatus.textContent=t;
-  ui.statusDot.className="dot "+(mode==="ok"?"":mode==="loading"?"loading":"error");
-}
-function setLoading(on){
-  ui.loadingBar.classList.toggle("hidden",!on);
-  if(on) setStatus("carregando…","loading");
+function setStatus(kind, text){
+  const dot = $("statusDot");
+  dot.classList.remove("ok","bad","warn");
+  dot.classList.add(kind);
+  $("statusText").textContent = text;
 }
 
-/* =========================================================
-   SVG + ZOOM
-========================================================= */
-const svg=d3.select("#svg"), svgEl=document.getElementById("svg");
-const wrap=ui.svgWrap;
-const gRoot=svg.append("g").attr("class","gRoot");
-const gLinks=gRoot.append("g").attr("class","links");
-const gNodes=gRoot.append("g").attr("class","nodes");
-let viewW=1000,viewH=800;
-
-const zoom=d3.zoom().scaleExtent([0.1,6]).on("zoom",e=>{
-  gRoot.attr("transform",e.transform);
-  ui.zoomInfo.textContent=Math.round(e.transform.k*100)+"%";
-});
-svg.call(zoom);
-
-function resize(){
-  const r=wrap.getBoundingClientRect();
-  viewW=r.width||1000; viewH=r.height||800;
-  svg.attr("viewBox",`0 0 ${viewW} ${viewH}`);
-}
-window.addEventListener("resize",()=>{ resize(); if(S.loaded) rebuildAndRender(); });
-
-/* =========================================================
-   TEXT MEASURE
-========================================================= */
-const _mc=document.createElement("canvas").getContext("2d");
-const _mcache=new Map();
-function measureW(text,fpx){
-  const k=`${fpx}|${text}`;
-  if(_mcache.has(k)) return _mcache.get(k);
-  _mc.font=`700 ${fpx}px Syne,ui-sans-serif,sans-serif`;
-  const w=_mc.measureText(text).width;
-  _mcache.set(k,w);
-  return w;
-}
-function autoSize(label,font=12){
-  const maxLW=170,padX=18,padY=10,lineH=Math.round(font*1.25);
-  const words=label.split(/\s+/).filter(Boolean); let l1="",l2="";
-  for(const w of words){
-    const c=(l1?l1+" ":"")+w;
-    if(measureW(c,font)<=maxLW) l1=c;
-    else l2=(l2?l2+" ":"")+w;
-  }
-  if(!l1) l1=label;
-  const w=Math.max(92,Math.ceil(Math.max(measureW(l1,font),l2?measureW(l2,font):0)+padX));
-  const h=Math.max(26,Math.ceil((l2?2:1)*lineH+padY));
-  return {w,h,l1,l2};
+function escapeHtml(str){
+  return (str ?? "").replace(/[&<>"']/g, s => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[s]));
 }
 
-/* =========================================================
-   HELPERS RDF
-========================================================= */
-function getLiterals(store,s,p){
-  return store.each(s,p,null).filter(o=>o.termType==="Literal").map(o=>o.value);
-}
-function getFL(store,s,p){ return getLiterals(store,s,p)[0]||""; }
-function shrinkIri(iri){
-  try{
-    const u=new URL(iri);
-    const f=u.hash?u.hash.slice(1):"";
-    if(f) return f;
-    const ps=u.pathname.split("/").filter(Boolean);
-    return ps[ps.length-1]||iri;
-  }catch{ return iri; }
-}
-function stripAccents(s){
-  return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-}
-function normKey(s){
-  return stripAccents(String(s))
-    .toLowerCase()
-    .replace(/[_\-\s]+/g," ")
-    .replace(/[^\w\s]/g,"")
-    .trim();
-}
-function isBuiltinIri(iri){
-  return iri===OWL("Thing").value ||
-    iri.startsWith("http://www.w3.org/") ||
-    iri.startsWith("http://purl.obolibrary.org/obo/") ||
-    iri.startsWith("https://w3id.org/") ||
-    iri.startsWith("http://xmlns.com/foaf/") ||
-    iri.startsWith("http://schema.org/");
+function shortIri(iri){
+  if(!iri) return "—";
+  const m = iri.match(/[#\/]([^#\/]+)$/);
+  return m ? m[1] : iri;
 }
 
-/* =========================================================
-   LOAD DATA (OWL)
-========================================================= */
-async function parseStore(store,url){
-  const res=await fetch(url,{cache:"no-store"});
-  if(!res.ok) throw new Error(`HTTP ${res.status} — verifique o link RAW`);
-  const text=await res.text();
-
-  let ok=false;
-  for(const fmt of ["application/rdf+xml","text/turtle"]){
-    try{ $rdf.parse(text,store,url,fmt); ok=true; break; }catch(e){}
-  }
-  if(!ok) throw new Error("Formato não reconhecido. Use RDF/XML (.owl) ou Turtle (.ttl).");
+function getLabel(iri){
+  return state.terms.labels.get(iri) || shortIri(iri);
 }
 
-async function loadData(url){
-  setLoading(true);
-  ui.emptyState.style.display="none";
+/** ===========================
+ *  Tabs
+ *  =========================== */
+function initTabs(){
+  document.querySelectorAll(".tabbtn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
 
-  while(STORE.statements.length) STORE.statements.pop();
-
-  await parseStore(STORE,url);
-
-  buildGraph(STORE);
-
-  S.loaded=true;
-  S.didFit=false;
-  enableCtls(true);
-
-  setStatus(`${S.classNodes.size} classes do domínio`,"ok");
-  setLoading(false);
-
-  buildDimensionsFromSpine();
-  rebuildAndRender();
-
-  // fecha o drawer no mobile após carregar
-  openDrawer(false);
-}
-
-const CTLS=["splitMode","activeDim","maxDepth","btnMoreDepth","compact","btnHlMode",
-  "layoutSelect","edgeCurve","edgeWidth","edgeColor","multiParentMode","btnAll","btnNone","btnFit","btnReset"];
-function enableCtls(on){ CTLS.forEach(id=>{ if(ui[id]) ui[id].disabled=!on; }); }
-
-/* =========================================================
-   BUILD GRAPH (classes + subclass)
-========================================================= */
-function buildGraph(store){
-  S.classNodes.clear(); S.subclasses.clear(); S.superclasses.clear();
-  S.parentCount.clear(); S.nodeDepth.clear();
-  S.tooltipCache.clear();
-  S.rootIris=[];
-  S.spine={universo:null,evento:null,discurso:null};
-
-  const classSet=new Set();
-
-  // classes declaradas
-  store.each(null,RDF("type"),OWL("Class")).forEach(s=>classSet.add(s.value));
-  store.each(null,RDF("type"),RDFS("Class")).forEach(s=>classSet.add(s.value));
-
-  // classes via subClassOf
-  store.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>{
-    if(st.subject.termType==="NamedNode") classSet.add(st.subject.value);
-    if(st.object.termType==="NamedNode") classSet.add(st.object.value);
-  });
-
-  // filtra built-ins/importadas
-  const domainIris=[...classSet].filter(iri=>!isBuiltinIri(iri));
-
-  // cria nodes
-  for(const iri of domainIris){
-    const sym=$rdf.sym(iri);
-    const label=getFL(store,sym,RDFS("label")) || getFL(store,sym,SKOS("prefLabel")) || "";
-    const comment=getLiterals(store,sym,RDFS("comment"));
-    S.classNodes.set(iri,{iri,label,comment});
-    S.subclasses.set(iri,new Set());
-    S.superclasses.set(iri,new Set());
-  }
-
-  // edges
-  store.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>{
-    if(st.subject.termType!=="NamedNode"||st.object.termType!=="NamedNode") return;
-    const c=st.subject.value, p=st.object.value;
-    if(!S.classNodes.has(c) || !S.classNodes.has(p)) return;
-    S.subclasses.get(p).add(c);
-    S.superclasses.get(c).add(p);
-  });
-
-  // roots
-  for(const iri of S.classNodes.keys()){
-    const supers=[...(S.superclasses.get(iri)||new Set())];
-    S.parentCount.set(iri,supers.length);
-    if(supers.length===0) S.rootIris.push(iri);
-  }
-
-  // depth BFS from roots
-  const q=[...S.rootIris.map(r=>({iri:r,d:0}))];
-  S.rootIris.forEach(r=>S.nodeDepth.set(r,0));
-  while(q.length){
-    const {iri,d}=q.shift();
-    (S.subclasses.get(iri)||new Set()).forEach(c=>{
-      if(!S.nodeDepth.has(c) || S.nodeDepth.get(c)>d+1){
-        S.nodeDepth.set(c,d+1);
-        q.push({iri:c,d:d+1});
-      }
+      const tab = btn.dataset.tab;
+      $("tab-tax").classList.toggle("hidden", tab !== "tax");
+      $("tab-onto").classList.toggle("hidden", tab !== "onto");
+      $("tab-sparql").classList.toggle("hidden", tab !== "sparql");
     });
-  }
-
-  detectSpineByLabelsAndRelations();
+  });
 }
 
-function findByLabelApprox(target){
-  const t=normKey(target);
-  for(const [iri,n] of S.classNodes){
-    const lbl=n.label || shrinkIri(iri);
-    if(normKey(lbl)===t) return iri;
+/** ===========================
+ *  OWL load + parse
+ *  =========================== */
+async function loadOntology(){
+  setStatus("warn","Carregando ontologia…");
+  state.store = new N3.Store();
+  state.terms = {
+    classes: new Set(),
+    subclassOf: new Map(),
+    childrenOf: new Map(),
+    labels: new Map(),
+    comments: new Map(),
+  };
+
+  let ttlOrRdfText;
+  try{
+    const res = await fetch(OWL_URL, { cache: "no-store" });
+    if(!res.ok) throw new Error(`HTTP ${res.status} ao buscar ${OWL_URL}`);
+    ttlOrRdfText = await res.text();
+  }catch(err){
+    setStatus("bad","Falha ao baixar a OWL (ver console).");
+    console.error(err);
+    throw err;
   }
-  return null;
+
+  // O N3 Parser lê Turtle/N-Triples/N-Quads muito bem.
+  // Para OWL em RDF/XML: nem sempre funciona. Muitos projetos publicam OWL em Turtle.
+  // Se seu arquivo for RDF/XML e der erro, a solução é converter para TTL no build (ex.: rdfxml -> ttl).
+  // Vamos tentar parsear e apontar erro claro.
+  const parser = new N3.Parser({ baseIRI: location.href });
+  await new Promise((resolve, reject)=>{
+    try{
+      parser.parse(ttlOrRdfText, (error, quad, prefixes) => {
+        if(error) reject(error);
+        else if(quad) state.store.addQuad(quad);
+        else resolve();
+      });
+    }catch(e){ reject(e); }
+  });
+
+  indexOntology();
+  initComuncia();
+  buildOntologyUI();
+  buildPresets();
+
+  setStatus("ok",`Ontologia carregada: ${state.terms.classes.size} classes`);
 }
 
-function detectSpineByLabelsAndRelations(){
-  // tenta achar pelos labels “humanos”
-  const universo = findByLabelApprox("Universo de evento") || findByLabelApprox("Universo de evento");
-  const evento   = findByLabelApprox("Evento de discurso de odio") || findByLabelApprox("Evento de discurso de ódio");
-  const discurso = findByLabelApprox("Discurso de odio") || findByLabelApprox("Discurso de ódio") || findByLabelApprox("Discurso de odio online") || findByLabelApprox("Discurso de ódio online");
+/** ===========================
+ *  Index: classes, subclass, labels, comments
+ *  =========================== */
+function addMapSet(map, k, v){
+  if(!map.has(k)) map.set(k, new Set());
+  map.get(k).add(v);
+}
 
-  // valida encadeamento via subclass
-  function isSubclassOf(a,b){
-    if(!a||!b) return false;
-    const vis=new Set([a]);
-    const q=[a];
-    while(q.length){
-      const x=q.shift();
-      if(x===b) return true;
-      for(const p of (S.superclasses.get(x)||new Set())){
-        if(!vis.has(p)){ vis.add(p); q.push(p); }
+function indexOntology(){
+  const { store } = state;
+
+  // owl:Class e rdfs:Class
+  const classTriples = [
+    ...store.getQuads(null, NS.rdf + "type", NS.owl + "Class", null),
+    ...store.getQuads(null, NS.rdf + "type", NS.rdfs + "Class", null),
+  ];
+  for(const q of classTriples){
+    if(q.subject.termType === "NamedNode"){
+      state.terms.classes.add(q.subject.value);
+    }
+  }
+
+  // rdfs:subClassOf
+  const subs = store.getQuads(null, NS.rdfs + "subClassOf", null, null);
+  for(const q of subs){
+    if(q.subject.termType !== "NamedNode") continue;
+    const child = q.subject.value;
+
+    // parent pode ser blank node (restrições). vamos ignorar bnodes para árvore de classes.
+    if(q.object.termType !== "NamedNode") continue;
+    const parent = q.object.value;
+
+    state.terms.classes.add(child);
+    state.terms.classes.add(parent);
+
+    addMapSet(state.terms.subclassOf, child, parent);
+    addMapSet(state.terms.childrenOf, parent, child);
+  }
+
+  // rdfs:label
+  const labels = store.getQuads(null, NS.rdfs + "label", null, null);
+  for(const q of labels){
+    if(q.subject.termType !== "NamedNode") continue;
+    if(q.object.termType !== "Literal") continue;
+    // pega primeiro label encontrado; se quiser priorizar pt, dá pra melhorar depois
+    if(!state.terms.labels.has(q.subject.value)){
+      state.terms.labels.set(q.subject.value, q.object.value);
+    }
+  }
+
+  // rdfs:comment (descrições)
+  const comments = store.getQuads(null, NS.rdfs + "comment", null, null);
+  for(const q of comments){
+    if(q.subject.termType !== "NamedNode") continue;
+    if(q.object.termType !== "Literal") continue;
+    if(!state.terms.comments.has(q.subject.value)){
+      state.terms.comments.set(q.subject.value, q.object.value);
+    }
+  }
+
+  // Dimensões: heurística prática
+  // 1) classes que são "top-level" (não têm parent NamedNode)
+  // 2) e que têm filhos (para evitar dimensões vazias)
+  const candidates = [];
+  for(const iri of state.terms.classes){
+    const parents = state.terms.subclassOf.get(iri);
+    const hasNamedParent = parents && [...parents].some(p => typeof p === "string" && p.startsWith("http"));
+    const hasChildren = state.terms.childrenOf.has(iri) && state.terms.childrenOf.get(iri).size > 0;
+
+    if(!hasNamedParent && hasChildren){
+      candidates.push(iri);
+    }
+  }
+
+  // ordena por label
+  candidates.sort((a,b)=> getLabel(a).localeCompare(getLabel(b), "pt-BR"));
+  state.dimensions = candidates;
+
+  // defaults
+  state.selectedDimension = state.dimensions[0] || null;
+  state.selectedRoot = state.selectedDimension;
+}
+
+/** ===========================
+ *  Comunica SPARQL setup
+ *  =========================== */
+function initComuncia(){
+  // QueryEngine do bundle browser
+  state.comunica = new Comunica.QueryEngine();
+
+  // Comunica pode consultar um array de fontes RDFJS.
+  // N3.Store é compatível com RDFJS Source.
+  state.sources = [ state.store ];
+}
+
+/** ===========================
+ *  Ontology UI
+ *  =========================== */
+function buildOntologyUI(){
+  // preencher dimensões
+  const dimSel = $("dimensionSelect");
+  dimSel.innerHTML = "";
+  if(state.dimensions.length === 0){
+    dimSel.innerHTML = `<option value="">(nenhuma dimensão detectada)</option>`;
+  }else{
+    for(const iri of state.dimensions){
+      const opt = document.createElement("option");
+      opt.value = iri;
+      opt.textContent = getLabel(iri);
+      dimSel.appendChild(opt);
+    }
+    dimSel.value = state.selectedDimension;
+  }
+
+  dimSel.onchange = ()=>{
+    state.selectedDimension = dimSel.value || null;
+    rebuildRootSelect();
+    renderTree();
+  };
+
+  $("classSearch").oninput = ()=>{
+    renderTree();
+  };
+
+  rebuildRootSelect();
+  renderTree();
+}
+
+function rebuildRootSelect(){
+  const rootSel = $("rootSelect");
+  rootSel.innerHTML = "";
+
+  if(!state.selectedDimension){
+    rootSel.innerHTML = `<option value="">(—)</option>`;
+    return;
+  }
+
+  // raízes possíveis = a própria dimensão + filhos que tenham filhos (pra evitar raiz que vira folha)
+  const roots = new Set([state.selectedDimension]);
+  const children = state.terms.childrenOf.get(state.selectedDimension) || new Set();
+  for(const c of children){
+    const hasKids = state.terms.childrenOf.has(c) && state.terms.childrenOf.get(c).size > 0;
+    if(hasKids) roots.add(c);
+  }
+
+  const arr = [...roots].sort((a,b)=> getLabel(a).localeCompare(getLabel(b), "pt-BR"));
+  for(const iri of arr){
+    const opt = document.createElement("option");
+    opt.value = iri;
+    opt.textContent = getLabel(iri);
+    rootSel.appendChild(opt);
+  }
+
+  state.selectedRoot = arr[0] || state.selectedDimension;
+  rootSel.value = state.selectedRoot;
+
+  rootSel.onchange = ()=>{
+    state.selectedRoot = rootSel.value;
+    renderTree();
+  };
+}
+
+function matchesSearch(iri, q){
+  if(!q) return true;
+  const s = q.toLowerCase().trim();
+  const lbl = (state.terms.labels.get(iri) || "").toLowerCase();
+  return lbl.includes(s) || iri.toLowerCase().includes(s) || shortIri(iri).toLowerCase().includes(s);
+}
+
+function renderTree(){
+  const root = state.selectedRoot;
+  const q = $("classSearch").value || "";
+  const box = $("classTree");
+  box.innerHTML = "";
+
+  if(!root){
+    box.innerHTML = `<div class="muted">Nenhuma raiz selecionada.</div>`;
+    return;
+  }
+
+  // render recursivo com filtro
+  const visited = new Set();
+
+  function buildNode(iri){
+    if(visited.has(iri)) return null;
+    visited.add(iri);
+
+    const children = [...(state.terms.childrenOf.get(iri) || [])]
+      .filter(c => matchesSearch(c, q) || hasDescendantMatch(c, q))
+      .sort((a,b)=> getLabel(a).localeCompare(getLabel(b), "pt-BR"));
+
+    const hasKids = children.length > 0;
+
+    const nodeEl = document.createElement("div");
+
+    const row = document.createElement("div");
+    row.className = "node" + (state.selectedClass === iri ? " active" : "");
+
+    const twisty = document.createElement("div");
+    twisty.className = "twisty" + (hasKids ? "" : " empty");
+    twisty.textContent = hasKids ? "+" : "•";
+
+    const lab = document.createElement("div");
+    lab.className = "label";
+    lab.innerHTML = `<b>${escapeHtml(getLabel(iri))}</b><div>${escapeHtml(shortIri(iri))}</div>`;
+
+    row.appendChild(twisty);
+    row.appendChild(lab);
+
+    // children container
+    const kidsBox = document.createElement("div");
+    kidsBox.className = "children hidden";
+
+    if(hasKids){
+      for(const c of children){
+        const cEl = buildNode(c);
+        if(cEl) kidsBox.appendChild(cEl);
       }
+    }
+
+    // click: selecionar
+    row.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      state.selectedClass = iri;
+      showClassDetail(iri);
+      // toggle expand
+      if(hasKids){
+        const open = !kidsBox.classList.contains("hidden");
+        kidsBox.classList.toggle("hidden", open);
+        twisty.textContent = open ? "+" : "–";
+      }
+      // re-render para marcar active
+      renderTree();
+    });
+
+    nodeEl.appendChild(row);
+    if(hasKids) nodeEl.appendChild(kidsBox);
+    return nodeEl;
+  }
+
+  function hasDescendantMatch(iri, query){
+    if(!query) return true;
+    const kids = state.terms.childrenOf.get(iri);
+    if(!kids || kids.size === 0) return matchesSearch(iri, query);
+    for(const c of kids){
+      if(matchesSearch(c, query)) return true;
+      if(hasDescendantMatch(c, query)) return true;
     }
     return false;
   }
 
-  // se achou, fixa
-  if(universo) S.spine.universo=universo;
-  if(evento)   S.spine.evento=evento;
-  if(discurso) S.spine.discurso=discurso;
-
-  // se evento/discurso não encaixarem, tenta inferir por relações
-  // (evento deve ser subclasse de universo; discurso subclasse de evento)
-  if(S.spine.universo && S.spine.evento && !isSubclassOf(S.spine.evento,S.spine.universo)){
-    // tenta achar outro evento que seja filho de universo
-    const kids=[...(S.subclasses.get(S.spine.universo)||new Set())];
-    const pick=kids.find(k=>normKey((S.classNodes.get(k)?.label)||shrinkIri(k)).includes("evento"));
-    if(pick) S.spine.evento=pick;
-  }
-  if(S.spine.evento && S.spine.discurso && !isSubclassOf(S.spine.discurso,S.spine.evento)){
-    // tenta achar um discurso filho do evento
-    const kids=[...(S.subclasses.get(S.spine.evento)||new Set())];
-    const pick=kids.find(k=>normKey((S.classNodes.get(k)?.label)||shrinkIri(k)).includes("discurso"));
-    if(pick) S.spine.discurso=pick;
-  }
-}
-
-function getPreservedChainIRIs(){
-  // retorna [universo, evento, discurso] se existirem
-  const out=[];
-  if(S.spine.universo) out.push(S.spine.universo);
-  if(S.spine.evento) out.push(S.spine.evento);
-  if(S.spine.discurso) out.push(S.spine.discurso);
-  return out;
-}
-
-/* =========================================================
-   DIMENSIONS = filhos diretos de "Discurso de odio"
-========================================================= */
-function buildDimensionsFromSpine(){
-  // dimensões = subclasses diretas de Discurso de ódio
-  const dIri = S.spine.discurso;
-
-  // fallback: se não achou, tenta usar a classe que tiver mais “dimensões conhecidas”
-  let base = dIri;
-  if(!base){
-    // heurística: pega a classe cujo label contém "discurso" e tem vários filhos
-    const candidates=[...S.classNodes.keys()]
-      .filter(iri=>normKey((S.classNodes.get(iri)?.label)||shrinkIri(iri)).includes("discurso"))
-      .sort((a,b)=>((S.subclasses.get(b)||new Set()).size)-((S.subclasses.get(a)||new Set()).size));
-    base=candidates[0]||null;
-    S.spine.discurso=base;
-  }
-
-  const dims = base ? [...(S.subclasses.get(base)||new Set())] : [];
-  const dimsSorted = dims
-    .filter(iri=>S.classNodes.has(iri))
-    .map((iri,idx)=>({
-      iri,
-      label: S.classNodes.get(iri).label || shrinkIri(iri),
-      color: DIM_PALETTE[idx % DIM_PALETTE.length],
-      count: countDesc(iri),
-    }))
-    .sort((a,b)=>a.label.localeCompare(b.label,"pt-BR"));
-
-  S.dimensions = dimsSorted;
-  S.selectedDims = new Set(dimsSorted.map(d=>d.iri)); // por padrão: todas marcadas
-
-  // popula dropdown
-  ui.activeDim.innerHTML="";
-  for(const d of S.dimensions){
-    const o=document.createElement("option");
-    o.value=d.iri;
-    o.textContent=d.label;
-    ui.activeDim.appendChild(o);
-  }
-  if(S.dimensions.length) ui.activeDim.value=S.dimensions[0].iri;
-
-  renderDimsList();
-
-  // se não achou spine completo, avisa no status (sem quebrar)
-  const chain=getPreservedChainIRIs();
-  if(chain.length<3){
-    setStatus(`carregado (${S.classNodes.size}) — ⚠ verifique labels do tronco`, "ok");
-  }
-}
-
-function countDesc(iri){
-  let n=0;
-  const q=[...(S.subclasses.get(iri)||new Set())];
-  const vis=new Set([iri]);
-  while(q.length){
-    const x=q.shift();
-    if(vis.has(x)) continue;
-    vis.add(x); n++;
-    (S.subclasses.get(x)||new Set()).forEach(c=>q.push(c));
-  }
-  return n;
-}
-
-function renderDimsList(){
-  ui.dimsList.innerHTML="";
-  if(!S.dimensions.length){
-    ui.dimsList.innerHTML = `<div style="font-size:11px;color:var(--muted)">Nenhuma dimensão detectada (verifique se “Discurso de odio” tem subclasses diretas).</div>`;
+  // se o root não bater com busca, ainda assim renderiza se tiver descendente que bate
+  if(!matchesSearch(root, q) && !hasDescendantMatch(root, q)){
+    box.innerHTML = `<div class="muted">Nada encontrado para a busca atual nesta dimensão/raiz.</div>`;
     return;
   }
-  for(const dim of S.dimensions){
-    const on=S.selectedDims.has(dim.iri);
-    const row=document.createElement("div");
-    row.className="di"+(on?" active":"");
 
-    const cb=document.createElement("input");
-    cb.type="checkbox"; cb.checked=on;
-    cb.addEventListener("change",()=>{
-      if(cb.checked) S.selectedDims.add(dim.iri);
-      else S.selectedDims.delete(dim.iri);
-      if(ui.splitMode.value==="single" && cb.checked) ui.activeDim.value=dim.iri;
-      renderDimsList();
-      rebuildAndRender();
+  const rootEl = buildNode(root);
+  if(rootEl) box.appendChild(rootEl);
+}
+
+function showClassDetail(iri){
+  $("detailPill").textContent = shortIri(iri);
+  const lbl = getLabel(iri);
+  const comment = state.terms.comments.get(iri) || "—";
+  const parents = [...(state.terms.subclassOf.get(iri) || [])].map(getLabel).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  const children = [...(state.terms.childrenOf.get(iri) || [])].map(getLabel).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+
+  $("classDetail").innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div>
+        <div class="small">Label</div>
+        <div style="font-weight:800; font-size:16px; margin-top:2px;">${escapeHtml(lbl)}</div>
+      </div>
+
+      <div>
+        <div class="small">IRI</div>
+        <div class="muted" style="font-family:var(--mono); word-break:break-all;">${escapeHtml(iri)}</div>
+      </div>
+
+      <div>
+        <div class="small">Descrição (rdfs:comment)</div>
+        <div class="muted">${escapeHtml(comment)}</div>
+      </div>
+
+      <div>
+        <div class="small">Superclasses</div>
+        <div class="muted">${parents.length ? escapeHtml(parents.join(" • ")) : "—"}</div>
+      </div>
+
+      <div>
+        <div class="small">Subclasses diretas</div>
+        <div class="muted">${children.length ? escapeHtml(children.join(" • ")) : "—"}</div>
+      </div>
+    </div>
+  `;
+}
+
+/** ===========================
+ *  SPARQL presets + runner
+ *  =========================== */
+function buildPresets(){
+  const presets = [
+    {
+      title: "Listar todas as classes (com label)",
+      query: `
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+
+SELECT DISTINCT ?class ?label
+WHERE {
+  ?class rdf:type owl:Class .
+  OPTIONAL { ?class rdfs:label ?label }
+}
+ORDER BY LCASE(STR(?label))
+LIMIT 200
+`.trim()
+    },
+    {
+      title: "Listar superclasses (raízes com filhos)",
+      query: `
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?root (COUNT(DISTINCT ?child) AS ?nChildren)
+WHERE {
+  ?child rdfs:subClassOf ?root .
+}
+GROUP BY ?root
+ORDER BY DESC(?nChildren)
+LIMIT 100
+`.trim()
+    },
+    {
+      title: "Subclasses diretas de uma classe (troque <IRI_AQUI>)",
+      query: `
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?child
+WHERE {
+  ?child rdfs:subClassOf <IRI_AQUI> .
+}
+ORDER BY STR(?child)
+`.trim()
+    },
+    {
+      title: "Buscar classes por termo no label (troque \"odio\")",
+      query: `
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+
+SELECT DISTINCT ?class ?label
+WHERE {
+  ?class rdf:type owl:Class .
+  ?class rdfs:label ?label .
+  FILTER(CONTAINS(LCASE(STR(?label)), "odio"))
+}
+ORDER BY LCASE(STR(?label))
+LIMIT 200
+`.trim()
+    }
+  ];
+
+  const list = $("presetList");
+  list.innerHTML = "";
+  presets.forEach((p, idx)=>{
+    const el = document.createElement("div");
+    el.className = "item";
+    el.innerHTML = `<div class="title">${escapeHtml(p.title)}</div><div class="sub">Clique para usar</div>`;
+    el.addEventListener("click", ()=>{
+      document.querySelectorAll("#presetList .item").forEach(i=>i.classList.remove("active"));
+      el.classList.add("active");
+      $("sparqlText").value = p.query;
+      $("resultMeta").textContent = `Preset #${idx+1}`;
     });
-
-    const sw=document.createElement("input");
-    sw.type="color";
-    sw.value=dim.color;
-    sw.style.cssText="width:20px;height:20px;padding:1px;border-radius:4px;border:1px solid var(--border2);";
-    sw.addEventListener("input",()=>{ dim.color=sw.value; S.tooltipCache.clear(); rebuildAndRender(); });
-
-    const nm=document.createElement("div"); nm.className="dn"; nm.textContent=dim.label;
-    const ct=document.createElement("div"); ct.className="dc"; ct.textContent=dim.count;
-
-    row.append(cb,sw,nm,ct);
-    ui.dimsList.appendChild(row);
-  }
-}
-
-/* =========================================================
-   TREE BUILD (com tronco preservado)
-========================================================= */
-function buildSubtreeBFS(startIri, maxDepth, globalVisited=null){
-  const rootNode={iri:startIri,children:[]};
-  const q=[{iri:startIri,d:0,node:rootNode}];
-  const vis=new Set([startIri]);
-
-  while(q.length){
-    const {iri,d,node}=q.shift();
-    if(S.collapsed.has(iri) || d>=maxDepth) continue;
-
-    const kids=[...(S.subclasses.get(iri)||new Set())]
-      .filter(k=>S.classNodes.has(k) && !vis.has(k));
-
-    for(const kid of kids){
-      vis.add(kid);
-      const cn={iri:kid,children:[]};
-      node.children.push(cn);
-      q.push({iri:kid,d:d+1,node:cn});
-    }
-  }
-  return rootNode;
-}
-
-function buildTreeData(){
-  const maxDepth = +ui.maxDepth.value;
-  const mode = ui.splitMode.value;
-
-  const selectedDims =
-    mode==="single"
-      ? (ui.activeDim.value ? [ui.activeDim.value] : [])
-      : [...S.selectedDims];
-
-  // tronco
-  const preserved = getPreservedChainIRIs();
-  let chainRoot = null;
-  let discourseNode = null;
-
-  if(preserved.length){
-    const nodes = preserved.map(iri=>({iri,children:[]}));
-    for(let i=0;i<nodes.length-1;i++) nodes[i].children.push(nodes[i+1]);
-    chainRoot = nodes[0];
-    discourseNode = nodes[nodes.length-1];
-  }
-
-  // Se não temos tronco detectado, cai num root virtual
-  if(!chainRoot){
-    return { iri:"__root__", children: selectedDims.map(d=>buildSubtreeBFS(d,maxDepth)) };
-  }
-
-  // Abaixo do Discurso: anexa ramos conforme modo
-  if(mode==="cross" && selectedDims.length < 2){
-    // no cruzamento, exige 2+
-    discourseNode.children = [];
-  } else {
-    discourseNode.children = selectedDims
-      .filter(d=>S.classNodes.has(d))
-      .map(d=>buildSubtreeBFS(d, maxDepth));
-  }
-
-  return { iri:"__root__", children:[chainRoot] };
-}
-
-/* =========================================================
-   DIM COLOR MAP
-========================================================= */
-function buildDimColorMap(){
-  const map=new Map();
-  const mode=ui.splitMode.value;
-
-  // pinta o tronco com cinza
-  for(const iri of getPreservedChainIRIs()) map.set(iri,"#475569");
-
-  // pinta dimensões
-  for(const dim of S.dimensions){
-    if(mode==="single" && dim.iri!==ui.activeDim.value) continue;
-    if(mode!=="single" && !S.selectedDims.has(dim.iri)) continue;
-
-    const q=[dim.iri];
-    while(q.length){
-      const i=q.shift();
-      if(map.has(i)) continue;
-      map.set(i,dim.color);
-      (S.subclasses.get(i)||new Set()).forEach(c=>{ if(S.classNodes.has(c)) q.push(c); });
-    }
-  }
-  return map;
-}
-
-/* =========================================================
-   LAYOUT
-========================================================= */
-function computeLayout(treeData){
-  const layout=ui.layoutSelect.value;
-  const compact=+ui.compact.value/100;
-  const gapX=Math.round(40-28*compact),gapY=Math.round(60-38*compact);
-
-  const root=d3.hierarchy(treeData,d=>d.children);
-
-  const sample=root.descendants().slice(0,Math.min(60,root.descendants().length)).map(d=>{
-    const iri=d.data.iri;
-    const lbl = iri==="__root__" ? "" : (S.classNodes.get(iri)?.label || shrinkIri(iri));
-    return autoSize(lbl,12);
+    list.appendChild(el);
   });
-  const avgW=sample.length?sample.reduce((a,b)=>a+b.w,0)/sample.length:120;
-  const avgH=sample.length?sample.reduce((a,b)=>a+b.h,0)/sample.length:28;
 
-  let sepX=Math.max(70,Math.round(avgW+gapX));
-  let sepY=Math.max(60,Math.round(avgH+gapY));
-  if(layout==="a4"){sepX+=10;sepY+=14;}
-
-  if(layout==="radial"){
-    const radius=Math.min(viewW,viewH)/2-80;
-    d3.tree().size([2*Math.PI,Math.max(120,radius)])(root);
-    const cx=viewW/2,cy=viewH/2;
-    root.descendants().forEach(d=>{
-      const r=d.y,a=d.x;
-      d.x=cx+r*Math.cos(a-Math.PI/2);
-      d.y=cy+r*Math.sin(a-Math.PI/2);
-    });
-  } else {
-    d3.tree().nodeSize([sepX,sepY])(root);
-    const cx=viewW/2,cy=viewH/2;
-    root.descendants().forEach(d=>{
-      if(layout==="leftright"){ const tx=d.x; d.x=40+d.y; d.y=cy+tx; }
-      else { d.x=cx+d.x; d.y=40+d.y; }
-    });
-  }
-  return root;
+  // default
+  $("sparqlText").value = presets[0].query;
 }
 
-/* =========================================================
-   MULTI-PARENT EDGES (tracejado)
-========================================================= */
-function buildSecondaryEdges(d3Root){
-  if(ui.multiParentMode.value==="hide") return [];
-  const rendered=new Set(d3Root.descendants().map(d=>d.data.iri));
-  const edges=[];
-  for(const d of d3Root.descendants()){
-    const iri=d.data.iri;
-    if(iri==="__root__") continue;
-    const parents=[...(S.superclasses.get(iri)||new Set())].filter(p=>rendered.has(p));
-    const primary=d.parent?.data?.iri;
-    for(const p of parents){
-      if(p!==primary && p!=="__root__") edges.push({sourceIri:p,targetIri:iri});
-    }
-  }
-  return edges;
-}
-
-/* =========================================================
-   TOOLTIP + BREADCRUMB
-========================================================= */
-function getTooltipHTML(iri){
-  if(iri==="__root__") return "";
-  if(S.tooltipCache.has(iri)) return S.tooltipCache.get(iri);
-
-  const n=S.classNodes.get(iri);
-  const label=(n?.label)||shrinkIri(iri);
-  const comments=(n?.comment)||[];
-  const supers=uniq([...(S.superclasses.get(iri)||new Set())]).map(x=>(S.classNodes.get(x)?.label)||shrinkIri(x)).sort();
-  const subs=uniq([...(S.subclasses.get(iri)||new Set())]).map(x=>(S.classNodes.get(x)?.label)||shrinkIri(x)).sort();
-
-  const p=[];
-  p.push(`<div class="tt">${esc(label)}</div>`);
-  p.push(`<div class="ti">${esc(shrinkIri(iri))}</div>`);
-  if(comments.length){
-    p.push(`<div class="ts">Descrição</div>`);
-    p.push(`<div style="font-size:11px">${esc(comments[0])}</div>`);
-  }
-  if(supers.length){
-    p.push(`<div class="ts">Superclasses</div>`);
-    supers.slice(0,10).forEach(s=>p.push(`<div class="tx">${esc(s)}</div>`));
-  }
-  if(subs.length){
-    p.push(`<div class="ts">Subclasses</div>`);
-    subs.slice(0,10).forEach(s=>p.push(`<div class="tx">${esc(s)}</div>`));
-  }
-  const html=p.join("");
-  S.tooltipCache.set(iri,html);
-  return html;
-}
-
-function getAncestorPath(iri){
-  const q=[[iri]];
-  const vis=new Set([iri]);
-  while(q.length){
-    const path=q.shift();
-    const cur=path[0];
-    const parents=[...(S.superclasses.get(cur)||new Set())].filter(p=>S.classNodes.has(p) && !vis.has(p));
-    if(!parents.length) return path.reverse();
-    for(const p of parents){
-      vis.add(p);
-      q.push([p,...path]);
-    }
-  }
-  return [iri];
-}
-
-function showBreadcrumb(iri){
-  const path=getAncestorPath(iri);
-  ui.breadcrumb.innerHTML=path.map((p,i)=>{
-    const label=esc((S.classNodes.get(p)?.label)||shrinkIri(p));
-    const isLast=i===path.length-1;
-    if(isLast) return `<span style="color:var(--text);font-weight:700">${label}</span>`;
-    return `<span class="bc-item" data-iri="${esc(p)}">${label}</span><span class="bc-sep">›</span>`;
-  }).join("");
-  ui.breadcrumb.style.display="block";
-  ui.breadcrumb.querySelectorAll(".bc-item").forEach(el=>{
-    el.onclick=()=>{ selectNode(el.dataset.iri); zoomToNode(el.dataset.iri); };
-  });
-}
-
-/* =========================================================
-   RENDER
-========================================================= */
-function renderGraph(d3Root){
-  if(!d3Root) return;
-  S.currentD3Root=d3Root;
-
-  const curve=+ui.edgeCurve.value/100;
-  const strokeW=+ui.edgeWidth.value;
-  const edgeCol=ui.edgeColor.value;
-  const dimMap=buildDimColorMap();
-
-  const allNodes=d3Root.descendants();
-  const allLinks=d3Root.links().filter(l=>l.source.data.iri!=="__root__");
-  ui.nodeCount.textContent=allNodes.length;
-  ui.edgeCount.textContent=allLinks.length;
-
-  function lp(s,t){
-    const dx=t.x-s.x,dy=t.y-s.y;
-    return `M${s.x},${s.y} C${s.x+dx*curve},${s.y+dy*(1-curve)} ${s.x+dx*(1-curve)},${s.y+dy*curve} ${t.x},${t.y}`;
+async function runSparql(){
+  const query = $("sparqlText").value.trim();
+  if(!query){
+    $("resultBox").innerHTML = `<div class="muted">Escreva uma consulta.</div>`;
+    return;
   }
 
-  // primary links
-  const lkSel=gLinks.selectAll("path.link.primary").data(allLinks,d=>d.target.data.iri);
-  lkSel.exit().remove();
-  lkSel.enter().append("path").attr("class","link primary").merge(lkSel)
-    .attr("stroke",edgeCol).attr("stroke-width",strokeW)
-    .attr("d",d=>lp(d.source,d.target));
+  $("resultMeta").textContent = "Executando…";
+  $("resultBox").innerHTML = `<div class="muted">Processando consulta SPARQL…</div>`;
 
-  // secondary edges
-  const secEdges=buildSecondaryEdges(d3Root);
-  const nodeMap=new Map(d3Root.descendants().map(d=>[d.data.iri,d]));
-  const secData=secEdges.map(e=>({s:nodeMap.get(e.sourceIri),t:nodeMap.get(e.targetIri)})).filter(e=>e.s&&e.t);
-  const secSel=gLinks.selectAll("path.link.multi-parent").data(secData,d=>`${d.s.data.iri}|${d.t.data.iri}`);
-  secSel.exit().remove();
-  secSel.enter().append("path").attr("class","link multi-parent").merge(secSel)
-    .attr("stroke",edgeCol).attr("stroke-width",1)
-    .attr("d",d=>lp(d.s,d.t));
+  try{
+    const result = await state.comunica.queryBindings(query, { sources: state.sources });
+    const bindings = await result.toArray();
 
-  // nodes
-  const ndSel=gNodes.selectAll("g.node").data(allNodes,d=>d.data.iri);
-  ndSel.exit().remove();
-
-  const ndEnter=ndSel.enter().append("g").attr("class","node").style("cursor","pointer")
-    .on("mousemove",(event,d)=>{
-      if(d.data.iri==="__root__") return;
-      if(S.hlMode) applyHL(d.data.iri);
-      const r=wrap.getBoundingClientRect();
-      ui.tooltip.innerHTML=getTooltipHTML(d.data.iri);
-      ui.tooltip.style.cssText=`display:block;left:${event.clientX-r.left+14}px;top:${event.clientY-r.top+14}px`;
-      showBreadcrumb(d.data.iri);
-    })
-    .on("mouseleave",()=>{ ui.tooltip.style.display="none"; if(S.hlMode) clearHL(); })
-    .on("click",(event,d)=>{
-      event.stopPropagation();
-      if(d.data.iri==="__root__") return;
-      if(event.altKey) toggleCollapse(d.data.iri);
-      else selectNode(d.data.iri);
-    });
-
-  ndEnter.append("rect");
-  ndEnter.append("text").attr("text-anchor","middle");
-
-  const ndMerge=ndEnter.merge(ndSel)
-    .attr("transform",d=>`translate(${d.x},${d.y})`)
-    .classed("selected",d=>d.data.iri===S.selectedIri);
-
-  ndMerge.select("rect").each(function(d){
-    const iri=d.data.iri;
-    if(iri==="__root__"){
-      d3.select(this).attr("width",0).attr("height",0).attr("opacity",0);
+    if(bindings.length === 0){
+      $("resultMeta").textContent = "0 linhas";
+      $("resultBox").innerHTML = `<div class="muted">Sem resultados.</div>`;
       return;
     }
-    const label=(S.classNodes.get(iri)?.label)||shrinkIri(iri);
-    const {w,h}=autoSize(label,12);
-    const r=8;
-    let fill=dimMap.get(iri) || "#475569";
-    // tronco mais suave
-    if(getPreservedChainIRIs().includes(iri)) fill = "#334155";
 
-    d3.select(this)
-      .attr("width",w).attr("height",h)
-      .attr("x",-w/2).attr("y",-h/2)
-      .attr("rx",r).attr("ry",r)
-      .attr("fill",fill)
-      .attr("opacity",0.92);
-  });
+    const vars = result.variables.map(v => v.value);
 
-  ndMerge.select("text").each(function(d){
-    const iri=d.data.iri;
-    if(iri==="__root__"){ d3.select(this).text(""); return; }
-    const label=(S.classNodes.get(iri)?.label)||shrinkIri(iri);
-    const font=12;
-    const {w,l1,l2}=autoSize(label,font);
-    const maxLW=Math.max(90,w-18);
-    const text=d3.select(this);
-    text.selectAll("*").remove();
-    text.style("font-size",font+"px").style("font-family","var(--fd)");
-    text.attr("dominant-baseline","middle");
-
-    if(!l2){
-      text.append("tspan").attr("x",0).attr("dy","0em").text(l1);
-    }else{
-      let t2=l2;
-      if(measureW(t2,font)>maxLW){
-        while(t2.length && measureW(t2+"…",font)>maxLW) t2=t2.slice(0,-1);
-        t2=t2.trim()+"…";
+    // render table
+    let html = `<table><thead><tr>${vars.map(v=>`<th>?${escapeHtml(v)}</th>`).join("")}</tr></thead><tbody>`;
+    for(const b of bindings.slice(0, 300)){
+      html += "<tr>";
+      for(const v of vars){
+        const term = b.get(v);
+        let val = "—";
+        if(term){
+          if(term.termType === "NamedNode") val = term.value;
+          else if(term.termType === "Literal") val = term.value;
+          else val = term.value || term.id || "—";
+        }
+        html += `<td style="font-family:var(--mono); font-size:12px; word-break:break-all;">${escapeHtml(val)}</td>`;
       }
-      text.append("tspan").attr("x",0).attr("dy","-0.3em").text(l1);
-      text.append("tspan").attr("x",0).attr("dy","1.35em").text(t2);
+      html += "</tr>";
     }
-  });
-}
+    html += "</tbody></table>";
 
-/* =========================================================
-   REBUILD
-========================================================= */
-function rebuildAndRender(){
-  if(!S.loaded) return;
+    $("resultMeta").textContent = `${bindings.length} linhas` + (bindings.length > 300 ? " (mostrando 300)" : "");
+    $("resultBox").innerHTML = html;
 
-  ui.depthLbl.textContent=ui.maxDepth.value;
-
-  const treeData=buildTreeData();
-  const d3Root=computeLayout(treeData);
-  renderGraph(d3Root);
-
-  if(!S.didFit){ fitToView(); S.didFit=true; }
-}
-
-/* =========================================================
-   FIT / RESET
-========================================================= */
-function getContentBBox(){
-  try{
-    const b=gRoot.node().getBBox();
-    return {x:b.x,y:b.y,w:b.width,h:b.height};
-  }catch{
-    return {x:0,y:0,w:viewW,h:viewH};
+  }catch(err){
+    console.error(err);
+    $("resultMeta").textContent = "Erro";
+    $("resultBox").innerHTML = `
+      <div class="muted">Falha ao executar a consulta.</div>
+      <div style="height:8px"></div>
+      <div class="small">${escapeHtml(String(err.message || err))}</div>
+    `;
   }
 }
-function fitToView(){
-  const bb=getContentBBox();
-  if(!isFinite(bb.w)||bb.w<=0) return;
-  const pad=60;
-  const s=Math.min(0.95,Math.max(0.1,Math.min(viewW/(bb.w+pad),(viewH-52)/(bb.h+pad))));
-  svg.transition().duration(300).call(
-    zoom.transform,
-    d3.zoomIdentity
-      .translate(viewW/2 - s*(bb.x+bb.w/2), viewH/2 - s*(bb.y+bb.h/2))
-      .scale(s)
-  );
-}
-function resetAll(){
-  S.collapsed.clear();
-  S.selectedIri=null;
-  S.hlMode=false;
-  ui.breadcrumb.style.display="none";
-  ui.tooltip.style.display="none";
-  clearHL();
-  S.didFit=false;
-  rebuildAndRender();
-}
 
-/* =========================================================
-   COLLAPSE / SELECT
-========================================================= */
-function toggleCollapse(iri){
-  if(S.collapsed.has(iri)) S.collapsed.delete(iri);
-  else S.collapsed.add(iri);
-  rebuildAndRender();
-}
-function selectNode(iri){
-  S.selectedIri=iri;
-  rebuildAndRender();
-  showBreadcrumb(iri);
-}
+/** ===========================
+ *  Init
+ *  =========================== */
+initTabs();
 
-/* =========================================================
-   HIGHLIGHT MODE
-========================================================= */
-function applyHL(iri){
-  const relevant=new Set([iri]);
-  (S.superclasses.get(iri)||new Set()).forEach(p=>relevant.add(p));
-  (S.subclasses.get(iri)||new Set()).forEach(c=>relevant.add(c));
+$("reloadBtn").addEventListener("click", ()=> loadOntology().catch(()=>{}));
+$("runBtn").addEventListener("click", ()=> runSparql());
+$("clearBtn").addEventListener("click", ()=> { $("sparqlText").value=""; });
 
-  gNodes.selectAll("g.node").classed("dimmed",d=>d.data.iri!=="__root__" && !relevant.has(d.data.iri));
-  gLinks.selectAll("path.link").classed("dimmed",d=>{
-    if(!d.source||!d.target) return false;
-    return !relevant.has(d.source.data.iri) && !relevant.has(d.target.data.iri);
-  });
-}
-function clearHL(){
-  gNodes.selectAll("g.node").classed("dimmed",false);
-  gLinks.selectAll("path.link").classed("dimmed",false);
-}
-
-/* =========================================================
-   ZOOM TO NODE
-========================================================= */
-function zoomToNode(iri){
-  const node=gNodes.selectAll("g.node").filter(d=>d.data.iri===iri).node();
-  if(!node) return;
-  const tr=node.getCTM(),bb=node.getBBox();
-  const x=tr.e+bb.x+bb.width/2,y=tr.f+bb.y+bb.height/2;
-  const k=Math.max(0.7,Math.min(2.5,d3.zoomTransform(svgEl).k));
-  svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity.translate(viewW/2-k*x,viewH/2-k*y).scale(k));
-}
-
-/* =========================================================
-   EVENTS
-========================================================= */
-ui.btnLoad.onclick=async()=>{
-  try{
-    const url=ui.dataUrl.value.trim();
-    if(!url) return alert("Cole a URL RAW do GitHub primeiro.");
-    await loadData(url);
-  }catch(e){
-    setStatus("erro","error");
-    setLoading(false);
-    alert(e.message||String(e));
-  }
-};
-
-ui.btnFit.onclick=fitToView;
-ui.btnReset.onclick=resetAll;
-
-ui.btnHlMode.onclick=()=>{
-  S.hlMode=!S.hlMode;
-  ui.btnHlMode.classList.toggle("primary",S.hlMode);
-  ui.btnHlMode.textContent=S.hlMode ? "👁 Normal" : "👁 Vizinhança";
-  if(!S.hlMode) clearHL();
-};
-
-ui.btnAll.onclick=()=>{
-  S.selectedDims=new Set(S.dimensions.map(d=>d.iri));
-  renderDimsList(); rebuildAndRender();
-};
-ui.btnNone.onclick=()=>{
-  S.selectedDims.clear();
-  renderDimsList(); rebuildAndRender();
-};
-
-ui.splitMode.onchange=()=>{
-  // no modo single, garante uma dimensão ativa marcada
-  if(ui.splitMode.value==="single" && ui.activeDim.value){
-    S.selectedDims.add(ui.activeDim.value);
-    renderDimsList();
-  }
-  rebuildAndRender();
-};
-ui.activeDim.onchange=()=>{
-  if(ui.splitMode.value==="single"){
-    S.selectedDims.add(ui.activeDim.value);
-    renderDimsList();
-  }
-  rebuildAndRender();
-};
-ui.maxDepth.oninput=rebuildAndRender;
-ui.btnMoreDepth.onclick=()=>{
-  ui.maxDepth.value=String(Math.min(+ui.maxDepth.max,+ui.maxDepth.value+1));
-  rebuildAndRender();
-};
-ui.compact.oninput=rebuildAndRender;
-ui.layoutSelect.onchange=()=>{ S.didFit=false; rebuildAndRender(); };
-ui.edgeCurve.oninput=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
-ui.edgeWidth.oninput=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
-ui.edgeColor.oninput=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
-ui.multiParentMode.onchange=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
-
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"){
-    S.selectedIri=null;
-    ui.tooltip.style.display="none";
-    ui.breadcrumb.style.display="none";
-    clearHL();
-    rebuildAndRender();
+$("sparqlText").addEventListener("keydown", (e)=>{
+  const isMac = navigator.platform.toLowerCase().includes("mac");
+  const mod = isMac ? e.metaKey : e.ctrlKey;
+  if(mod && e.key === "Enter"){
+    e.preventDefault();
+    runSparql();
   }
 });
 
-svg.on("click",()=>{
-  S.selectedIri=null;
-  ui.tooltip.style.display="none";
-  ui.breadcrumb.style.display="none";
-  clearHL();
-  rebuildAndRender();
+// boot
+loadOntology().catch(err=>{
+  // Mensagem prática para caso RDF/XML
+  const msg = String(err?.message || err);
+  if(msg.toLowerCase().includes("unexpected") || msg.toLowerCase().includes("syntax")){
+    setStatus("bad","Erro de parse. Se sua OWL estiver em RDF/XML, converta para TTL.");
+  }else{
+    setStatus("bad","Erro ao carregar a ontologia.");
+  }
 });
-
-/* =========================================================
-   INIT
-========================================================= */
-(function init(){
-  const t=localStorage.getItem("ontohate_theme");
-  if(t==="light"||t==="dark") setTheme(t); else setTheme("dark");
-
-  resize();
-  enableCtls(false);
-
-  // ✅ Default já aponta para o seu novo arquivo Ontohate_V.owl (raw)
-  // Ajuste o branch se você estiver usando "master" ao invés de "main".
-  ui.dataUrl.value="https://raw.githubusercontent.com/luquizis/Ontohate/main/Ontohate_V.owl";
-})();
 </script>
 </body>
 </html>
