@@ -102,8 +102,6 @@ svg{width:100%;height:100%;display:block}
 .link{fill:none;stroke-width:1.6;opacity:.7;pointer-events:none}
 .link.dimmed{opacity:.05}
 .link.multi-parent{stroke-dasharray:5,3;opacity:.55}
-
-/* Tooltip */
 .tooltip{
   position:absolute;max-width:330px;pointer-events:none;
   background:var(--panel);border:1px solid var(--border2);border-radius:var(--r);
@@ -113,8 +111,6 @@ svg{width:100%;height:100%;display:block}
 .ti{font-family:var(--fm);font-size:10px;color:var(--muted)}
 .ts{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:6px 0 2px}
 .tx{padding:1px 0 1px 9px;position:relative}.tx::before{content:'·';position:absolute;left:2px;color:var(--muted)}
-
-/* Breadcrumb */
 #breadcrumb{
   position:absolute;bottom:0;left:0;right:0;
   padding:6px 14px;font-family:var(--fm);font-size:11px;color:var(--muted2);
@@ -124,8 +120,6 @@ svg{width:100%;height:100%;display:block}
 #breadcrumb .bc-sep{color:var(--muted);margin:0 4px}
 #breadcrumb .bc-item{color:var(--accent);cursor:pointer}
 #breadcrumb .bc-item:hover{text-decoration:underline}
-
-/* Stats panel modal */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
 .modal{background:var(--panel);border:1px solid var(--border2);border-radius:var(--r);padding:20px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.4)}
 .modal h2{font-size:15px;font-weight:800;margin-bottom:14px}
@@ -141,13 +135,9 @@ svg{width:100%;height:100%;display:block}
 .badge.warn{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
 .badge.danger{background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger)}
 .badge.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
-
-/* Diff mode */
 .node.diff-added rect{stroke:#10b981!important;stroke-width:2px!important}
 .node.diff-removed rect{stroke:#f43f5e!important;stroke-width:2px!important;opacity:.5!important}
 .node.diff-changed rect{stroke:#f59e0b!important;stroke-width:2px!important}
-
-/* Compare panel */
 #comparePanel{
   position:absolute;bottom:0;left:0;right:0;max-height:38vh;
   background:var(--panel);border-top:1px solid var(--border2);
@@ -158,52 +148,36 @@ svg{width:100%;height:100%;display:block}
 .cmp-row{font-size:11.5px;color:var(--muted);margin-bottom:3px}
 .cmp-row span{color:var(--text)}
 .cmp-common{font-size:11.5px;margin-bottom:3px}
-
-/* Search results */
 .sr{border:1px solid var(--border2);border-radius:var(--rs);overflow:hidden;background:var(--bg);max-height:200px;overflow-y:auto}
 .sr::-webkit-scrollbar{width:3px}.sr::-webkit-scrollbar-thumb{background:var(--border2)}
 .sri{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-top:1px solid var(--border);cursor:pointer;transition:background .1s}
 .sri:first-child{border-top:none}.sri:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .sri .sl{font-size:12px}.sri .st{font-family:var(--fm);font-size:10px;color:var(--muted);white-space:nowrap}
 .sri .sb{font-size:10px;color:var(--muted);font-family:var(--fm)}
-
-/* Dims list */
 .dims{display:flex;flex-direction:column;gap:4px}
 .di{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);transition:border-color .15s}
 .di:hover{border-color:var(--border2)}.di.active{border-color:color-mix(in srgb,var(--accent) 38%,var(--border))}
 .dn{flex:1;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dc{font-family:var(--fm);font-size:10px;color:var(--muted)}
-
-/* Loading bar */
 .lbar{position:absolute;top:var(--th);left:0;right:0;height:2px;background:transparent;z-index:30;overflow:hidden}
 .lbar::after{content:'';display:block;height:100%;background:var(--accent);animation:loading 1.1s ease-in-out infinite}
 .lbar.hidden{display:none}
 @keyframes loading{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
-
-/* Empty state */
 .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none;padding-top:var(--th)}
 .empty-icon{font-size:42px;opacity:.16}
 .empty-txt{font-size:13px;color:var(--muted);text-align:center;max-width:230px;line-height:1.5}
-
-/* Scientific mode badge */
 #sciModeBadge{
   position:absolute;top:calc(var(--th) + 10px);right:14px;
   background:color-mix(in srgb,var(--warn) 15%,transparent);
   border:1px solid color-mix(in srgb,var(--warn) 40%,var(--border2));
   color:var(--warn);font-size:11px;font-weight:700;padding:4px 10px;
   border-radius:999px;display:none;z-index:18;pointer-events:none}
-
-/* Neighborhood highlight cursor */
 body.hl-mode{cursor:crosshair}
-
-/* Diff legend */
 #diffLegend{
   position:absolute;top:calc(var(--th)+10px);left:14px;
   background:var(--panel);border:1px solid var(--border2);border-radius:var(--rs);
   padding:8px 12px;font-size:11px;display:none;z-index:18;line-height:1.8}
 .dl-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
-
-/* Editor locked */
 #editorCard.locked{opacity:.42;pointer-events:none}
 </style>
 </head>
@@ -479,7 +453,6 @@ body.hl-mode{cursor:crosshair}
 
   <div id="breadcrumb"></div>
 
-  <!-- Compare panel -->
   <div id="comparePanel">
     <button id="btnCmpClosePanel" style="float:right;margin-top:-2px">✕</button>
     <h3>Comparação de nós</h3>
@@ -488,7 +461,6 @@ body.hl-mode{cursor:crosshair}
   </div>
 </main>
 
-<!-- STATS MODAL -->
 <div id="statsModal" class="modal-bg" style="display:none" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -513,7 +485,8 @@ const RDF  = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 const RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
 const OWL  = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
 const SKOS = $rdf.Namespace("http://www.w3.org/2004/02/skos/core#");
-const ONTO = $rdf.Namespace("https://ontohate.org/ontohate-v2-ufo-rigor/");
+let ONTO = $rdf.Namespace(""); // ✅ definido dinamicamente após carregar a ontologia
+
 const STORE  = $rdf.graph();
 const STORE2 = $rdf.graph(); // para diff
 
@@ -566,23 +539,21 @@ const ui = {
 const S = {
   loaded:false, didFit:false,
   classNodes:new Map(), subclasses:new Map(), superclasses:new Map(),
-  parentCount:new Map(), // IRI -> número de pais (para herança múltipla)
-  nodeDepth:new Map(),   // IRI -> profundidade real
-  subontoMap:new Map(),  // IRI -> inSubontologia string
-  subontoValues:new Set(), // valores únicos de inSubontologia
+  parentCount:new Map(),
+  nodeDepth:new Map(),
+  subontoMap:new Map(),
+  subontoValues:new Set(),
   rootIris:[], dimensions:[], selectedDims:new Set(),
   collapsed:new Set(), customLabels:new Map(),
   nodePositions:new Map(), nodeStyles:new Map(),
   selectedIri:null, searchIndex:[],
   labelCount:new Map(), tooltipCache:new Map(),
-  hlMode:false,        // neighborhood highlight mode
-  sciMode:false,       // scientific figure mode
-  diffMode:false,      // diff mode
-  diffData:null,       // {added,removed,changed} sets of IRIs
-  compareA:null, compareB:null, // nós do comparador
-  subtreeRoot:null,    // raiz para crop de subárvore
-  savedTemplates:new Map(), // name -> config object
-  currentD3Root:null,  // último d3Root para re-render sem rebuild
+  hlMode:false, sciMode:false,
+  diffMode:false, diffData:null,
+  compareA:null, compareB:null,
+  subtreeRoot:null,
+  savedTemplates:new Map(),
+  currentD3Root:null,
 };
 
 const DIM_PALETTE=["#38bdf8","#34d399","#fbbf24","#f87171","#a78bfa","#22d3ee","#fb923c","#e879f9","#86efac","#67e8f9","#fca5a5","#c4b5fd"];
@@ -727,14 +698,41 @@ async function parseStore(store,url){
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
   const text=await res.text();
   let ok=false;
-  for(const fmt of ["application/rdf+xml","text/turtle"]){ try{ $rdf.parse(text,store,url,fmt); ok=true; break; }catch{} }
+  for(const fmt of ["application/rdf+xml","text/turtle"]){
+    try{ $rdf.parse(text,store,url,fmt); ok=true; break; }catch{}
+  }
   if(!ok) throw new Error("Formato não reconhecido (RDF/XML ou Turtle).");
+}
+
+function deriveBaseNamespaceFromStore(store, fallbackUrl){
+  // 1) tenta pegar o IRI do recurso owl:Ontology
+  const ontoIRI = store.any(undefined, RDF("type"), OWL("Ontology"))?.value || "";
+  const candidate = ontoIRI || fallbackUrl || "";
+  if(!candidate) return "";
+
+  // Regra: preferir base com "#"
+  if(candidate.includes("#")) return candidate.split("#")[0] + "#";
+
+  // Se for URL, garante "#" no final
+  if(candidate.startsWith("http://") || candidate.startsWith("https://")){
+    if(candidate.endsWith("#")) return candidate;
+    if(candidate.endsWith("/")) return candidate + "#";
+    return candidate + "#";
+  }
+
+  return "";
 }
 
 async function loadData(url){
   setLoading(true); ui.emptyState.style.display="none";
   while(STORE.statements.length) STORE.statements.pop();
+
   await parseStore(STORE,url);
+
+  // ✅ ONTO dinâmico (não hardcode)
+  const base = deriveBaseNamespaceFromStore(STORE, url);
+  ONTO = $rdf.Namespace(base);
+
   buildGraph(STORE);
   S.loaded=true; S.didFit=false; S.diffMode=false; S.diffData=null;
   ui.diffLegend.style.display="none";
@@ -778,7 +776,6 @@ function buildGraph(store){
     S.subclasses.get(p).add(c); S.superclasses.get(c).add(p);
   });
 
-  // Computa profundidade real e contagem de pais
   S.rootIris=[];
   for(const iri of S.classNodes.keys()){
     const supers=[...(S.superclasses.get(iri)||new Set())].filter(x=>S.classNodes.has(x));
@@ -786,7 +783,6 @@ function buildGraph(store){
     if(!supers.length) S.rootIris.push(iri);
   }
 
-  // BFS para profundidade
   const depthQ=[...S.rootIris.map(r=>({iri:r,d:0}))];
   S.rootIris.forEach(r=>S.nodeDepth.set(r,0));
   while(depthQ.length){
@@ -868,7 +864,6 @@ function buildTreeData(cropRoot=null){
   const maxDepth=+ui.maxDepth.value, mode=ui.splitMode.value;
   let dimRoots;
   if(cropRoot){
-    // Modo subárvore: exporta só o ramo do nó selecionado
     dimRoots=[cropRoot];
   } else {
     dimRoots=mode==="single"?(ui.activeDim.value?[ui.activeDim.value]:[]):[...S.selectedDims];
@@ -894,8 +889,6 @@ function buildTreeData(cropRoot=null){
   const children=[];
   for(const dimIri of dimRoots){
     if(!S.classNodes.has(dimIri)) continue;
-    if(visited.has(dimIri)&&!S.rootIris.includes(dimIri)) continue;
-    if(S.rootIris.includes(dimIri)&&!visited.has(dimIri)) visited.add(dimIri);
     if(!visited.has(dimIri)) visited.add(dimIri);
     children.push(buildSubBFS(dimIri,1,visited));
   }
@@ -912,7 +905,6 @@ function buildSecondaryEdges(d3Root){
   for(const d of d3Root.descendants()){
     const iri=d.data.iri; if(iri==="__root__") continue;
     const allParents=[...(S.superclasses.get(iri)||new Set())].filter(p=>rendered.has(p));
-    // O pai "oficial" já está nas links normais; os extras são os secundários
     const primaryParent=d.parent?.data?.iri;
     for(const p of allParents){
       if(p!==primaryParent&&p!=="__root__"){ edges.push({sourceIri:p,targetIri:iri}); }
@@ -930,7 +922,12 @@ function buildDimColorMap(){
     if(mode==="union"&&!S.selectedDims.has(dim.iri)) return;
     if(mode==="single"&&dim.iri!==ui.activeDim.value) return;
     const q=[dim.iri];
-    while(q.length){ const i=q.shift(); if(map.has(i)) continue; map.set(i,dim.color); (S.subclasses.get(i)||new Set()).forEach(c=>{ if(S.classNodes.has(c)) q.push(c); }); }
+    while(q.length){
+      const i=q.shift();
+      if(map.has(i)) continue;
+      map.set(i,dim.color);
+      (S.subclasses.get(i)||new Set()).forEach(c=>{ if(S.classNodes.has(c)) q.push(c); });
+    }
   });
   S.rootIris.forEach(r=>{ if(!map.has(r)) map.set(r,"#475569"); });
   return map;
@@ -973,7 +970,7 @@ function computeLayout(treeData){
 }
 
 /* =========================================================
-   TOOLTIP (memoizado)
+   TOOLTIP
 ========================================================= */
 function getTooltipHTML(iri){
   if(iri==="__root__") return "";
@@ -1012,12 +1009,10 @@ function renderGraph(d3Root){
   const allNodes=d3Root.descendants(),allLinks=d3Root.links();
   ui.nodeCount.textContent=allNodes.length; ui.edgeCount.textContent=allLinks.length;
 
-  // Scientific mode overrides
   const sci=S.sciMode;
 
   function lp(s,t){ const dx=t.x-s.x,dy=t.y-s.y; return `M${s.x},${s.y} C${s.x+dx*curve},${s.y+dy*(1-curve)} ${s.x+dx*(1-curve)},${s.y+dy*curve} ${t.x},${t.y}`; }
 
-  // Primary links (hide virtual root links)
   const visLinks=allLinks.filter(l=>l.source.data.iri!=="__root__");
   const lkSel=gLinks.selectAll("path.link.primary").data(visLinks,d=>d.target.data.iri);
   lkSel.exit().remove();
@@ -1025,7 +1020,6 @@ function renderGraph(d3Root){
     .attr("stroke",sci?"#333":edgeCol).attr("stroke-width",sci?1.2:strokeW)
     .attr("d",d=>lp(d.source,d.target));
 
-  // Secondary edges (multi-parent)
   const secEdges=buildSecondaryEdges(d3Root);
   const nodeMap=new Map(d3Root.descendants().map(d=>[d.data.iri,d]));
   const secData=secEdges.map(e=>({s:nodeMap.get(e.sourceIri),t:nodeMap.get(e.targetIri)})).filter(e=>e.s&&e.t);
@@ -1035,7 +1029,6 @@ function renderGraph(d3Root){
     .attr("stroke",sci?"#888":edgeCol).attr("stroke-width",1)
     .attr("d",d=>lp(d.s,d.t));
 
-  // Nodes
   const ndSel=gNodes.selectAll("g.node").data(allNodes,d=>d.data.iri);
   ndSel.exit().remove();
   const ndEnter=ndSel.enter().append("g").attr("class","node").style("cursor","pointer")
@@ -1073,11 +1066,6 @@ function renderGraph(d3Root){
   const ndMerge=ndEnter.merge(ndSel)
     .attr("transform",d=>`translate(${d.x},${d.y})`)
     .classed("selected",d=>d.data.iri===S.selectedIri);
-
-  // Apply diff classes
-  ndMerge.classed("diff-added",  d=>S.diffData?.added?.has(d.data.iri)||false)
-         .classed("diff-removed",d=>S.diffData?.removed?.has(d.data.iri)||false)
-         .classed("diff-changed",d=>S.diffData?.changed?.has(d.data.iri)||false);
 
   ndMerge.select("rect").each(function(d){
     const iri=d.data.iri;
@@ -1154,7 +1142,6 @@ function selectNode(iri){
   S.subtreeRoot=iri;
   openEditorFor(iri); rebuildAndRender(); showBreadcrumb(iri);
   updateLegend();
-  // Enable comparator buttons
   ui.btnFixA.disabled=false; ui.btnFixB.disabled=false;
 }
 function openEditorFor(iri){
@@ -1184,10 +1171,9 @@ ui.btnEdReset.onclick=()=>{
 };
 
 /* =========================================================
-   FEATURE 4: BREADCRUMB
+   BREADCRUMB
 ========================================================= */
 function getAncestorPath(iri){
-  // BFS para encontrar o caminho mais curto até uma raiz
   const q=[[iri]];
   const vis=new Set([iri]);
   while(q.length){
@@ -1213,9 +1199,9 @@ function showBreadcrumb(iri){
 }
 
 /* =========================================================
-   FEATURE 11: NEIGHBORHOOD HIGHLIGHT
+   NEIGHBORHOOD
 ========================================================= */
-function applyHL(iri,d3Root){
+function applyHL(iri){
   const relevant=new Set([iri]);
   (S.superclasses.get(iri)||new Set()).forEach(p=>relevant.add(p));
   (S.subclasses.get(iri)||new Set()).forEach(c=>relevant.add(c));
@@ -1226,7 +1212,6 @@ function applyHL(iri,d3Root){
   });
 }
 function clearHL(){ gNodes.selectAll("g.node").classed("dimmed",false); gLinks.selectAll("path.link").classed("dimmed",false); }
-
 ui.btnHlMode.onclick=()=>{
   S.hlMode=!S.hlMode;
   ui.btnHlMode.textContent=S.hlMode?"👁 Normal":"👁 Vizinhança";
@@ -1236,14 +1221,14 @@ ui.btnHlMode.onclick=()=>{
 };
 
 /* =========================================================
-   FEATURE 7: SCIENTIFIC MODE (template presets)
+   TEMPLATES
 ========================================================= */
 const TEMPLATES={
-  sci_bw:{ layout:"topdown",edgeCurve:10,edgeWidth:1,edgeColor:"#333333",compact:65,sci:true,bg:"#ffffff",nodeBase:"#555555" },
+  sci_bw:{ layout:"topdown",edgeCurve:10,edgeWidth:1,edgeColor:"#333333",compact:65,sci:true },
   sci_color:{ layout:"topdown",edgeCurve:15,edgeWidth:1.5,edgeColor:"#334155",compact:65,sci:false },
   poster:{ layout:"topdown",edgeCurve:20,edgeWidth:2.5,edgeColor:"#1e3a5f",compact:55,sci:false },
   pres:{ layout:"leftright",edgeCurve:25,edgeWidth:2,edgeColor:"#1e3a5f",compact:70,sci:false },
-  thesis:{ layout:"topdown",edgeCurve:0,edgeWidth:1,edgeColor:"#475569",compact:60,sci:true,bg:"#ffffff" },
+  thesis:{ layout:"topdown",edgeCurve:0,edgeWidth:1,edgeColor:"#475569",compact:60,sci:true },
 };
 function applyTemplate(cfg){
   if(!cfg) return;
@@ -1271,7 +1256,7 @@ ui.btnTplLoad.onclick=()=>{
 };
 
 /* =========================================================
-   FEATURE 4 + CITATION: LEGEND + CITATION TEXT
+   LEGEND
 ========================================================= */
 function updateLegend(){
   if(!S.loaded) return;
@@ -1280,7 +1265,7 @@ function updateLegend(){
     :S.dimensions.filter(d=>S.selectedDims.has(d.iri));
   const dimNames=dims.map(d=>d.label).join(", ");
   const year=new Date().getFullYear();
-  const legend=`Figura X: Taxonomia do discurso de ódio online — dimensão(ões): ${dimNames||"todas"}. Profundidade máxima: ${ui.maxDepth.value}. Fonte: OntoHate v2 (${year}).`;
+  const legend=`Figura X: Taxonomia do discurso de ódio online — dimensão(ões): ${dimNames||"todas"}. Profundidade máxima: ${ui.maxDepth.value}. Fonte: OntoHate (${year}).`;
   const citation=`SILVA, L. Q. OntoHate: Ontologia para classificação do discurso de ódio online. ${year}. Disponível em: https://github.com/luquizis/Ontohate`;
   ui.legendText.textContent=legend;
   ui.legendPreview.style.display="block";
@@ -1289,7 +1274,7 @@ function updateLegend(){
 }
 
 /* =========================================================
-   FEATURE 1: STATS PANEL
+   STATS
 ========================================================= */
 function buildStats(){
   if(!S.loaded) return;
@@ -1299,7 +1284,6 @@ function buildStats(){
   const multiParent=[...S.parentCount.entries()].filter(([,c])=>c>1).length;
   const noLabel=[...S.classNodes.values()].filter(n=>!n.label).length;
   const leafs=[...S.classNodes.keys()].filter(iri=>(S.subclasses.get(iri)||new Set()).size===0).length;
-  const fanout=[...S.classNodes.keys()].filter(iri=>(S.subclasses.get(iri)||new Set()).size>10).length;
 
   ui.statGrid.innerHTML=[
     {v:total,l:"Classes total"},{v:maxD,l:"Profundidade máx."},
@@ -1308,148 +1292,92 @@ function buildStats(){
     {v:S.subontoValues.size,l:"Subontologias"},{v:noLabel,l:"Sem rdfs:label"},
   ].map(s=>`<div class="stat-box"><div class="sv">${s.v}</div><div class="sl">${s.l}</div></div>`).join("");
 
-  // Distribuição por subontologia
   const subMap=new Map();
   S.subontoMap.forEach((sub)=>subMap.set(sub,(subMap.get(sub)||0)+1));
   ui.statSubonto.innerHTML=[...subMap.entries()].sort((a,b)=>b[1]-a[1])
     .map(([sub,count])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--border);font-size:12px"><span>${esc(sub)}</span><span class="badge ok">${count}</span></div>`).join("");
 
-  // Anomalias
   const anomalies=[];
-  if(noLabel>0) anomalies.push({t:"Classes sem rdfs:label",d:`${noLabel} classes sem label dificultam a leitura da taxonomia.`,badge:"warn"});
-  if(fanout>0) anomalies.push({t:"Nós com mais de 10 filhos diretos",d:`${fanout} nó(s) com muitos filhos — considere subdivisões.`,badge:"warn"});
-  if(multiParent>0) anomalias?.push({t:"Herança múltipla detectada",d:`${multiParent} classe(s) com mais de um pai. Ative "Mostrar tracejado" para visualizar.`,badge:"ok"});
   const noComment=[...S.classNodes.values()].filter(n=>!n.comment?.length).length;
+  if(noLabel>0) anomalies.push({t:"Classes sem rdfs:label",d:`${noLabel} classes sem label dificultam a leitura.`,badge:"warn"});
   if(noComment>0) anomalies.push({t:"Classes sem rdfs:comment",d:`${noComment} classes sem descrição.`,badge:"warn"});
-  // Lonely leafs (folha sem irmãos)
-  const lonelyLeafs=[...S.classNodes.keys()].filter(iri=>{
-    if((S.subclasses.get(iri)||new Set()).size!==0) return false;
-    const parents=[...(S.superclasses.get(iri)||new Set())];
-    return parents.some(p=>(S.subclasses.get(p)||new Set()).size===1);
-  }).length;
-  if(lonelyLeafs>0) anomalies.push({t:"Classes folha sem irmãos",d:`${lonelyLeafs} nó(s) únicos no seu nível — possível lacuna conceitual.`,badge:"warn"});
-  ui.statAnomalies.innerHTML=anomalies.length?anomalies.map(a=>`<div class="anomaly-item"><div><div class="ai">${esc(a.t)} <span class="badge ${a.badge}">${a.badge==="ok"?"info":"aviso"}</span></div><div class="ad">${esc(a.d)}</div></div></div>`).join("")
+  ui.statAnomalies.innerHTML=anomalies.length?anomalies.map(a=>`<div class="anomaly-item"><div><div class="ai">${esc(a.t)} <span class="badge ${a.badge}">aviso</span></div><div class="ad">${esc(a.d)}</div></div></div>`).join("")
     :"<div style='font-size:12px;color:var(--ok)'>✓ Nenhuma anomalia detectada.</div>";
 }
 
 /* =========================================================
-   FEATURE 5: NODE COMPARATOR
+   SEARCH
 ========================================================= */
-ui.btnFixA.onclick=()=>{ if(!S.selectedIri) return; S.compareA=S.selectedIri; ui.cmpA.textContent=termLabel(S.selectedIri); ui.btnCompare.disabled=!S.compareB; };
-ui.btnFixB.onclick=()=>{ if(!S.selectedIri) return; S.compareB=S.selectedIri; ui.cmpB.textContent=termLabel(S.selectedIri); ui.btnCompare.disabled=!S.compareA; };
-ui.btnCmpClose.onclick=()=>{ S.compareA=null;S.compareB=null; ui.cmpA.textContent="—";ui.cmpB.textContent="—"; ui.btnCompare.disabled=true; ui.comparePanel.style.display="none"; ui.btnCmpClosePanel.disabled=true; };
-ui.btnCmpClosePanel.onclick=()=>{ ui.comparePanel.style.display="none"; };
-ui.btnCompare.onclick=()=>{
-  const a=S.compareA,b=S.compareB; if(!a||!b) return;
-  const la=termLabel(a),lb=termLabel(b);
-  const getInfo=(iri)=>({
-    label:termLabel(iri), iri:shrinkIri(iri),
-    subonto:S.subontoMap.get(iri)||"—",
+function buildSearchIndex(){
+  S.searchIndex=[...S.classNodes.keys()].map(iri=>({
+    iri,label:termLabel(iri),iriShort:shrinkIri(iri),
+    subonto:S.subontoMap.get(iri)||"",
+    comment:S.classNodes.get(iri)?.comment?.[0]||"",
     depth:S.nodeDepth.get(iri)??0,
-    parents:uniq([...(S.superclasses.get(iri)||new Set())]).map(termLabel).sort(),
-    children:uniq([...(S.subclasses.get(iri)||new Set())]).map(termLabel).sort(),
-    comment:S.classNodes.get(iri)?.comment?.[0]||"—",
-    pcount:S.parentCount.get(iri)??0,
-  });
-  const ia=getInfo(a),ib=getInfo(b);
-
-  // Ancestrais comuns
-  function ancestors(iri){ const set=new Set(); const q=[...(S.superclasses.get(iri)||new Set())]; while(q.length){ const x=q.shift(); if(set.has(x)) continue; set.add(x); (S.superclasses.get(x)||new Set()).forEach(p=>q.push(p)); } return set; }
-  const ancA=ancestors(a),ancB=ancestors(b);
-  const common=[...ancA].filter(x=>ancB.has(x)).map(termLabel).sort();
-
-  function row(label,va,vb){ return `<div class="cmp-row">${esc(label)}: <span>${esc(String(va))}</span></div><div class="cmp-row">${esc(label)}: <span>${esc(String(vb))}</span></div>`; }
-  ui.cmpGrid.innerHTML=`
-    <div class="cmp-col"><h4>${esc(la)}</h4>
-      <div class="cmp-row">IRI: <span>${esc(ia.iri)}</span></div>
-      <div class="cmp-row">Subontologia: <span>${esc(ia.subonto)}</span></div>
-      <div class="cmp-row">Profundidade: <span>${ia.depth}</span></div>
-      <div class="cmp-row">Pais (${ia.pcount}): <span>${ia.parents.slice(0,4).map(esc).join(", ")||"—"}</span></div>
-      <div class="cmp-row">Filhos: <span>${ia.children.length}</span></div>
-      <div class="cmp-row" style="margin-top:6px">Descrição: <span style="font-size:11px">${esc(ia.comment.slice(0,120))}${ia.comment.length>120?"…":""}</span></div>
-    </div>
-    <div class="cmp-col"><h4>${esc(lb)}</h4>
-      <div class="cmp-row">IRI: <span>${esc(ib.iri)}</span></div>
-      <div class="cmp-row">Subontologia: <span>${esc(ib.subonto)}</span></div>
-      <div class="cmp-row">Profundidade: <span>${ib.depth}</span></div>
-      <div class="cmp-row">Pais (${ib.pcount}): <span>${ib.parents.slice(0,4).map(esc).join(", ")||"—"}</span></div>
-      <div class="cmp-row">Filhos: <span>${ib.children.length}</span></div>
-      <div class="cmp-row" style="margin-top:6px">Descrição: <span style="font-size:11px">${esc(ib.comment.slice(0,120))}${ib.comment.length>120?"…":""}</span></div>
-    </div>`;
-  ui.cmpCommon.textContent=common.length?common.join(", "):"Nenhum ancestral comum encontrado";
-  ui.comparePanel.style.display="block"; ui.btnCmpClosePanel.disabled=false;
-};
-
-/* =========================================================
-   FEATURE 14: DIFF MODE
-========================================================= */
-async function loadDiff(url1,url2){
-  setLoading(true); setStatus("carregando diff…","loading");
-  while(STORE2.statements.length) STORE2.statements.pop();
-  await parseStore(STORE,url1); await parseStore(STORE2,url2);
-
-  const getIRIs=(store)=>{
-    const set=new Set();
-    store.each(null,RDF("type"),OWL("Class")).forEach(s=>set.add(s.value));
-    store.statementsMatching(null,RDFS("subClassOf"),null).forEach(st=>set.add(st.subject.value));
-    return set;
-  };
-  const getLabel=(store,iri)=>getFL(store,$rdf.sym(iri),RDFS("label"))||"";
-  const getComment=(store,iri)=>getFL(store,$rdf.sym(iri),RDFS("comment"))||"";
-
-  const iris1=getIRIs(STORE),iris2=getIRIs(STORE2);
-  const added=new Set([...iris2].filter(i=>!iris1.has(i)));
-  const removed=new Set([...iris1].filter(i=>!iris2.has(i)));
-  const changed=new Set([...iris1].filter(i=>iris2.has(i)&&(getLabel(STORE,i)!==getLabel(STORE2,i)||getComment(STORE,i)!==getComment(STORE2,i))));
-
-  S.diffData={added,removed,changed}; S.diffMode=true;
-  buildGraph(STORE);
-  enableCtls(true); setStatus(`Diff: +${added.size} −${removed.size} ~${changed.size}`,"ok");
-  setLoading(false); ui.diffLegend.style.display="block";
-  rebuildAndRender();
+  })).sort((a,b)=>a.label.localeCompare(b.label,"pt-BR"));
 }
+function filterSearch(){
+  const q=ui.searchInput.value.trim().toLowerCase();
+  const sub=ui.subontoFilter.value;
+  const dep=ui.depthFilter.value;
+  let items=S.searchIndex;
+  if(q) items=items.filter(it=>it.label.toLowerCase().includes(q)||it.iriShort.toLowerCase().includes(q)||it.comment.toLowerCase().includes(q)||it.subonto.toLowerCase().includes(q));
+  if(sub) items=items.filter(it=>it.subonto===sub);
+  if(dep){ if(dep==="5+") items=items.filter(it=>it.depth>=5); else items=items.filter(it=>it.depth===+dep); }
+  renderSearchResults(items);
+}
+function renderSearchResults(items){
+  const box=ui.searchResults; box.innerHTML="";
+  if(!items.length){ box.innerHTML=`<div class="sri"><span class="sl" style="color:var(--muted)">Sem resultados</span></div>`; }
+  else{
+    items.slice(0,50).forEach(it=>{
+      const row=document.createElement("div"); row.className="sri";
+      row.innerHTML=`<span class="sl">${esc(it.label)}</span><span class="st">${esc(it.iriShort)}</span>${it.subonto?`<span class="sb">${esc(it.subonto.slice(0,20))}</span>`:""}`;
+      row.onclick=()=>{ selectNode(it.iri); zoomToNode(it.iri); };
+      box.appendChild(row);
+    });
+    if(items.length>50) box.innerHTML+=`<div class="sri"><span class="sl" style="color:var(--muted)">+${items.length-50} resultados — refine a busca</span></div>`;
+  }
+  box.style.display="block";
+}
+ui.searchInput.oninput=filterSearch;
+ui.subontoFilter.onchange=filterSearch;
+ui.depthFilter.onchange=filterSearch;
+ui.btnSrClear.onclick=()=>{ ui.searchInput.value=""; ui.searchResults.style.display="none"; };
+ui.btnSrAll.onclick=()=>renderSearchResults(S.searchIndex);
 
 /* =========================================================
-   FEATURE 6 + 9: EXPORT (SVG, PNG, PDF, Subárvore)
+   EXPORT (SVG/PNG/PDF) + CSV
 ========================================================= */
 function downloadBlob(blob,name){ const url=URL.createObjectURL(blob),a=document.createElement("a"); a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url); }
+function getContentBBox(){ try{ const b=gRoot.node().getBBox(); return{x:b.x,y:b.y,w:b.width,h:b.height}; }catch{ return{x:0,y:0,w:viewW,h:viewH}; } }
 
 function buildExportClone(cropIri=null){
   let targetRoot=S.currentD3Root;
   if(cropIri){
     const treeData=buildTreeData(cropIri);
     targetRoot=computeLayout(treeData);
+    renderGraph(targetRoot);
   }
-
-  // Temporarily render to get bbox
-  if(cropIri){ renderGraph(targetRoot); }
-
   const bb=getContentBBox(); const m=50;
   const w=Math.max(10,bb.w+m*2),h=Math.max(10,bb.h+m*2);
   const clone=svgEl.cloneNode(true);
   clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
   clone.setAttribute("viewBox",`0 0 ${w} ${h}`);
-
   const bg=document.createElementNS("http://www.w3.org/2000/svg","rect");
   bg.setAttribute("x",0);bg.setAttribute("y",0);bg.setAttribute("width",w);bg.setAttribute("height",h);
   const bgColor=S.sciMode?"#ffffff":(getComputedStyle(document.body).getPropertyValue("--bg").trim()||"#07090f");
   bg.setAttribute("fill",bgColor);
   clone.insertBefore(bg,clone.firstChild);
-
   const g=clone.querySelector("g.gRoot"); if(g) g.setAttribute("transform",`translate(${m-bb.x},${m-bb.y})`);
-
-  // Restore original render if we changed it
   if(cropIri) rebuildAndRender();
-
   return {clone,w,h};
 }
-
 function doExportSVG(cropIri=null){
   const {clone}=buildExportClone(cropIri);
   const text=new XMLSerializer().serializeToString(clone);
   downloadBlob(new Blob([text],{type:"image/svg+xml;charset=utf-8"}),`ontohate_${ui.layoutSelect.value}${cropIri?"_sub":""}.svg`);
 }
-
 function doExportPNG(cropIri=null){
   const ratio=+ui.dpiSelect.value;
   const {clone,w,h}=buildExportClone(cropIri);
@@ -1464,19 +1392,16 @@ function doExportPNG(cropIri=null){
   img.onerror=()=>{URL.revokeObjectURL(url);alert("Falha ao gerar PNG. Tente SVG.");};
   img.src=url;
 }
-
 function doExportPDF(cropIri=null){
   const {clone,w,h}=buildExportClone(cropIri);
   const text=new XMLSerializer().serializeToString(clone);
-  // Use SVG in HTML-in-iframe print trick for PDF
   const html=`<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{width:${w}px;height:${h}px}</style></head><body>${text}</body></html>`;
   const blob=new Blob([html],{type:"text/html"});
   const url=URL.createObjectURL(blob);
   const win=window.open(url,"_blank");
   if(win){ setTimeout(()=>{ win.print(); URL.revokeObjectURL(url); },600); }
-  else { alert("Popup bloqueado. Use SVG ou PNG e converta para PDF com Inkscape/Illustrator."); URL.revokeObjectURL(url); }
+  else { alert("Popup bloqueado. Use SVG/PNG e converta para PDF."); URL.revokeObjectURL(url); }
 }
-
 function exportSubtree(iri){
   const scope=ui.exportScope.value;
   const cropIri=scope==="subtree"&&iri?iri:null;
@@ -1486,15 +1411,11 @@ function exportSubtree(iri){
   else if(fmt==="png") doExportPNG(cropIri);
   else if(fmt==="pdf") doExportPDF(cropIri);
 }
-
 ui.btnExportSVG.onclick=()=>{ const crop=ui.exportScope.value==="subtree"?S.subtreeRoot:null; doExportSVG(crop); };
 ui.btnExportPNG.onclick=()=>{ const crop=ui.exportScope.value==="subtree"?S.subtreeRoot:null; doExportPNG(crop); };
 ui.btnExportPDF.onclick=()=>{ const crop=ui.exportScope.value==="subtree"?S.subtreeRoot:null; doExportPDF(crop); };
 ui.btnCropSubtree.onclick=()=>{ if(S.selectedIri) exportSubtree(S.selectedIri); else alert("Selecione um nó primeiro."); };
 
-/* =========================================================
-   FEATURE 15: CSV EXPORT
-========================================================= */
 ui.btnExportCSV.onclick=()=>{
   const rows=[["IRI","Label","Superclasses","Subclasses","Subontologia","Profundidade","Pais_count","rdfs:comment","observacaoV1"]];
   for(const [iri,node] of S.classNodes){
@@ -1508,51 +1429,7 @@ ui.btnExportCSV.onclick=()=>{
 };
 
 /* =========================================================
-   FEATURE 13: ADVANCED SEARCH
-========================================================= */
-function buildSearchIndex(){
-  S.searchIndex=[...S.classNodes.keys()].map(iri=>({
-    iri,label:termLabel(iri),iriShort:shrinkIri(iri),
-    subonto:S.subontoMap.get(iri)||"",
-    comment:S.classNodes.get(iri)?.comment?.[0]||"",
-    depth:S.nodeDepth.get(iri)??0,
-  })).sort((a,b)=>a.label.localeCompare(b.label,"pt-BR"));
-}
-
-function filterSearch(){
-  const q=ui.searchInput.value.trim().toLowerCase();
-  const sub=ui.subontoFilter.value;
-  const dep=ui.depthFilter.value;
-  let items=S.searchIndex;
-  if(q) items=items.filter(it=>it.label.toLowerCase().includes(q)||it.iriShort.toLowerCase().includes(q)||it.comment.toLowerCase().includes(q)||it.subonto.toLowerCase().includes(q));
-  if(sub) items=items.filter(it=>it.subonto===sub);
-  if(dep){ if(dep==="5+") items=items.filter(it=>it.depth>=5); else items=items.filter(it=>it.depth===+dep); }
-  renderSearchResults(items);
-}
-
-function renderSearchResults(items){
-  const box=ui.searchResults; box.innerHTML="";
-  if(!items.length){ box.innerHTML=`<div class="sri"><span class="sl" style="color:var(--muted)">Sem resultados</span></div>`; }
-  else {
-    items.slice(0,50).forEach(it=>{
-      const row=document.createElement("div"); row.className="sri";
-      row.innerHTML=`<span class="sl">${esc(it.label)}</span><span class="st">${esc(it.iriShort)}</span>${it.subonto?`<span class="sb">${esc(it.subonto.slice(0,20))}</span>`:""}`;
-      row.onclick=()=>{ selectNode(it.iri); zoomToNode(it.iri); };
-      box.appendChild(row);
-    });
-    if(items.length>50) box.innerHTML+=`<div class="sri"><span class="sl" style="color:var(--muted)">+${items.length-50} resultados — refine a busca</span></div>`;
-  }
-  box.style.display="block";
-}
-
-ui.searchInput.oninput=filterSearch;
-ui.subontoFilter.onchange=filterSearch;
-ui.depthFilter.onchange=filterSearch;
-ui.btnSrClear.onclick=()=>{ ui.searchInput.value=""; ui.searchResults.style.display="none"; };
-ui.btnSrAll.onclick=()=>renderSearchResults(S.searchIndex);
-
-/* =========================================================
-   ZOOM TO NODE
+   ZOOM TO NODE + ESC
 ========================================================= */
 function zoomToNode(iri){
   const node=gNodes.selectAll("g.node").filter(d=>d.data.iri===iri).node(); if(!node) return;
@@ -1561,17 +1438,14 @@ function zoomToNode(iri){
   const k=Math.max(0.7,Math.min(2.5,d3.zoomTransform(svgEl).k));
   svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity.translate(viewW/2-k*x,viewH/2-k*y).scale(k));
 }
-
-/* =========================================================
-   KEYBOARD SHORTCUT
-========================================================= */
 document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"){ S.selectedIri=null; ui.selPill.style.display="none"; ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none"; ui.breadcrumb.style.display="none"; clearHL(); if(S.currentD3Root) rebuildAndRender(); }
+  if(e.key==="Escape"){
+    S.selectedIri=null; ui.selPill.style.display="none";
+    ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
+    ui.breadcrumb.style.display="none"; clearHL();
+    if(S.currentD3Root) rebuildAndRender();
+  }
 });
-
-/* =========================================================
-   SVG CLICK (deselect)
-========================================================= */
 svg.on("click",()=>{
   S.selectedIri=null; ui.selPill.style.display="none";
   ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
@@ -1580,7 +1454,7 @@ svg.on("click",()=>{
 });
 
 /* =========================================================
-   EVENT BINDINGS (misc)
+   BINDINGS
 ========================================================= */
 ui.btnLoad.onclick=async()=>{
   try{ loadPersisted(); await loadData(ui.dataUrl.value.trim()); }
@@ -1589,12 +1463,6 @@ ui.btnLoad.onclick=async()=>{
 ui.btnFit.onclick=fitToView;
 ui.btnReset.onclick=resetAll;
 ui.btnStats.onclick=()=>{ buildStats(); ui.statsModal.style.display="flex"; };
-ui.btnDiff.onclick=()=>{ ui.diffUrlWrap.style.display="block"; };
-ui.btnCloseDiff.onclick=()=>{ ui.diffUrlWrap.style.display="none"; };
-ui.btnLoadDiff.onclick=async()=>{
-  try{ await loadDiff(ui.dataUrl.value.trim(),ui.dataUrl2.value.trim()); ui.diffUrlWrap.style.display="none"; }
-  catch(e){ setStatus("erro diff","error"); setLoading(false); alert(e.message||String(e)); }
-};
 ui.btnAll.onclick=()=>{ S.dimensions.forEach(d=>S.selectedDims.add(d.iri)); saveDimsPersist(); renderDimsList(); rebuildAndRender(); };
 ui.btnNone.onclick=()=>{ S.selectedDims.clear(); saveDimsPersist(); renderDimsList(); rebuildAndRender(); };
 ui.splitMode.onchange=rebuildAndRender;
@@ -1608,7 +1476,6 @@ ui.edgeWidth.oninput=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
 ui.edgeColor.oninput=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
 ui.multiParentMode.onchange=()=>{ if(S.currentD3Root) renderGraph(S.currentD3Root); };
 ui.persistSelect.onchange=()=>{ if(persistEnabled()) savePersisted(); else clearPersisted(); };
-ui.updateLegend=updateLegend;
 [ui.splitMode,ui.maxDepth,ui.layoutSelect].forEach(el=>el?.addEventListener("change",updateLegend));
 
 /* =========================================================
@@ -1618,8 +1485,10 @@ ui.updateLegend=updateLegend;
   const t=localStorage.getItem(P("theme")); if(t==="light"||t==="dark") setTheme(t,false);
   ui.editorCard.classList.add("locked"); ui.editorFields.style.display="none";
   resize(); enableCtls(false);
-  ui.dataUrl.value="https://raw.githubusercontent.com/luquizis/Ontohate/main/ontohate_.owl";
-  // Carrega templates salvos
+
+  // ✅ agora aponta para o OWL novo no GitHub:
+  ui.dataUrl.value="https://raw.githubusercontent.com/luquizis/Ontohate/main/Ontohate_V.owl";
+
   try{ S.savedTemplates=new Map(Object.entries(JSON.parse(localStorage.getItem(P("templates"))||"{}"))); }catch{}
 })();
 </script>
