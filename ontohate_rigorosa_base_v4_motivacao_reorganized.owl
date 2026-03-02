@@ -1,0 +1,2435 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://ontohate.org/ontohate#"
+     xml:base="http://ontohate.org/ontohate"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+    <owl:Ontology rdf:about="http://ontohate.org/ontohate">
+        <rdfs:label xml:lang="pt">OntoHate (rigorosa, simplificada, baseada no XLSX)</rdfs:label>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://ontohate.org/ontohate#expressa_conteudo -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#expressa_conteudo">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Conteudo"/>
+        <rdfs:comment xml:lang="pt">Relaciona o evento de discurso ao conteudo informacional expresso.</rdfs:comment>
+        <rdfs:label xml:lang="pt">expressa conteudo</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://ontohate.org/ontohate#ocorre_em -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#ocorre_em">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Relaciona um discurso ao contexto em que ocorre.</rdfs:comment>
+        <rdfs:label xml:lang="pt">ocorre em</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://ontohate.org/ontohate#tem_consequencia -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#tem_consequencia">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Consequencia"/>
+        <rdfs:comment xml:lang="pt">Relaciona um discurso a consequencias/impactos.</rdfs:comment>
+        <rdfs:label xml:lang="pt">tem consequencia</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://ontohate.org/ontohate#tem_destinatario -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#tem_destinatario">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Destinatario_vitima"/>
+        <rdfs:comment xml:lang="pt">Relaciona um discurso ao(s) destinatario(s)/vitima(s).</rdfs:comment>
+        <rdfs:label xml:lang="pt">tem destinatario vitima</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://ontohate.org/ontohate#tem_manifestacao -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#tem_manifestacao">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Manifestacao"/>
+        <rdfs:comment xml:lang="pt">Relaciona um discurso a formas de manifestacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">tem manifestacao</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://ontohate.org/ontohate#tem_moderacao -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#tem_moderacao">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Moderacao"/>
+        <rdfs:comment xml:lang="pt">Relaciona um discurso a acoes/processos de moderacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">tem moderacao</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://ontohate.org/ontohate#tem_motivacao -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#tem_motivacao">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Motivacao"/>
+        <rdfs:comment xml:lang="pt">Relaciona um discurso a motivacoes.</rdfs:comment>
+        <rdfs:label xml:lang="pt">tem motivacao</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://ontohate.org/ontohate#tem_natureza -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#tem_natureza">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Natureza"/>
+        <rdfs:comment xml:lang="pt">Relaciona um discurso a qualidades/caracteristicas.</rdfs:comment>
+        <rdfs:label xml:lang="pt">tem natureza</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://ontohate.org/ontohate#tem_nucleo -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#tem_nucleo">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Nucleo"/>
+        <rdfs:comment xml:lang="pt">Relaciona um discurso ao seu nucleo conceitual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">tem nucleo</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://ontohate.org/ontohate#usa_recurso -->
+
+    <owl:ObjectProperty rdf:about="http://ontohate.org/ontohate#usa_recurso">
+        <rdfs:domain rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:range rdf:resource="http://ontohate.org/ontohate#Recursos"/>
+        <rdfs:comment xml:lang="pt">Relaciona um discurso a recursos/estrategias utilizadas.</rdfs:comment>
+        <rdfs:label xml:lang="pt">usa recurso</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://ontohate.org/ontohate#Adversario_politico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Adversario_politico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa identificada por posicionamento politico divergente.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Adversario politico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Agente_denunciante -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Agente_denunciante">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Nucleo"/>
+        <rdfs:comment xml:lang="pt">Agente que reporta discurso de odio.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Ampliacao v2.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Agente denunciante</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Agente_hibrido -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Agente_hibrido">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Agente_odiador"/>
+        <rdfs:comment xml:lang="pt">Agente que combina acao humana e suporte algoritmico.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Ampliacao v2.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Agente hibrido</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Agente_influenciador -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Agente_influenciador">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Agente_odiador"/>
+        <rdfs:comment xml:lang="pt">Agente com alto alcance digital.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Ampliacao v2.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Agente influenciador</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Agente_moderador -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Agente_moderador">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Nucleo"/>
+        <rdfs:comment xml:lang="pt">Agente responsavel por avaliar ou remover conteudo.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Participante regulador.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Agente moderador</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Agente_moderador_automatico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Agente_moderador_automatico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Agente_moderador"/>
+        <rdfs:comment xml:lang="pt">Ampliacao v2.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Sistema automatizado de moderacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Agente moderador automatico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Agente_odiador -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Agente_odiador">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Nucleo"/>
+        <rdfs:comment xml:lang="pt">Agente social que manifesta o discurso de odio online.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Participante ativo do evento.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Agente odiador</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Agente_sintetico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Agente_sintetico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Agente_odiador"/>
+        <rdfs:comment xml:lang="pt">Agente nao humano que produz discurso de odio por meio de IA.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Ampliacao v2.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Agente sintetico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Agente_testemunha -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Agente_testemunha">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Nucleo"/>
+        <rdfs:comment xml:lang="pt">Agente que presencia discurso de odio.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Ampliacao v2.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Agente testemunha</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Agnostico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Agnostico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa que afirma nao ser possivel conhecer a existencia de divindade.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Agnostico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Alcance -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Alcance">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Manifestacao"/>
+        <rdfs:comment xml:lang="pt">Dimensao de impacto mensuravel.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Extensao quantitativa da exposicao de um conteudo odiento.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Alcance</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Ameaca -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Ameaca">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Declaracao de intencao de causar dano.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Pode configurar ilicito.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Ameaca</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Amplificacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Amplificacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Sistema_algoritmico"/>
+        <rdfs:comment xml:lang="pt">Processo pelo qual a plataforma aumenta visibilidade de determinado conteudo.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Relaciona-se a dinamica de viralizacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Amplificacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Animalizacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Animalizacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Comparacao da vitima a animal.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estrategia de desumanizacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Animalizacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Antonimia_odienta -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Antonimia_odienta">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia linguistica indireta.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Uso de oposicao semantica para inferiorizacao indireta.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Antonimia odienta</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Aprovacao_social -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Aprovacao_social">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Modo_mental"/>
+        <rdfs:comment xml:lang="pt">Disposicao social.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Modo mental relacionado a busca por reconhecimento ou validacao social.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Aprovacao social</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Argumento_de_inferioridade_da_vitima -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Argumento_de_inferioridade_da_vitima">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Desqualificacao moral ou social da vitima.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estrategia central do discurso.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Argumento de inferioridade da vitima</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Argumento_de_normalidade_do_tratamento -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Argumento_de_normalidade_do_tratamento">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia de banalizacao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Naturalizacao do tratamento discriminatorio.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Argumento de normalidade do tratamento</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Argumento_de_superioridade_do_odiador -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Argumento_de_superioridade_do_odiador">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Afirmacao de hierarquia moral ou social.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estrategia de legitimacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Argumento de superioridade do odiador</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Arrogancia_moral -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Arrogancia_moral">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Modo_mental"/>
+        <rdfs:comment xml:lang="pt">Disposicao avaliativa.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Disposicao baseada na percepcao de superioridade moral.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Arrogancia moral</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Assexual -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Assexual">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa com ausencia ou baixa atracao sexual.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Assexual</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Ateu -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Ateu">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa que nao professa crenca religiosa.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Ateu</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Audiencia -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Audiencia">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Plataforma_digital"/>
+        <rdfs:comment xml:lang="pt">Categoria estrutural de recepcao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Conjunto de usuarios potencial ou efetivamente expostos ao conteudo.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Audiencia</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Bissexual -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Bissexual">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa com atracao por mais de um genero.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Bissexual</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Bot_social -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Bot_social">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_Tecnicos"/>
+        <rdfs:comment xml:lang="pt">Conta automatizada utilizada para produzir ou amplificar discurso odiento.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estrategia automatizada.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Bot social</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Bystander -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Bystander">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Audiencia"/>
+        <rdfs:comment xml:lang="pt">Importante para dinamica social do fenomeno.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Usuario que presencia o discurso de odio sem ser autor nem vitima direta.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Bystander</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Calunia -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Calunia">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Atribuicao falsa de fato desonroso.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Pode configurar ilicito.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Calunia</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Candomblecista -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Candomblecista">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa praticante do candomble.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Candomblecista</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Coisa -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Coisa">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+        <rdfs:comment xml:lang="pt">Raiz do dominio (continuante/entidade geral).</rdfs:comment>
+        <rdfs:label xml:lang="pt">Coisa</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Coletivo_politico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Coletivo_politico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Grupo_de_pessoas_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Grupo organizado em torno de identidade politica.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse coletiva.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Coletivo politico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Comentario_odiento -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Comentario_odiento">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_de_Forma"/>
+        <rdfs:comment xml:lang="pt">Forma interacional.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Intervencao textual inserida em interacao digital.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Comentario odiento</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Consequencia -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Consequencia">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Efeitos/danos/impactos associados.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Consequencia</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Conspiracao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Conspiracao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia de mobilizacao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Narrativa conspiratoria contra grupo social.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Conspiracao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Conteudo -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Conteudo">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Proposicao_odienta"/>
+        <rdfs:comment xml:lang="pt">Entidade informacional (texto, imagem, audio, video).</rdfs:comment>
+        <rdfs:label xml:lang="pt">Conteudo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Conteudo_multimodal -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Conteudo_multimodal">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_Tecnicos"/>
+        <rdfs:comment xml:lang="pt">Ampliacao contemporanea.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Conteudo que integra multiplos modos comunicacionais.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Conteudo multimodal</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Contexto sociocomunicacional e situacional.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_academico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_academico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Contexto vinculado a debates e ambientes educacionais ou cientificos.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Derivado da tese.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto academico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_algoritmico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_algoritmico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Ampliacao ontologica contemporanea.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Contexto mediado por sistemas algoritmicos de recomendacao e ranqueamento.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto algoritmico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_artistico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_artistico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Contexto relacionado a manifestacoes culturais e artisticas.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Derivado da tese.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto artistico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_de_evento_gatilho -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_de_evento_gatilho">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Contexto ativado por acontecimentos especificos que desencadeiam manifestacoes odientas.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Derivado da nocao de “eventos gatilho” da tese.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto de evento gatilho</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_de_normas_culturais -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_de_normas_culturais">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Contexto baseado em valores, costumes e normas sociais compartilhadas.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Fundamentacao sociocultural da tese.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto de normas culturais</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_de_plataforma_fechada -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_de_plataforma_fechada">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Ampliacao estrutural v2.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Contexto em que o discurso circula em ambientes privados ou restritos.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto de plataforma fechada</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_global -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_global">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Contexto vinculado a dinamicas transnacionais ou globais.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Relacionado a dimensao digital transfronteirica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto global</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_local -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_local">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Aparece nas questoes de competencia.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Contexto vinculado a realidades regionais ou comunitarias especificas.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto local</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_politico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_politico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Contexto relacionado a disputas, ideologias ou eventos politicos.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Derivado das questoes de competencia da tese.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto politico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_religioso -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_religioso">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Contexto relacionado a crencas, praticas ou conflitos religiosos.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Presente na fundamentacao da tese.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto religioso</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Contexto_transplataforma -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Contexto_transplataforma">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Contexto"/>
+        <rdfs:comment xml:lang="pt">Ampliacao analitica v2.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Contexto caracterizado pela circulacao do discurso entre multiplas plataformas digitais.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Contexto transplataforma</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Crenca -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Crenca">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Modo_mental"/>
+        <rdfs:comment xml:lang="pt">Classe intermediaria.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estado mental de conviccao ou aceitacao de uma proposicao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Crenca</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Crenca_na_normalidade -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Crenca_na_normalidade">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Crenca"/>
+        <rdfs:comment xml:lang="pt">Conviccao de que determinado tratamento e legitimo ou natural.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Crenca na normalidade</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Crenca_na_ordem_social -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Crenca_na_ordem_social">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Crenca"/>
+        <rdfs:comment xml:lang="pt">Conviccao na preservacao de hierarquias sociais estabelecidas.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Crenca na ordem social</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Crenca_na_superioridade -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Crenca_na_superioridade">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Crenca"/>
+        <rdfs:comment xml:lang="pt">Conviccao na superioridade do agente ou de seu grupo.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Crenca na superioridade</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Crenca_na_tradicao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Crenca_na_tradicao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Crenca"/>
+        <rdfs:comment xml:lang="pt">Conviccao fundamentada na manutencao de valores tradicionais.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Crenca na tradicao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Crenca_religiosa -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Crenca_religiosa">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Crenca"/>
+        <rdfs:comment xml:lang="pt">Conviccao baseada em doutrina ou fe religiosa.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Crenca religiosa</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Dano_fisico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Dano_fisico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_provocado"/>
+        <rdfs:comment xml:lang="pt">Ampliacao necessaria para completude ontologica.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Dano que afeta a integridade corporal da vitima.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Dano fisico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Dano_provocado -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Dano_provocado">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Consequencia"/>
+        <rdfs:comment xml:lang="pt">Classe base da V1.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Consequencia resultante da manifestacao do discurso de odio online.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Dano provocado</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Dano_psicologico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Dano_psicologico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_provocado"/>
+        <rdfs:comment xml:lang="pt">Dano relacionado ao sofrimento emocional da vitima.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Dimensao central na tese.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Dano psicologico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Dano_social -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Dano_social">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_provocado"/>
+        <rdfs:comment xml:lang="pt">Dano relacionado a posicao social da vitima.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Dimensao estrutural da tese.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Dano social</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Decisao_de_moderacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Decisao_de_moderacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Sistema_de_moderacao"/>
+        <rdfs:comment xml:lang="pt">Ato institucional de intervencao sobre conteudo classificado.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Conecta analise e acao normativa.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Decisao de moderacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Deepfake_odiento -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Deepfake_odiento">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_Tecnicos"/>
+        <rdfs:comment xml:lang="pt">Relaciona-se a IA generativa.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Uso de midia sintetica gerada por IA para ataque.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Deepfake odiento</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Demonizacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Demonizacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Construcao da vitima como ameaca moral ou social.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estrategia simbolica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Demonizacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Depressao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Depressao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_psicologico"/>
+        <rdfs:comment xml:lang="pt">Estado emocional persistente de tristeza ou desanimo.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Depressao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Desejo -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Desejo">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Modo_mental"/>
+        <rdfs:comment xml:lang="pt">Disposicao volitiva.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estado mental voltado a obtencao de determinado resultado.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Desejo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Desinformacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Desinformacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia manipulativa.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Uso intencional de informacao falsa para prejudicar grupo.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Desinformacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Destinatario_vitima -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Destinatario_vitima">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Nucleo"/>
+        <rdfs:comment xml:lang="pt">Agente social alvo do discurso de odio online.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Papeis/grupos alvo do discurso.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Polo passivo do evento.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Destinatario vitima</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Desumanizacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Desumanizacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_social"/>
+        <rdfs:comment xml:lang="pt">Processo de negacao da dignidade humana da vitima.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse conceitual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Desumanizacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Difamacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Difamacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Conecta com dano moral.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Divulgacao de informacao ofensiva a reputacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Difamacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Dificuldade_de_respiracao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Dificuldade_de_respiracao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_fisico"/>
+        <rdfs:comment xml:lang="pt">Alteracao fisiologica relacionada a estados de estresse intenso.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse de Dano_fisico.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Dificuldade de respiracao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Direitos_negados -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Direitos_negados">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Argumentacao para retirada de direitos.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estrategia normativa.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Direitos negados</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_LGBTQIfobico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_LGBTQIfobico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_afetiva"/>
+        <rdfs:comment xml:lang="pt">Classe especifica sob Natureza_principal (via Natureza_afetiva).</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Discurso de odio direcionado a pessoas LGBTQIA+.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso LGBTQIfobico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_antissemita -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_antissemita">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_dispositiva"/>
+        <rdfs:comment xml:lang="pt">Classe especifica sob Natureza_principal; pode participar de interseccionalidade.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Discurso de odio direcionado contra pessoas judias.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso antissemita</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_aporofobico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_aporofobico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_por_conduta"/>
+        <rdfs:comment xml:lang="pt">Classe especifica sob Natureza_principal.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Discurso de odio direcionado a pessoas em situacao de pobreza ou vulnerabilidade economica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso aporofobico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_capacitista -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_capacitista">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_por_atributos"/>
+        <rdfs:comment xml:lang="pt">Classe especifica sob Natureza_principal.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Discurso de odio direcionado contra pessoas com deficiencia.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso capacitista</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_de_odio -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_de_odio">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Evento_de_discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Classe central da ontologia.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Evento comunicacional de expressao/circulacao de odio.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Fenomeno comunicativo manifestado em Plataformas Digitais.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso de odio</rdfs:label>
+        <rdfs:label xml:lang="pt">Discurso de odio online</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_de_odio_por_aparencia -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_de_odio_por_aparencia">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_por_atributos"/>
+        <rdfs:comment xml:lang="pt">Discurso de odio baseado na aparencia corporal.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">No arranjo V2, fica sob Natureza_por_atributos.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso de odio por aparencia</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_etarista -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_etarista">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_por_atributos"/>
+        <rdfs:comment xml:lang="pt">Discurso de odio direcionado contra pessoas com base na idade.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">No arranjo V2, fica sob Natureza_por_atributos.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso etarista</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_intolerante_religioso -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_intolerante_religioso">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_dispositiva"/>
+        <rdfs:comment xml:lang="pt">Classe especifica sob Natureza_principal.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Discurso de odio baseado em intolerancia religiosa.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso intolerante religioso</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_misogino -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_misogino">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_por_atributos"/>
+        <rdfs:comment xml:lang="pt">Classe especifica sob Natureza_principal.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Discurso de odio direcionado contra mulheres.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso misogino</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_politico_partidario -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_politico_partidario">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_dispositiva"/>
+        <rdfs:comment xml:lang="pt">Classe especifica sob Natureza_principal.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Discurso de odio direcionado a adversarios politicos ou partidarios.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso politico partidario</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_racialista -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_racialista">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_por_atributos"/>
+        <rdfs:comment xml:lang="pt">Discurso de odio baseado em hierarquizacao racial.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">No arranjo V2, fica sob Natureza_por_atributos; interseccionalidade via combinacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso racialista</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Discurso_xenofobico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Discurso_xenofobico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_afiliativa"/>
+        <rdfs:comment xml:lang="pt">Classe especifica sob Natureza_principal (via Natureza_afiliativa).</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Discurso de odio direcionado contra estrangeiros, migrantes ou grupos percebidos como “de fora”.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Discurso xenofobico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Dispositivo_odiador -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Dispositivo_odiador">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Nucleo"/>
+        <rdfs:comment xml:lang="pt">Agente nao humano.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Sistema tecnico utilizado para disseminar discurso de odio.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Dispositivo odiador</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Dissidente_religioso -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Dissidente_religioso">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa que diverge de determinada tradicao religiosa dominante.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Dissidente religioso</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Diversao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Diversao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Modo_mental"/>
+        <rdfs:comment xml:lang="pt">Disposicao motivacional.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Modo mental associado a busca de entretenimento na manifestacao do discurso de odio.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Diversao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Emoji_como_recurso_odiento -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Emoji_como_recurso_odiento">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_Tecnicos"/>
+        <rdfs:comment xml:lang="pt">Estrategia semantica digital.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Uso codificado de emojis para sinalizar hostilidade.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Emoji como recurso odiento</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Estereotipo_negativo -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Estereotipo_negativo">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Elemento recorrente na tese.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Generalizacao depreciativa aplicada a grupo social.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Estereotipo negativo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Estrangeiro -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Estrangeiro">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa de nacionalidade distinta do pais de referencia.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Estrangeiro</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Estrategias_Discursivas -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Estrategias_Discursivas">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos"/>
+        <rdfs:comment xml:lang="pt">Classe intermediaria estrutural.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Recursos retoricos utilizados para estruturar e legitimar o ataque odiento.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Estrategias Discursivas</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Etnofaulismo -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Etnofaulismo">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia linguistica.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Uso de termos etnicos pejorativos para inferiorizacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Etnofaulismo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Eufemismo_odiento -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Eufemismo_odiento">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia de evasao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Uso de suavizacao linguistica para ocultar hostilidade.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Eufemismo odiento</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Evento_de_discurso_de_odio -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Evento_de_discurso_de_odio">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Universo_de_evento"/>
+        <rdfs:comment xml:lang="pt">Eventos relacionados ao fenomeno do discurso de odio.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Instanciacao do fenomeno.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Ocorrencia especifica do discurso de odio online.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Evento de discurso de odio</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Evidencia_computacional -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Evidencia_computacional">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Sistema_de_moderacao"/>
+        <rdfs:comment xml:lang="pt">Importante para auditabilidade e transparencia.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Registro tecnico produzido por sistemas automatizados para fundamentar avaliacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Evidencia computacional</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Exclusao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Exclusao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Conecta com dano social.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Negacao de participacao ou direitos.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Exclusao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Exclusao_dos_espacos -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Exclusao_dos_espacos">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_social"/>
+        <rdfs:comment xml:lang="pt">Restricao de acesso a espacos sociais ou institucionais.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Exclusao dos espacos</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Expulsao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Expulsao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia radical.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Proposicao de retirada territorial ou simbolica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Expulsao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Falta_de_poder -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Falta_de_poder">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_social"/>
+        <rdfs:comment xml:lang="pt">Percepcao ou condicao de impotencia social.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Falta de poder</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Gay -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Gay">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa com orientacao homossexual masculina.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Gay</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Gordo -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Gordo">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa com corpo gordo.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Gordo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Governanca_plataforma -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Governanca_plataforma">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Plataforma_digital"/>
+        <rdfs:comment xml:lang="pt">Dimensao politico-institucional.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estrutura institucional responsavel pela definicao de regras e praticas de moderacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Governanca plataforma</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Grupo_de_pessoas_com_caracteristica_protegida -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Grupo_de_pessoas_com_caracteristica_protegida">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Destinatario_vitima"/>
+        <rdfs:comment xml:lang="pt">Classe intermediaria coletiva.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Coletividade que compartilha caracteristica protegida.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Grupo de pessoas com caracteristica protegida</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Hashtag_coordenada -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Hashtag_coordenada">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_Tecnicos"/>
+        <rdfs:comment xml:lang="pt">Relevante para deteccao computacional.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Uso articulado de hashtags para campanhas coordenadas.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Hashtag coordenada</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Hashtag_odienta -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Hashtag_odienta">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_de_Forma"/>
+        <rdfs:comment xml:lang="pt">Forma organizacional.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Marcador tematico utilizado para indexar discurso odiento.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Hashtag odienta</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Hater -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Hater">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Agente_odiador"/>
+        <rdfs:comment xml:lang="pt">Categoria comportamental.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tipo de agente odiador que produz ou dissemina conteudo odiento.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Hater</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Hater_distribuidor -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Hater_distribuidor">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Hater"/>
+        <rdfs:comment xml:lang="pt">Hater que compartilha conteudo odiento.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Papel especifico.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Hater distribuidor</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Hater_enganador -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Hater_enganador">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Hater"/>
+        <rdfs:comment xml:lang="pt">Hater que manipula informacoes para atacar.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Papel especifico.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Hater enganador</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Hater_fantasiador -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Hater_fantasiador">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Hater"/>
+        <rdfs:comment xml:lang="pt">Hater que constroi narrativas distorcidas.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Papel especifico.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Hater fantasiador</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Hater_oportunista -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Hater_oportunista">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Hater"/>
+        <rdfs:comment xml:lang="pt">Hater que atua em eventos gatilho.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Papel especifico.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Hater oportunista</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Hater_produtor -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Hater_produtor">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Hater"/>
+        <rdfs:comment xml:lang="pt">Hater que cria conteudo odiento.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Papel especifico.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Hater produtor</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Haterbot -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Haterbot">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dispositivo_odiador"/>
+        <rdfs:comment xml:lang="pt">Bot programado para produzir ou amplificar discurso de odio.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse tecnica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Haterbot</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Humor -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Humor">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia de dissimulacao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Uso de comicidade para disfarcar agressao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Humor</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Idoso -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Idoso">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa em faixa etaria avancada.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Idoso</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Imagem_de_odio -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Imagem_de_odio">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_de_Forma"/>
+        <rdfs:comment xml:lang="pt">Conteudo visual utilizado para inferiorizacao ou ataque simbolico.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Forma visual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Imagem de odio</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Imigrante -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Imigrante">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa que migrou para outro pais.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Imigrante</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Incels -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Incels">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Agente_odiador"/>
+        <rdfs:comment xml:lang="pt">Grupo de agentes odiadores associado a ideologias misoginas online.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Grupo ideologico especifico.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Incels</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Incitacao_a_violencia -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Incitacao_a_violencia">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Convocacao explicita ou implicita a agressao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estrategia de escalada.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Incitacao a violencia</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Indicador_de_risco_odiento -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Indicador_de_risco_odiento">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Sistema_de_moderacao"/>
+        <rdfs:comment xml:lang="pt">Fundamental para moderacao algoritmica.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Metrica ou sinal utilizado para estimar probabilidade de conteudo odiento.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Indicador de risco odiento</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Indigena -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Indigena">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa pertencente a povo indigena.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Indigena</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Infraestrutura_tecnica -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Infraestrutura_tecnica">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Plataforma_digital"/>
+        <rdfs:comment xml:lang="pt">Base material e arquitetural da plataforma digital.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Dimensao tecnica estrutural.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Infraestrutura tecnica</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Inimigos_da_nacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Inimigos_da_nacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia nacionalista.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Representacao da vitima como ameaca nacional.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Inimigos da nacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Insonia -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Insonia">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_fisico"/>
+        <rdfs:comment xml:lang="pt">Disturbio do sono decorrente de sofrimento associado ao discurso de odio.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse de Dano_fisico.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Insonia</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Intencao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Intencao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Modo_mental"/>
+        <rdfs:comment xml:lang="pt">Disposicao finalistica.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estado mental orientado a realizacao de uma acao discursiva.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estado mental voltado a realizacao de acao deliberada.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Repetida na lista original.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Intencao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Judeu -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Judeu">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa identificada pela religiao judaica.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Judeu</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Lesbica -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Lesbica">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Mulher com orientacao homossexual.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Lesbica</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Linguagem_discriminatoria -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Linguagem_discriminatoria">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Manifestacao_explicita"/>
+        <rdfs:comment xml:lang="pt">Linguagem que estabelece distincoes hierarquizantes entre grupos ou individuos.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse associada a dimensao normativa do ataque.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Linguagem discriminatoria</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Linguagem_excludente -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Linguagem_excludente">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Manifestacao_explicita"/>
+        <rdfs:comment xml:lang="pt">Linguagem que nega pertencimento ou participacao social ao destinatario-vitima.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse associada a exclusao social discursiva.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Linguagem excludente</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Linguagem_pejorativa -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Linguagem_pejorativa">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Manifestacao_explicita"/>
+        <rdfs:comment xml:lang="pt">Subclasse de linguagem explicita.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Uso de termos depreciativos para desqualificar o destinatario-vitima.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Linguagem pejorativa</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Manifestacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Manifestacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Formas de expressao/realizacao do discurso (texto, meme etc.).</rdfs:comment>
+        <rdfs:label xml:lang="pt">Manifestacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Manifestacao_explicita -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Manifestacao_explicita">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Manifestacao"/>
+        <rdfs:comment xml:lang="pt">Deriva da questao de competencia da tese.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Manifestacao em que o conteudo odiento e apresentado de forma direta e identificavel.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Manifestacao explicita</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Manifestacao_velada -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Manifestacao_velada">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Manifestacao"/>
+        <rdfs:comment xml:lang="pt">Deriva da questao de competencia da tese.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Manifestacao em que o conteudo odiento e apresentado de forma indireta ou implicita.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Manifestacao velada</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Manutencao_de_estereotipos_negativos -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Manutencao_de_estereotipos_negativos">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_social"/>
+        <rdfs:comment xml:lang="pt">Reforco de representacoes sociais depreciativas.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse estrutural.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Manutencao de estereotipos negativos</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Meme_de_odio -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Meme_de_odio">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_de_Forma"/>
+        <rdfs:comment xml:lang="pt">Conteudo hibrido que combina imagem e texto para ataque simbolico.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Forma multimodal simbolica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Meme de odio</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Migrante -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Migrante">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa em deslocamento territorial interno ou externo.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Migrante</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Moderacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Moderacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Acoes/processos de moderacao e governanca.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Moderacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Moderacao_automatizada -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Moderacao_automatizada">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Sistema_de_moderacao"/>
+        <rdfs:comment xml:lang="pt">Conecta com Agente_moderador_automatico.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Processo de avaliacao realizado por sistemas automatizados.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Moderacao automatizada</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Moderacao_humana -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Moderacao_humana">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Sistema_de_moderacao"/>
+        <rdfs:comment xml:lang="pt">Conecta com Agente_moderador.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Processo de avaliacao realizado por moderadores humanos.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Moderacao humana</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Modo_intencional -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Modo_intencional">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Motivacao"/>
+        <rdfs:comment xml:lang="pt">Classe estruturante.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Estrutura intencional associada ao agente odiador.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Modo intencional</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Modo_mental -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Modo_mental">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Modo_intencional"/>
+        <rdfs:comment xml:lang="pt">Classe abstrata.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Dimensao mental que fundamenta crencas, desejos e intencoes.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Modo mental</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Motivacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Motivacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Intencoes/justificativas que orientam o discurso.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Motivacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Movimento_dos_trabalhadores_sem_terra -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Movimento_dos_trabalhadores_sem_terra">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Grupo_de_pessoas_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Movimento social organizado em torno da reforma agraria.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse coletiva.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Movimento dos trabalhadores sem terra</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Muculmano -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Muculmano">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa identificada pela religiao islamica.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Muculmano</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Mulher_cisgenero -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Mulher_cisgenero">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa que se identifica com o genero atribuido ao nascer.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Mulher cisgenero</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Natureza -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Natureza">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Qualidades/caracteristicas do discurso (ex.: discriminatorio).</rdfs:comment>
+        <rdfs:label xml:lang="pt">Natureza</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Natureza_afetiva -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Natureza_afetiva">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_principal"/>
+        <rdfs:comment xml:lang="pt">Natureza baseada em afetividade, orientacao sexual e identidade de genero.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Reinterpretacao V2 da categoria V1 “afetiva”.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Natureza afetiva</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Natureza_afiliativa -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Natureza_afiliativa">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_principal"/>
+        <rdfs:comment xml:lang="pt">Natureza baseada em afiliacoes coletivas, etnia, cultura, nacionalidade ou comunidade.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Reinterpretacao V2 da categoria V1 “afiliativa”.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Natureza afiliativa</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Natureza_dispositiva -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Natureza_dispositiva">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_principal"/>
+        <rdfs:comment xml:lang="pt">Natureza baseada em disposicoes, crencas e conviccoes ideologicas.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Reinterpretacao V2 da categoria V1 “dispositiva”.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Natureza dispositiva</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Natureza_interseccional -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Natureza_interseccional">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza"/>
+        <rdfs:comment xml:lang="pt">Dimensao que indica combinacao de multiplas naturezas no mesmo ataque.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Mudanca V2: nao substitui a natureza principal; e dimensao combinatoria.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Natureza interseccional</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Natureza_por_atributos -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Natureza_por_atributos">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_principal"/>
+        <rdfs:comment xml:lang="pt">Natureza baseada em atributos fisicos, biologicos, corporais ou marcadores sociais atribuidos ao corpo.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Reinterpretacao V2 da categoria V1 “por atributos”.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Natureza por atributos</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Natureza_por_conduta -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Natureza_por_conduta">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza_principal"/>
+        <rdfs:comment xml:lang="pt">Natureza baseada em conduta, comportamento, modo de vida ou condicao social atribuida ao destinatario-vitima.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Reinterpretacao V2 da categoria V1 “por conduta”.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Natureza por conduta</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Natureza_principal -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Natureza_principal">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Natureza"/>
+        <rdfs:comment xml:lang="pt">Mudanca V2: natureza principal unica (cardinalidade = 1).</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Natureza predominante do ataque no discurso de odio online.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Natureza principal</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Negro -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Negro">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa identificada racialmente como negra.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Negro</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Nivel_de_severidade -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Nivel_de_severidade">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Sistema_de_moderacao"/>
+        <rdfs:comment xml:lang="pt">Classificacao da gravidade do conteudo identificado.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Conecta analise a decisao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Nivel de severidade</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Nucleo -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Nucleo">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Conteudo/estrutura conceitual central do discurso.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Nucleo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Obeso -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Obeso">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Gordo"/>
+        <rdfs:comment xml:lang="pt">Pessoa classificada clinicamente como obesa.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Obeso</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Pansexual -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Pansexual">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa com atracao independente de genero.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Pansexual</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Pertencer_ao_grupo -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Pertencer_ao_grupo">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Modo_mental"/>
+        <rdfs:comment xml:lang="pt">Disposicao identitaria.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Modo mental associado a identificacao coletiva.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Pertencer ao grupo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Destinatario_vitima"/>
+        <rdfs:comment xml:lang="pt">Classe intermediaria.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Pessoa que possui caracteristica protegida socialmente.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Pessoa com caracteristica protegida</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Pessoa_com_deficiencia -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Pessoa_com_deficiencia">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa com deficiencia fisica, sensorial ou intelectual.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Pessoa com deficiencia</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Pessoa_em_situacao_de_rua -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Pessoa_em_situacao_de_rua">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa em condicao de vulnerabilidade habitacional.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Pessoa em situacao de rua</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Plataforma_digital -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Plataforma_digital">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Moderacao"/>
+        <rdfs:comment xml:lang="pt">Ambiente sociotecnico onde o discurso de odio e produzido, circula e e moderado.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Conceito robusto derivado da tese.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Plataforma digital</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Politica_de_uso -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Politica_de_uso">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Plataforma_digital"/>
+        <rdfs:comment xml:lang="pt">Conjunto de normas formais que regulam comportamento e conteudo na plataforma.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Dimensao normativa.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Politica de uso</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Populacao_LGBTQIA -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Populacao_LGBTQIA">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Grupo_de_pessoas_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Coletividade de pessoas com identidades LGBTQIA+.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse coletiva.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Populacao LGBTQIA</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Populacao_indigena -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Populacao_indigena">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Grupo_de_pessoas_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Grupo social identificado como populacao indigena.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse coletiva.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Populacao indigena</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Populacao_negra -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Populacao_negra">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Grupo_de_pessoas_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Grupo social identificado como populacao negra.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse coletiva.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Populacao negra</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Pressao_alta -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Pressao_alta">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_fisico"/>
+        <rdfs:comment xml:lang="pt">Alteracao fisiologica associada ao estresse provocado pelo discurso de odio.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse de Dano_fisico.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Pressao alta</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Proposicao_odienta -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Proposicao_odienta">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Conteudo proposicional que expressa hostilidade ou inferiorizacao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Elemento semantico do discurso.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Proposicao odienta</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Qualidade_expressiva -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Qualidade_expressiva">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos"/>
+        <rdfs:comment xml:lang="pt">Classe-ponte para manter rigor UFO sem importar UFO inteira.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Qualidade que caracteriza dimensoes expressivas do enunciado odiento.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Qualidade expressiva</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Queer -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Queer">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa que se identifica fora das normas tradicionais de genero ou sexualidade.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Queer</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Raiva_interna -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Raiva_interna">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_psicologico"/>
+        <rdfs:comment xml:lang="pt">Estado emocional de indignacao ou revolta internalizada.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Raiva interna</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Recursos -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Recursos">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Discurso_de_odio"/>
+        <rdfs:comment xml:lang="pt">Recursos tecnicos e estrategias discursivas.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Recursos</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Recursos_Tecnicos -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Recursos_Tecnicos">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos"/>
+        <rdfs:comment xml:lang="pt">Classe intermediaria estrutural.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Recursos baseados em sistemas tecnicos ou automatizados.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Recursos Tecnicos</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Recursos_de_Forma -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Recursos_de_Forma">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos"/>
+        <rdfs:comment xml:lang="pt">Classe intermediaria estrutural.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Recursos relacionados a forma material da manifestacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Recursos de Forma</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Rede_de_agentes_odiadores -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Rede_de_agentes_odiadores">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Agente_odiador"/>
+        <rdfs:comment xml:lang="pt">Ampliacao v2.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Conjunto coordenado de agentes odiadores.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Rede de agentes odiadores</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Refugiado -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Refugiado">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa que busca protecao internacional por perseguicao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Refugiado</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Regra_comunitaria -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Regra_comunitaria">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Politica_de_uso"/>
+        <rdfs:comment xml:lang="pt">Derivacao operacional da politica de uso.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Norma especifica aplicada a comunidade da plataforma.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Regra comunitaria</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Restricoes_a_capacidade_de_se_identificar_como_membro_do_grupo -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Restricoes_a_capacidade_de_se_identificar_como_membro_do_grupo">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_social"/>
+        <rdfs:comment xml:lang="pt">Limitacao na autoidentificacao coletiva da vitima.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Restricoes a capacidade de se identificar como membro do grupo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Retirada_de_oportunidades_expressivas -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Retirada_de_oportunidades_expressivas">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_social"/>
+        <rdfs:comment xml:lang="pt">Limitacao da capacidade de manifestacao publica da vitima.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Retirada de oportunidades expressivas</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Sentimento_de_medo -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Sentimento_de_medo">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_psicologico"/>
+        <rdfs:comment xml:lang="pt">Experiencia emocional de temor ou inseguranca.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Sentimento de medo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Silenciamento_no_debate_publico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Silenciamento_no_debate_publico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dano_social"/>
+        <rdfs:comment xml:lang="pt">Exclusao da vitima da esfera publica de discussao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse especifica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Silenciamento no debate publico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Sistema_algoritmico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Sistema_algoritmico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Plataforma_digital"/>
+        <rdfs:comment xml:lang="pt">Conecta com Contexto_algoritmico.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Conjunto de mecanismos automatizados que organizam visibilidade e circulacao de conteudo.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Sistema algoritmico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Sistema_de_moderacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Sistema_de_moderacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Plataforma_digital"/>
+        <rdfs:comment xml:lang="pt">Classe central da moderacao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Conjunto de mecanismos responsaveis por avaliar e intervir sobre conteudos.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Sistema de moderacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Subumanizacao -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Subumanizacao">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia extrema.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Representacao da vitima como menos que humana.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Subumanizacao</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Supremacia_branca -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Supremacia_branca">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Estrategias_Discursivas"/>
+        <rdfs:comment xml:lang="pt">Estrategia ideologica estruturante.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Ideologia de hierarquizacao racial utilizada como fundamento do ataque.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Supremacia branca</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Texto_odiento -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Texto_odiento">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_de_Forma"/>
+        <rdfs:comment xml:lang="pt">Conteudo textual utilizado para expressar hostilidade.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Forma basica de manifestacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Texto odiento</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_ameacador -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_ameacador">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Diferente de “Ameaca” (estrategia); aqui e a forma expressiva.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom que comunica intimidacao ou promessa de dano.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom ameacador</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_aparentemente_neutro -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_aparentemente_neutro">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Ampliacao tipologica na v2.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom com aparencia descritiva/objetiva que naturaliza exclusao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom aparentemente neutro</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_deboche -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_deboche">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Ampliacao tipologica na v2.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom de escarnio e ridicularizacao indireta.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom deboche</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_desumanizante -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_desumanizante">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Conecta-se a animalizacao/subumanizacao/demonizacao (estrategias), sem duplicar.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom que expressa desprezo e reducao simbolica da vitima.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom desumanizante</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_do_discurso -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_do_discurso">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Qualidade_expressiva"/>
+        <rdfs:comment xml:lang="pt">Nao e Recurso_de_Forma; inere em Comentario_odiento via possuiTom.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Qualidade expressiva que caracteriza a maneira como o comentario odiento e enunciado.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom do discurso</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_eufemistico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_eufemistico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Complementa “Eufemismo_odiento” (estrategia), sem redundancia.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom que suaviza ou oculta agressao por linguagem “polida” ou mitigada.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom eufemistico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_humoristico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_humoristico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Diferente de “Humor” (estrategia); aqui e tonalidade.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom que utiliza comicidade para mascarar agressao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom humoristico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_incitador -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_incitador">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Diferente de “Incitacao_a_violencia” (estrategia); aqui e intensidade expressiva.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom que estimula ou celebra agressao contra a vitima.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom incitador</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_insultuoso -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_insultuoso">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Presente implicitamente na v1; formalizado na v2.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom marcado por xingamentos diretos e adjetivacao depreciativa.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom insultuoso</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_moralizante -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_moralizante">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Complementa argumentos de superioridade/inferioridade (estrategias).</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom de julgamento moral e superioridade normativa.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom moralizante</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Tom_sarcastico -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Tom_sarcastico">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Tom_do_discurso"/>
+        <rdfs:comment xml:lang="pt">Ampliacao tipologica na v2.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Tom baseado em inversao semantica e ironia hostil.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Tom sarcastico</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Trabalhador_sem_terra -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Trabalhador_sem_terra">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa vinculada a movimentos de luta por terra.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Trabalhador sem terra</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Transgenero -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Transgenero">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa cuja identidade de genero difere do sexo atribuido ao nascer.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Transgenero</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Travesti -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Travesti">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Pessoa_com_caracteristica_protegida"/>
+        <rdfs:comment xml:lang="pt">Pessoa que se identifica com identidade de genero distinta do sexo atribuido ao nascer.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse individual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Travesti</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Troll -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Troll">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Agente_odiador"/>
+        <rdfs:comment xml:lang="pt">Agente odiador que provoca ou perturba interacoes digitais.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Foco na provocacao.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Troll</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Trollbot -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Trollbot">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Dispositivo_odiador"/>
+        <rdfs:comment xml:lang="pt">Bot programado para provocar interacoes conflituosas.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Subclasse tecnica.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Trollbot</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Universo_de_evento -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Universo_de_evento">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Coisa"/>
+        <rdfs:comment xml:lang="pt">Camada que agrupa eventos do dominio.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Classe de fundamentacao.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Classe fundamentada na UFO-C que representa universais relacionados a eventos.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Universal de evento</rdfs:label>
+        <rdfs:label xml:lang="pt">Universo de evento</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Video_de_odio -->
+
+    <owl:Class rdf:about="http://ontohate.org/ontohate#Video_de_odio">
+        <rdfs:subClassOf rdf:resource="http://ontohate.org/ontohate#Recursos_de_Forma"/>
+        <rdfs:comment xml:lang="pt">Conteudo audiovisual utilizado para difusao de ataque.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Forma audiovisual.</rdfs:comment>
+        <rdfs:label xml:lang="pt">Video de odio</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://ontohate.org/ontohate#Facebook -->
+
+    <owl:NamedIndividual rdf:about="http://ontohate.org/ontohate#Facebook">
+        <rdf:type rdf:resource="http://ontohate.org/ontohate#Plataforma_digital"/>
+        <rdfs:label xml:lang="pt">Facebook</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://ontohate.org/ontohate#Gorda_escrota -->
+
+    <owl:NamedIndividual rdf:about="http://ontohate.org/ontohate#Gorda_escrota">
+        <rdfs:label xml:lang="pt">Gorda escrota</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://ontohate.org/ontohate#X_antigo_Twitter -->
+
+    <owl:NamedIndividual rdf:about="http://ontohate.org/ontohate#X_antigo_Twitter">
+        <rdf:type rdf:resource="http://ontohate.org/ontohate#Plataforma_digital"/>
+        <rdfs:label xml:lang="pt">X (antigo Twitter)</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://ontohate.org/ontohate#YouTube -->
+
+    <owl:NamedIndividual rdf:about="http://ontohate.org/ontohate#YouTube">
+        <rdf:type rdf:resource="http://ontohate.org/ontohate#Plataforma_digital"/>
+        <rdfs:label xml:lang="pt">YouTube</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://ontohate.org/ontohate#coisa_de_mulherzinha -->
+
+    <owl:NamedIndividual rdf:about="http://ontohate.org/ontohate#coisa_de_mulherzinha">
+        <rdfs:label xml:lang="pt">coisa de mulherzinha</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://ontohate.org/ontohate#tinha_que_ser_preto -->
+
+    <owl:NamedIndividual rdf:about="http://ontohate.org/ontohate#tinha_que_ser_preto">
+        <rdfs:label xml:lang="pt">tinha que ser preto</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // General axioms
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://ontohate.org/ontohate#Consequencia"/>
+            <rdf:Description rdf:about="http://ontohate.org/ontohate#Contexto"/>
+            <rdf:Description rdf:about="http://ontohate.org/ontohate#Destinatario_vitima"/>
+            <rdf:Description rdf:about="http://ontohate.org/ontohate#Manifestacao"/>
+            <rdf:Description rdf:about="http://ontohate.org/ontohate#Moderacao"/>
+            <rdf:Description rdf:about="http://ontohate.org/ontohate#Motivacao"/>
+            <rdf:Description rdf:about="http://ontohate.org/ontohate#Natureza"/>
+            <rdf:Description rdf:about="http://ontohate.org/ontohate#Nucleo"/>
+            <rdf:Description rdf:about="http://ontohate.org/ontohate#Recursos"/>
+        </owl:members>
+    </rdf:Description>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.5.9.2019-02-01T07:24:44Z) https://github.com/owlcs/owlapi -->
+
