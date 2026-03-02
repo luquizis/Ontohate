@@ -833,7 +833,7 @@ const state = {
   classNodes:   new Map(),
   subclasses:   new Map(),
   superclasses: new Map(),
-  rootIri:      null,
+  rootIris:     [],   // OPÇÃO B: todas as raízes reais (nós sem superclasse)
   dimensions:   [],
   selectedDims: new Set(),
   collapsed:    new Set(),
@@ -873,6 +873,7 @@ function shrinkIri(iri){
 function getLiterals(s,p){ return STORE.each(s,p,null).filter(o=>o.termType==="Literal").map(o=>o.value); }
 function getFirstLiteral(s,p){ return getLiterals(s,p)[0]||""; }
 function termLabel(iri){
+  if(iri==="__multi_root__") return ""; // nó raiz virtual — sem label
   if (state.customLabels.has(iri)) return state.customLabels.get(iri);
   const n = state.classNodes.get(iri);
   const base = n?.label || shrinkIri(iri);
@@ -1070,13 +1071,14 @@ async function loadData(url){
     state.superclasses.get(c).add(p);
   });
 
-  const roots=[];
+  // OPÇÃO B: coleta TODAS as raízes (nós sem nenhuma superclasse conhecida).
+  // Cada raiz vira uma dimensão de topo independente — nenhuma é descartada.
+  state.rootIris = [];
   for(const iri of state.classNodes.keys()){
     const supers=[...(state.superclasses.get(iri)||new Set())].filter(x=>state.classNodes.has(x));
-    if(!supers.length) roots.push(iri);
+    if(!supers.length) state.rootIris.push(iri);
   }
-  state.rootIri=roots[0]||[...state.classNodes.keys()][0]||null;
-  if(!state.rootIri) throw new Error("Nenhuma classe encontrada.");
+  if(!state.rootIris.length) throw new Error("Nenhuma classe encontrada.");
 
   buildDimensions(); buildSearchIndex();
   state.loaded=true; state.didFit=false;
@@ -1100,8 +1102,23 @@ function buildDimensions(){
   let saved={};
   if(persistEnabled()){ try{ saved=JSON.parse(localStorage.getItem(P("dims"))||"{}"); }catch{} }
 
-  const kids=[...(state.subclasses.get(state.rootIri)||new Set())].filter(i=>state.classNodes.has(i));
-  state.dimensions=kids.map((iri,idx)=>({
+  // OPÇÃO B: dimensões = filhos diretos de TODAS as raízes detectadas.
+  // Raízes sem filhos entram elas mesmas como dimensão.
+  // Assim hierarquias paralelas (ex: UFO + domínio) ficam todas acessíveis.
+  const dimSet = new Set();
+  for(const rootIri of state.rootIris){
+    const kids=[...(state.subclasses.get(rootIri)||new Set())].filter(i=>state.classNodes.has(i));
+    if(kids.length > 0){
+      // Raiz com filhos: os filhos directos são as dimensões
+      kids.forEach(k=>dimSet.add(k));
+    } else {
+      // Raiz folha ou isolada: ela mesma é uma dimensão
+      dimSet.add(rootIri);
+    }
+    // A raiz em si também entra como dimensão de topo (para navegação)
+    dimSet.add(rootIri);
+  }
+  state.dimensions=[...dimSet].filter(i=>state.classNodes.has(i)).map((iri,idx)=>({
     iri, label:termLabel(iri),
     color:saved[iri]?.color||DIM_PALETTE[idx%DIM_PALETTE.length],
     count:countDescendants(iri),
@@ -1176,13 +1193,30 @@ function buildTreeData(){
     return rootNode;
   }
 
-  const visited=new Set([state.rootIri]);
-  const children=[];
+  // OPÇÃO B: visited começa com TODAS as raízes para evitar duplicação entre hierarquias.
+  // Um nó virtual "__root__" agrega todas as dimensões selecionadas como filhos de nível 0.
+  const VIRTUAL_ROOT = "__multi_root__";
+  const visited = new Set(state.rootIris); // bloqueia todas as raízes reais da deduplicação
+  const children = [];
   for(const dimIri of dimRoots){
-    if(!state.classNodes.has(dimIri)||visited.has(dimIri)) continue;
-    children.push(buildSubBFS(dimIri,1,visited));
+    if(!state.classNodes.has(dimIri)) continue;
+    // Se a própria raiz é uma das dimensões, começa dela (depth=0 relativo)
+    const isRoot = state.rootIris.includes(dimIri);
+    if(isRoot){
+      // Raiz real: seus filhos entram como filhos diretos do nó virtual
+      const rootKids = [...(state.subclasses.get(dimIri)||new Set())]
+        .filter(k=>state.classNodes.has(k)&&!visited.has(k));
+      // Adiciona a raiz em si como nó de profundidade 1 (com seus filhos)
+      if(!visited.has(dimIri)){
+        visited.add(dimIri);
+        children.push(buildSubBFS(dimIri, 1, visited));
+      }
+    } else {
+      if(visited.has(dimIri)) continue;
+      children.push(buildSubBFS(dimIri, 1, visited));
+    }
   }
-  return {iri:state.rootIri,depth:0,children};
+  return {iri:VIRTUAL_ROOT, label:"(raiz)", depth:0, children};
 }
 
 /* =========================================================
@@ -1197,7 +1231,9 @@ function buildDimColorMap(){
     while(q.length){ const i=q.shift(); if(map.has(i)) continue; map.set(i,dim.color);
       (state.subclasses.get(i)||new Set()).forEach(c=>{ if(state.classNodes.has(c)) q.push(c); }); }
   }
-  map.set(state.rootIri,"#475569"); return map;
+  // OPÇÃO B: o nó virtual não aparece no mapa de cores; raízes reais ganham cor própria via dimensões
+  state.rootIris.forEach(r => { if(!map.has(r)) map.set(r, "#475569"); });
+  return map;
 }
 
 /* =========================================================
@@ -1243,6 +1279,7 @@ function computeLayout(treeData){
    FIX: recalcula apenas na primeira chamada, invalida ao editar/mudar tema
 ========================================================= */
 function getTooltipHTML(iri){
+  if(iri==="__multi_root__") return "";
   if(state.tooltipCache.has(iri)) return state.tooltipCache.get(iri);
   const s=$rdf.sym(iri);
   const label=termLabel(iri);
@@ -1289,7 +1326,9 @@ function renderGraph(d3Root){
     return `M${s.x},${s.y} C${s.x+dx*curve},${s.y+dy*(1-curve)} ${s.x+dx*(1-curve)},${s.y+dy*curve} ${t.x},${t.y}`; }
 
   // LINKS
-  const linkSel=gLinks.selectAll("path.link").data(allLinks,d=>d.target.data.iri);
+  // OPÇÃO B: esconde arestas que partem do nó virtual (raiz oculta)
+  const visibleLinks = allLinks.filter(l=>l.source.data.iri!=="__multi_root__");
+  const linkSel=gLinks.selectAll("path.link").data(visibleLinks,d=>d.target.data.iri);
   linkSel.exit().remove();
   linkSel.enter().append("path").attr("class","link").merge(linkSel)
     .attr("stroke",edgeCol).attr("stroke-width",strokeW).attr("d",d=>lp(d.source,d.target));
@@ -1299,12 +1338,13 @@ function renderGraph(d3Root){
   nodeSel.exit().remove();
   const nodeEnter=nodeSel.enter().append("g").attr("class","node").style("cursor","pointer")
     .on("mousemove",(event,d)=>{
+      if(d.data.iri==="__multi_root__") return;
       const r=wrap.getBoundingClientRect();
       ui.tooltip.innerHTML=getTooltipHTML(d.data.iri); // FIX: memoizado
       ui.tooltip.style.cssText=`display:block;left:${event.clientX-r.left+14}px;top:${event.clientY-r.top+14}px;`;
     })
     .on("mouseleave",()=>{ ui.tooltip.style.display="none"; })
-    .on("click",(event,d)=>{ event.stopPropagation(); if(event.altKey) toggleCollapse(d.data.iri); else selectNode(d.data.iri); })
+    .on("click",(event,d)=>{ event.stopPropagation(); if(d.data.iri==="__multi_root__") return; if(event.altKey) toggleCollapse(d.data.iri); else selectNode(d.data.iri); })
     .call(d3.drag()
       .on("start",e=>e.sourceEvent?.stopPropagation())
       .on("drag",(event,d)=>{
@@ -1320,11 +1360,14 @@ function renderGraph(d3Root){
     .classed("selected",d=>d.data.iri===state.selectedIri);
 
   nm.select("rect").each(function(d){
-    const iri=d.data.iri, st=state.nodeStyles.get(iri)||{}, auto=computeAutoNodeSize(iri);
+    const iri=d.data.iri;
+    // OPÇÃO B: nó raiz virtual é invisível — serve só como âncora de layout
+    if(iri==="__multi_root__"){ d3.select(this).attr("width",0).attr("height",0).attr("opacity",0); return; }
+    const st=state.nodeStyles.get(iri)||{}, auto=computeAutoNodeSize(iri);
     const w=st.w??auto.w, h=st.h??auto.h, r=st.radius??8;
     d3.select(this).attr("width",w).attr("height",h).attr("x",-w/2).attr("y",-h/2)
       .attr("rx",r).attr("ry",r).attr("fill",st.fill??(dimMap.get(iri)||"#475569"))
-      .attr("opacity",iri===state.rootIri?0.4:((st.opacity??92)/100))
+      .attr("opacity",state.rootIris.includes(iri)?0.55:((st.opacity??92)/100))
       .attr("stroke",st.stroke||"var(--node-stroke)");
   });
 
