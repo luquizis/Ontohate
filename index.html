@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Cytoscape -->
+  <!-- Cytoscape (grafos) -->
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.29.2/dist/cytoscape.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
@@ -21,7 +21,7 @@
   <!-- Turtle parser -->
   <script src="https://cdn.jsdelivr.net/npm/n3@1.17.3/browser/n3.min.js"></script>
 
-  <!-- SPARQL engine -->
+  <!-- SPARQL in-browser -->
   <script src="https://cdn.jsdelivr.net/npm/@comunica/query-sparql@3.1.0/browser/query-sparql.min.js"></script>
 
   <style>
@@ -74,11 +74,10 @@
     }
     .wrap{max-width:1320px; margin:0 auto; padding:16px;}
     .top{display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;}
-    .brand{display:flex; flex-direction:column; gap:6px; max-width:880px;}
+    .brand{display:flex; flex-direction:column; gap:6px; max-width:920px;}
     .brand h1{margin:0; font-size:18px;}
     .brand p{margin:0; color:var(--muted); font-size:13px; line-height:1.35;}
     .brand small{color:var(--muted2); font-family:var(--mono);}
-
     .tabs{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
     .tabbtn{
       border:1px solid var(--border);
@@ -88,7 +87,7 @@
       border-radius:999px;
       cursor:pointer;
       transition:.15s ease;
-      font-weight:800;
+      font-weight:900;
       display:flex; align-items:center; gap:8px;
     }
     .tabbtn.active{
@@ -103,11 +102,9 @@
       background: color-mix(in srgb, var(--panel) 20%, transparent);
       white-space:nowrap;
     }
-
     main .wrap{padding-top:16px; padding-bottom:26px;}
     .grid{display:grid; grid-template-columns: 1fr 420px; gap:14px; align-items:start;}
     @media (max-width: 1050px){ .grid{grid-template-columns:1fr} }
-
     .card{
       background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 85%, transparent), color-mix(in srgb, var(--panel2) 92%, transparent));
       border:1px solid var(--border);
@@ -131,7 +128,7 @@
       padding:10px 12px;
       border-radius: 12px;
       cursor:pointer;
-      font-weight:800;
+      font-weight:900;
       transition:.15s ease;
       user-select:none;
     }
@@ -205,6 +202,18 @@
     table{width:100%; border-collapse:collapse; border:1px solid var(--border); border-radius: 12px; overflow:hidden; font-size:13px;}
     th, td{padding:10px 10px; border-bottom:1px solid color-mix(in srgb, var(--border) 70%, transparent); vertical-align:top;}
     th{text-align:left; color:var(--muted); background: color-mix(in srgb, var(--panel) 35%, transparent); font-family:var(--mono); font-size:12px;}
+    .listItem{
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding:10px 12px;
+      margin-bottom:10px;
+      background: color-mix(in srgb, var(--panel) 25%, transparent);
+      cursor:pointer;
+      transition:.12s ease;
+    }
+    .listItem:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--panel) 35%, transparent);}
+    .listItem .t{font-weight:900; font-size:13px;}
+    .listItem .s{font-family:var(--mono); font-size:11px; color:var(--muted2); margin-top:4px;}
   </style>
 </head>
 
@@ -229,7 +238,7 @@
       </div>
 
       <div class="row" style="align-items:flex-start;">
-        <div class="status"><span class="dot warn" id="statusDot"></span><span id="statusText">Carregando ontologia…</span></div>
+        <div class="status"><span class="dot warn" id="statusDot"></span><span id="statusText">Carregando…</span></div>
         <button class="btn" id="themeBtn">Tema</button>
         <button class="btn" id="reloadBtn">Recarregar</button>
       </div>
@@ -239,6 +248,11 @@
 
 <main>
   <div class="wrap">
+
+    <div class="card" style="box-shadow:none; margin-bottom:14px;">
+      <div class="hd"><h2>Debug do carregamento</h2><span class="pill" id="debugPill">—</span></div>
+      <div class="bd" id="debugBox"><div class="muted">Ainda não carregou.</div></div>
+    </div>
 
     <!-- TAXONOMIA -->
     <section id="tab-tax">
@@ -443,16 +457,17 @@
 </main>
 
 <script>
-/* =================== CONFIG (GitHub Pages) =================== */
-const TTL_URL = "./Ontohate_oficial.ttl";
-
-/* =================== helpers UI =================== */
+/* =================== UI helpers =================== */
 const $ = (id)=>document.getElementById(id);
 function setStatus(kind, text){
   const dot = $("statusDot");
   dot.classList.remove("ok","bad","warn");
   dot.classList.add(kind);
   $("statusText").textContent = text;
+}
+function setDebug(title, html){
+  $("debugPill").textContent = title;
+  $("debugBox").innerHTML = html;
 }
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, s => ({
@@ -517,8 +532,8 @@ const state = {
   sources: [],
 
   classes: new Set(),
-  labelsByLang: new Map(),     // iri -> Map(lang->label)
-  labels: new Map(),           // iri -> best label
+  labelsByLang: new Map(),
+  labels: new Map(),
   comments: new Map(),
   subclassOf: new Map(),
   childrenOf: new Map(),
@@ -528,8 +543,10 @@ const state = {
   propDomain: new Map(),
   propRange: new Map(),
 
-  annotations: new Map(),      // iri -> [{p,pLabel,o,oType,lang,dt}]
+  annotations: new Map(),
   dims: [],
+
+  loadedFrom: null
 };
 
 function resetIndex(){
@@ -549,6 +566,7 @@ function resetIndex(){
   state.propRange = new Map();
   state.annotations = new Map();
   state.dims = [];
+  state.loadedFrom = null;
 }
 
 function addMapSet(map,k,v){
@@ -574,21 +592,7 @@ function bestLabelFor(iri){
 }
 function bestPropLabelFor(iri){ return state.propLabel.get(iri) || shortIri(iri); }
 
-/* =================== Parse TTL =================== */
-async function parseTurtleIntoStore(ttlText){
-  const parser = new N3.Parser({ baseIRI: location.href });
-  await new Promise((resolve,reject)=>{
-    try{
-      parser.parse(ttlText, (err, quad)=>{
-        if(err) return reject(err);
-        if(quad) state.store.addQuad(quad);
-        else resolve();
-      });
-    }catch(e){ reject(e); }
-  });
-}
-
-/* =================== Comunica query on store =================== */
+/* =================== Comunica query helper =================== */
 async function qBindings(query){
   const res = await state.engine.queryBindings(query, { sources: state.sources });
   const arr = await res.toArray();
@@ -596,7 +600,7 @@ async function qBindings(query){
   return {vars, arr};
 }
 
-/* =================== Index =================== */
+/* =================== Index from store =================== */
 async function buildIndexFromStore(){
   // classes + labels
   {
@@ -640,7 +644,7 @@ WHERE { ?c rdfs:comment ?comment . }`;
     }
   }
 
-  // subclassOf (ignora bnodes)
+  // subClassOf (NamedNode only)
   {
     const q = `
 PREFIX rdfs: <${NS.rdfs}>
@@ -660,7 +664,7 @@ WHERE {
     }
   }
 
-  // object properties + label + domain/range
+  // object properties domain/range/label
   {
     const q = `
 PREFIX rdf:  <${NS.rdf}>
@@ -687,7 +691,7 @@ WHERE {
     }
   }
 
-  // annotations (tudo exceto rdf:type e subClassOf)
+  // annotations (tudo que não é rdf:type e não é subClassOf)
   {
     const q = `
 PREFIX rdf:  <${NS.rdf}>
@@ -723,25 +727,26 @@ WHERE {
     }
   }
 
-  // dimensões = raízes com filhos
+  // dimensions: roots with children
   {
     const cand = [];
+    const block = new Set([
+      "http://www.w3.org/2002/07/owl#Thing",
+      "http://www.w3.org/2000/01/rdf-schema#Resource"
+    ]);
+
     for(const c of state.classes){
+      if(block.has(c)) continue;
       const parents = state.subclassOf.get(c);
       const hasParent = parents && [...parents].some(p=>String(p).startsWith("http"));
       const hasKids = (state.childrenOf.get(c)?.size || 0) > 0;
       if(!hasParent && hasKids) cand.push(c);
     }
-    const block = [
-      "http://www.w3.org/2002/07/owl#Thing",
-      "http://www.w3.org/2000/01/rdf-schema#Resource"
-    ];
-    state.dims = cand.filter(x=>!block.includes(x))
-      .sort((a,b)=>bestLabelFor(a).localeCompare(bestLabelFor(b),"pt-BR"));
+    state.dims = cand.sort((a,b)=>bestLabelFor(a).localeCompare(bestLabelFor(b),"pt-BR"));
   }
 }
 
-/* =================== Tooltips =================== */
+/* =================== Tooltip =================== */
 function makeTippy(cyNode, html){
   const ref = cyNode.popperRef();
   const dummy = document.createElement("div");
@@ -756,7 +761,7 @@ function makeTippy(cyNode, html){
     placement: "top",
     interactive: true,
     appendTo: document.body,
-    maxWidth: 650,
+    maxWidth: 700,
     theme: "light-border",
     delay: [150, 50],
   });
@@ -765,10 +770,11 @@ function makeTippy(cyNode, html){
   cyNode.on("mouseout",  ()=> tip.hide());
   cyNode.data("__tippy", tip);
 }
+
 function tooltipHtml(iri){
   const ann = (state.annotations.get(iri) || [])
     .filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment")
-    .slice(0, 140);
+    .slice(0, 160);
 
   const parents = [...(state.subclassOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
   const kids = [...(state.childrenOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
@@ -782,7 +788,7 @@ function tooltipHtml(iri){
   }).join("");
 
   return `
-    <div style="max-width:600px;">
+    <div style="max-width:680px;">
       <div style="font-weight:900;font-size:14px;margin-bottom:6px;">${escapeHtml(bestLabelFor(iri))}</div>
       <div class="mono" style="font-size:11px;color:var(--muted2);word-break:break-all;">${escapeHtml(iri)}</div>
       <div style="height:8px"></div>
@@ -794,10 +800,10 @@ function tooltipHtml(iri){
 
       <div style="height:8px"></div>
       <div class="small">Subclasses diretas</div>
-      <div class="muted" style="font-size:12px;">${kids.length ? escapeHtml(kids.slice(0,25).join(" • ")) + (kids.length>25 ? " …" : "") : "—"}</div>
+      <div class="muted" style="font-size:12px;">${kids.length ? escapeHtml(kids.slice(0,30).join(" • ")) + (kids.length>30 ? " …" : "") : "—"}</div>
 
       <div style="height:10px"></div>
-      <div class="small">Anotações (tabela)</div>
+      <div class="small">Anotações</div>
       <table>
         <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
         <tbody>${rows || `<tr><td colspan="2" class="muted">Sem anotações adicionais.</td></tr>`}</tbody>
@@ -851,8 +857,6 @@ function baseCyStyle(){
     { selector:".prop", style:{ "line-style":"dashed", "width":1.9 } },
     { selector:".highlight", style:{ "border-width":4, "border-color":"var(--accent2)" } },
     { selector:":selected", style:{ "border-color":"var(--accent)", "border-width":5 } },
-
-    /* foco de vizinhança */
     { selector:".focusDim", style:{ "opacity":0.12 } },
     { selector:".focusHide", style:{ "display":"none" } },
   ];
@@ -906,8 +910,9 @@ function setNeighborhoodFocus(cy, nodeId){
   cy.fit(hood, 70);
 }
 
-/* =================== Build dimensions UI =================== */
+/* =================== Build dimension selectors =================== */
 function fillDimensions(){
+  // tax dims
   const sel = $("taxDimSelect");
   sel.innerHTML = "";
   for(const d of state.dims){
@@ -917,6 +922,7 @@ function fillDimensions(){
   }
   if(sel.options.length) sel.options[0].selected=true;
 
+  // onto dims
   const os = $("ontoDimSelect");
   os.innerHTML = `<option value="__ALL__">Todas</option>`;
   for(const d of state.dims){
@@ -932,6 +938,7 @@ function selectedTaxDims(){
   const vals=[...sel.selectedOptions].map(o=>o.value);
   return vals.length ? vals : (state.dims[0] ? [state.dims[0]] : []);
 }
+
 function buildTaxonomyGraph(){
   if(!state.classes.size) return;
 
@@ -1086,20 +1093,14 @@ function buildPresetList(){
   box.innerHTML="";
   PRESETS.forEach((p, idx)=>{
     const div=document.createElement("div");
-    div.className="card";
-    div.style.boxShadow="none";
-    div.style.marginBottom="10px";
+    div.className="listItem";
     div.innerHTML=`
-      <div class="hd"><h2>${escapeHtml(p.title)}</h2><span class="pill">Preset #${idx+1}</span></div>
-      <div class="bd">
-        <div class="row">
-          <button class="btn primary">Usar</button>
-          <button class="btn">Copiar</button>
-        </div>
-      </div>`;
-    const [useBtn, copyBtn] = div.querySelectorAll("button");
-    useBtn.onclick=()=>{ $("sparqlText").value=p.query; $("resultMeta").textContent=`Preset #${idx+1}`; };
-    copyBtn.onclick=async()=>{ try{ await navigator.clipboard.writeText(p.query);}catch(e){} };
+      <div class="t">${escapeHtml(p.title)}</div>
+      <div class="s">Clique para usar • Preset #${idx+1}</div>`;
+    div.onclick=()=>{
+      $("sparqlText").value=p.query;
+      $("resultMeta").textContent=`Preset #${idx+1}`;
+    };
     box.appendChild(div);
   });
   $("sparqlText").value = PRESETS[0]?.query || "";
@@ -1156,8 +1157,9 @@ async function runSparql(){
   }
 }
 
-/* =================== Wire Cytoscape events (inclui foco) =================== */
+/* =================== Wire Cytoscape events =================== */
 function wireCyEvents(){
+  // TAX
   cyTax.on("tap",(evt)=>{
     if(evt.target===cyTax && focusState.tax.active){
       focusState.tax.active=false; clearNeighborhoodFocus(cyTax);
@@ -1169,6 +1171,7 @@ function wireCyEvents(){
     setNeighborhoodFocus(cyTax, evt.target.id());
   });
 
+  // ONTO
   cyOnto.on("tap",(evt)=>{
     if(evt.target===cyOnto && focusState.onto.active){
       focusState.onto.active=false; clearNeighborhoodFocus(cyOnto);
@@ -1238,47 +1241,82 @@ function wireUI(){
   };
 }
 
-/* =================== Boot =================== */
+/* =================== BOOT (com as substituições pedidas) =================== */
 async function boot(){
+  // ✅ substituição: calcular URL robusta a partir da página atual
+  const ttlUrl = new URL("Ontohate_oficial.ttl", window.location.href).toString();
+
   setStatus("warn","Baixando Ontohate_oficial.ttl…");
+  setDebug("Baixando…", `
+    <div class="small">Página atual:</div>
+    <div class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(window.location.href)}</div>
+    <div style="height:8px"></div>
+    <div class="small">TTL_URL calculada:</div>
+    <div class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(ttlUrl)}</div>
+  `);
+
+  console.log("[OntoHate] page:", window.location.href);
+  console.log("[OntoHate] TTL_URL:", ttlUrl);
 
   resetIndex();
 
   let res;
   try{
-    res = await fetch(TTL_URL, { cache:"no-store" });
+    res = await fetch(ttlUrl, { cache:"no-store" });
   }catch(e){
-    console.error(e);
-    setStatus("bad","Falha de rede ao buscar o TTL (ver console).");
+    console.error("[OntoHate] fetch failed:", e);
+    setStatus("bad","Falha de rede/CORS ao buscar o TTL (ver console).");
+    setDebug("Falha", `<div class="muted">Fetch falhou.</div><div class="small mono">${escapeHtml(String(e?.message||e))}</div>`);
     return;
   }
+
   if(!res.ok){
-    setStatus("bad",`Não consegui abrir ${TTL_URL} (HTTP ${res.status}).`);
+    console.error("[OntoHate] HTTP error:", res.status, res.statusText, ttlUrl);
+    setStatus("bad",`Não consegui abrir o TTL (HTTP ${res.status}).`);
+    setDebug("HTTP erro", `
+      <div class="muted">Resposta HTTP inválida.</div>
+      <div class="small">Status: <b>${escapeHtml(String(res.status))}</b> ${escapeHtml(String(res.statusText||""))}</div>
+      <div class="small mono" style="margin-top:6px;word-break:break-all;">${escapeHtml(ttlUrl)}</div>
+    `);
     return;
   }
 
   const text = await res.text();
-  state.ttlText = text;
+  console.log("[OntoHate] TTL bytes:", text.length);
+  console.log("[OntoHate] TTL head:", text.slice(0, 120));
 
+  state.ttlText = text;
+  state.loadedFrom = ttlUrl;
+
+  setStatus("warn","Parseando Turtle…");
+  // Parse TTL -> N3.Store
   try{
-    setStatus("warn","Parseando Turtle…");
-    await parseTurtleIntoStore(text);
+    const parser = new N3.Parser({ baseIRI: ttlUrl });
+    await new Promise((resolve,reject)=>{
+      parser.parse(text, (err, quad)=>{
+        if(err) return reject(err);
+        if(quad) state.store.addQuad(quad);
+        else resolve();
+      });
+    });
   }catch(e){
-    console.error(e);
-    setStatus("bad","Erro ao parsear TTL (provável Turtle inválido). Veja console.");
+    console.error("[OntoHate] parse error:", e);
+    setStatus("bad","Erro ao parsear TTL (Turtle inválido?).");
+    setDebug("Erro no parse", `<div class="muted">Falha no parse do Turtle.</div><div class="small mono">${escapeHtml(String(e?.message||e))}</div>`);
     return;
   }
 
+  setStatus("warn","Indexando classes/relações…");
   try{
-    setStatus("warn","Indexando (classes, relações, propriedades)…");
     await buildIndexFromStore();
   }catch(e){
-    console.error(e);
-    setStatus("bad","Erro ao indexar via SPARQL em memória (ver console).");
+    console.error("[OntoHate] index error:", e);
+    setStatus("bad","Erro ao indexar (SPARQL in-memory).");
+    setDebug("Erro no índice", `<div class="muted">Falha na etapa de indexação.</div><div class="small mono">${escapeHtml(String(e?.message||e))}</div>`);
     return;
   }
 
-  setStatus("ok",`OK: ${state.classes.size} classes • ${state.objProps.size} propriedades`);
+  // init UI after data
   fillDimensions();
   buildPresetList();
 
@@ -1290,9 +1328,18 @@ async function boot(){
 
   buildTaxonomyGraph();
   buildOntologyGraph();
+
+  setStatus("ok",`OK: ${state.classes.size} classes • ${state.objProps.size} propriedades`);
+  setDebug("OK", `
+    <div class="small">Carregado de:</div>
+    <div class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(ttlUrl)}</div>
+    <div style="height:8px"></div>
+    <div class="small">Resumo:</div>
+    <div class="muted">${state.classes.size} classes • ${state.objProps.size} object properties • ${state.dims.length} dimensões (raízes)</div>
+  `);
 }
 
-/* =================== init =================== */
+/* =================== INIT =================== */
 initTabs();
 wireUI();
 boot();
