@@ -3,42 +3,40 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>OntoHate — Taxonomia (leve) • Ontologia (pesado) • SPARQL (inteligente)</title>
+  <title>OntoHate — Taxonomia • Ontologia • SPARQL</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Cytoscape (grafo interativo) -->
+  <!-- Cytoscape -->
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.29.2/dist/cytoscape.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
 
-  <!-- Tooltips ricos -->
+  <!-- Tooltips -->
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
 
-  <!-- SPARQL no browser -->
+  <!-- Turtle parser -->
+  <script src="https://cdn.jsdelivr.net/npm/n3@1.17.3/browser/n3.min.js"></script>
+
+  <!-- SPARQL engine -->
   <script src="https://cdn.jsdelivr.net/npm/@comunica/query-sparql@3.1.0/browser/query-sparql.min.js"></script>
 
   <style>
     :root{
-      --bg:#0b0c10;
-      --panel:#11131a;
-      --panel2:#0f1117;
+      --bg:#0b0c10; --panel:#11131a; --panel2:#0f1117;
       --border:rgba(255,255,255,.10);
       --text:rgba(255,255,255,.92);
       --muted:rgba(255,255,255,.65);
       --muted2:rgba(255,255,255,.45);
-      --accent:#7dd3fc;
-      --accent2:#a78bfa;
-      --ok:#34d399;
-      --warn:#fbbf24;
-      --bad:#fb7185;
+      --accent:#7dd3fc; --accent2:#a78bfa;
+      --ok:#34d399; --warn:#fbbf24; --bad:#fb7185;
       --shadow: 0 10px 30px rgba(0,0,0,.35);
       --radius: 14px;
       --mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-      --sans: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --sans: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
 
       --nodeFill: rgba(255,255,255,.07);
       --nodeBorder: rgba(255,255,255,.18);
@@ -46,11 +44,8 @@
       --edgeLabel: rgba(255,255,255,.65);
       --canvas: rgba(0,0,0,.18);
     }
-
     [data-theme="light"]{
-      --bg:#f7f7fb;
-      --panel:#ffffff;
-      --panel2:#fbfbff;
+      --bg:#f7f7fb; --panel:#ffffff; --panel2:#fbfbff;
       --border:rgba(0,0,0,.10);
       --text:rgba(10,10,16,.92);
       --muted:rgba(10,10,16,.65);
@@ -63,16 +58,13 @@
       --edgeLabel: rgba(10,10,16,.58);
       --canvas: rgba(10,10,16,.05);
     }
-
     *{box-sizing:border-box}
     body{
-      margin:0;
-      font-family:var(--sans);
+      margin:0; font-family:var(--sans); color:var(--text);
       background:
         radial-gradient(1200px 800px at 20% -10%, rgba(167,139,250,.15), transparent 60%),
         radial-gradient(900px 700px at 90% 0%, rgba(125,211,252,.14), transparent 55%),
         var(--bg);
-      color:var(--text);
     }
     header{
       position:sticky; top:0; z-index:50;
@@ -80,13 +72,10 @@
       background: color-mix(in srgb, var(--bg) 70%, transparent);
       border-bottom: 1px solid var(--border);
     }
-    .wrap{max-width:1300px; margin:0 auto; padding:16px;}
-    .top{
-      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
-      flex-wrap:wrap;
-    }
-    .brand{display:flex; flex-direction:column; gap:6px; max-width:820px;}
-    .brand h1{margin:0; font-size:18px; letter-spacing:.2px;}
+    .wrap{max-width:1320px; margin:0 auto; padding:16px;}
+    .top{display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;}
+    .brand{display:flex; flex-direction:column; gap:6px; max-width:880px;}
+    .brand h1{margin:0; font-size:18px;}
     .brand p{margin:0; color:var(--muted); font-size:13px; line-height:1.35;}
     .brand small{color:var(--muted2); font-family:var(--mono);}
 
@@ -99,36 +88,25 @@
       border-radius:999px;
       cursor:pointer;
       transition:.15s ease;
-      font-weight:700;
+      font-weight:800;
       display:flex; align-items:center; gap:8px;
     }
-    .tabbtn:hover{transform: translateY(-1px);}
     .tabbtn.active{
       border-color: color-mix(in srgb, var(--accent) 55%, transparent);
       box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
       background: color-mix(in srgb, var(--accent) 12%, transparent);
     }
     .pill{
-      font-family:var(--mono);
-      font-size:12px;
-      padding:2px 8px;
-      border:1px solid var(--border);
-      border-radius:999px;
+      font-family:var(--mono); font-size:12px; padding:2px 8px;
+      border:1px solid var(--border); border-radius:999px;
       color:var(--muted);
       background: color-mix(in srgb, var(--panel) 20%, transparent);
       white-space:nowrap;
     }
 
     main .wrap{padding-top:16px; padding-bottom:26px;}
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 380px;
-      gap:14px;
-      align-items:start;
-    }
-    @media (max-width: 1050px){
-      .grid{grid-template-columns:1fr}
-    }
+    .grid{display:grid; grid-template-columns: 1fr 420px; gap:14px; align-items:start;}
+    @media (max-width: 1050px){ .grid{grid-template-columns:1fr} }
 
     .card{
       background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 85%, transparent), color-mix(in srgb, var(--panel2) 92%, transparent));
@@ -141,15 +119,9 @@
       padding:14px 14px 10px 14px;
       border-bottom: 1px solid var(--border);
       display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
+      gap:10px; flex-wrap:wrap;
     }
-    .card .hd h2{
-      margin:0;
-      font-size:14px;
-      letter-spacing:.2px;
-      color:color-mix(in srgb, var(--text) 94%, transparent);
-    }
+    .card .hd h2{margin:0; font-size:14px; letter-spacing:.2px;}
     .card .bd{padding:14px;}
     .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
     .btn{
@@ -159,11 +131,10 @@
       padding:10px 12px;
       border-radius: 12px;
       cursor:pointer;
-      font-weight:700;
+      font-weight:800;
       transition:.15s ease;
       user-select:none;
     }
-    .btn:hover{transform: translateY(-1px);}
     .btn.primary{
       border-color: color-mix(in srgb, var(--accent2) 55%, transparent);
       background: color-mix(in srgb, var(--accent2) 14%, transparent);
@@ -184,7 +155,7 @@
       outline:none;
       font-family: var(--sans);
     }
-    textarea{min-height: 200px; font-family: var(--mono); font-size: 12px; line-height: 1.4;}
+    textarea{min-height: 210px; font-family: var(--mono); font-size: 12px; line-height: 1.4;}
     .muted{color:var(--muted); font-size:13px; line-height:1.35;}
     .small{color:var(--muted2); font-size:12px; font-family:var(--mono);}
     .status{
@@ -211,16 +182,14 @@
       font-size:12px;
       color:var(--muted);
     }
-
     .canvas{
-      height: 660px;
+      height: 680px;
       border:1px solid var(--border);
       border-radius: 14px;
       overflow:hidden;
       background: var(--canvas);
     }
-    @media (max-width: 1050px){ .canvas{ height: 620px; } }
-
+    @media (max-width: 1050px){ .canvas{ height: 640px; } }
     .help{
       border:1px dashed var(--border);
       background: color-mix(in srgb, var(--panel) 25%, transparent);
@@ -230,31 +199,12 @@
     .help b{display:block; margin-bottom:6px;}
     .help ul{margin:8px 0 0 18px; color:var(--muted); padding:0;}
     .help li{margin:6px 0;}
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      border:1px solid var(--border);
-      border-radius: 12px;
-      overflow:hidden;
-      font-size:13px;
-    }
-    th, td{
-      padding:10px 10px;
-      border-bottom:1px solid color-mix(in srgb, var(--border) 70%, transparent);
-      vertical-align:top;
-    }
-    th{
-      text-align:left;
-      color:var(--muted);
-      background: color-mix(in srgb, var(--panel) 35%, transparent);
-      font-family:var(--mono);
-      font-size:12px;
-    }
-
     .hr{height:1px; background:var(--border); margin:10px 0;}
     .mono{font-family:var(--mono);}
     .nowrap{white-space:nowrap;}
+    table{width:100%; border-collapse:collapse; border:1px solid var(--border); border-radius: 12px; overflow:hidden; font-size:13px;}
+    th, td{padding:10px 10px; border-bottom:1px solid color-mix(in srgb, var(--border) 70%, transparent); vertical-align:top;}
+    th{text-align:left; color:var(--muted); background: color-mix(in srgb, var(--panel) 35%, transparent); font-family:var(--mono); font-size:12px;}
   </style>
 </head>
 
@@ -265,12 +215,11 @@
       <div class="brand">
         <h1>OntoHate <span class="pill">Leve • Pesado • Inteligente</span></h1>
         <p>
-          Este projeto representa o <b>discurso de ódio online</b> por meio da ontologia OntoHate, permitindo:
-          <b>(i)</b> gerar taxonomias por dimensão e por cruzamento (nível leve),
-          <b>(ii)</b> explorar a ontologia como grafo interativo com relações/propriedades (nível pesado),
-          <b>(iii)</b> responder questões de competência via <b>SPARQL</b> (nível inteligente).
+          Projeto de <b>representação do discurso de ódio online</b> a partir da OntoHate:
+          <b>Taxonomia</b> (cruzamentos + exportação), <b>Ontologia</b> (grafo interativo + propriedades + tooltips),
+          <b>SPARQL</b> (questões de competência respondidas automaticamente).
         </p>
-        <small>Base: <b>Ontohate_oficial.ttl</b> no GitHub (RAW) • Visualização interativa • Exportação em todas as etapas</small>
+        <small>Base (GitHub Pages): <b>./Ontohate_oficial.ttl</b> • Exportação em todas as etapas</small>
       </div>
 
       <div class="tabs">
@@ -280,9 +229,9 @@
       </div>
 
       <div class="row" style="align-items:flex-start;">
-        <div class="status" id="loadStatus"><span class="dot warn" id="statusDot"></span><span id="statusText">Carregando ontologia…</span></div>
-        <button class="btn" id="reloadBtn" title="Recarregar ontologia">Recarregar</button>
-        <button class="btn" id="themeBtn" title="Alternar tema">Tema</button>
+        <div class="status"><span class="dot warn" id="statusDot"></span><span id="statusText">Carregando ontologia…</span></div>
+        <button class="btn" id="themeBtn">Tema</button>
+        <button class="btn" id="reloadBtn">Recarregar</button>
       </div>
     </div>
   </div>
@@ -291,15 +240,13 @@
 <main>
   <div class="wrap">
 
-    <!-- TAXONOMIA (LEVE) -->
+    <!-- TAXONOMIA -->
     <section id="tab-tax">
       <div class="grid">
         <div class="card">
           <div class="hd">
-            <h2>Gerador de Taxonomias (por dimensão e cruzamento)</h2>
-            <div class="row">
-              <span class="pill">arraste nós • personalize • exporte</span>
-            </div>
+            <h2>Taxonomia (cruzamentos, layout, exportação)</h2>
+            <span class="pill" id="taxMeta">—</span>
           </div>
           <div class="bd">
             <div class="canvas" id="cyTax"></div>
@@ -307,36 +254,31 @@
         </div>
 
         <div class="card">
-          <div class="hd">
-            <h2>Controles — Taxonomia</h2>
-            <div class="pill" id="taxMeta">—</div>
-          </div>
+          <div class="hd"><h2>Controles — Taxonomia</h2><span class="pill">leve</span></div>
           <div class="bd">
             <div class="help">
-              <b>Como usar (nível leve)</b>
+              <b>Como usar</b>
               <ul>
-                <li>Escolha uma ou mais <b>dimensões</b> e gere a taxonomia.</li>
-                <li>Use <b>cruzamento</b> para reduzir ruído (interseção).</li>
-                <li><b>Foco de Vizinhança</b>: clique em um nó para mostrar só ele + vizinhos diretos.</li>
+                <li>Selecione dimensões (multi) e escolha <b>União</b> ou <b>Cruzamento</b>.</li>
+                <li>Arraste nós livremente; exporte PNG/JSON.</li>
+                <li><b>Foco de Vizinhança</b>: clique num nó para ver só Pai/Filho/Propriedade.</li>
               </ul>
             </div>
 
             <div style="height:12px"></div>
 
             <label class="small">Dimensões (multi-seleção)</label>
-            <select id="taxDimSelect" multiple size="8"></select>
-            <div class="small" style="margin-top:6px;">Dica: segure <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> para selecionar múltiplas.</div>
+            <select id="taxDimSelect" multiple size="10"></select>
+            <div class="small" style="margin-top:6px;">Use <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> para múltipla seleção.</div>
 
             <div style="height:10px"></div>
-
             <label class="small">Modo</label>
             <select id="taxMode">
-              <option value="union">União (mostrar todas as dimensões selecionadas)</option>
-              <option value="intersection">Cruzamento (interseção das dimensões)</option>
+              <option value="union">União</option>
+              <option value="intersection">Cruzamento (interseção)</option>
             </select>
 
             <div style="height:10px"></div>
-
             <label class="small">Layout</label>
             <select id="taxLayout">
               <option value="dagre">Top-down (Dagre)</option>
@@ -347,89 +289,72 @@
 
             <div class="row" style="margin-top:10px;">
               <button class="btn primary" id="taxBuildBtn">Gerar</button>
-              <button class="btn" id="taxFitBtn">Ajustar tela</button>
-              <button class="btn" id="taxResetBtn">Reset posições</button>
+              <button class="btn" id="taxFitBtn">Ajustar</button>
+              <button class="btn" id="taxResetBtn">Reset layout</button>
             </div>
 
             <div class="hr"></div>
 
             <div class="row">
-              <label class="small nowrap" title="Ao clicar em um nó, mostra apenas vizinhos diretos (Pai/Filho/Propriedade)">
-                <input type="checkbox" id="taxFocusToggle" checked>
-                Foco de Vizinhança
-              </label>
-              <button class="btn" id="taxFocusClearBtn" title="Voltar a mostrar tudo">Limpar foco</button>
+              <label class="small nowrap"><input type="checkbox" id="taxFocusToggle" checked> Foco de Vizinhança</label>
+              <button class="btn" id="taxFocusClearBtn">Limpar foco</button>
             </div>
 
             <div class="hr"></div>
 
-            <label class="small">Cor da dimensão selecionada</label>
-            <select id="taxColorDim"></select>
-            <input type="color" id="taxColorPicker" style="height:44px; padding:6px 10px; border-radius:12px;">
-
-            <div class="row" style="margin-top:10px;">
+            <div class="row">
               <button class="btn good" id="taxExportPngBtn">Exportar PNG</button>
-              <button class="btn" id="taxExportGraphBtn">Exportar JSON (grafo)</button>
+              <button class="btn" id="taxExportJsonBtn">Exportar JSON</button>
             </div>
 
             <div class="hr"></div>
 
             <label class="small">Busca (label / IRI)</label>
-            <input id="taxSearch" class="input" placeholder="Ex.: 'ameaça', 'destinatário', 'http://…'">
+            <input id="taxSearch" class="input" placeholder="Ex.: ameaça, destinatário, http://…">
             <div class="row" style="margin-top:10px;">
               <button class="btn" id="taxHighlightBtn">Destacar</button>
-              <button class="btn" id="taxClearHighlightBtn">Limpar destaque</button>
+              <button class="btn" id="taxClearHighlightBtn">Limpar</button>
             </div>
-
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ONTOLOGIA (PESADO) -->
+    <!-- ONTOLOGIA -->
     <section id="tab-onto" class="hidden">
       <div class="grid">
         <div class="card">
           <div class="hd">
-            <h2>Ontologia Interativa (classes + propriedades + relações)</h2>
-            <div class="row">
-              <span class="pill">tooltips ricos • arestas rotuladas • foco</span>
-            </div>
+            <h2>Ontologia (classes + hierarquia + propriedades)</h2>
+            <span class="pill" id="ontoMeta">—</span>
           </div>
-          <div class="bd">
-            <div class="canvas" id="cyOnto"></div>
-          </div>
+          <div class="bd"><div class="canvas" id="cyOnto"></div></div>
         </div>
 
         <div class="card">
-          <div class="hd">
-            <h2>Controles — Ontologia</h2>
-            <div class="pill" id="ontoMeta">—</div>
-          </div>
+          <div class="hd"><h2>Controles — Ontologia</h2><span class="pill">pesado</span></div>
           <div class="bd">
             <div class="help">
-              <b>Como usar (nível pesado)</b>
+              <b>Como usar</b>
               <ul>
-                <li>Selecione uma dimensão para focar (ou <b>todas</b>).</li>
-                <li>Ative/Desative <b>subClassOf</b> e <b>Object Properties</b> (arestas com rótulos).</li>
-                <li><b>Foco de Vizinhança</b>: clique em um nó para limpar ruído (1 salto).</li>
+                <li>Filtre por dimensão (ou todas).</li>
+                <li>Ative/desative <b>subClassOf</b> e <b>Object Properties</b>.</li>
+                <li><b>Foco de Vizinhança</b>: clique num nó para reduzir ruído visual.</li>
               </ul>
             </div>
 
             <div style="height:12px"></div>
 
-            <label class="small">Dimensão (filtro)</label>
+            <label class="small">Dimensão</label>
             <select id="ontoDimSelect"></select>
 
             <div style="height:10px"></div>
-
             <div class="row">
-              <label class="small nowrap"><input type="checkbox" id="ontoShowSubclass" checked> Mostrar hierarquia</label>
-              <label class="small nowrap"><input type="checkbox" id="ontoShowProps" checked> Mostrar propriedades</label>
+              <label class="small nowrap"><input type="checkbox" id="ontoShowSubclass" checked> Hierarquia</label>
+              <label class="small nowrap"><input type="checkbox" id="ontoShowProps" checked> Propriedades</label>
             </div>
 
             <div style="height:10px"></div>
-
             <label class="small">Layout</label>
             <select id="ontoLayout">
               <option value="cose">Force (COSE)</option>
@@ -438,25 +363,22 @@
             </select>
 
             <div class="row" style="margin-top:10px;">
-              <button class="btn primary" id="ontoBuildBtn">Atualizar grafo</button>
-              <button class="btn" id="ontoFitBtn">Ajustar tela</button>
+              <button class="btn primary" id="ontoBuildBtn">Atualizar</button>
+              <button class="btn" id="ontoFitBtn">Ajustar</button>
               <button class="btn" id="ontoExportPngBtn">Exportar PNG</button>
             </div>
 
             <div class="hr"></div>
 
             <div class="row">
-              <label class="small nowrap" title="Ao clicar em um nó, mostra apenas vizinhos diretos (Pai/Filho/Propriedade)">
-                <input type="checkbox" id="ontoFocusToggle" checked>
-                Foco de Vizinhança
-              </label>
-              <button class="btn" id="ontoFocusClearBtn" title="Voltar a mostrar tudo">Limpar foco</button>
+              <label class="small nowrap"><input type="checkbox" id="ontoFocusToggle" checked> Foco de Vizinhança</label>
+              <button class="btn" id="ontoFocusClearBtn">Limpar foco</button>
             </div>
 
             <div class="hr"></div>
 
             <label class="small">Busca (label / IRI)</label>
-            <input id="ontoSearch" class="input" placeholder="Ex.: 'ameaça', 'moderação', 'http://…'">
+            <input id="ontoSearch" class="input" placeholder="Ex.: moderação, ameaça, http://…">
             <div class="row" style="margin-top:10px;">
               <button class="btn" id="ontoHighlightBtn">Destacar</button>
               <button class="btn" id="ontoClearHighlightBtn">Limpar</button>
@@ -465,36 +387,25 @@
             <div class="hr"></div>
 
             <div class="card" style="box-shadow:none;">
-              <div class="hd"><h2>Detalhes (seleção)</h2><span class="pill" id="ontoDetailPill">—</span></div>
-              <div class="bd" id="ontoDetailBox">
-                <div class="muted">Clique em uma classe no grafo para ver detalhes aqui.</div>
-              </div>
+              <div class="hd"><h2>Detalhes</h2><span class="pill" id="ontoDetailPill">—</span></div>
+              <div class="bd" id="ontoDetailBox"><div class="muted">Clique em um nó no grafo.</div></div>
             </div>
-
-            <div class="row" style="margin-top:10px;">
-              <button class="btn" id="ontoExportJsonBtn">Exportar JSON (seleção)</button>
-            </div>
-
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SPARQL (INTELIGENTE) -->
+    <!-- SPARQL -->
     <section id="tab-sparql" class="hidden">
       <div class="grid">
         <div class="card">
-          <div class="hd">
-            <h2>Questões de competência (presets)</h2>
-            <div class="pill">clique para preencher</div>
-          </div>
+          <div class="hd"><h2>Questões de competência (presets)</h2><span class="pill">inteligente</span></div>
           <div class="bd">
             <div class="help">
-              <b>Como usar (nível inteligente)</b>
+              <b>Como usar</b>
               <ul>
-                <li>Escolha uma questão pronta. Ajuste parâmetros (IRIs) quando necessário.</li>
-                <li>Execute com <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> + <span class="kbd">Enter</span>.</li>
-                <li>Exporte resultados (CSV/JSON) para análise.</li>
+                <li>Selecione um preset e execute.</li>
+                <li>Atalho: <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> + <span class="kbd">Enter</span></li>
               </ul>
             </div>
             <div style="height:12px"></div>
@@ -509,24 +420,19 @@
               <button class="btn good" id="runBtn">Executar</button>
               <button class="btn" id="clearBtn">Limpar</button>
               <button class="btn" id="copyBtn">Copiar</button>
-              <span class="small">Atalho: <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> + <span class="kbd">Enter</span></span>
             </div>
           </div>
           <div class="bd">
             <textarea id="sparqlText"></textarea>
-
             <div style="height:10px"></div>
-
             <div class="row">
               <button class="btn" id="exportCsvBtn">Exportar CSV</button>
               <button class="btn" id="exportJsonBtn">Exportar JSON</button>
             </div>
-
             <div style="height:10px"></div>
-
             <div class="card" style="box-shadow:none;">
               <div class="hd"><h2>Resultado</h2><div class="small" id="resultMeta">—</div></div>
-              <div class="bd" id="resultBox"><div class="muted">Execute uma consulta para ver os resultados aqui.</div></div>
+              <div class="bd" id="resultBox"><div class="muted">Execute uma consulta.</div></div>
             </div>
           </div>
         </div>
@@ -537,31 +443,17 @@
 </main>
 
 <script>
-/* =========================================================
-   CONFIG — base no GitHub: Ontohate_oficial.ttl
-   ========================================================= */
-const GITHUB_USER = "SEU_USER_AQUI";
-const GITHUB_REPO = "SEU_REPO_AQUI";
-const BRANCH = "main";
-const FILE_PATH = "Ontohate_oficial.ttl"; // exigido
+/* =================== CONFIG (GitHub Pages) =================== */
+const TTL_URL = "./Ontohate_oficial.ttl";
 
-const OWL_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}/${FILE_PATH}`;
-
-const NS = {
-  rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-  rdfs: "http://www.w3.org/2000/01/rdf-schema#",
-  owl:  "http://www.w3.org/2002/07/owl#",
-};
-
-const $ = (id) => document.getElementById(id);
-
+/* =================== helpers UI =================== */
+const $ = (id)=>document.getElementById(id);
 function setStatus(kind, text){
   const dot = $("statusDot");
   dot.classList.remove("ok","bad","warn");
   dot.classList.add(kind);
   $("statusText").textContent = text;
 }
-
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, s => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
@@ -572,41 +464,61 @@ function shortIri(iri){
   const m = iri.match(/[#\/]([^#\/]+)$/);
   return m ? m[1] : iri;
 }
-
 function downloadText(filename, text, mime="text/plain;charset=utf-8"){
   const blob = new Blob([text], {type:mime});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
-
 function toCsv(rows){
   if(!rows || rows.length===0) return "";
   const cols = Object.keys(rows[0]);
-  const esc = (v) => {
-    const s = String(v ?? "");
-    if(/[,"\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
-    return s;
-  };
+  const esc = (v)=>{ const s=String(v??""); return /[,"\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
   return [cols.join(","), ...rows.map(r=>cols.map(c=>esc(r[c])).join(","))].join("\n");
 }
 
-/* =========================================================
-   STATE
-   ========================================================= */
+/* =================== Tabs + Theme =================== */
+function initTabs(){
+  document.querySelectorAll(".tabbtn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const tab = btn.dataset.tab;
+      $("tab-tax").classList.toggle("hidden", tab !== "tax");
+      $("tab-onto").classList.toggle("hidden", tab !== "onto");
+      $("tab-sparql").classList.toggle("hidden", tab !== "sparql");
+      if(tab==="tax" && cyTax){ cyTax.resize(); cyTax.fit(undefined,30); }
+      if(tab==="onto" && cyOnto){ cyOnto.resize(); cyOnto.fit(undefined,30); }
+    });
+  });
+}
+$("themeBtn").addEventListener("click", ()=>{
+  const cur = document.body.getAttribute("data-theme") || "dark";
+  document.body.setAttribute("data-theme", cur==="dark" ? "light" : "dark");
+  if(cyTax) applyCyStyle(cyTax);
+  if(cyOnto) applyCyStyle(cyOnto);
+});
+$("reloadBtn").addEventListener("click", ()=> boot().catch(()=>{}));
+
+/* =================== Namespaces =================== */
+const NS = {
+  rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+  owl:  "http://www.w3.org/2002/07/owl#",
+};
+
+/* =================== State =================== */
 const state = {
+  ttlText: "",
+  store: null,
   engine: null,
   sources: [],
-  loaded: false,
 
   classes: new Set(),
-  labels: new Map(),
-  labelsByLang: new Map(),
+  labelsByLang: new Map(),     // iri -> Map(lang->label)
+  labels: new Map(),           // iri -> best label
   comments: new Map(),
   subclassOf: new Map(),
   childrenOf: new Map(),
@@ -616,18 +528,39 @@ const state = {
   propDomain: new Map(),
   propRange: new Map(),
 
-  annotations: new Map(),
-
-  canonicalDimensions: [],
-  dimColors: new Map(),
+  annotations: new Map(),      // iri -> [{p,pLabel,o,oType,lang,dt}]
   dims: [],
 };
+
+function resetIndex(){
+  state.store = new N3.Store();
+  state.engine = new Comunica.QueryEngine();
+  state.sources = [state.store];
+
+  state.classes = new Set();
+  state.labelsByLang = new Map();
+  state.labels = new Map();
+  state.comments = new Map();
+  state.subclassOf = new Map();
+  state.childrenOf = new Map();
+  state.objProps = new Set();
+  state.propLabel = new Map();
+  state.propDomain = new Map();
+  state.propRange = new Map();
+  state.annotations = new Map();
+  state.dims = [];
+}
 
 function addMapSet(map,k,v){
   if(!map.has(k)) map.set(k, new Set());
   map.get(k).add(v);
 }
-
+function termToString(term){
+  if(!term) return "";
+  if(term.termType === "NamedNode") return term.value;
+  if(term.termType === "Literal") return term.value;
+  return term.value || "";
+}
 function bestLabelFor(iri){
   const langMap = state.labelsByLang.get(iri);
   if(langMap){
@@ -641,73 +574,33 @@ function bestLabelFor(iri){
 }
 function bestPropLabelFor(iri){ return state.propLabel.get(iri) || shortIri(iri); }
 
-/* =========================================================
-   TABS + THEME
-   ========================================================= */
-function initTabs(){
-  document.querySelectorAll(".tabbtn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active");
-      const tab = btn.dataset.tab;
-      $("tab-tax").classList.toggle("hidden", tab !== "tax");
-      $("tab-onto").classList.toggle("hidden", tab !== "onto");
-      $("tab-sparql").classList.toggle("hidden", tab !== "sparql");
-      if(tab==="tax" && cyTax) { cyTax.resize(); cyTax.fit(undefined, 30); }
-      if(tab==="onto" && cyOnto) { cyOnto.resize(); cyOnto.fit(undefined, 30); }
-    });
-  });
-}
-function initTheme(){
-  $("themeBtn").addEventListener("click", ()=>{
-    const body = document.body;
-    const cur = body.getAttribute("data-theme") || "dark";
-    const nxt = cur === "dark" ? "light" : "dark";
-    body.setAttribute("data-theme", nxt);
-    if(cyTax) applyCyStyle(cyTax);
-    if(cyOnto) applyCyStyle(cyOnto);
+/* =================== Parse TTL =================== */
+async function parseTurtleIntoStore(ttlText){
+  const parser = new N3.Parser({ baseIRI: location.href });
+  await new Promise((resolve,reject)=>{
+    try{
+      parser.parse(ttlText, (err, quad)=>{
+        if(err) return reject(err);
+        if(quad) state.store.addQuad(quad);
+        else resolve();
+      });
+    }catch(e){ reject(e); }
   });
 }
 
-/* =========================================================
-   SPARQL (Comunica)
-   ========================================================= */
-function initEngine(){
-  state.engine = new Comunica.QueryEngine();
-  state.sources = [OWL_URL];
-}
+/* =================== Comunica query on store =================== */
 async function qBindings(query){
   const res = await state.engine.queryBindings(query, { sources: state.sources });
   const arr = await res.toArray();
   const vars = res.variables.map(v=>v.value);
   return {vars, arr};
 }
-function termToString(term){
-  if(!term) return "";
-  if(term.termType === "NamedNode") return term.value;
-  if(term.termType === "Literal") return term.value;
-  return term.value || "";
-}
-function termLang(term){ return term?.termType==="Literal" ? (term.language || "") : ""; }
-function termDatatype(term){ return term?.termType==="Literal" ? (term.datatype?.value || "") : ""; }
 
-/* =========================================================
-   INDEX
-   ========================================================= */
-async function loadIndex(){
-  setStatus("warn","Carregando Ontohate_oficial.ttl do GitHub…");
-
-  try{
-    const r = await fetch(OWL_URL, {cache:"no-store"});
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-  }catch(e){
-    setStatus("bad","Falha ao acessar Ontohate_oficial.ttl (URL RAW/CORS/Repo).");
-    throw e;
-  }
-
+/* =================== Index =================== */
+async function buildIndexFromStore(){
   // classes + labels
   {
-    const query = `
+    const q = `
 PREFIX rdf:  <${NS.rdf}>
 PREFIX rdfs: <${NS.rdfs}>
 PREFIX owl:  <${NS.owl}>
@@ -715,16 +608,15 @@ SELECT DISTINCT ?c ?label
 WHERE {
   { ?c rdf:type owl:Class . } UNION { ?c rdf:type rdfs:Class . }
   OPTIONAL { ?c rdfs:label ?label }
-}
-`;
-    const {arr} = await qBindings(query);
+}`;
+    const {arr} = await qBindings(q);
     for(const b of arr){
       const c = termToString(b.get("c"));
       if(!c) continue;
       state.classes.add(c);
       const lab = b.get("label");
       if(lab){
-        const lang = termLang(lab).toLowerCase();
+        const lang = (lab.language || "").toLowerCase();
         if(!state.labelsByLang.has(c)) state.labelsByLang.set(c, new Map());
         state.labelsByLang.get(c).set(lang || "_", termToString(lab));
       }
@@ -736,46 +628,41 @@ WHERE {
 
   // comments
   {
-    const query = `
+    const q = `
 PREFIX rdfs: <${NS.rdfs}>
 SELECT DISTINCT ?c ?comment
-WHERE { ?c rdfs:comment ?comment . }
-`;
-    const {arr} = await qBindings(query);
+WHERE { ?c rdfs:comment ?comment . }`;
+    const {arr} = await qBindings(q);
     for(const b of arr){
       const c = termToString(b.get("c"));
       const comm = b.get("comment");
-      if(c && comm && !state.comments.has(c)){
-        state.comments.set(c, termToString(comm));
-      }
+      if(c && comm && !state.comments.has(c)) state.comments.set(c, termToString(comm));
     }
   }
 
-  // subclass edges
+  // subclassOf (ignora bnodes)
   {
-    const query = `
+    const q = `
 PREFIX rdfs: <${NS.rdfs}>
 SELECT DISTINCT ?child ?parent
 WHERE {
   ?child rdfs:subClassOf ?parent .
   FILTER(isIRI(?child) && isIRI(?parent))
-}
-`;
-    const {arr} = await qBindings(query);
+}`;
+    const {arr} = await qBindings(q);
     for(const b of arr){
       const child = termToString(b.get("child"));
       const parent = termToString(b.get("parent"));
       if(!child || !parent) continue;
+      state.classes.add(child); state.classes.add(parent);
       addMapSet(state.subclassOf, child, parent);
       addMapSet(state.childrenOf, parent, child);
-      state.classes.add(child);
-      state.classes.add(parent);
     }
   }
 
   // object properties + label + domain/range
   {
-    const query = `
+    const q = `
 PREFIX rdf:  <${NS.rdf}>
 PREFIX rdfs: <${NS.rdfs}>
 PREFIX owl:  <${NS.owl}>
@@ -785,9 +672,8 @@ WHERE {
   OPTIONAL { ?p rdfs:label ?label }
   OPTIONAL { ?p rdfs:domain ?d . FILTER(isIRI(?d)) }
   OPTIONAL { ?p rdfs:range  ?r . FILTER(isIRI(?r)) }
-}
-`;
-    const {arr} = await qBindings(query);
+}`;
+    const {arr} = await qBindings(q);
     for(const b of arr){
       const p = termToString(b.get("p"));
       if(!p) continue;
@@ -801,9 +687,9 @@ WHERE {
     }
   }
 
-  // annotations completas (tooltip “tabela”)
+  // annotations (tudo exceto rdf:type e subClassOf)
   {
-    const query = `
+    const q = `
 PREFIX rdf:  <${NS.rdf}>
 PREFIX rdfs: <${NS.rdfs}>
 SELECT DISTINCT ?s ?p ?o ?plabel
@@ -812,17 +698,16 @@ WHERE {
   FILTER(isIRI(?s))
   FILTER(?p != rdf:type && ?p != rdfs:subClassOf)
   OPTIONAL { ?p rdfs:label ?plabel }
-}
-`;
-    const {arr} = await qBindings(query);
+}`;
+    const {arr} = await qBindings(q);
     for(const b of arr){
       const s = termToString(b.get("s"));
-      const p = b.get("p");
+      const pTerm = b.get("p");
       const o = b.get("o");
-      if(!s || !p || !o) continue;
+      if(!s || !pTerm || !o) continue;
       if(!state.classes.has(s)) continue;
 
-      const pIri = termToString(p);
+      const pIri = termToString(pTerm);
       const pLabel = termToString(b.get("plabel")) || shortIri(pIri);
 
       const item = {
@@ -830,257 +715,70 @@ WHERE {
         pLabel,
         o: termToString(o),
         oType: o.termType,
-        lang: termLang(o),
-        dt: termDatatype(o)
+        lang: o.termType==="Literal" ? (o.language||"") : "",
+        dt: o.termType==="Literal" ? (o.datatype?.value||"") : ""
       };
       if(!state.annotations.has(s)) state.annotations.set(s, []);
       state.annotations.get(s).push(item);
     }
   }
 
-  computeDimensions();
-  seedDimensionColors();
-
-  setStatus("ok",`Ontohate_oficial.ttl carregado: ${state.classes.size} classes • ${state.objProps.size} props`);
-  state.loaded = true;
-}
-
-function computeDimensions(){
-  let dims = [];
-  if(state.canonicalDimensions.length){
-    dims = state.canonicalDimensions.filter(d=>state.classes.has(d));
-  }else{
+  // dimensões = raízes com filhos
+  {
     const cand = [];
     for(const c of state.classes){
       const parents = state.subclassOf.get(c);
       const hasParent = parents && [...parents].some(p=>String(p).startsWith("http"));
-      const hasKids = state.childrenOf.get(c)?.size > 0;
+      const hasKids = (state.childrenOf.get(c)?.size || 0) > 0;
       if(!hasParent && hasKids) cand.push(c);
     }
     const block = [
       "http://www.w3.org/2002/07/owl#Thing",
       "http://www.w3.org/2000/01/rdf-schema#Resource"
     ];
-    dims = cand.filter(c => !block.includes(c));
-  }
-  dims.sort((a,b)=>bestLabelFor(a).localeCompare(bestLabelFor(b),"pt-BR"));
-  state.dims = dims;
-}
-
-function seedDimensionColors(){
-  const palette = ["#7dd3fc","#a78bfa","#34d399","#fbbf24","#fb7185","#60a5fa","#f472b6","#10b981","#f59e0b","#22c55e"];
-  let i=0;
-  for(const d of state.dims){
-    if(!state.dimColors.has(d)){
-      state.dimColors.set(d, palette[i % palette.length]);
-      i++;
-    }
+    state.dims = cand.filter(x=>!block.includes(x))
+      .sort((a,b)=>bestLabelFor(a).localeCompare(bestLabelFor(b),"pt-BR"));
   }
 }
 
-/* =========================================================
-   CYTOSCAPE
-   ========================================================= */
-let cyTax=null, cyOnto=null;
-
-function baseCyStyle(){
-  // NOTE: 'display: none' é via Cytoscape style (não CSS)
-  return [
-    {
-      selector: 'node',
-      style: {
-        'background-color': 'data(fill)',
-        'border-color': 'data(stroke)',
-        'border-width': 2,
-        'label': 'data(label)',
-        'color': 'var(--text)',
-        'font-family': 'Inter, system-ui',
-        'font-size': 11,
-        'text-wrap': 'wrap',
-        'text-max-width': 140,
-        'text-valign': 'center',
-        'text-halign': 'center',
-        'padding': 10,
-        'shape': 'round-rectangle',
-        'width': 'label',
-        'height': 'label',
-        'min-width': 70,
-        'min-height': 38,
-      }
-    },
-    {
-      selector: 'edge',
-      style: {
-        'curve-style': 'bezier',
-        'line-color': 'var(--edge)',
-        'width': 1.6,
-        'target-arrow-shape': 'triangle',
-        'target-arrow-color': 'var(--edge)',
-        'arrow-scale': 0.9,
-        'label': 'data(label)',
-        'font-size': 10,
-        'font-family': 'DM Mono, monospace',
-        'color': 'var(--edgeLabel)',
-        'text-rotation': 'autorotate',
-        'text-background-opacity': 1,
-        'text-background-color': 'data(labelBg)',
-        'text-background-padding': 2,
-        'text-background-shape': 'round-rectangle',
-      }
-    },
-    { selector: '.subclass', style: { 'line-style': 'solid', 'width': 1.6 } },
-    { selector: '.prop',     style: { 'line-style': 'dashed', 'width': 1.9 } },
-    { selector: '.highlight', style: { 'border-width': 4, 'border-color': 'var(--accent2)' } },
-    { selector: '.dimTag', style: { 'border-color': 'data(dimColor)', 'border-width': 4 } },
-    { selector: ':selected', style: { 'border-color': 'var(--accent)', 'border-width': 5 } },
-
-    /* ✅ FOCO DE VIZINHANÇA */
-    { selector: '.focusDim', style: { 'opacity': 0.12 } },
-    { selector: '.focusHide', style: { 'display': 'none' } },
-  ];
-}
-
-function applyCyStyle(cy){
-  cy.style(baseCyStyle());
-  cy.style().update();
-}
-
-function initCy(){
-  cyTax = cytoscape({ container: $("cyTax"), elements: [], wheelSensitivity:0.2 });
-  cyOnto = cytoscape({ container: $("cyOnto"), elements: [], wheelSensitivity:0.2 });
-  applyCyStyle(cyTax);
-  applyCyStyle(cyOnto);
-}
-
-function runLayout(cy, name){
-  let opts;
-  if(name==="dagre"){
-    opts = { name:"dagre", rankDir:"TB", nodeSep: 40, rankSep: 70, edgeSep: 10, animate: true, animationDuration: 350 };
-  }else if(name==="breadthfirst"){
-    opts = { name:"breadthfirst", directed:true, padding: 30, spacingFactor: 1.2, animate:true, animationDuration: 350 };
-  }else if(name==="concentric"){
-    opts = { name:"concentric", padding: 30, minNodeSpacing: 30, animate:true, animationDuration: 350 };
-  }else{
-    opts = { name:"cose-bilkent", padding: 30, animate:true, animationDuration: 450, fit:true };
-  }
-  cy.layout(opts).run();
-}
-
-function nodeData(iri, dimColor=null){
-  const lbl = bestLabelFor(iri);
-  const fill = getComputedStyle(document.body).getPropertyValue('--nodeFill').trim() || 'rgba(255,255,255,.07)';
-  const stroke = getComputedStyle(document.body).getPropertyValue('--nodeBorder').trim() || 'rgba(255,255,255,.18)';
-  return { id: iri, iri, label: lbl, fill, stroke, dimColor: dimColor || "transparent" };
-}
-function edgeData(id, src, tgt, label){
-  const bg = getComputedStyle(document.body).getPropertyValue('--canvas').trim() || 'rgba(0,0,0,.15)';
-  return { id, source: src, target: tgt, label: label || "", labelBg: bg };
-}
-
-/* =========================================================
-   DIMENSIONS helpers
-   ========================================================= */
-function getDescendants(root){
-  const out = new Set();
-  const q = [root];
-  const seen = new Set([root]);
-  while(q.length){
-    const cur = q.shift();
-    out.add(cur);
-    const kids = state.childrenOf.get(cur);
-    if(!kids) continue;
-    for(const k of kids){
-      if(seen.has(k)) continue;
-      seen.add(k);
-      q.push(k);
-    }
-  }
-  return out;
-}
-function selectedTaxDims(){
-  const sel = $("taxDimSelect");
-  const vals = [...sel.selectedOptions].map(o=>o.value);
-  return vals.length ? vals : (state.dims[0] ? [state.dims[0]] : []);
-}
-function buildDimensionDropdowns(){
-  const sel = $("taxDimSelect");
-  sel.innerHTML = "";
-  for(const d of state.dims){
-    const opt = document.createElement("option");
-    opt.value = d;
-    opt.textContent = bestLabelFor(d);
-    sel.appendChild(opt);
-  }
-  if(sel.options.length) sel.options[0].selected = true;
-
-  const csel = $("taxColorDim");
-  csel.innerHTML = "";
-  for(const d of state.dims){
-    const opt = document.createElement("option");
-    opt.value = d;
-    opt.textContent = bestLabelFor(d);
-    csel.appendChild(opt);
-  }
-  if(csel.options.length) csel.value = csel.options[0].value;
-  $("taxColorPicker").value = state.dimColors.get(csel.value) || "#7dd3fc";
-
-  csel.onchange = ()=> $("taxColorPicker").value = state.dimColors.get(csel.value) || "#7dd3fc";
-
-  $("taxColorPicker").oninput = ()=>{
-    const d = csel.value;
-    state.dimColors.set(d, $("taxColorPicker").value);
-    if(cyTax) applyCyStyle(cyTax);
-    if(cyOnto) applyCyStyle(cyOnto);
-  };
-
-  const osel = $("ontoDimSelect");
-  osel.innerHTML = `<option value="__ALL__">Todas</option>`;
-  for(const d of state.dims){
-    const opt = document.createElement("option");
-    opt.value = d;
-    opt.textContent = bestLabelFor(d);
-    osel.appendChild(opt);
-  }
-}
-
-/* =========================================================
-   TOOLTIP
-   ========================================================= */
+/* =================== Tooltips =================== */
 function makeTippy(cyNode, html){
   const ref = cyNode.popperRef();
-  const dummy = document.createElement('div');
+  const dummy = document.createElement("div");
 
-  // destrói tippy anterior (se houver)
   const old = cyNode.data("__tippy");
   if(old) { try{ old.destroy(); }catch(e){} }
 
   const tip = tippy(dummy, {
     getReferenceClientRect: ref.getBoundingClientRect,
-    content: () => { const div = document.createElement('div'); div.innerHTML = html; return div; },
-    trigger: 'manual',
-    placement: 'top',
+    content: ()=>{ const div=document.createElement("div"); div.innerHTML=html; return div; },
+    trigger: "manual",
+    placement: "top",
     interactive: true,
     appendTo: document.body,
     maxWidth: 650,
-    theme: 'light-border',
+    theme: "light-border",
     delay: [150, 50],
   });
-  cyNode.on('mouseover', () => tip.show());
-  cyNode.on('mouseout',  () => tip.hide());
+
+  cyNode.on("mouseover", ()=> tip.show());
+  cyNode.on("mouseout",  ()=> tip.hide());
   cyNode.data("__tippy", tip);
 }
-
 function tooltipHtml(iri){
   const ann = (state.annotations.get(iri) || [])
     .filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment")
-    .slice(0, 100);
+    .slice(0, 140);
 
   const parents = [...(state.subclassOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
   const kids = [...(state.childrenOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
 
   const rows = ann.map(x=>{
     const extra = x.oType==="Literal" ? (x.lang ? ` @${x.lang}` : (x.dt ? ` ^^${shortIri(x.dt)}` : "")) : "";
-    return `<tr><td class="mono" style="font-size:11px;color:var(--muted2)">${escapeHtml(x.pLabel)}</td><td class="mono" style="font-size:11px;word-break:break-all;color:var(--muted)">${escapeHtml(x.o)}<span style="color:var(--muted2)">${escapeHtml(extra)}</span></td></tr>`;
+    return `<tr>
+      <td class="mono" style="font-size:11px;color:var(--muted2)">${escapeHtml(x.pLabel)}</td>
+      <td class="mono" style="font-size:11px;word-break:break-all;color:var(--muted)">${escapeHtml(x.o)} <span style="color:var(--muted2)">${escapeHtml(extra)}</span></td>
+    </tr>`;
   }).join("");
 
   return `
@@ -1108,49 +806,140 @@ function tooltipHtml(iri){
   `;
 }
 
-/* =========================================================
-   ✅ FOCO DE VIZINHANÇA (Pai/Filho/Propriedade)
-   ========================================================= */
-const focusState = {
-  tax:  { enabled: true, active: false },
-  onto: { enabled: true, active: false },
-};
+/* =================== Cytoscape =================== */
+let cyTax=null, cyOnto=null;
 
+function baseCyStyle(){
+  return [
+    { selector:"node", style:{
+      "background-color":"var(--nodeFill)",
+      "border-color":"var(--nodeBorder)",
+      "border-width":2,
+      "label":"data(label)",
+      "color":"var(--text)",
+      "font-family":"Inter, system-ui",
+      "font-size":11,
+      "text-wrap":"wrap",
+      "text-max-width":150,
+      "text-valign":"center",
+      "text-halign":"center",
+      "padding":10,
+      "shape":"round-rectangle",
+      "width":"label",
+      "height":"label",
+      "min-width":70,
+      "min-height":38,
+    }},
+    { selector:"edge", style:{
+      "curve-style":"bezier",
+      "line-color":"var(--edge)",
+      "width":1.6,
+      "target-arrow-shape":"triangle",
+      "target-arrow-color":"var(--edge)",
+      "arrow-scale":0.9,
+      "label":"data(label)",
+      "font-size":10,
+      "font-family":"DM Mono, monospace",
+      "color":"var(--edgeLabel)",
+      "text-rotation":"autorotate",
+      "text-background-opacity":1,
+      "text-background-color":"var(--canvas)",
+      "text-background-padding":2,
+      "text-background-shape":"round-rectangle",
+    }},
+    { selector:".subclass", style:{ "line-style":"solid", "width":1.6 } },
+    { selector:".prop", style:{ "line-style":"dashed", "width":1.9 } },
+    { selector:".highlight", style:{ "border-width":4, "border-color":"var(--accent2)" } },
+    { selector:":selected", style:{ "border-color":"var(--accent)", "border-width":5 } },
+
+    /* foco de vizinhança */
+    { selector:".focusDim", style:{ "opacity":0.12 } },
+    { selector:".focusHide", style:{ "display":"none" } },
+  ];
+}
+function applyCyStyle(cy){ cy.style(baseCyStyle()); cy.style().update(); }
+
+function initCy(){
+  cyTax = cytoscape({ container:$("cyTax"), elements:[], wheelSensitivity:0.2 });
+  cyOnto = cytoscape({ container:$("cyOnto"), elements:[], wheelSensitivity:0.2 });
+  applyCyStyle(cyTax); applyCyStyle(cyOnto);
+}
+
+function runLayout(cy, name){
+  let opts;
+  if(name==="dagre") opts = { name:"dagre", rankDir:"TB", nodeSep:40, rankSep:70, edgeSep:10, animate:true, animationDuration:350 };
+  else if(name==="breadthfirst") opts = { name:"breadthfirst", directed:true, padding:30, spacingFactor:1.2, animate:true, animationDuration:350 };
+  else if(name==="concentric") opts = { name:"concentric", padding:30, minNodeSpacing:30, animate:true, animationDuration:350 };
+  else opts = { name:"cose-bilkent", padding:30, animate:true, animationDuration:450, fit:true };
+  cy.layout(opts).run();
+}
+
+function nodeData(iri){ return { id: iri, iri, label: bestLabelFor(iri) }; }
+function edgeData(id, src, tgt, label){ return { id, source:src, target:tgt, label:label||"" }; }
+
+function getDescendants(root){
+  const out=new Set(); const q=[root]; const seen=new Set([root]);
+  while(q.length){
+    const cur=q.shift(); out.add(cur);
+    const kids=state.childrenOf.get(cur); if(!kids) continue;
+    for(const k of kids){ if(seen.has(k)) continue; seen.add(k); q.push(k); }
+  }
+  return out;
+}
+
+/* =================== Foco de Vizinhança =================== */
+const focusState = { tax:{enabled:true,active:false}, onto:{enabled:true,active:false} };
 function clearNeighborhoodFocus(cy){
   cy.elements().removeClass("focusDim");
   cy.elements().removeClass("focusHide");
   cy.fit(undefined, 30);
 }
-
 function setNeighborhoodFocus(cy, nodeId){
   const n = cy.getElementById(nodeId);
   if(!n || n.empty()) return;
-
-  // Nó + vizinhos diretos (arestas subClassOf e props, porque são edges conectadas)
   const hood = n.closedNeighborhood();
-
-  // esconde tudo e mostra só a vizinhança
   cy.elements().addClass("focusHide");
   hood.removeClass("focusHide");
-
-  // aplica “dim” ao restante (caso você queira só opacidade, bastaria comentar a parte focusHide)
   cy.elements().addClass("focusDim");
   hood.removeClass("focusDim");
-
   n.select();
   cy.fit(hood, 70);
 }
 
-/* =========================================================
-   TAXONOMY build
-   ========================================================= */
+/* =================== Build dimensions UI =================== */
+function fillDimensions(){
+  const sel = $("taxDimSelect");
+  sel.innerHTML = "";
+  for(const d of state.dims){
+    const opt=document.createElement("option");
+    opt.value=d; opt.textContent=bestLabelFor(d);
+    sel.appendChild(opt);
+  }
+  if(sel.options.length) sel.options[0].selected=true;
+
+  const os = $("ontoDimSelect");
+  os.innerHTML = `<option value="__ALL__">Todas</option>`;
+  for(const d of state.dims){
+    const opt=document.createElement("option");
+    opt.value=d; opt.textContent=bestLabelFor(d);
+    os.appendChild(opt);
+  }
+}
+
+/* =================== Build Taxonomy =================== */
+function selectedTaxDims(){
+  const sel = $("taxDimSelect");
+  const vals=[...sel.selectedOptions].map(o=>o.value);
+  return vals.length ? vals : (state.dims[0] ? [state.dims[0]] : []);
+}
 function buildTaxonomyGraph(){
+  if(!state.classes.size) return;
+
   const dims = selectedTaxDims();
   const mode = $("taxMode").value;
-
   const sets = dims.map(d=>getDescendants(d));
-  let nodeSet = new Set();
 
+  let nodeSet = new Set();
   if(mode==="intersection" && sets.length){
     nodeSet = new Set(sets[0]);
     for(let i=1;i<sets.length;i++){
@@ -1161,13 +950,7 @@ function buildTaxonomyGraph(){
   }
 
   const nodes=[], edges=[];
-  for(const iri of nodeSet){
-    const belongs = dims.filter((d,idx)=>sets[idx].has(iri));
-    const d0 = belongs[0];
-    const dimColor = d0 ? state.dimColors.get(d0) : "transparent";
-    nodes.push({ data: { ...nodeData(iri, dimColor), dims: belongs } });
-  }
-
+  for(const iri of nodeSet) nodes.push({ data: nodeData(iri) });
   for(const child of nodeSet){
     const parents = state.subclassOf.get(child);
     if(!parents) continue;
@@ -1180,30 +963,20 @@ function buildTaxonomyGraph(){
   cyTax.elements().remove();
   cyTax.add(nodes);
   cyTax.add(edges);
-
-  cyTax.nodes().forEach(n=>{
-    const d0 = (n.data("dims")||[])[0];
-    if(d0){
-      n.addClass("dimTag");
-      n.data("dimColor", state.dimColors.get(d0));
-    }
-    makeTippy(n, tooltipHtml(n.id()));
-  });
-
+  cyTax.nodes().forEach(n=> makeTippy(n, tooltipHtml(n.id())));
   applyCyStyle(cyTax);
   runLayout(cyTax, $("taxLayout").value);
-  cyTax.fit(undefined, 30);
-  $("taxMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
+  cyTax.fit(undefined,30);
 
-  // se havia foco ativo, limpa ao regerar
-  focusState.tax.active = false;
+  $("taxMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
+  focusState.tax.active=false;
   clearNeighborhoodFocus(cyTax);
 }
 
-/* =========================================================
-   ONTOLOGY build
-   ========================================================= */
+/* =================== Build Ontology =================== */
 function buildOntologyGraph(){
+  if(!state.classes.size) return;
+
   const dim = $("ontoDimSelect").value;
   const showSub = $("ontoShowSubclass").checked;
   const showProps = $("ontoShowProps").checked;
@@ -1211,9 +984,7 @@ function buildOntologyGraph(){
   const nodeSet = (dim && dim!=="__ALL__") ? getDescendants(dim) : new Set(state.classes);
 
   const nodes=[], edges=[];
-  for(const iri of nodeSet){
-    nodes.push({ data: nodeData(iri, "transparent") });
-  }
+  for(const iri of nodeSet) nodes.push({ data: nodeData(iri) });
 
   if(showSub){
     for(const child of nodeSet){
@@ -1244,29 +1015,24 @@ function buildOntologyGraph(){
   cyOnto.elements().remove();
   cyOnto.add(nodes);
   cyOnto.add(edges);
-
   cyOnto.nodes().forEach(n=> makeTippy(n, tooltipHtml(n.id())));
-
   applyCyStyle(cyOnto);
   runLayout(cyOnto, $("ontoLayout").value);
-  cyOnto.fit(undefined, 30);
-  $("ontoMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
+  cyOnto.fit(undefined,30);
 
-  // se havia foco ativo, limpa ao regerar
-  focusState.onto.active = false;
+  $("ontoMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
+  focusState.onto.active=false;
   clearNeighborhoodFocus(cyOnto);
 }
 
-/* =========================================================
-   HIGHLIGHT + EXPORTS
-   ========================================================= */
+/* =================== Highlight + export =================== */
 function doHighlight(cy, q){
-  const s = (q||"").trim().toLowerCase();
+  const s=(q||"").trim().toLowerCase();
   cy.elements().removeClass("highlight");
   if(!s) return;
   const matches = cy.nodes().filter(n=>{
-    const iri = (n.data("iri")||"").toLowerCase();
-    const lab = (n.data("label")||"").toLowerCase();
+    const iri=(n.data("iri")||"").toLowerCase();
+    const lab=(n.data("label")||"").toLowerCase();
     return iri.includes(s) || lab.includes(s) || shortIri(iri).toLowerCase().includes(s);
   });
   matches.addClass("highlight");
@@ -1274,38 +1040,30 @@ function doHighlight(cy, q){
 }
 function exportCyPng(cy, filename){
   const png = cy.png({ full:true, scale:2, bg:"transparent" });
-  const a = document.createElement("a");
-  a.href = png; a.download = filename; a.click();
+  const a=document.createElement("a"); a.href=png; a.download=filename; a.click();
 }
 
-/* =========================================================
-   SPARQL presets
-   ========================================================= */
+/* =================== SPARQL presets + runner =================== */
 const PRESETS = [
   {
-    title: "CQ01 — Quais são as dimensões (raízes com mais subclasses)?",
-    desc: "Candidatos a dimensão por contagem de subclasses diretas.",
+    title: "CQ01 — Dimensões (raízes com mais subclasses diretas)",
     query: `
 PREFIX rdfs: <${NS.rdfs}>
 SELECT ?root (COUNT(DISTINCT ?child) AS ?nChildren)
 WHERE { ?child rdfs:subClassOf ?root . FILTER(isIRI(?root) && isIRI(?child)) }
 GROUP BY ?root
 ORDER BY DESC(?nChildren)
-LIMIT 100
-`.trim()
+LIMIT 100`.trim()
   },
   {
     title: "CQ02 — Subclasses diretas de uma classe X",
-    desc: "Troque <IRI_AQUI> por uma classe.",
     query: `
 PREFIX rdfs: <${NS.rdfs}>
 SELECT ?child WHERE { ?child rdfs:subClassOf <IRI_AQUI> . }
-ORDER BY STR(?child)
-`.trim()
+ORDER BY STR(?child)`.trim()
   },
   {
     title: "CQ03 — Object Properties e domain/range",
-    desc: "Mostra propriedades e (se definidos) domain/range.",
     query: `
 PREFIX rdf:  <${NS.rdf}>
 PREFIX rdfs: <${NS.rdfs}>
@@ -1318,286 +1076,227 @@ WHERE {
   OPTIONAL { ?p rdfs:range  ?range }
 }
 ORDER BY STR(?p)
-LIMIT 400
-`.trim()
-  },
-  {
-    title: "CQ04 — Buscar classes por termo no label",
-    desc: "Troque \"odio\" pelo termo.",
-    query: `
-PREFIX rdf:  <${NS.rdf}>
-PREFIX rdfs: <${NS.rdfs}>
-PREFIX owl:  <${NS.owl}>
-SELECT DISTINCT ?c ?label
-WHERE {
-  ?c rdf:type owl:Class .
-  ?c rdfs:label ?label .
-  FILTER(CONTAINS(LCASE(STR(?label)), "odio"))
-}
-ORDER BY LCASE(STR(?label))
-LIMIT 200
-`.trim()
+LIMIT 400`.trim()
   }
 ];
-
 let lastResultRows = [];
 
 function buildPresetList(){
-  const box = $("presetList");
-  box.innerHTML = "";
+  const box=$("presetList");
+  box.innerHTML="";
   PRESETS.forEach((p, idx)=>{
-    const div = document.createElement("div");
-    div.className = "card";
-    div.style.boxShadow = "none";
-    div.style.marginBottom = "10px";
-    div.innerHTML = `
-      <div class="hd">
-        <h2>${escapeHtml(p.title)}</h2>
-        <span class="pill">Preset #${idx+1}</span>
-      </div>
+    const div=document.createElement("div");
+    div.className="card";
+    div.style.boxShadow="none";
+    div.style.marginBottom="10px";
+    div.innerHTML=`
+      <div class="hd"><h2>${escapeHtml(p.title)}</h2><span class="pill">Preset #${idx+1}</span></div>
       <div class="bd">
-        <div class="muted">${escapeHtml(p.desc)}</div>
-        <div style="height:10px"></div>
         <div class="row">
           <button class="btn primary">Usar</button>
           <button class="btn">Copiar</button>
         </div>
-      </div>
-    `;
+      </div>`;
     const [useBtn, copyBtn] = div.querySelectorAll("button");
-    useBtn.addEventListener("click", ()=>{
-      $("sparqlText").value = p.query;
-      $("resultMeta").textContent = `Preset #${idx+1}`;
-    });
-    copyBtn.addEventListener("click", async ()=>{
-      try{ await navigator.clipboard.writeText(p.query); }catch(e){}
-    });
+    useBtn.onclick=()=>{ $("sparqlText").value=p.query; $("resultMeta").textContent=`Preset #${idx+1}`; };
+    copyBtn.onclick=async()=>{ try{ await navigator.clipboard.writeText(p.query);}catch(e){} };
     box.appendChild(div);
   });
   $("sparqlText").value = PRESETS[0]?.query || "";
 }
 
 async function runSparql(){
-  const query = $("sparqlText").value.trim();
+  const query=$("sparqlText").value.trim();
   if(!query){
-    $("resultBox").innerHTML = `<div class="muted">Escreva uma consulta.</div>`;
-    $("resultMeta").textContent = "—";
-    lastResultRows = [];
+    $("resultBox").innerHTML=`<div class="muted">Escreva uma consulta.</div>`;
+    $("resultMeta").textContent="—";
+    lastResultRows=[];
     return;
   }
-  $("resultMeta").textContent = "Executando…";
-  $("resultBox").innerHTML = `<div class="muted">Processando consulta SPARQL…</div>`;
-  lastResultRows = [];
+
+  $("resultMeta").textContent="Executando…";
+  $("resultBox").innerHTML=`<div class="muted">Processando…</div>`;
+  lastResultRows=[];
 
   try{
-    const {vars, arr} = await qBindings(query);
-    if(arr.length === 0){
-      $("resultMeta").textContent = "0 linhas";
-      $("resultBox").innerHTML = `<div class="muted">Sem resultados.</div>`;
+    const res = await state.engine.queryBindings(query, { sources: state.sources });
+    const arr = await res.toArray();
+    const vars = res.variables.map(v=>v.value);
+
+    if(arr.length===0){
+      $("resultMeta").textContent="0 linhas";
+      $("resultBox").innerHTML=`<div class="muted">Sem resultados.</div>`;
       return;
     }
-    const rows = arr.slice(0, 800).map(b=>{
-      const obj = {};
+
+    const rows = arr.slice(0,800).map(b=>{
+      const obj={};
       for(const v of vars){
-        const t = b.get(v);
-        obj["?"+v] = t ? t.value : "";
+        const t=b.get(v);
+        obj["?"+v]=t ? t.value : "";
       }
       return obj;
     });
-    lastResultRows = rows;
+    lastResultRows=rows;
 
-    const cols = Object.keys(rows[0]);
-    let html = `<table><thead><tr>${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>`;
-    for(const r of rows.slice(0, 300)){
-      html += "<tr>";
-      for(const c of cols){
-        html += `<td class="mono" style="font-size:12px; word-break:break-all;">${escapeHtml(r[c])}</td>`;
-      }
-      html += "</tr>";
+    const cols=Object.keys(rows[0]);
+    let html=`<table><thead><tr>${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>`;
+    for(const r of rows.slice(0,300)){
+      html+="<tr>"+cols.map(c=>`<td class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(r[c])}</td>`).join("")+"</tr>";
     }
-    html += "</tbody></table>";
+    html+="</tbody></table>";
 
-    $("resultMeta").textContent = `${arr.length} linhas` + (arr.length > 300 ? " (mostrando 300)" : "");
-    $("resultBox").innerHTML = html;
+    $("resultMeta").textContent = `${arr.length} linhas` + (arr.length>300 ? " (mostrando 300)" : "");
+    $("resultBox").innerHTML=html;
 
   }catch(err){
     console.error(err);
-    $("resultMeta").textContent = "Erro";
-    $("resultBox").innerHTML = `<div class="muted">Falha na consulta.</div><div class="small mono">${escapeHtml(String(err.message || err))}</div>`;
-    lastResultRows = [];
+    $("resultMeta").textContent="Erro";
+    $("resultBox").innerHTML=`<div class="muted">Falha na consulta.</div><div class="small mono">${escapeHtml(String(err.message||err))}</div>`;
   }
 }
 
-/* =========================================================
-   WIRE UI
-   ========================================================= */
-function wireUI(){
-  $("reloadBtn").addEventListener("click", ()=> boot().catch(()=>{}));
-
-  // TAX
-  $("taxBuildBtn").addEventListener("click", buildTaxonomyGraph);
-  $("taxFitBtn").addEventListener("click", ()=> cyTax.fit(undefined, 30));
-  $("taxResetBtn").addEventListener("click", ()=> { runLayout(cyTax, $("taxLayout").value); cyTax.fit(undefined, 30); });
-  $("taxLayout").addEventListener("change", ()=> runLayout(cyTax, $("taxLayout").value));
-  $("taxExportPngBtn").addEventListener("click", ()=> exportCyPng(cyTax, "ontohate-taxonomia.png"));
-  $("taxExportGraphBtn").addEventListener("click", ()=> downloadText("ontohate-taxonomia-graph.json", JSON.stringify(cyTax.json(), null, 2), "application/json;charset=utf-8"));
-  $("taxHighlightBtn").addEventListener("click", ()=> doHighlight(cyTax, $("taxSearch").value));
-  $("taxClearHighlightBtn").addEventListener("click", ()=> { $("taxSearch").value=""; cyTax.elements().removeClass("highlight"); });
-
-  // ✅ FOCO TAX
-  $("taxFocusToggle").addEventListener("change", ()=>{
-    focusState.tax.enabled = $("taxFocusToggle").checked;
-    if(!focusState.tax.enabled){
-      focusState.tax.active = false;
-      clearNeighborhoodFocus(cyTax);
-    }
-  });
-  $("taxFocusClearBtn").addEventListener("click", ()=>{
-    focusState.tax.active = false;
-    clearNeighborhoodFocus(cyTax);
-  });
-
-  // ONTO
-  $("ontoBuildBtn").addEventListener("click", buildOntologyGraph);
-  $("ontoFitBtn").addEventListener("click", ()=> cyOnto.fit(undefined, 30));
-  $("ontoHighlightBtn").addEventListener("click", ()=> doHighlight(cyOnto, $("ontoSearch").value));
-  $("ontoClearHighlightBtn").addEventListener("click", ()=> { $("ontoSearch").value=""; cyOnto.elements().removeClass("highlight"); });
-  $("ontoExportPngBtn").addEventListener("click", ()=> exportCyPng(cyOnto, "ontohate-ontologia.png"));
-  $("ontoExportJsonBtn").addEventListener("click", ()=>{
-    const selected = cyOnto.$(":selected");
-    const json = selected.length ? selected.jsons() : [];
-    downloadText("ontohate-selecao.json", JSON.stringify(json, null, 2), "application/json;charset=utf-8");
-  });
-
-  // ✅ FOCO ONTO
-  $("ontoFocusToggle").addEventListener("change", ()=>{
-    focusState.onto.enabled = $("ontoFocusToggle").checked;
-    if(!focusState.onto.enabled){
-      focusState.onto.active = false;
-      clearNeighborhoodFocus(cyOnto);
-    }
-  });
-  $("ontoFocusClearBtn").addEventListener("click", ()=>{
-    focusState.onto.active = false;
-    clearNeighborhoodFocus(cyOnto);
-  });
-
-  // SPARQL
-  $("runBtn").addEventListener("click", runSparql);
-  $("clearBtn").addEventListener("click", ()=> { $("sparqlText").value=""; });
-  $("copyBtn").addEventListener("click", async ()=>{ try{ await navigator.clipboard.writeText($("sparqlText").value || ""); }catch(e){} });
-
-  $("sparqlText").addEventListener("keydown", (e)=>{
-    const isMac = navigator.platform.toLowerCase().includes("mac");
-    const mod = isMac ? e.metaKey : e.ctrlKey;
-    if(mod && e.key === "Enter"){ e.preventDefault(); runSparql(); }
-  });
-
-  $("exportCsvBtn").addEventListener("click", ()=>{
-    if(!lastResultRows.length) return alert("Sem resultados para exportar.");
-    downloadText("sparql-result.csv", toCsv(lastResultRows), "text/csv;charset=utf-8");
-  });
-  $("exportJsonBtn").addEventListener("click", ()=>{
-    if(!lastResultRows.length) return alert("Sem resultados para exportar.");
-    downloadText("sparql-result.json", JSON.stringify(lastResultRows, null, 2), "application/json;charset=utf-8");
-  });
-}
-
-/* =========================================================
-   CY EVENTS (inclui foco de vizinhança + detalhes)
-   ========================================================= */
+/* =================== Wire Cytoscape events (inclui foco) =================== */
 function wireCyEvents(){
-  // clique no fundo limpa foco (se ativo)
-  cyTax.on("tap", (evt)=>{
-    if(evt.target === cyTax && focusState.tax.active){
-      focusState.tax.active = false;
-      clearNeighborhoodFocus(cyTax);
+  cyTax.on("tap",(evt)=>{
+    if(evt.target===cyTax && focusState.tax.active){
+      focusState.tax.active=false; clearNeighborhoodFocus(cyTax);
     }
   });
-  cyOnto.on("tap", (evt)=>{
-    if(evt.target === cyOnto && focusState.onto.active){
-      focusState.onto.active = false;
-      clearNeighborhoodFocus(cyOnto);
-    }
-  });
-
-  // clique no nó aplica foco se toggle ON
   cyTax.on("tap","node",(evt)=>{
-    const iri = evt.target.id();
-    if(focusState.tax.enabled){
-      focusState.tax.active = true;
-      setNeighborhoodFocus(cyTax, iri);
-    }
+    if(!focusState.tax.enabled) return;
+    focusState.tax.active=true;
+    setNeighborhoodFocus(cyTax, evt.target.id());
   });
 
+  cyOnto.on("tap",(evt)=>{
+    if(evt.target===cyOnto && focusState.onto.active){
+      focusState.onto.active=false; clearNeighborhoodFocus(cyOnto);
+    }
+  });
   cyOnto.on("tap","node",(evt)=>{
-    const iri = evt.target.id();
-
-    // 1) detalhes sempre
+    const iri=evt.target.id();
     $("ontoDetailPill").textContent = shortIri(iri);
     $("ontoDetailBox").innerHTML = tooltipHtml(iri);
 
-    // 2) foco opcional
-    if(focusState.onto.enabled){
-      focusState.onto.active = true;
-      setNeighborhoodFocus(cyOnto, iri);
-    }
+    if(!focusState.onto.enabled) return;
+    focusState.onto.active=true;
+    setNeighborhoodFocus(cyOnto, iri);
   });
 }
 
-/* =========================================================
-   BOOT
-   ========================================================= */
-async function boot(){
-  setStatus("warn","Iniciando…");
+/* =================== UI wiring =================== */
+function wireUI(){
+  $("taxBuildBtn").onclick = buildTaxonomyGraph;
+  $("taxFitBtn").onclick = ()=> cyTax.fit(undefined,30);
+  $("taxResetBtn").onclick = ()=> { runLayout(cyTax, $("taxLayout").value); cyTax.fit(undefined,30); };
+  $("taxLayout").onchange = ()=> runLayout(cyTax, $("taxLayout").value);
 
-  // reset index (preserva cores)
-  const keepColors = new Map(state.dimColors);
-  Object.assign(state, {
-    loaded:false,
-    classes:new Set(),
-    labels:new Map(),
-    labelsByLang:new Map(),
-    comments:new Map(),
-    subclassOf:new Map(),
-    childrenOf:new Map(),
-    objProps:new Set(),
-    propLabel:new Map(),
-    propDomain:new Map(),
-    propRange:new Map(),
-    annotations:new Map(),
-    dims:[],
+  $("taxFocusToggle").onchange = ()=>{
+    focusState.tax.enabled = $("taxFocusToggle").checked;
+    if(!focusState.tax.enabled){ focusState.tax.active=false; clearNeighborhoodFocus(cyTax); }
+  };
+  $("taxFocusClearBtn").onclick = ()=>{ focusState.tax.active=false; clearNeighborhoodFocus(cyTax); };
+
+  $("taxExportPngBtn").onclick = ()=> exportCyPng(cyTax, "ontohate-taxonomia.png");
+  $("taxExportJsonBtn").onclick = ()=> downloadText("ontohate-taxonomia.json", JSON.stringify(cyTax.json(), null, 2), "application/json;charset=utf-8");
+
+  $("taxHighlightBtn").onclick = ()=> doHighlight(cyTax, $("taxSearch").value);
+  $("taxClearHighlightBtn").onclick = ()=>{ $("taxSearch").value=""; cyTax.elements().removeClass("highlight"); };
+
+  $("ontoBuildBtn").onclick = buildOntologyGraph;
+  $("ontoFitBtn").onclick = ()=> cyOnto.fit(undefined,30);
+  $("ontoLayout").onchange = ()=> runLayout(cyOnto, $("ontoLayout").value);
+  $("ontoExportPngBtn").onclick = ()=> exportCyPng(cyOnto, "ontohate-ontologia.png");
+
+  $("ontoFocusToggle").onchange = ()=>{
+    focusState.onto.enabled = $("ontoFocusToggle").checked;
+    if(!focusState.onto.enabled){ focusState.onto.active=false; clearNeighborhoodFocus(cyOnto); }
+  };
+  $("ontoFocusClearBtn").onclick = ()=>{ focusState.onto.active=false; clearNeighborhoodFocus(cyOnto); };
+
+  $("ontoHighlightBtn").onclick = ()=> doHighlight(cyOnto, $("ontoSearch").value);
+  $("ontoClearHighlightBtn").onclick = ()=>{ $("ontoSearch").value=""; cyOnto.elements().removeClass("highlight"); };
+
+  $("runBtn").onclick = runSparql;
+  $("clearBtn").onclick = ()=> $("sparqlText").value="";
+  $("copyBtn").onclick = async()=>{ try{ await navigator.clipboard.writeText($("sparqlText").value||""); }catch(e){} };
+
+  $("sparqlText").addEventListener("keydown",(e)=>{
+    const isMac = navigator.platform.toLowerCase().includes("mac");
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    if(mod && e.key==="Enter"){ e.preventDefault(); runSparql(); }
   });
-  state.dimColors = keepColors;
 
-  initEngine();
+  $("exportCsvBtn").onclick = ()=>{
+    if(!lastResultRows.length) return alert("Sem resultados para exportar.");
+    downloadText("sparql-result.csv", toCsv(lastResultRows), "text/csv;charset=utf-8");
+  };
+  $("exportJsonBtn").onclick = ()=>{
+    if(!lastResultRows.length) return alert("Sem resultados para exportar.");
+    downloadText("sparql-result.json", JSON.stringify(lastResultRows, null, 2), "application/json;charset=utf-8");
+  };
+}
+
+/* =================== Boot =================== */
+async function boot(){
+  setStatus("warn","Baixando Ontohate_oficial.ttl…");
+
+  resetIndex();
+
+  let res;
+  try{
+    res = await fetch(TTL_URL, { cache:"no-store" });
+  }catch(e){
+    console.error(e);
+    setStatus("bad","Falha de rede ao buscar o TTL (ver console).");
+    return;
+  }
+  if(!res.ok){
+    setStatus("bad",`Não consegui abrir ${TTL_URL} (HTTP ${res.status}).`);
+    return;
+  }
+
+  const text = await res.text();
+  state.ttlText = text;
 
   try{
-    await loadIndex();
-    buildDimensionDropdowns();
-    buildPresetList();
-
-    if(!cyTax || !cyOnto){
-      initCy();
-      wireCyEvents(); // ✅ conecta 1 vez (evita duplicar handlers)
-    }
-
-    buildTaxonomyGraph();
-    buildOntologyGraph();
-
-  }catch(err){
-    console.error(err);
-    setStatus("bad","Erro ao carregar Ontohate_oficial.ttl. Confira user/repo/branch e CORS.");
+    setStatus("warn","Parseando Turtle…");
+    await parseTurtleIntoStore(text);
+  }catch(e){
+    console.error(e);
+    setStatus("bad","Erro ao parsear TTL (provável Turtle inválido). Veja console.");
+    return;
   }
+
+  try{
+    setStatus("warn","Indexando (classes, relações, propriedades)…");
+    await buildIndexFromStore();
+  }catch(e){
+    console.error(e);
+    setStatus("bad","Erro ao indexar via SPARQL em memória (ver console).");
+    return;
+  }
+
+  setStatus("ok",`OK: ${state.classes.size} classes • ${state.objProps.size} propriedades`);
+  fillDimensions();
+  buildPresetList();
+
+  if(!cyTax || !cyOnto){
+    initCy();
+    wireCyEvents();
+  }
+  applyCyStyle(cyTax); applyCyStyle(cyOnto);
+
+  buildTaxonomyGraph();
+  buildOntologyGraph();
 }
 
-/* =========================================================
-   START
-   ========================================================= */
+/* =================== init =================== */
 initTabs();
-initTheme();
 wireUI();
 boot();
 </script>
+
 </body>
 </html>
