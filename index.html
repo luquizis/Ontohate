@@ -47,7 +47,6 @@
       --canvas: rgba(0,0,0,.18);
     }
 
-    /* Light mode overrides */
     [data-theme="light"]{
       --bg:#f7f7fb;
       --panel:#ffffff;
@@ -233,12 +232,6 @@
     }
     @media (max-width: 1050px){ .canvas{ height: 620px; } }
 
-    .split{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-    }
-
     .help{
       border:1px dashed var(--border);
       background: color-mix(in srgb, var(--panel) 25%, transparent);
@@ -302,7 +295,7 @@
           <b>(ii)</b> explorar a ontologia como grafo interativo com relações/propriedades (nível pesado),
           <b>(iii)</b> responder questões de competência via <b>SPARQL</b> (nível inteligente).
         </p>
-        <small>Fonte OWL/TTL no GitHub • Visualização interativa • Exportação em todas as etapas</small>
+        <small>Base: <b>Ontohate_oficial.ttl</b> no GitHub (RAW) • Visualização interativa • Exportação em todas as etapas</small>
       </div>
 
       <div class="tabs">
@@ -349,8 +342,8 @@
               <ul>
                 <li>Escolha uma ou mais <b>dimensões</b> e gere a taxonomia.</li>
                 <li>Use <b>cruzamento</b> para mostrar apenas classes que pertencem às dimensões selecionadas.</li>
-                <li>Arraste os nós para organizar. Escolha layout <span class="kbd">Top-down</span>, <span class="kbd">Radial</span> ou <span class="kbd">Force</span>.</li>
-                <li>Edite cores por dimensão e exporte a visualização (PNG/SVG).</li>
+                <li>Arraste os nós para organizar. Layout <span class="kbd">Top-down</span>, <span class="kbd">Radial</span> ou <span class="kbd">Force</span>.</li>
+                <li>Edite cores por dimensão e exporte a visualização (PNG). (SVG real pode ser adicionado via plugin.)</li>
               </ul>
             </div>
 
@@ -392,7 +385,7 @@
 
             <div class="row" style="margin-top:10px;">
               <button class="btn good" id="taxExportPngBtn">Exportar PNG</button>
-              <button class="btn" id="taxExportSvgBtn">Exportar SVG</button>
+              <button class="btn" id="taxExportGraphBtn">Exportar JSON (grafo)</button>
             </div>
 
             <div class="hr"></div>
@@ -551,19 +544,29 @@
 
 <script>
 /* =========================================================
-   CONFIG — ajuste aqui para o arquivo OWL/TTL no GitHub
+   CONFIG — base no GitHub: Ontohate_oficial.ttl
    =========================================================
 
-   Recomendação:
-   - Use a URL RAW do GitHub (raw.githubusercontent.com/...)
-   - Garanta CORS (GitHub raw costuma permitir)
-   - Se seu arquivo for RDF/XML (.owl), o Comunica geralmente consegue ler via URL.
-   - Se for Turtle (.ttl), funciona muito bem.
+   ✅ ESTE CÓDIGO PRESUME que no GitHub existe o arquivo:
+      Ontohate_oficial.ttl
 
+   Você só precisa trocar o REPO abaixo.
+   O código monta automaticamente a URL RAW:
+
+   https://raw.githubusercontent.com/<GITHUB_USER>/<GITHUB_REPO>/<BRANCH>/Ontohate_oficial.ttl
+
+   Observação:
+   - Se o arquivo estiver em subpasta, ajuste FILE_PATH.
+   - Se você publicar via GitHub Pages, também pode apontar para uma URL do pages.
 */
-const OWL_URL = "./Ontohate_V.owl"; // <-- troque para a URL RAW do GitHub, ex.:
-                                    // "https://raw.githubusercontent.com/SEUUSER/SEUREPO/main/Ontohate_oficial.ttl"
+const GITHUB_USER = "SEU_USER_AQUI";
+const GITHUB_REPO = "SEU_REPO_AQUI";
+const BRANCH = "main";
+const FILE_PATH = "Ontohate_oficial.ttl"; // <-- nome/base exigido
 
+const OWL_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}/${FILE_PATH}`;
+
+// Namespaces
 const NS = {
   rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
   rdfs: "http://www.w3.org/2000/01/rdf-schema#",
@@ -584,7 +587,6 @@ function escapeHtml(str){
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[s]));
 }
-
 function shortIri(iri){
   if(!iri) return "—";
   const m = iri.match(/[#\/]([^#\/]+)$/);
@@ -622,33 +624,42 @@ const state = {
   sources: [],
   loaded: false,
 
-  // index local para UI rápida
-  classes: new Set(),         // iri
-  labels: new Map(),          // iri -> best label
-  labelsByLang: new Map(),    // iri -> Map(lang -> label)
-  comments: new Map(),        // iri -> comment
-  subclassOf: new Map(),      // child -> Set(parent)
-  childrenOf: new Map(),      // parent -> Set(child)
+  classes: new Set(),
+  labels: new Map(),
+  labelsByLang: new Map(),
+  comments: new Map(),
+  subclassOf: new Map(),
+  childrenOf: new Map(),
 
-  objProps: new Set(),        // prop iri
-  propLabel: new Map(),       // prop iri -> label
-  propDomain: new Map(),      // prop iri -> Set(domain class)
-  propRange: new Map(),       // prop iri -> Set(range class)
+  objProps: new Set(),
+  propLabel: new Map(),
+  propDomain: new Map(),
+  propRange: new Map(),
 
-  // annotations (para tooltip “completo”)
-  annotations: new Map(),     // class iri -> Array<{p,pLabel,o,oType,lang,dt}>
+  annotations: new Map(),
 
-  // dimensões canônicas (se você quiser travar)
-  // Se vazio: usa heurística (top-level com filhos) e remove imports comuns.
-  canonicalDimensions: [
-    // Exemplo (troque para IRIs reais se quiser forçar):
-    // "http://ontohate.org/ontohate#MotivacaoEConsequencia",
-    // "http://ontohate.org/ontohate#ManifestacaoEContexto",
-  ],
-
-  dimColors: new Map(),       // dimension iri -> hex
-  dims: [],                   // dimension iri list
+  canonicalDimensions: [], // opcional: você pode travar aqui depois
+  dimColors: new Map(),
+  dims: [],
 };
+
+function addMapSet(map,k,v){
+  if(!map.has(k)) map.set(k, new Set());
+  map.get(k).add(v);
+}
+
+function bestLabelFor(iri){
+  const langMap = state.labelsByLang.get(iri);
+  if(langMap){
+    if(langMap.get("pt")) return langMap.get("pt");
+    if(langMap.get("pt-br")) return langMap.get("pt-br");
+    if(langMap.get("en")) return langMap.get("en");
+    const any = [...langMap.values()][0];
+    if(any) return any;
+  }
+  return state.labels.get(iri) || shortIri(iri);
+}
+function bestPropLabelFor(iri){ return state.propLabel.get(iri) || shortIri(iri); }
 
 /* =========================================================
    TABS + THEME
@@ -662,40 +673,35 @@ function initTabs(){
       $("tab-tax").classList.toggle("hidden", tab !== "tax");
       $("tab-onto").classList.toggle("hidden", tab !== "onto");
       $("tab-sparql").classList.toggle("hidden", tab !== "sparql");
-      // fit ao trocar (se já carregado)
       if(tab==="tax" && cyTax) cyTax.resize();
       if(tab==="onto" && cyOnto) cyOnto.resize();
     });
   });
 }
-
 function initTheme(){
   $("themeBtn").addEventListener("click", ()=>{
     const body = document.body;
     const cur = body.getAttribute("data-theme") || "dark";
     const nxt = cur === "dark" ? "light" : "dark";
     body.setAttribute("data-theme", nxt);
-    // re-aplica style nos grafos
     if(cyTax) applyCyStyle(cyTax, "tax");
     if(cyOnto) applyCyStyle(cyOnto, "onto");
   });
 }
 
 /* =========================================================
-   SPARQL HELPERS (Comunica)
+   SPARQL (Comunica)
    ========================================================= */
 function initEngine(){
   state.engine = new Comunica.QueryEngine();
-  state.sources = [OWL_URL]; // fonte remota (ou arquivo local no mesmo diretório)
+  state.sources = [OWL_URL];
 }
-
 async function qBindings(query){
   const res = await state.engine.queryBindings(query, { sources: state.sources });
   const arr = await res.toArray();
   const vars = res.variables.map(v=>v.value);
   return {vars, arr};
 }
-
 function termToString(term){
   if(!term) return "";
   if(term.termType === "NamedNode") return term.value;
@@ -706,40 +712,26 @@ function termLang(term){ return term?.termType==="Literal" ? (term.language || "
 function termDatatype(term){ return term?.termType==="Literal" ? (term.datatype?.value || "") : ""; }
 
 /* =========================================================
-   INDEXING — carrega tudo que o UI precisa
+   INDEX
    ========================================================= */
-function addMapSet(map,k,v){
-  if(!map.has(k)) map.set(k, new Set());
-  map.get(k).add(v);
-}
-
-function bestLabelFor(iri){
-  // prefer pt > en > qualquer
-  const langMap = state.labelsByLang.get(iri);
-  if(langMap){
-    if(langMap.get("pt")) return langMap.get("pt");
-    if(langMap.get("pt-br")) return langMap.get("pt-br");
-    if(langMap.get("en")) return langMap.get("en");
-    const any = [...langMap.values()][0];
-    if(any) return any;
-  }
-  return state.labels.get(iri) || shortIri(iri);
-}
-
-function bestPropLabelFor(iri){
-  return state.propLabel.get(iri) || shortIri(iri);
-}
-
 async function loadIndex(){
-  setStatus("warn","Carregando índice (classes, hierarquia, propriedades)…");
+  setStatus("warn","Carregando Ontohate_oficial.ttl do GitHub…");
 
-  // 1) classes + labels (com linguagem)
+  // sanity check: fetch head
+  try{
+    const r = await fetch(OWL_URL, {cache:"no-store"});
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  }catch(e){
+    setStatus("bad","Falha ao acessar Ontohate_oficial.ttl (URL RAW/CORS/Repo).");
+    throw e;
+  }
+
+  // classes + labels (lang)
   {
     const query = `
 PREFIX rdf:  <${NS.rdf}>
 PREFIX rdfs: <${NS.rdfs}>
 PREFIX owl:  <${NS.owl}>
-
 SELECT DISTINCT ?c ?label
 WHERE {
   { ?c rdf:type owl:Class . }
@@ -761,20 +753,17 @@ WHERE {
         state.labelsByLang.get(c).set(lang || "_", termToString(lab));
       }
     }
-    // flatten best label
     for(const c of state.classes){
       state.labels.set(c, bestLabelFor(c));
     }
   }
 
-  // 2) comments
+  // comments
   {
     const query = `
 PREFIX rdfs: <${NS.rdfs}>
 SELECT DISTINCT ?c ?comment
-WHERE {
-  ?c rdfs:comment ?comment .
-}
+WHERE { ?c rdfs:comment ?comment . }
 `;
     const {arr} = await qBindings(query);
     for(const b of arr){
@@ -786,7 +775,7 @@ WHERE {
     }
   }
 
-  // 3) subclass edges (NamedNode only)
+  // subclass edges
   {
     const query = `
 PREFIX rdfs: <${NS.rdfs}>
@@ -808,13 +797,12 @@ WHERE {
     }
   }
 
-  // 4) object properties + labels + domain/range
+  // object properties + label + domain/range
   {
     const query = `
 PREFIX rdf:  <${NS.rdf}>
 PREFIX rdfs: <${NS.rdfs}>
 PREFIX owl:  <${NS.owl}>
-
 SELECT DISTINCT ?p ?label ?d ?r
 WHERE {
   ?p rdf:type owl:ObjectProperty .
@@ -841,13 +829,11 @@ WHERE {
     }
   }
 
-  // 5) annotations “completas” (tudo que estiver na tabela anexada tende a estar como annotation property)
-  // Captura literais e IRIs (exceto rdf:type e rdfs:subClassOf)
+  // annotations completas (para tooltip “tabela anexa”, se estiverem no RDF)
   {
     const query = `
 PREFIX rdf:  <${NS.rdf}>
 PREFIX rdfs: <${NS.rdfs}>
-
 SELECT DISTINCT ?s ?p ?o ?plabel
 WHERE {
   ?s ?p ?o .
@@ -862,7 +848,7 @@ WHERE {
       const p = b.get("p");
       const o = b.get("o");
       if(!s || !p || !o) continue;
-      if(!state.classes.has(s)) continue; // só anotações sobre classes
+      if(!state.classes.has(s)) continue;
 
       const pIri = termToString(p);
       const pLabel = termToString(b.get("plabel")) || shortIri(pIri);
@@ -880,44 +866,37 @@ WHERE {
     }
   }
 
-  // dimensões
   computeDimensions();
-
-  // cores default
   seedDimensionColors();
-
-  setStatus("ok",`Ontologia pronta: ${state.classes.size} classes • ${state.objProps.size} obj props`);
+  setStatus("ok",`Ontohate_oficial.ttl carregado: ${state.classes.size} classes • ${state.objProps.size} props`);
   state.loaded = true;
 }
 
 function computeDimensions(){
   let dims = [];
-  if(state.canonicalDimensions && state.canonicalDimensions.length){
+  if(state.canonicalDimensions.length){
     dims = state.canonicalDimensions.filter(d=>state.classes.has(d));
   }else{
-    // heurística: top-level com filhos
     const cand = [];
     for(const c of state.classes){
       const parents = state.subclassOf.get(c);
-      const hasNamedParent = parents && [...parents].some(p => typeof p === "string" && p.startsWith("http"));
-      const hasChildren = state.childrenOf.get(c)?.size > 0;
-      if(!hasNamedParent && hasChildren) cand.push(c);
+      const hasParent = parents && [...parents].some(p=>String(p).startsWith("http"));
+      const hasKids = state.childrenOf.get(c)?.size > 0;
+      if(!hasParent && hasKids) cand.push(c);
     }
-    // remove imports “óbvios” (ufo/gufo/owl/rdfs)
     const block = [
       "http://www.w3.org/2002/07/owl#Thing",
       "http://www.w3.org/2000/01/rdf-schema#Resource"
     ];
     dims = cand.filter(c => !block.includes(c));
   }
-  dims.sort((a,b)=>bestLabelFor(a).localeCompare(bestLabelFor(b), "pt-BR"));
+  dims.sort((a,b)=>bestLabelFor(a).localeCompare(bestLabelFor(b),"pt-BR"));
   state.dims = dims;
 }
 
 function seedDimensionColors(){
-  // palette “ok”
-  const palette = ["#7dd3fc","#a78bfa","#34d399","#fbbf24","#fb7185","#22c55e","#60a5fa","#f472b6","#f59e0b","#10b981"];
-  let i = 0;
+  const palette = ["#7dd3fc","#a78bfa","#34d399","#fbbf24","#fb7185","#60a5fa","#f472b6","#10b981","#f59e0b","#22c55e"];
+  let i=0;
   for(const d of state.dims){
     if(!state.dimColors.has(d)){
       state.dimColors.set(d, palette[i % palette.length]);
@@ -927,13 +906,11 @@ function seedDimensionColors(){
 }
 
 /* =========================================================
-   CYTOSCAPE — setups
+   CYTOSCAPE
    ========================================================= */
-let cyTax = null;
-let cyOnto = null;
+let cyTax=null, cyOnto=null;
 
-function baseCyStyle(kind){
-  // kind: "tax"|"onto"
+function baseCyStyle(){
   return [
     {
       selector: 'node',
@@ -979,30 +956,22 @@ function baseCyStyle(kind){
     },
     { selector: '.subclass', style: { 'line-style': 'solid', 'width': 1.6 } },
     { selector: '.prop',     style: { 'line-style': 'dashed', 'width': 1.9 } },
-    { selector: '.highlight', style: { 'border-width': 4, 'border-color': 'var(--accent2)', 'background-color': 'data(fill)' } },
+    { selector: '.highlight', style: { 'border-width': 4, 'border-color': 'var(--accent2)' } },
     { selector: '.dimTag', style: { 'border-color': 'data(dimColor)', 'border-width': 4 } },
     { selector: ':selected', style: { 'border-color': 'var(--accent)', 'border-width': 5 } },
   ];
 }
 
-function applyCyStyle(cy, kind){
-  cy.style(baseCyStyle(kind));
+function applyCyStyle(cy){
+  cy.style(baseCyStyle());
   cy.style().update();
 }
 
 function initCy(){
-  cyTax = cytoscape({
-    container: $("cyTax"),
-    elements: [],
-    wheelSensitivity: 0.2,
-  });
-  cyOnto = cytoscape({
-    container: $("cyOnto"),
-    elements: [],
-    wheelSensitivity: 0.2,
-  });
-  applyCyStyle(cyTax, "tax");
-  applyCyStyle(cyOnto, "onto");
+  cyTax = cytoscape({ container: $("cyTax"), elements: [], wheelSensitivity:0.2 });
+  cyOnto = cytoscape({ container: $("cyOnto"), elements: [], wheelSensitivity:0.2 });
+  applyCyStyle(cyTax);
+  applyCyStyle(cyOnto);
 }
 
 function runLayout(cy, name){
@@ -1013,7 +982,7 @@ function runLayout(cy, name){
     opts = { name:"breadthfirst", directed:true, padding: 30, spacingFactor: 1.2, animate:true, animationDuration: 350 };
   }else if(name==="concentric"){
     opts = { name:"concentric", padding: 30, minNodeSpacing: 30, animate:true, animationDuration: 350 };
-  }else{ // "cose"
+  }else{
     opts = { name:"cose-bilkent", padding: 30, animate:true, animationDuration: 450, fit:true };
   }
   cy.layout(opts).run();
@@ -1023,33 +992,17 @@ function nodeData(iri, dimColor=null){
   const lbl = bestLabelFor(iri);
   const fill = getComputedStyle(document.body).getPropertyValue('--nodeFill').trim() || 'rgba(255,255,255,.07)';
   const stroke = getComputedStyle(document.body).getPropertyValue('--nodeBorder').trim() || 'rgba(255,255,255,.18)';
-  return {
-    id: iri,
-    iri,
-    label: lbl,
-    fill,
-    stroke,
-    dimColor: dimColor || "transparent"
-  };
+  return { id: iri, iri, label: lbl, fill, stroke, dimColor: dimColor || "transparent" };
 }
-
-function edgeData(id, src, tgt, label, kind){
+function edgeData(id, src, tgt, label){
   const bg = getComputedStyle(document.body).getPropertyValue('--canvas').trim() || 'rgba(0,0,0,.15)';
-  return {
-    id,
-    source: src,
-    target: tgt,
-    label: label || "",
-    labelBg: bg,
-    kind
-  };
+  return { id, source: src, target: tgt, label: label || "", labelBg: bg };
 }
 
 /* =========================================================
-   DIMENSIONS — util
+   DIMENSIONS helpers
    ========================================================= */
 function getDescendants(root){
-  // BFS over childrenOf
   const out = new Set();
   const q = [root];
   const seen = new Set([root]);
@@ -1066,9 +1019,12 @@ function getDescendants(root){
   }
   return out;
 }
-
+function selectedTaxDims(){
+  const sel = $("taxDimSelect");
+  const vals = [...sel.selectedOptions].map(o=>o.value);
+  return vals.length ? vals : (state.dims[0] ? [state.dims[0]] : []);
+}
 function buildDimensionDropdowns(){
-  // Taxonomy dims (multi select)
   const sel = $("taxDimSelect");
   sel.innerHTML = "";
   for(const d of state.dims){
@@ -1077,10 +1033,8 @@ function buildDimensionDropdowns(){
     opt.textContent = bestLabelFor(d);
     sel.appendChild(opt);
   }
-  // preselect first
   if(sel.options.length) sel.options[0].selected = true;
 
-  // Tax color dim select
   const csel = $("taxColorDim");
   csel.innerHTML = "";
   for(const d of state.dims){
@@ -1090,26 +1044,17 @@ function buildDimensionDropdowns(){
     csel.appendChild(opt);
   }
   if(csel.options.length) csel.value = csel.options[0].value;
-  syncColorPicker();
+  $("taxColorPicker").value = state.dimColors.get(csel.value) || "#7dd3fc";
+  csel.onchange = ()=> $("taxColorPicker").value = state.dimColors.get(csel.value) || "#7dd3fc";
 
-  csel.onchange = syncColorPicker;
   $("taxColorPicker").oninput = ()=>{
     const d = csel.value;
     state.dimColors.set(d, $("taxColorPicker").value);
-    // re-render current graphs styles (dimension border)
-    if(cyTax) cyTax.nodes().forEach(n=>{
-      const dims = n.data("dims") || [];
-      if(dims.includes(d)) n.data("dimColor", state.dimColors.get(d));
-    });
-    if(cyOnto) cyOnto.nodes().forEach(n=>{
-      const dims = n.data("dims") || [];
-      if(dims.includes(d)) n.data("dimColor", state.dimColors.get(d));
-    });
-    applyCyStyle(cyTax, "tax");
-    applyCyStyle(cyOnto, "onto");
+    // reapply
+    if(cyTax) applyCyStyle(cyTax);
+    if(cyOnto) applyCyStyle(cyOnto);
   };
 
-  // Ontology dim filter (single)
   const osel = $("ontoDimSelect");
   osel.innerHTML = `<option value="__ALL__">Todas</option>`;
   for(const d of state.dims){
@@ -1120,61 +1065,91 @@ function buildDimensionDropdowns(){
   }
 }
 
-function syncColorPicker(){
-  const d = $("taxColorDim").value;
-  $("taxColorPicker").value = state.dimColors.get(d) || "#7dd3fc";
+/* =========================================================
+   TOOLTIP (usa anotações do TTL)
+   ========================================================= */
+function makeTippy(cyNode, html){
+  const ref = cyNode.popperRef();
+  const dummy = document.createElement('div');
+  if(cyNode.data("__tippy")) { try{ cyNode.data("__tippy").destroy(); }catch(e){} }
+  const tip = tippy(dummy, {
+    getReferenceClientRect: ref.getBoundingClientRect,
+    content: () => { const div = document.createElement('div'); div.innerHTML = html; return div; },
+    trigger: 'manual',
+    placement: 'top',
+    interactive: true,
+    appendTo: document.body,
+    maxWidth: 650,
+    theme: 'light-border',
+    delay: [150, 50],
+  });
+  cyNode.on('mouseover', () => tip.show());
+  cyNode.on('mouseout',  () => tip.hide());
+  cyNode.data("__tippy", tip);
+}
+
+function tooltipHtml(iri){
+  const ann = (state.annotations.get(iri) || [])
+    .filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment")
+    .slice(0, 80);
+
+  const parents = [...(state.subclassOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  const kids = [...(state.childrenOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+
+  const rows = ann.map(x=>{
+    const extra = x.oType==="Literal" ? (x.lang ? ` @${x.lang}` : (x.dt ? ` ^^${shortIri(x.dt)}` : "")) : "";
+    return `<tr><td class="mono" style="font-size:11px;color:var(--muted2)">${escapeHtml(x.pLabel)}</td><td class="mono" style="font-size:11px;word-break:break-all;color:var(--muted)">${escapeHtml(x.o)}<span style="color:var(--muted2)">${escapeHtml(extra)}</span></td></tr>`;
+  }).join("");
+
+  return `
+    <div style="max-width:600px;">
+      <div style="font-weight:900;font-size:14px;margin-bottom:6px;">${escapeHtml(bestLabelFor(iri))}</div>
+      <div class="mono" style="font-size:11px;color:var(--muted2);word-break:break-all;">${escapeHtml(iri)}</div>
+      <div style="height:8px"></div>
+      <div style="color:var(--muted);font-size:12px;line-height:1.35;">${escapeHtml(state.comments.get(iri) || "—")}</div>
+
+      <div style="height:10px"></div>
+      <div class="small">Superclasses</div>
+      <div class="muted" style="font-size:12px;">${parents.length ? escapeHtml(parents.join(" • ")) : "—"}</div>
+
+      <div style="height:8px"></div>
+      <div class="small">Subclasses diretas</div>
+      <div class="muted" style="font-size:12px;">${kids.length ? escapeHtml(kids.slice(0,25).join(" • ")) + (kids.length>25 ? " …" : "") : "—"}</div>
+
+      <div style="height:10px"></div>
+      <div class="small">Anotações (tabela)</div>
+      <table>
+        <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="2" class="muted">Sem anotações adicionais.</td></tr>`}</tbody>
+      </table>
+    </div>
+  `;
 }
 
 /* =========================================================
-   TAXONOMY (LEVE) — build graph
+   TAXONOMY build
    ========================================================= */
-function selectedTaxDims(){
-  const sel = $("taxDimSelect");
-  const vals = [...sel.selectedOptions].map(o=>o.value);
-  return vals.length ? vals : (state.dims[0] ? [state.dims[0]] : []);
-}
-
-function computeNodeDims(iri){
-  // class pertence a uma dimensão se estiver no fecho de subclasses daquela dimensão
-  // Para performance, vamos calcular por dimensão selecionada no build
-  return [];
-}
-
 function buildTaxonomyGraph(){
-  if(!state.loaded) return;
-
   const dims = selectedTaxDims();
-  const mode = $("taxMode").value; // union|intersection
+  const mode = $("taxMode").value;
 
   const sets = dims.map(d=>getDescendants(d));
   let nodeSet = new Set();
 
   if(mode==="intersection" && sets.length){
-    // interseção
     nodeSet = new Set(sets[0]);
     for(let i=1;i<sets.length;i++){
       nodeSet = new Set([...nodeSet].filter(x=>sets[i].has(x)));
     }
   }else{
-    // união
     for(const s of sets) for(const x of s) nodeSet.add(x);
   }
 
-  // edges: subclassOf dentro do conjunto
-  const nodes = [];
-  const edges = [];
-
-  // tag dimensions on nodes for border color
-  const dimsByNode = new Map(); // iri -> [dim...]
+  const nodes=[], edges=[];
   for(const iri of nodeSet){
     const belongs = dims.filter((d,idx)=>sets[idx].has(iri));
-    dimsByNode.set(iri, belongs);
-  }
-
-  for(const iri of nodeSet){
-    // pick first dim color for border tag
-    const belongs = dimsByNode.get(iri) || [];
-    const dimColor = belongs[0] ? state.dimColors.get(belongs[0]) : "transparent";
+    const d0 = belongs[0];
+    const dimColor = d0 ? state.dimColors.get(d0) : "transparent";
     nodes.push({ data: { ...nodeData(iri, dimColor), dims: belongs } });
   }
 
@@ -1183,8 +1158,7 @@ function buildTaxonomyGraph(){
     if(!parents) continue;
     for(const parent of parents){
       if(!nodeSet.has(parent)) continue;
-      const id = `sub:${child}→${parent}`;
-      edges.push({ data: edgeData(id, parent, child, "subClassOf", "sub"), classes: "subclass" });
+      edges.push({ data: edgeData(`sub:${child}→${parent}`, parent, child, "subClassOf"), classes:"subclass" });
     }
   }
 
@@ -1192,118 +1166,57 @@ function buildTaxonomyGraph(){
   cyTax.add(nodes);
   cyTax.add(edges);
 
-  // dimension tag styling
   cyTax.nodes().forEach(n=>{
     const d0 = (n.data("dims")||[])[0];
     if(d0){
       n.addClass("dimTag");
       n.data("dimColor", state.dimColors.get(d0));
     }
+    makeTippy(n, tooltipHtml(n.id()));
   });
 
-  applyCyStyle(cyTax, "tax");
-
+  applyCyStyle(cyTax);
   runLayout(cyTax, $("taxLayout").value);
   cyTax.fit(undefined, 30);
-
-  // meta
   $("taxMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
-
-  attachTaxTooltips();
-}
-
-function attachTaxTooltips(){
-  // tooltip leve: label + iri + comment curto
-  cyTax.nodes().forEach(node=>{
-    const iri = node.id();
-    const content = `
-      <div style="max-width:380px;">
-        <div style="font-weight:800; font-size:14px; margin-bottom:6px;">${escapeHtml(bestLabelFor(iri))}</div>
-        <div class="mono" style="font-size:11px; color:var(--muted2); word-break:break-all;">${escapeHtml(iri)}</div>
-        <div style="height:8px"></div>
-        <div style="color:var(--muted); font-size:12px; line-height:1.35;">${escapeHtml(state.comments.get(iri) || "—")}</div>
-      </div>
-    `;
-    makeTippy(node, content);
-  });
 }
 
 /* =========================================================
-   ONTOLOGY (PESADO) — build graph
+   ONTOLOGY build
    ========================================================= */
 function buildOntologyGraph(){
-  if(!state.loaded) return;
-
   const dim = $("ontoDimSelect").value;
   const showSub = $("ontoShowSubclass").checked;
   const showProps = $("ontoShowProps").checked;
 
-  // node set: all or descendants of dimension
-  let nodeSet;
-  if(dim && dim !== "__ALL__"){
-    nodeSet = getDescendants(dim);
-  }else{
-    nodeSet = new Set(state.classes);
-  }
+  let nodeSet = (dim && dim!=="__ALL__") ? getDescendants(dim) : new Set(state.classes);
 
-  // To keep it usable: we will only include nodes that are connected by:
-  // - subclass edges within set OR
-  // - object properties whose domain/range are within set
-  const nodes = [];
-  const edges = [];
-
-  // compute dims membership for border tag (first matching dimension from state.dims)
-  const dimsByNode = new Map();
-  // precompute descendant sets for all dimensions (heavy, but dims usually small)
-  const dimSets = new Map();
-  for(const d of state.dims){
-    dimSets.set(d, getDescendants(d));
-  }
+  const nodes=[], edges=[];
   for(const iri of nodeSet){
-    const belongs = [];
-    for(const d of state.dims){
-      if(dimSets.get(d).has(iri)) belongs.push(d);
-    }
-    dimsByNode.set(iri, belongs);
+    nodes.push({ data: nodeData(iri, "transparent") });
   }
 
-  for(const iri of nodeSet){
-    const belongs = dimsByNode.get(iri) || [];
-    const dimColor = belongs[0] ? state.dimColors.get(belongs[0]) : "transparent";
-    nodes.push({ data: { ...nodeData(iri, dimColor), dims: belongs } });
-  }
-
-  // subclass edges
   if(showSub){
     for(const child of nodeSet){
       const parents = state.subclassOf.get(child);
       if(!parents) continue;
       for(const parent of parents){
         if(!nodeSet.has(parent)) continue;
-        const id = `sub:${child}→${parent}`;
-        edges.push({ data: edgeData(id, parent, child, "subClassOf", "sub"), classes: "subclass" });
+        edges.push({ data: edgeData(`sub:${child}→${parent}`, parent, child, "subClassOf"), classes:"subclass" });
       }
     }
   }
 
-  // object property edges (domain->range)
   if(showProps){
-    // We only draw edges when we can find explicit domain/range
     for(const p of state.objProps){
       const ds = state.propDomain.get(p) ? [...state.propDomain.get(p)] : [];
       const rs = state.propRange.get(p) ? [...state.propRange.get(p)] : [];
-      if(ds.length===0 || rs.length===0) continue;
-
-      // Create edges for each domain-range pair that exists in current set
+      if(!ds.length || !rs.length) continue;
       for(const d of ds){
         if(!nodeSet.has(d)) continue;
         for(const r of rs){
           if(!nodeSet.has(r)) continue;
-          const id = `prop:${p}:${d}→${r}`;
-          edges.push({
-            data: edgeData(id, d, r, bestPropLabelFor(p), "prop"),
-            classes: "prop"
-          });
+          edges.push({ data: edgeData(`prop:${p}:${d}→${r}`, d, r, bestPropLabelFor(p)), classes:"prop" });
         }
       }
     }
@@ -1314,262 +1227,50 @@ function buildOntologyGraph(){
   cyOnto.add(edges);
 
   cyOnto.nodes().forEach(n=>{
-    const d0 = (n.data("dims")||[])[0];
-    if(d0){
-      n.addClass("dimTag");
-      n.data("dimColor", state.dimColors.get(d0));
-    }
+    makeTippy(n, tooltipHtml(n.id()));
   });
 
-  applyCyStyle(cyOnto, "onto");
+  cyOnto.off("tap");
+  cyOnto.on("tap","node",(evt)=>{
+    const iri = evt.target.id();
+    $("ontoDetailPill").textContent = shortIri(iri);
+    $("ontoDetailBox").innerHTML = tooltipHtml(iri);
+  });
+
+  applyCyStyle(cyOnto);
   runLayout(cyOnto, $("ontoLayout").value);
   cyOnto.fit(undefined, 30);
-
   $("ontoMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
-
-  attachOntoTooltips();
-  bindOntoSelection();
-}
-
-function formatAnnotationList(iri){
-  // tooltip “completo”: lista tudo que capturamos em state.annotations (inclui os campos da tabela anexada se estiverem no RDF)
-  const ann = state.annotations.get(iri) || [];
-  // remove ruído: triples onde objeto é IRI e pred é muito técnico — você pode ajustar depois
-  const cleaned = ann
-    .filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment")
-    .slice(0, 60); // evita tooltip gigante
-
-  const langMap = state.labelsByLang.get(iri) || new Map();
-  const labels = [];
-  for(const [lang,lab] of langMap.entries()){
-    if(lang === "_") continue;
-    labels.push(`<span class="tag"><span class="sw" style="background:${lang.startsWith("pt") ? "var(--ok)" : "var(--accent)"}"></span>${escapeHtml(lang)}: ${escapeHtml(lab)}</span>`);
-  }
-
-  const parents = [...(state.subclassOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
-  const kids = [...(state.childrenOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
-
-  const rows = cleaned.map(x=>{
-    const o = x.oType==="NamedNode" ? shortIri(x.o) : x.o;
-    const extra = x.oType==="Literal" ? (x.lang ? ` @${x.lang}` : (x.dt ? ` ^^${shortIri(x.dt)}` : "")) : "";
-    return `<tr><td class="mono" style="font-size:11px; color:var(--muted2);">${escapeHtml(x.pLabel)}</td><td style="font-size:12px; color:var(--muted);">${escapeHtml(o)}<span class="mono" style="color:var(--muted2);">${escapeHtml(extra)}</span></td></tr>`;
-  }).join("");
-
-  return `
-    <div style="max-width:520px;">
-      <div style="font-weight:900; font-size:14px; margin-bottom:6px;">${escapeHtml(bestLabelFor(iri))}</div>
-      <div class="mono" style="font-size:11px; color:var(--muted2); word-break:break-all;">${escapeHtml(iri)}</div>
-
-      <div style="height:8px"></div>
-      <div style="color:var(--muted); font-size:12px; line-height:1.35;">${escapeHtml(state.comments.get(iri) || "—")}</div>
-
-      ${labels.length ? `<div style="height:8px"></div><div>${labels.join("")}</div>` : ""}
-
-      <div style="height:10px"></div>
-      <div class="small">Superclasses</div>
-      <div style="color:var(--muted); font-size:12px;">${parents.length ? escapeHtml(parents.join(" • ")) : "—"}</div>
-
-      <div style="height:8px"></div>
-      <div class="small">Subclasses diretas</div>
-      <div style="color:var(--muted); font-size:12px;">${kids.length ? escapeHtml(kids.slice(0,20).join(" • ")) + (kids.length>20 ? " …" : "") : "—"}</div>
-
-      <div style="height:10px"></div>
-      <div class="small">Anotações (campos da tabela)</div>
-      <div style="height:6px"></div>
-
-      <table>
-        <thead><tr><th>Propriedade</th><th>Valor</th></tr></thead>
-        <tbody>
-          ${rows || `<tr><td colspan="2" class="muted">Sem anotações adicionais encontradas.</td></tr>`}
-        </tbody>
-      </table>
-
-      <div style="height:8px"></div>
-      <div class="small">Obs.: se algum campo da sua tabela anexada não aparecer, ele não está publicado como anotação no OWL/TTL (ou está como blank node/restrição).</div>
-    </div>
-  `;
-}
-
-function attachOntoTooltips(){
-  cyOnto.nodes().forEach(node=>{
-    const iri = node.id();
-    makeTippy(node, formatAnnotationList(iri));
-  });
-}
-
-function makeTippy(cyNode, html){
-  // cria tippy com popperRef do cytoscape
-  const ref = cyNode.popperRef();
-  const dummy = document.createElement('div');
-
-  // Evita duplicar tooltips
-  if(cyNode.data("__tippy")) {
-    try{ cyNode.data("__tippy").destroy(); }catch(e){}
-  }
-
-  const tip = tippy(dummy, {
-    getReferenceClientRect: ref.getBoundingClientRect,
-    content: () => {
-      const div = document.createElement('div');
-      div.innerHTML = html;
-      return div;
-    },
-    trigger: 'manual',
-    placement: 'top',
-    interactive: true,
-    appendTo: document.body,
-    maxWidth: 600,
-    theme: 'light-border',
-    delay: [150, 50],
-  });
-
-  cyNode.on('mouseover', () => tip.show());
-  cyNode.on('mouseout',  () => tip.hide());
-  cyNode.data("__tippy", tip);
-}
-
-function bindOntoSelection(){
-  cyOnto.off('tap');
-  cyOnto.on('tap', 'node', (evt)=>{
-    const n = evt.target;
-    const iri = n.id();
-    $("ontoDetailPill").textContent = shortIri(iri);
-    renderOntoDetail(iri);
-  });
-}
-
-function renderOntoDetail(iri){
-  const ann = state.annotations.get(iri) || [];
-  const parents = [...(state.subclassOf.get(iri)||[])];
-  const kids = [...(state.childrenOf.get(iri)||[])];
-
-  // relações por propriedades (domain/range)
-  const outgoing = [];
-  const incoming = [];
-  for(const p of state.objProps){
-    const ds = state.propDomain.get(p) ? [...state.propDomain.get(p)] : [];
-    const rs = state.propRange.get(p) ? [...state.propRange.get(p)] : [];
-    if(ds.includes(iri)){
-      for(const r of rs) outgoing.push({p, r});
-    }
-    if(rs.includes(iri)){
-      for(const d of ds) incoming.push({p, d});
-    }
-  }
-
-  const annRows = ann
-    .filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment")
-    .slice(0, 120)
-    .map(x=>{
-      const o = x.oType==="NamedNode" ? x.o : x.o;
-      const extra = x.oType==="Literal" ? (x.lang ? ` @${x.lang}` : (x.dt ? ` ^^${x.dt}` : "")) : "";
-      return `<tr><td class="mono">${escapeHtml(x.pLabel)}</td><td class="mono" style="word-break:break-all;">${escapeHtml(o)}${extra ? ` <span style="color:var(--muted2)">${escapeHtml(extra)}</span>` : ""}</td></tr>`;
-    }).join("");
-
-  $("ontoDetailBox").innerHTML = `
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <div>
-        <div class="small">Label</div>
-        <div style="font-weight:900; font-size:16px; margin-top:2px;">${escapeHtml(bestLabelFor(iri))}</div>
-      </div>
-
-      <div>
-        <div class="small">IRI</div>
-        <div class="mono" style="color:var(--muted2); word-break:break-all;">${escapeHtml(iri)}</div>
-      </div>
-
-      <div>
-        <div class="small">Descrição (rdfs:comment)</div>
-        <div class="muted">${escapeHtml(state.comments.get(iri) || "—")}</div>
-      </div>
-
-      <div class="row">
-        <span class="tag"><span class="sw" style="background:var(--accent)"></span>Superclasses: ${parents.length}</span>
-        <span class="tag"><span class="sw" style="background:var(--accent2)"></span>Subclasses: ${kids.length}</span>
-        <span class="tag"><span class="sw" style="background:var(--ok)"></span>Annotations: ${ann.length}</span>
-      </div>
-
-      <div class="hr"></div>
-
-      <div>
-        <div class="small">Superclasses</div>
-        <div class="muted">${parents.length ? parents.map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR")).map(escapeHtml).join(" • ") : "—"}</div>
-      </div>
-      <div>
-        <div class="small">Subclasses diretas</div>
-        <div class="muted">${kids.length ? kids.map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR")).slice(0,60).map(escapeHtml).join(" • ") + (kids.length>60 ? " …" : "") : "—"}</div>
-      </div>
-
-      <div class="hr"></div>
-
-      <div>
-        <div class="small">Propriedades (por domínio/alcance)</div>
-        <div style="height:6px"></div>
-        <div class="small">Saindo</div>
-        <div class="muted">${outgoing.length ? outgoing.slice(0,40).map(x=>`${escapeHtml(bestPropLabelFor(x.p))} → ${escapeHtml(bestLabelFor(x.r))}`).join("<br>") : "—"}</div>
-        <div style="height:8px"></div>
-        <div class="small">Chegando</div>
-        <div class="muted">${incoming.length ? incoming.slice(0,40).map(x=>`${escapeHtml(bestLabelFor(x.d))} → ${escapeHtml(bestPropLabelFor(x.p))}`).join("<br>") : "—"}</div>
-      </div>
-
-      <div class="hr"></div>
-
-      <div>
-        <div class="small">Anotações (tabela)</div>
-        <table>
-          <thead><tr><th>Propriedade</th><th>Valor</th></tr></thead>
-          <tbody>
-            ${annRows || `<tr><td colspan="2" class="muted">Sem anotações adicionais encontradas.</td></tr>`}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
 }
 
 /* =========================================================
-   HIGHLIGHT (tax/onto)
+   HIGHLIGHT + EXPORTS
    ========================================================= */
-function doHighlight(cy, query){
-  const q = (query||"").trim().toLowerCase();
+function doHighlight(cy, q){
+  const s = (q||"").trim().toLowerCase();
   cy.elements().removeClass("highlight");
-  if(!q) return;
+  if(!s) return;
   const matches = cy.nodes().filter(n=>{
     const iri = (n.data("iri")||"").toLowerCase();
     const lab = (n.data("label")||"").toLowerCase();
-    return iri.includes(q) || lab.includes(q) || shortIri(iri).toLowerCase().includes(q);
+    return iri.includes(s) || lab.includes(s) || shortIri(iri).toLowerCase().includes(s);
   });
   matches.addClass("highlight");
   if(matches.length) cy.fit(matches, 60);
 }
-
-/* =========================================================
-   EXPORTS (graphs)
-   ========================================================= */
 function exportCyPng(cy, filename){
-  const png = cy.png({ full: true, scale: 2, bg: "transparent" });
+  const png = cy.png({ full:true, scale:2, bg:"transparent" });
   const a = document.createElement("a");
-  a.href = png;
-  a.download = filename;
-  a.click();
-}
-
-function exportCySvg(cy, filename){
-  // Cytoscape core não exporta SVG por padrão. Truque: export via PNG + avisar.
-  // Para SVG real, use cytoscape-svg plugin (se quiser, dá pra adicionar depois).
-  // Aqui: exportamos JSON do grafo (reimportável) como alternativa.
-  const json = cy.json();
-  downloadText(filename.replace(/\.svg$/i,".json"), JSON.stringify(json, null, 2), "application/json;charset=utf-8");
-  alert("SVG real exige plugin (cytoscape-svg). Exportei JSON do grafo para reuso.");
+  a.href = png; a.download = filename; a.click();
 }
 
 /* =========================================================
-   SPARQL UI (competency questions)
+   SPARQL presets
    ========================================================= */
 const PRESETS = [
   {
     title: "CQ01 — Quais são as dimensões (raízes com mais subclasses)?",
-    desc: "Lista candidatos a dimensões pela contagem de subclasses diretas.",
+    desc: "Candidatos a dimensão por contagem de subclasses diretas.",
     query: `
 PREFIX rdfs: <${NS.rdfs}>
 SELECT ?root (COUNT(DISTINCT ?child) AS ?nChildren)
@@ -1580,17 +1281,16 @@ LIMIT 100
 `.trim()
   },
   {
-    title: "CQ02 — Quais subclasses (diretas) de uma classe X?",
-    desc: "Troque <IRI_AQUI> pela classe desejada.",
+    title: "CQ02 — Subclasses diretas de uma classe X",
+    desc: "Troque <IRI_AQUI> por uma classe.",
     query: `
 PREFIX rdfs: <${NS.rdfs}>
-SELECT ?child
-WHERE { ?child rdfs:subClassOf <IRI_AQUI> . }
+SELECT ?child WHERE { ?child rdfs:subClassOf <IRI_AQUI> . }
 ORDER BY STR(?child)
 `.trim()
   },
   {
-    title: "CQ03 — Quais Object Properties existem e seus domínios/alcances?",
+    title: "CQ03 — Object Properties e domain/range",
     desc: "Mostra propriedades e (se definidos) domain/range.",
     query: `
 PREFIX rdf:  <${NS.rdf}>
@@ -1601,15 +1301,15 @@ WHERE {
   ?p rdf:type owl:ObjectProperty .
   OPTIONAL { ?p rdfs:label ?label }
   OPTIONAL { ?p rdfs:domain ?domain }
-  OPTIONAL { ?p rdfs:range ?range }
+  OPTIONAL { ?p rdfs:range  ?range }
 }
 ORDER BY STR(?p)
-LIMIT 300
+LIMIT 400
 `.trim()
   },
   {
     title: "CQ04 — Buscar classes por termo no label",
-    desc: "Troque \"odio\" pelo termo (minúsculo).",
+    desc: "Troque \"odio\" pelo termo.",
     query: `
 PREFIX rdf:  <${NS.rdf}>
 PREFIX rdfs: <${NS.rdfs}>
@@ -1623,23 +1323,10 @@ WHERE {
 ORDER BY LCASE(STR(?label))
 LIMIT 200
 `.trim()
-  },
-  {
-    title: "CQ05 — Caminhos taxonômicos (subClassOf+) entre duas classes",
-    desc: "Útil para explicar ligação por hierarquia. Troque A e B.",
-    query: `
-PREFIX rdfs: <${NS.rdfs}>
-SELECT ?mid
-WHERE {
-  <IRI_A> rdfs:subClassOf+ ?mid .
-  ?mid rdfs:subClassOf+ <IRI_B> .
-}
-LIMIT 200
-`.trim()
   }
 ];
 
-let lastResultRows = []; // para export CSV/JSON
+let lastResultRows = [];
 
 function buildPresetList(){
   const box = $("presetList");
@@ -1667,15 +1354,12 @@ function buildPresetList(){
     useBtn.addEventListener("click", ()=>{
       $("sparqlText").value = p.query;
       $("resultMeta").textContent = `Preset #${idx+1}`;
-      // troca para aba SPARQL
-      document.querySelector('.tabbtn[data-tab="sparql"]').click();
     });
     copyBtn.addEventListener("click", async ()=>{
       try{ await navigator.clipboard.writeText(p.query); }catch(e){}
     });
     box.appendChild(div);
   });
-
   $("sparqlText").value = PRESETS[0]?.query || "";
 }
 
@@ -1693,25 +1377,21 @@ async function runSparql(){
 
   try{
     const {vars, arr} = await qBindings(query);
-
     if(arr.length === 0){
       $("resultMeta").textContent = "0 linhas";
       $("resultBox").innerHTML = `<div class="muted">Sem resultados.</div>`;
       return;
     }
-
-    // construir rows simples (strings)
     const rows = arr.slice(0, 800).map(b=>{
       const obj = {};
       for(const v of vars){
         const t = b.get(v);
-        obj["?"+v] = t ? (t.termType==="NamedNode" ? t.value : t.value) : "";
+        obj["?"+v] = t ? t.value : "";
       }
       return obj;
     });
     lastResultRows = rows;
 
-    // render table
     const cols = Object.keys(rows[0]);
     let html = `<table><thead><tr>${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>`;
     for(const r of rows.slice(0, 300)){
@@ -1729,17 +1409,13 @@ async function runSparql(){
   }catch(err){
     console.error(err);
     $("resultMeta").textContent = "Erro";
-    $("resultBox").innerHTML = `
-      <div class="muted">Falha ao executar a consulta.</div>
-      <div style="height:8px"></div>
-      <div class="small mono" style="word-break:break-all;">${escapeHtml(String(err.message || err))}</div>
-    `;
+    $("resultBox").innerHTML = `<div class="muted">Falha na consulta.</div><div class="small mono">${escapeHtml(String(err.message || err))}</div>`;
     lastResultRows = [];
   }
 }
 
 /* =========================================================
-   WIRING UI
+   WIRE UI
    ========================================================= */
 function wireUI(){
   $("reloadBtn").addEventListener("click", ()=> boot().catch(()=>{}));
@@ -1747,45 +1423,33 @@ function wireUI(){
   // TAX
   $("taxBuildBtn").addEventListener("click", buildTaxonomyGraph);
   $("taxFitBtn").addEventListener("click", ()=> cyTax.fit(undefined, 30));
-  $("taxResetBtn").addEventListener("click", ()=>{
-    // reset: run layout again
-    runLayout(cyTax, $("taxLayout").value);
-    cyTax.fit(undefined, 30);
-  });
-  $("taxLayout").addEventListener("change", ()=>{
-    runLayout(cyTax, $("taxLayout").value);
-  });
+  $("taxResetBtn").addEventListener("click", ()=> { runLayout(cyTax, $("taxLayout").value); cyTax.fit(undefined, 30); });
+  $("taxLayout").addEventListener("change", ()=> runLayout(cyTax, $("taxLayout").value));
   $("taxExportPngBtn").addEventListener("click", ()=> exportCyPng(cyTax, "ontohate-taxonomia.png"));
-  $("taxExportSvgBtn").addEventListener("click", ()=> exportCySvg(cyTax, "ontohate-taxonomia.svg"));
+  $("taxExportGraphBtn").addEventListener("click", ()=> downloadText("ontohate-taxonomia-graph.json", JSON.stringify(cyTax.json(), null, 2), "application/json;charset=utf-8"));
   $("taxHighlightBtn").addEventListener("click", ()=> doHighlight(cyTax, $("taxSearch").value));
   $("taxClearHighlightBtn").addEventListener("click", ()=> { $("taxSearch").value=""; cyTax.elements().removeClass("highlight"); });
 
   // ONTO
   $("ontoBuildBtn").addEventListener("click", buildOntologyGraph);
   $("ontoFitBtn").addEventListener("click", ()=> cyOnto.fit(undefined, 30));
+  $("ontoHighlightBtn").addEventListener("click", ()=> doHighlight(cyOnto, $("ontoSearch").value));
+  $("ontoClearHighlightBtn").addEventListener("click", ()=> { $("ontoSearch").value=""; cyOnto.elements().removeClass("highlight"); });
   $("ontoExportPngBtn").addEventListener("click", ()=> exportCyPng(cyOnto, "ontohate-ontologia.png"));
   $("ontoExportJsonBtn").addEventListener("click", ()=>{
-    // exporta seleção (ou nó clicado)
     const selected = cyOnto.$(":selected");
     const json = selected.length ? selected.jsons() : [];
     downloadText("ontohate-selecao.json", JSON.stringify(json, null, 2), "application/json;charset=utf-8");
   });
-  $("ontoHighlightBtn").addEventListener("click", ()=> doHighlight(cyOnto, $("ontoSearch").value));
-  $("ontoClearHighlightBtn").addEventListener("click", ()=> { $("ontoSearch").value=""; cyOnto.elements().removeClass("highlight"); });
 
   // SPARQL
   $("runBtn").addEventListener("click", runSparql);
   $("clearBtn").addEventListener("click", ()=> { $("sparqlText").value=""; });
-  $("copyBtn").addEventListener("click", async ()=>{
-    try{ await navigator.clipboard.writeText($("sparqlText").value || ""); }catch(e){}
-  });
+  $("copyBtn").addEventListener("click", async ()=>{ try{ await navigator.clipboard.writeText($("sparqlText").value || ""); }catch(e){} });
   $("sparqlText").addEventListener("keydown", (e)=>{
     const isMac = navigator.platform.toLowerCase().includes("mac");
     const mod = isMac ? e.metaKey : e.ctrlKey;
-    if(mod && e.key === "Enter"){
-      e.preventDefault();
-      runSparql();
-    }
+    if(mod && e.key === "Enter"){ e.preventDefault(); runSparql(); }
   });
   $("exportCsvBtn").addEventListener("click", ()=>{
     if(!lastResultRows.length) return alert("Sem resultados para exportar.");
@@ -1801,9 +1465,9 @@ function wireUI(){
    BOOT
    ========================================================= */
 async function boot(){
-  setStatus("warn","Carregando ontologia…");
+  setStatus("warn","Iniciando…");
 
-  // reset state caches (mantém cores)
+  // reset index (preserva cores)
   const keepColors = new Map(state.dimColors);
   Object.assign(state, {
     loaded:false,
@@ -1829,18 +1493,14 @@ async function boot(){
     buildDimensionDropdowns();
     buildPresetList();
 
-    // inicializa grafos (primeira vez)
-    if(!cyTax || !cyOnto){
-      initCy();
-    }
+    if(!cyTax || !cyOnto) initCy();
 
-    // auto-build (MVP)
     buildTaxonomyGraph();
     buildOntologyGraph();
 
   }catch(err){
     console.error(err);
-    setStatus("bad","Erro ao carregar. Ver console. (CORS/URL RAW/arquivo inválido)");
+    setStatus("bad","Erro ao carregar Ontohate_oficial.ttl. Confira user/repo/branch e CORS.");
   }
 }
 
