@@ -74,7 +74,7 @@
     }
     .wrap{max-width:1320px; margin:0 auto; padding:16px;}
     .top{display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;}
-    .brand{display:flex; flex-direction:column; gap:6px; max-width:920px;}
+    .brand{display:flex; flex-direction:column; gap:6px; max-width:880px;}
     .brand h1{margin:0; font-size:18px;}
     .brand p{margin:0; color:var(--muted); font-size:13px; line-height:1.35;}
     .brand small{color:var(--muted2); font-family:var(--mono);}
@@ -219,7 +219,7 @@
           <b>Taxonomia</b> (cruzamentos + exportação), <b>Ontologia</b> (grafo interativo + propriedades + tooltips),
           <b>SPARQL</b> (questões de competência respondidas automaticamente).
         </p>
-        <small>Base esperada no site: <b>Ontohate_oficial.ttl</b> • O loader tenta também RAW como fallback.</small>
+        <small>Base (GitHub Pages): <b>./Ontohate_oficial.ttl</b> • Exportação em todas as etapas</small>
       </div>
 
       <div class="tabs">
@@ -239,11 +239,6 @@
 
 <main>
   <div class="wrap">
-
-    <div class="card" style="box-shadow:none; margin-bottom:14px;">
-      <div class="hd"><h2>Debug do carregamento</h2><span class="pill" id="debugPill">—</span></div>
-      <div class="bd" id="debugBox"><div class="muted">Ainda não carregou.</div></div>
-    </div>
 
     <!-- TAXONOMIA -->
     <section id="tab-tax">
@@ -448,27 +443,16 @@
 </main>
 
 <script>
-/* =================== CONFIG ROBUSTO (Pages + RAW fallback) =================== */
-const FILE_NAME = "Ontohate_oficial.ttl";
+/* =================== CONFIG (GitHub Pages) =================== */
+const TTL_URL = "./Ontohate_oficial.ttl";
 
-// 1) relativo (GitHub Pages)
-// 2) raw (sempre existe se o repo for público)
-const TTL_CANDIDATES = [
-  new URL("./" + FILE_NAME, window.location.href).toString(),
-  "https://raw.githubusercontent.com/luquizis/Ontohate/main/" + FILE_NAME
-];
-
-/* =================== UI helpers =================== */
+/* =================== helpers UI =================== */
 const $ = (id)=>document.getElementById(id);
 function setStatus(kind, text){
   const dot = $("statusDot");
   dot.classList.remove("ok","bad","warn");
   dot.classList.add(kind);
   $("statusText").textContent = text;
-}
-function setDebug(title, html){
-  $("debugPill").textContent = title;
-  $("debugBox").innerHTML = html;
 }
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, s => ({
@@ -533,8 +517,8 @@ const state = {
   sources: [],
 
   classes: new Set(),
-  labelsByLang: new Map(),
-  labels: new Map(),
+  labelsByLang: new Map(),     // iri -> Map(lang->label)
+  labels: new Map(),           // iri -> best label
   comments: new Map(),
   subclassOf: new Map(),
   childrenOf: new Map(),
@@ -544,10 +528,8 @@ const state = {
   propDomain: new Map(),
   propRange: new Map(),
 
-  annotations: new Map(),
+  annotations: new Map(),      // iri -> [{p,pLabel,o,oType,lang,dt}]
   dims: [],
-
-  loadedFrom: null
 };
 
 function resetIndex(){
@@ -567,7 +549,6 @@ function resetIndex(){
   state.propRange = new Map();
   state.annotations = new Map();
   state.dims = [];
-  state.loadedFrom = null;
 }
 
 function addMapSet(map,k,v){
@@ -593,41 +574,6 @@ function bestLabelFor(iri){
 }
 function bestPropLabelFor(iri){ return state.propLabel.get(iri) || shortIri(iri); }
 
-/* =================== Robust fetch (try candidates) =================== */
-async function fetchWithFallback(urls){
-  const attempts = [];
-  for(const url of urls){
-    const t0 = performance.now();
-    try{
-      const res = await fetch(url, { cache:"no-store" });
-      const ms = Math.round(performance.now() - t0);
-      attempts.push({ url, ok:res.ok, status:res.status, ms });
-      if(res.ok){
-        const text = await res.text();
-        return { text, used:url, attempts };
-      }
-    }catch(err){
-      const ms = Math.round(performance.now() - t0);
-      attempts.push({ url, ok:false, status:"ERR", ms, err:String(err?.message || err) });
-    }
-  }
-  return { text:null, used:null, attempts };
-}
-function renderAttempts(attempts){
-  const rows = attempts.map(a=>{
-    const ok = a.ok ? "✅" : "❌";
-    const st = escapeHtml(String(a.status));
-    const err = a.err ? `<div class="small mono" style="margin-top:4px;">${escapeHtml(a.err)}</div>` : "";
-    return `
-      <div style="padding:10px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
-        <div class="mono" style="font-size:12px;word-break:break-all;">${ok} ${escapeHtml(a.url)}</div>
-        <div class="small">status: <b>${st}</b> • ${a.ms}ms</div>
-        ${err}
-      </div>`;
-  }).join("");
-  return rows || `<div class="muted">Sem tentativas.</div>`;
-}
-
 /* =================== Parse TTL =================== */
 async function parseTurtleIntoStore(ttlText){
   const parser = new N3.Parser({ baseIRI: location.href });
@@ -652,6 +598,7 @@ async function qBindings(query){
 
 /* =================== Index =================== */
 async function buildIndexFromStore(){
+  // classes + labels
   {
     const q = `
 PREFIX rdf:  <${NS.rdf}>
@@ -679,6 +626,7 @@ WHERE {
     }
   }
 
+  // comments
   {
     const q = `
 PREFIX rdfs: <${NS.rdfs}>
@@ -692,6 +640,7 @@ WHERE { ?c rdfs:comment ?comment . }`;
     }
   }
 
+  // subclassOf (ignora bnodes)
   {
     const q = `
 PREFIX rdfs: <${NS.rdfs}>
@@ -711,6 +660,7 @@ WHERE {
     }
   }
 
+  // object properties + label + domain/range
   {
     const q = `
 PREFIX rdf:  <${NS.rdf}>
@@ -737,6 +687,7 @@ WHERE {
     }
   }
 
+  // annotations (tudo exceto rdf:type e subClassOf)
   {
     const q = `
 PREFIX rdf:  <${NS.rdf}>
@@ -772,6 +723,7 @@ WHERE {
     }
   }
 
+  // dimensões = raízes com filhos
   {
     const cand = [];
     for(const c of state.classes){
@@ -899,6 +851,8 @@ function baseCyStyle(){
     { selector:".prop", style:{ "line-style":"dashed", "width":1.9 } },
     { selector:".highlight", style:{ "border-width":4, "border-color":"var(--accent2)" } },
     { selector:":selected", style:{ "border-color":"var(--accent)", "border-width":5 } },
+
+    /* foco de vizinhança */
     { selector:".focusDim", style:{ "opacity":0.12 } },
     { selector:".focusHide", style:{ "display":"none" } },
   ];
@@ -1284,63 +1238,34 @@ function wireUI(){
   };
 }
 
-/* =================== Init =================== */
-function initTabsAndTheme(){
-  initTabs();
-}
-
 /* =================== Boot =================== */
 async function boot(){
-  setStatus("warn","Baixando TTL…");
-  setDebug("Carregando…", `<div class="muted">Testando URLs (Pages → RAW)…</div>`);
+  setStatus("warn","Baixando Ontohate_oficial.ttl…");
 
   resetIndex();
 
-  const { text, used, attempts } = await fetchWithFallback(TTL_CANDIDATES);
-
-  setDebug(
-    used ? "OK" : "Falha",
-    `
-      <div class="small">URL usada (se OK):</div>
-      <div class="mono" style="font-size:12px;word-break:break-all;margin:6px 0 10px 0;">
-        ${escapeHtml(used || "—")}
-      </div>
-      <div class="small">Tentativas:</div>
-      ${renderAttempts(attempts)}
-      <div class="hr"></div>
-      <div class="small">Dica rápida:</div>
-      <div class="muted">
-        Se a tentativa <b>./Ontohate_oficial.ttl</b> der 404, seu GitHub Pages provavelmente não está publicando esse arquivo.
-        O RAW deve funcionar mesmo assim.
-      </div>
-    `
-  );
-
-  if(!text){
-    setStatus("bad","Não consegui baixar o TTL (veja Debug).");
+  let res;
+  try{
+    res = await fetch(TTL_URL, { cache:"no-store" });
+  }catch(e){
+    console.error(e);
+    setStatus("bad","Falha de rede ao buscar o TTL (ver console).");
+    return;
+  }
+  if(!res.ok){
+    setStatus("bad",`Não consegui abrir ${TTL_URL} (HTTP ${res.status}).`);
     return;
   }
 
+  const text = await res.text();
   state.ttlText = text;
-  state.loadedFrom = used;
 
   try{
     setStatus("warn","Parseando Turtle…");
-    await (async ()=>{
-      const parser = new N3.Parser({ baseIRI: location.href });
-      await new Promise((resolve,reject)=>{
-        try{
-          parser.parse(text, (err, quad)=>{
-            if(err) return reject(err);
-            if(quad) state.store.addQuad(quad);
-            else resolve();
-          });
-        }catch(e){ reject(e); }
-      });
-    })();
+    await parseTurtleIntoStore(text);
   }catch(e){
     console.error(e);
-    setStatus("bad","Erro ao parsear TTL (Turtle inválido?). Veja console.");
+    setStatus("bad","Erro ao parsear TTL (provável Turtle inválido). Veja console.");
     return;
   }
 
@@ -1354,7 +1279,6 @@ async function boot(){
   }
 
   setStatus("ok",`OK: ${state.classes.size} classes • ${state.objProps.size} propriedades`);
-
   fillDimensions();
   buildPresetList();
 
@@ -1368,8 +1292,8 @@ async function boot(){
   buildOntologyGraph();
 }
 
-/* =================== page init =================== */
-initTabsAndTheme();
+/* =================== init =================== */
+initTabs();
 wireUI();
 boot();
 </script>
