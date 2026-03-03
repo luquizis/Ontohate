@@ -1376,3 +1376,25 @@ boot();
 
 </body>
 </html>
+const FILE_NAME = "Ontohate_oficial.ttl";
+
+const TTL_CANDIDATES = [
+  new URL("./" + FILE_NAME, window.location.href).toString(), // GitHub Pages
+  "https://raw.githubusercontent.com/luquizis/Ontohate/main/" + FILE_NAME // RAW fallback
+];
+
+async function fetchTTLWithFallback(){
+  const attempts = [];
+  for (const url of TTL_CANDIDATES){
+    try{
+      const res = await fetch(url, { cache:"no-store" });
+      attempts.push({ url, status: res.status, ok: res.ok });
+      if(res.ok) return { text: await res.text(), used: url, attempts };
+    }catch(e){
+      attempts.push({ url, status: "ERR", ok: false, err: String(e) });
+    }
+  }
+  throw new Error("Falha ao carregar TTL. Tentativas: " + JSON.stringify(attempts, null, 2));
+}
+const { text, used } = await fetchTTLWithFallback();
+console.log("TTL carregado de:", used);
