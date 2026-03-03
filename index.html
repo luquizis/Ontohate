@@ -1,12 +1,25 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>OntoHate — Taxonomia / Ontologia / SPARQL</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>OntoHate — Taxonomia (leve) • Ontologia (pesado) • SPARQL (inteligente)</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Cytoscape (grafo interativo) -->
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.29.2/dist/cytoscape.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
+
+  <!-- Tooltips ricos -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
+
+  <!-- SPARQL no browser -->
+  <script src="https://cdn.jsdelivr.net/npm/@comunica/query-sparql@3.1.0/browser/query-sparql.min.js"></script>
 
   <style>
     :root{
@@ -26,53 +39,75 @@
       --radius: 14px;
       --mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
       --sans: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+
+      --nodeFill: rgba(255,255,255,.07);
+      --nodeBorder: rgba(255,255,255,.18);
+      --edge: rgba(255,255,255,.22);
+      --edgeLabel: rgba(255,255,255,.65);
+      --canvas: rgba(0,0,0,.18);
     }
+
+    /* Light mode overrides */
+    [data-theme="light"]{
+      --bg:#f7f7fb;
+      --panel:#ffffff;
+      --panel2:#fbfbff;
+      --border:rgba(0,0,0,.10);
+      --text:rgba(10,10,16,.92);
+      --muted:rgba(10,10,16,.65);
+      --muted2:rgba(10,10,16,.45);
+      --shadow: 0 10px 30px rgba(0,0,0,.10);
+
+      --nodeFill: rgba(10,10,16,.04);
+      --nodeBorder: rgba(10,10,16,.14);
+      --edge: rgba(10,10,16,.20);
+      --edgeLabel: rgba(10,10,16,.58);
+      --canvas: rgba(10,10,16,.05);
+    }
+
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family:var(--sans);
-      background: radial-gradient(1200px 800px at 20% -10%, rgba(167,139,250,.15), transparent 60%),
-                  radial-gradient(900px 700px at 90% 0%, rgba(125,211,252,.14), transparent 55%),
-                  var(--bg);
+      background:
+        radial-gradient(1200px 800px at 20% -10%, rgba(167,139,250,.15), transparent 60%),
+        radial-gradient(900px 700px at 90% 0%, rgba(125,211,252,.14), transparent 55%),
+        var(--bg);
       color:var(--text);
     }
     header{
-      position:sticky; top:0; z-index:10;
+      position:sticky; top:0; z-index:50;
       backdrop-filter: blur(10px);
-      background: rgba(11,12,16,.72);
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
       border-bottom: 1px solid var(--border);
     }
-    .wrap{max-width:1200px; margin:0 auto; padding:16px;}
+    .wrap{max-width:1300px; margin:0 auto; padding:16px;}
     .top{
-      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
       flex-wrap:wrap;
     }
-    .brand{
-      display:flex; flex-direction:column; gap:2px;
-    }
-    .brand h1{
-      margin:0; font-size:18px; letter-spacing:.2px;
-    }
-    .brand small{color:var(--muted); font-family:var(--mono);}
-    .tabs{
-      display:flex; gap:8px; flex-wrap:wrap;
-    }
+    .brand{display:flex; flex-direction:column; gap:6px; max-width:820px;}
+    .brand h1{margin:0; font-size:18px; letter-spacing:.2px;}
+    .brand p{margin:0; color:var(--muted); font-size:13px; line-height:1.35;}
+    .brand small{color:var(--muted2); font-family:var(--mono);}
+
+    .tabs{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
     .tabbtn{
       border:1px solid var(--border);
-      background: rgba(255,255,255,.04);
+      background: color-mix(in srgb, var(--panel) 30%, transparent);
       color:var(--text);
       padding:10px 12px;
       border-radius:999px;
       cursor:pointer;
       transition:.15s ease;
-      font-weight:600;
+      font-weight:700;
       display:flex; align-items:center; gap:8px;
     }
-    .tabbtn:hover{transform: translateY(-1px); background: rgba(255,255,255,.06);}
+    .tabbtn:hover{transform: translateY(-1px);}
     .tabbtn.active{
-      border-color: rgba(125,211,252,.45);
-      box-shadow: 0 0 0 4px rgba(125,211,252,.12);
-      background: rgba(125,211,252,.10);
+      border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
     }
     .pill{
       font-family:var(--mono);
@@ -81,19 +116,23 @@
       border:1px solid var(--border);
       border-radius:999px;
       color:var(--muted);
-      background: rgba(255,255,255,.03);
+      background: color-mix(in srgb, var(--panel) 20%, transparent);
+      white-space:nowrap;
     }
-    main .wrap{padding-top:18px; padding-bottom:26px;}
+
+    main .wrap{padding-top:16px; padding-bottom:26px;}
     .grid{
       display:grid;
-      grid-template-columns: 1.1fr .9fr;
+      grid-template-columns: 1fr 380px;
       gap:14px;
+      align-items:start;
     }
-    @media (max-width: 980px){
+    @media (max-width: 1050px){
       .grid{grid-template-columns:1fr}
     }
+
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 85%, transparent), color-mix(in srgb, var(--panel2) 92%, transparent));
       border:1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
@@ -110,42 +149,53 @@
       margin:0;
       font-size:14px;
       letter-spacing:.2px;
-      color:rgba(255,255,255,.9);
+      color:color-mix(in srgb, var(--text) 94%, transparent);
     }
     .card .bd{padding:14px;}
     .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
     .btn{
       border:1px solid var(--border);
-      background: rgba(255,255,255,.05);
+      background: color-mix(in srgb, var(--panel) 40%, transparent);
       color:var(--text);
       padding:10px 12px;
       border-radius: 12px;
       cursor:pointer;
-      font-weight:600;
+      font-weight:700;
       transition:.15s ease;
+      user-select:none;
     }
-    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.07);}
+    .btn:hover{transform: translateY(-1px);}
     .btn.primary{
-      border-color: rgba(167,139,250,.5);
-      background: rgba(167,139,250,.14);
-      box-shadow: 0 0 0 4px rgba(167,139,250,.10);
+      border-color: color-mix(in srgb, var(--accent2) 55%, transparent);
+      background: color-mix(in srgb, var(--accent2) 14%, transparent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent2) 12%, transparent);
     }
     .btn.good{
-      border-color: rgba(52,211,153,.5);
-      background: rgba(52,211,153,.12);
-      box-shadow: 0 0 0 4px rgba(52,211,153,.10);
+      border-color: color-mix(in srgb, var(--ok) 55%, transparent);
+      background: color-mix(in srgb, var(--ok) 12%, transparent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 12%, transparent);
+    }
+    .btn.warn{
+      border-color: color-mix(in srgb, var(--warn) 55%, transparent);
+      background: color-mix(in srgb, var(--warn) 12%, transparent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--warn) 10%, transparent);
+    }
+    .btn.bad{
+      border-color: color-mix(in srgb, var(--bad) 55%, transparent);
+      background: color-mix(in srgb, var(--bad) 12%, transparent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 10%, transparent);
     }
     .input, select, textarea{
       width:100%;
       border:1px solid var(--border);
-      background: rgba(0,0,0,.15);
+      background: color-mix(in srgb, var(--panel) 45%, transparent);
       color: var(--text);
       padding:10px 12px;
       border-radius: 12px;
       outline:none;
       font-family: var(--sans);
     }
-    textarea{min-height: 180px; font-family: var(--mono); font-size: 12px; line-height: 1.4;}
+    textarea{min-height: 200px; font-family: var(--mono); font-size: 12px; line-height: 1.4;}
     .muted{color:var(--muted); font-size:13px; line-height:1.35;}
     .small{color:var(--muted2); font-size:12px; font-family:var(--mono);}
     .status{
@@ -154,69 +204,51 @@
       padding:6px 10px;
       border-radius:999px;
       border:1px solid var(--border);
-      background: rgba(255,255,255,.03);
+      background: color-mix(in srgb, var(--panel) 30%, transparent);
       display:flex; align-items:center; gap:8px;
+      white-space:nowrap;
     }
     .dot{width:8px;height:8px;border-radius:999px;background:var(--muted2);}
     .dot.ok{background:var(--ok)}
     .dot.bad{background:var(--bad)}
     .dot.warn{background:var(--warn)}
-    .list{
-      display:flex; flex-direction:column; gap:8px;
-      max-height: 560px;
-      overflow:auto;
-      padding-right:4px;
-    }
-    .item{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      border-radius: 12px;
-      padding:10px 12px;
-      cursor:pointer;
-      transition:.12s ease;
-    }
-    .item:hover{background: rgba(255,255,255,.05)}
-    .item.active{
-      border-color: rgba(125,211,252,.45);
-      background: rgba(125,211,252,.10);
-    }
-    .item .title{font-weight:700; font-size:13px;}
-    .item .sub{font-family:var(--mono); font-size:11px; color:var(--muted2); margin-top:2px;}
-    .tree{
-      border:1px solid var(--border);
-      border-radius: 12px;
-      background: rgba(0,0,0,.12);
-      padding:10px 12px;
-      max-height: 560px;
-      overflow:auto;
-    }
-    .node{
-      display:flex; gap:8px; align-items:flex-start;
-      padding:6px 6px;
-      border-radius:10px;
-      cursor:pointer;
-    }
-    .node:hover{background: rgba(255,255,255,.04)}
-    .node.active{background: rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.35);}
-    .twisty{
-      width:18px; height:18px;
-      border:1px solid var(--border);
-      border-radius: 6px;
-      display:flex; align-items:center; justify-content:center;
-      flex: 0 0 18px;
+
+    .hidden{display:none !important;}
+    .kbd{
       font-family:var(--mono);
+      border:1px solid var(--border);
+      background: color-mix(in srgb, var(--panel) 25%, transparent);
+      padding:2px 6px;
+      border-radius:8px;
+      font-size:12px;
       color:var(--muted);
-      margin-top:1px;
-      user-select:none;
     }
-    .twisty.empty{opacity:.35}
-    .label{
-      flex: 1;
-      min-width:0;
+
+    .canvas{
+      height: 660px;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      overflow:hidden;
+      background: var(--canvas);
     }
-    .label b{font-size:13px}
-    .label div{font-family:var(--mono); font-size:11px; color:var(--muted2); margin-top:2px; word-break:break-all;}
-    .children{margin-left: 22px; border-left:1px dashed rgba(255,255,255,.10); padding-left:10px;}
+    @media (max-width: 1050px){ .canvas{ height: 620px; } }
+
+    .split{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+
+    .help{
+      border:1px dashed var(--border);
+      background: color-mix(in srgb, var(--panel) 25%, transparent);
+      padding:12px;
+      border-radius: 12px;
+    }
+    .help b{display:block; margin-bottom:6px;}
+    .help ul{margin:8px 0 0 18px; color:var(--muted); padding:0;}
+    .help li{margin:6px 0;}
+
     table{
       width:100%;
       border-collapse:collapse;
@@ -227,53 +259,62 @@
     }
     th, td{
       padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.08);
+      border-bottom:1px solid color-mix(in srgb, var(--border) 70%, transparent);
       vertical-align:top;
     }
     th{
       text-align:left;
       color:var(--muted);
-      background: rgba(255,255,255,.04);
+      background: color-mix(in srgb, var(--panel) 35%, transparent);
       font-family:var(--mono);
       font-size:12px;
     }
-    .hidden{display:none !important;}
-    .kbd{
+
+    .tag{
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
       font-family:var(--mono);
+      font-size:11px;
+      padding:3px 8px;
       border:1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      padding:2px 6px;
-      border-radius:8px;
-      font-size:12px;
+      border-radius:999px;
       color:var(--muted);
+      background: color-mix(in srgb, var(--panel) 25%, transparent);
+      margin:2px 6px 0 0;
     }
+    .tag .sw{width:10px;height:10px;border-radius:999px;background:var(--accent);}
+    .hr{height:1px; background:var(--border); margin:10px 0;}
+    .mono{font-family:var(--mono);}
+    .nowrap{white-space:nowrap;}
   </style>
-
-  <!-- RDF parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/n3@1.17.3/browser/n3.min.js"></script>
-
-  <!-- Comunica SPARQL over in-memory sources -->
-  <script src="https://cdn.jsdelivr.net/npm/@comunica/query-sparql@3.1.0/browser/query-sparql.min.js"></script>
 </head>
 
-<body>
+<body data-theme="dark">
 <header>
   <div class="wrap">
     <div class="top">
       <div class="brand">
-        <h1>OntoHate <span class="pill">UI</span></h1>
-        <small>Taxonomia • Ontologia • SPARQL</small>
+        <h1>OntoHate <span class="pill">Leve • Pesado • Inteligente</span></h1>
+        <p>
+          Este projeto representa o <b>discurso de ódio online</b> por meio da ontologia OntoHate, permitindo:
+          <b>(i)</b> gerar taxonomias por dimensão e por cruzamento (nível leve),
+          <b>(ii)</b> explorar a ontologia como grafo interativo com relações/propriedades (nível pesado),
+          <b>(iii)</b> responder questões de competência via <b>SPARQL</b> (nível inteligente).
+        </p>
+        <small>Fonte OWL/TTL no GitHub • Visualização interativa • Exportação em todas as etapas</small>
       </div>
 
       <div class="tabs">
-        <button class="tabbtn active" data-tab="tax"><span>Taxonomia</span><span class="pill">A</span></button>
-        <button class="tabbtn" data-tab="onto"><span>Ontologia</span><span class="pill">B</span></button>
-        <button class="tabbtn" data-tab="sparql"><span>SPARQL</span><span class="pill">C</span></button>
+        <button class="tabbtn active" data-tab="tax"><span>Taxonomia</span><span class="pill">Leve</span></button>
+        <button class="tabbtn" data-tab="onto"><span>Ontologia</span><span class="pill">Pesado</span></button>
+        <button class="tabbtn" data-tab="sparql"><span>SPARQL</span><span class="pill">Inteligente</span></button>
       </div>
 
-      <div class="row">
+      <div class="row" style="align-items:flex-start;">
         <div class="status" id="loadStatus"><span class="dot warn" id="statusDot"></span><span id="statusText">Carregando ontologia…</span></div>
-        <button class="btn" id="reloadBtn" title="Recarregar OWL (Ctrl/Cmd+R também funciona)">Recarregar</button>
+        <button class="btn" id="reloadBtn" title="Recarregar ontologia">Recarregar</button>
+        <button class="btn" id="themeBtn" title="Alternar tema">Tema</button>
       </div>
     </div>
   </div>
@@ -282,78 +323,195 @@
 <main>
   <div class="wrap">
 
-    <!-- TAXONOMIA -->
+    <!-- TAXONOMIA (LEVE) -->
     <section id="tab-tax">
-      <div class="card">
-        <div class="hd">
-          <h2>Aba Taxonomia</h2>
-          <div class="small">Cole aqui o seu código atual da taxonomia</div>
-        </div>
-        <div class="bd">
-          <div class="muted">
-            Você disse que essa aba já existe. Para não quebrar nada, deixei um placeholder.
-            <br><br>
-            ✅ Onde integrar: substitua o bloco abaixo pelo seu HTML/JS atual da taxonomia (ou mantenha em arquivo separado e carregue via iframe/import).
+      <div class="grid">
+        <div class="card">
+          <div class="hd">
+            <h2>Gerador de Taxonomias (por dimensão e cruzamento)</h2>
+            <div class="row">
+              <span class="pill">arraste nós • personalize cores • exporte</span>
+            </div>
           </div>
-          <div style="height:12px"></div>
-          <div class="card" style="background:rgba(0,0,0,.12); border:1px dashed rgba(255,255,255,.12); box-shadow:none;">
-            <div class="bd">
-              <div class="muted">[ Placeholder da Taxonomia ]</div>
+          <div class="bd">
+            <div class="canvas" id="cyTax"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <h2>Controles — Taxonomia</h2>
+            <div class="pill" id="taxMeta">—</div>
+          </div>
+          <div class="bd">
+            <div class="help">
+              <b>Como usar (nível leve)</b>
+              <ul>
+                <li>Escolha uma ou mais <b>dimensões</b> e gere a taxonomia.</li>
+                <li>Use <b>cruzamento</b> para mostrar apenas classes que pertencem às dimensões selecionadas.</li>
+                <li>Arraste os nós para organizar. Escolha layout <span class="kbd">Top-down</span>, <span class="kbd">Radial</span> ou <span class="kbd">Force</span>.</li>
+                <li>Edite cores por dimensão e exporte a visualização (PNG/SVG).</li>
+              </ul>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <label class="small">Dimensões (multi-seleção)</label>
+            <select id="taxDimSelect" multiple size="8"></select>
+            <div class="small" style="margin-top:6px;">Dica: segure <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> para selecionar múltiplas.</div>
+
+            <div style="height:10px"></div>
+
+            <label class="small">Modo</label>
+            <select id="taxMode">
+              <option value="union">União (mostrar todas as dimensões selecionadas)</option>
+              <option value="intersection">Cruzamento (interseção das dimensões)</option>
+            </select>
+
+            <div style="height:10px"></div>
+
+            <label class="small">Layout</label>
+            <select id="taxLayout">
+              <option value="dagre">Top-down (Dagre)</option>
+              <option value="breadthfirst">Top-down (BFS)</option>
+              <option value="concentric">Radial</option>
+              <option value="cose">Force (COSE)</option>
+            </select>
+
+            <div class="row" style="margin-top:10px;">
+              <button class="btn primary" id="taxBuildBtn">Gerar</button>
+              <button class="btn" id="taxFitBtn">Ajustar tela</button>
+              <button class="btn" id="taxResetBtn">Reset posições</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <label class="small">Cor da dimensão selecionada</label>
+            <select id="taxColorDim"></select>
+            <input type="color" id="taxColorPicker" style="height:44px; padding:6px 10px; border-radius:12px;">
+
+            <div class="row" style="margin-top:10px;">
+              <button class="btn good" id="taxExportPngBtn">Exportar PNG</button>
+              <button class="btn" id="taxExportSvgBtn">Exportar SVG</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <label class="small">Busca (label / IRI)</label>
+            <input id="taxSearch" class="input" placeholder="Ex.: 'ameaça', 'destinatário', 'http://…'">
+            <div class="row" style="margin-top:10px;">
+              <button class="btn" id="taxHighlightBtn">Destacar</button>
+              <button class="btn" id="taxClearHighlightBtn">Limpar destaque</button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ONTOLOGIA -->
+    <!-- ONTOLOGIA (PESADO) -->
     <section id="tab-onto" class="hidden">
       <div class="grid">
         <div class="card">
           <div class="hd">
-            <h2>Dimensões (superclasses) e navegação</h2>
-            <div class="row" style="flex:1; justify-content:flex-end;">
-              <input id="classSearch" class="input" placeholder="Buscar classe (label/IRI)…" style="max-width:360px;">
+            <h2>Ontologia Interativa (classes + propriedades + relações)</h2>
+            <div class="row">
+              <span class="pill">tooltips ricos • arestas rotuladas • filtros</span>
             </div>
           </div>
           <div class="bd">
-            <div class="row">
-              <div style="flex:1; min-width:240px;">
-                <label class="small">Dimensão (superclasse)</label>
-                <select id="dimensionSelect"></select>
-              </div>
-              <div style="flex:1; min-width:240px;">
-                <label class="small">Raiz dentro da dimensão</label>
-                <select id="rootSelect"></select>
-              </div>
-            </div>
-
-            <div style="height:12px"></div>
-            <div class="tree" id="classTree"></div>
+            <div class="canvas" id="cyOnto"></div>
           </div>
         </div>
 
         <div class="card">
           <div class="hd">
-            <h2>Detalhes da classe</h2>
-            <div class="pill" id="detailPill">—</div>
+            <h2>Controles — Ontologia</h2>
+            <div class="pill" id="ontoMeta">—</div>
           </div>
-          <div class="bd" id="classDetail">
-            <div class="muted">Selecione uma classe na árvore para ver detalhes.</div>
+          <div class="bd">
+            <div class="help">
+              <b>Como usar (nível pesado)</b>
+              <ul>
+                <li>Selecione uma dimensão para focar (ou <b>todas</b>).</li>
+                <li>Ative/Desative <b>subClassOf</b> e <b>Object Properties</b> (arestas com rótulos).</li>
+                <li>Passe o mouse em uma classe para ver <b>todas as anotações</b> (tooltip).</li>
+                <li>Clique para fixar e ver detalhes no painel.</li>
+              </ul>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <label class="small">Dimensão (filtro)</label>
+            <select id="ontoDimSelect"></select>
+
+            <div style="height:10px"></div>
+
+            <div class="row">
+              <label class="small nowrap"><input type="checkbox" id="ontoShowSubclass" checked> Mostrar hierarquia</label>
+              <label class="small nowrap"><input type="checkbox" id="ontoShowProps" checked> Mostrar propriedades</label>
+            </div>
+
+            <div style="height:10px"></div>
+
+            <label class="small">Layout</label>
+            <select id="ontoLayout">
+              <option value="cose">Force (COSE)</option>
+              <option value="dagre">Top-down (Dagre)</option>
+              <option value="concentric">Radial</option>
+            </select>
+
+            <div class="row" style="margin-top:10px;">
+              <button class="btn primary" id="ontoBuildBtn">Atualizar grafo</button>
+              <button class="btn" id="ontoFitBtn">Ajustar tela</button>
+              <button class="btn" id="ontoExportPngBtn">Exportar PNG</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <label class="small">Busca (label / IRI)</label>
+            <input id="ontoSearch" class="input" placeholder="Ex.: 'ameaça', 'moderação', 'http://…'">
+            <div class="row" style="margin-top:10px;">
+              <button class="btn" id="ontoHighlightBtn">Destacar</button>
+              <button class="btn" id="ontoClearHighlightBtn">Limpar</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="card" style="box-shadow:none;">
+              <div class="hd"><h2>Detalhes (seleção)</h2><span class="pill" id="ontoDetailPill">—</span></div>
+              <div class="bd" id="ontoDetailBox">
+                <div class="muted">Clique em uma classe no grafo para ver detalhes aqui.</div>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+              <button class="btn" id="ontoExportJsonBtn">Exportar JSON (seleção)</button>
+            </div>
+
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SPARQL -->
+    <!-- SPARQL (INTELIGENTE) -->
     <section id="tab-sparql" class="hidden">
       <div class="grid">
         <div class="card">
           <div class="hd">
-            <h2>Perguntas prontas</h2>
-            <div class="small">Clique para preencher a consulta</div>
+            <h2>Questões de competência (presets)</h2>
+            <div class="pill">clique para preencher</div>
           </div>
           <div class="bd">
-            <div class="list" id="presetList"></div>
+            <div class="help">
+              <b>Como usar (nível inteligente)</b>
+              <ul>
+                <li>Escolha uma questão pronta. Ajuste parâmetros (IRIs) quando necessário.</li>
+                <li>Execute com <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> + <span class="kbd">Enter</span>.</li>
+                <li>Exporte resultados (CSV/JSON) para análise.</li>
+              </ul>
+            </div>
+            <div style="height:12px"></div>
+            <div id="presetList"></div>
           </div>
         </div>
 
@@ -363,13 +521,23 @@
             <div class="row">
               <button class="btn good" id="runBtn">Executar</button>
               <button class="btn" id="clearBtn">Limpar</button>
-              <span class="small">Dica: <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> + <span class="kbd">Enter</span></span>
+              <button class="btn" id="copyBtn">Copiar</button>
+              <span class="small">Atalho: <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span> + <span class="kbd">Enter</span></span>
             </div>
           </div>
           <div class="bd">
             <textarea id="sparqlText"></textarea>
+
             <div style="height:10px"></div>
-            <div class="card" style="box-shadow:none; background: rgba(0,0,0,.12);">
+
+            <div class="row">
+              <button class="btn" id="exportCsvBtn">Exportar CSV</button>
+              <button class="btn" id="exportJsonBtn">Exportar JSON</button>
+            </div>
+
+            <div style="height:10px"></div>
+
+            <div class="card" style="box-shadow:none;">
               <div class="hd"><h2>Resultado</h2><div class="small" id="resultMeta">—</div></div>
               <div class="bd" id="resultBox"><div class="muted">Execute uma consulta para ver os resultados aqui.</div></div>
             </div>
@@ -382,39 +550,26 @@
 </main>
 
 <script>
-/** ===========================
- *  CONFIG
- *  =========================== */
-const OWL_URL = "./Ontohate_V.owl"; // <-- AJUSTE AQUI (arquivo no mesmo diretório do index.html)
+/* =========================================================
+   CONFIG — ajuste aqui para o arquivo OWL/TTL no GitHub
+   =========================================================
 
-/** namespaces úteis */
+   Recomendação:
+   - Use a URL RAW do GitHub (raw.githubusercontent.com/...)
+   - Garanta CORS (GitHub raw costuma permitir)
+   - Se seu arquivo for RDF/XML (.owl), o Comunica geralmente consegue ler via URL.
+   - Se for Turtle (.ttl), funciona muito bem.
+
+*/
+const OWL_URL = "./Ontohate_V.owl"; // <-- troque para a URL RAW do GitHub, ex.:
+                                    // "https://raw.githubusercontent.com/SEUUSER/SEUREPO/main/Ontohate_oficial.ttl"
+
 const NS = {
   rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
   rdfs: "http://www.w3.org/2000/01/rdf-schema#",
   owl:  "http://www.w3.org/2002/07/owl#",
 };
 
-/** estado global */
-const state = {
-  store: null,             // N3.Store
-  terms: {
-    classes: new Set(),    // IRIs de classes (owl:Class + rdfs:Class)
-    subclassOf: new Map(), // child -> Set(parents)
-    childrenOf: new Map(), // parent -> Set(children)
-    labels: new Map(),     // iri -> string
-    comments: new Map(),   // iri -> string
-  },
-  dimensions: [],          // lista de superclasses "candidatas"
-  selectedDimension: null,
-  selectedRoot: null,
-  selectedClass: null,
-  comunica: null,          // Comunica QueryEngine
-  sources: [],             // fontes RDF para SPARQL
-};
-
-/** ===========================
- *  UI helpers
- *  =========================== */
 const $ = (id) => document.getElementById(id);
 
 function setStatus(kind, text){
@@ -425,7 +580,7 @@ function setStatus(kind, text){
 }
 
 function escapeHtml(str){
-  return (str ?? "").replace(/[&<>"']/g, s => ({
+  return String(str ?? "").replace(/[&<>"']/g, s => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[s]));
 }
@@ -436,499 +591,1139 @@ function shortIri(iri){
   return m ? m[1] : iri;
 }
 
-function getLabel(iri){
-  return state.terms.labels.get(iri) || shortIri(iri);
+function downloadText(filename, text, mime="text/plain;charset=utf-8"){
+  const blob = new Blob([text], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
-/** ===========================
- *  Tabs
- *  =========================== */
+function toCsv(rows){
+  if(!rows || rows.length===0) return "";
+  const cols = Object.keys(rows[0]);
+  const esc = (v) => {
+    const s = String(v ?? "");
+    if(/[,"\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+    return s;
+  };
+  return [cols.join(","), ...rows.map(r=>cols.map(c=>esc(r[c])).join(","))].join("\n");
+}
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = {
+  engine: null,
+  sources: [],
+  loaded: false,
+
+  // index local para UI rápida
+  classes: new Set(),         // iri
+  labels: new Map(),          // iri -> best label
+  labelsByLang: new Map(),    // iri -> Map(lang -> label)
+  comments: new Map(),        // iri -> comment
+  subclassOf: new Map(),      // child -> Set(parent)
+  childrenOf: new Map(),      // parent -> Set(child)
+
+  objProps: new Set(),        // prop iri
+  propLabel: new Map(),       // prop iri -> label
+  propDomain: new Map(),      // prop iri -> Set(domain class)
+  propRange: new Map(),       // prop iri -> Set(range class)
+
+  // annotations (para tooltip “completo”)
+  annotations: new Map(),     // class iri -> Array<{p,pLabel,o,oType,lang,dt}>
+
+  // dimensões canônicas (se você quiser travar)
+  // Se vazio: usa heurística (top-level com filhos) e remove imports comuns.
+  canonicalDimensions: [
+    // Exemplo (troque para IRIs reais se quiser forçar):
+    // "http://ontohate.org/ontohate#MotivacaoEConsequencia",
+    // "http://ontohate.org/ontohate#ManifestacaoEContexto",
+  ],
+
+  dimColors: new Map(),       // dimension iri -> hex
+  dims: [],                   // dimension iri list
+};
+
+/* =========================================================
+   TABS + THEME
+   ========================================================= */
 function initTabs(){
   document.querySelectorAll(".tabbtn").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
       btn.classList.add("active");
-
       const tab = btn.dataset.tab;
       $("tab-tax").classList.toggle("hidden", tab !== "tax");
       $("tab-onto").classList.toggle("hidden", tab !== "onto");
       $("tab-sparql").classList.toggle("hidden", tab !== "sparql");
+      // fit ao trocar (se já carregado)
+      if(tab==="tax" && cyTax) cyTax.resize();
+      if(tab==="onto" && cyOnto) cyOnto.resize();
     });
   });
 }
 
-/** ===========================
- *  OWL load + parse
- *  =========================== */
-async function loadOntology(){
-  setStatus("warn","Carregando ontologia…");
-  state.store = new N3.Store();
-  state.terms = {
-    classes: new Set(),
-    subclassOf: new Map(),
-    childrenOf: new Map(),
-    labels: new Map(),
-    comments: new Map(),
-  };
-
-  let ttlOrRdfText;
-  try{
-    const res = await fetch(OWL_URL, { cache: "no-store" });
-    if(!res.ok) throw new Error(`HTTP ${res.status} ao buscar ${OWL_URL}`);
-    ttlOrRdfText = await res.text();
-  }catch(err){
-    setStatus("bad","Falha ao baixar a OWL (ver console).");
-    console.error(err);
-    throw err;
-  }
-
-  // O N3 Parser lê Turtle/N-Triples/N-Quads muito bem.
-  // Para OWL em RDF/XML: nem sempre funciona. Muitos projetos publicam OWL em Turtle.
-  // Se seu arquivo for RDF/XML e der erro, a solução é converter para TTL no build (ex.: rdfxml -> ttl).
-  // Vamos tentar parsear e apontar erro claro.
-  const parser = new N3.Parser({ baseIRI: location.href });
-  await new Promise((resolve, reject)=>{
-    try{
-      parser.parse(ttlOrRdfText, (error, quad, prefixes) => {
-        if(error) reject(error);
-        else if(quad) state.store.addQuad(quad);
-        else resolve();
-      });
-    }catch(e){ reject(e); }
+function initTheme(){
+  $("themeBtn").addEventListener("click", ()=>{
+    const body = document.body;
+    const cur = body.getAttribute("data-theme") || "dark";
+    const nxt = cur === "dark" ? "light" : "dark";
+    body.setAttribute("data-theme", nxt);
+    // re-aplica style nos grafos
+    if(cyTax) applyCyStyle(cyTax, "tax");
+    if(cyOnto) applyCyStyle(cyOnto, "onto");
   });
-
-  indexOntology();
-  initComuncia();
-  buildOntologyUI();
-  buildPresets();
-
-  setStatus("ok",`Ontologia carregada: ${state.terms.classes.size} classes`);
 }
 
-/** ===========================
- *  Index: classes, subclass, labels, comments
- *  =========================== */
-function addMapSet(map, k, v){
+/* =========================================================
+   SPARQL HELPERS (Comunica)
+   ========================================================= */
+function initEngine(){
+  state.engine = new Comunica.QueryEngine();
+  state.sources = [OWL_URL]; // fonte remota (ou arquivo local no mesmo diretório)
+}
+
+async function qBindings(query){
+  const res = await state.engine.queryBindings(query, { sources: state.sources });
+  const arr = await res.toArray();
+  const vars = res.variables.map(v=>v.value);
+  return {vars, arr};
+}
+
+function termToString(term){
+  if(!term) return "";
+  if(term.termType === "NamedNode") return term.value;
+  if(term.termType === "Literal") return term.value;
+  return term.value || "";
+}
+function termLang(term){ return term?.termType==="Literal" ? (term.language || "") : ""; }
+function termDatatype(term){ return term?.termType==="Literal" ? (term.datatype?.value || "") : ""; }
+
+/* =========================================================
+   INDEXING — carrega tudo que o UI precisa
+   ========================================================= */
+function addMapSet(map,k,v){
   if(!map.has(k)) map.set(k, new Set());
   map.get(k).add(v);
 }
 
-function indexOntology(){
-  const { store } = state;
-
-  // owl:Class e rdfs:Class
-  const classTriples = [
-    ...store.getQuads(null, NS.rdf + "type", NS.owl + "Class", null),
-    ...store.getQuads(null, NS.rdf + "type", NS.rdfs + "Class", null),
-  ];
-  for(const q of classTriples){
-    if(q.subject.termType === "NamedNode"){
-      state.terms.classes.add(q.subject.value);
-    }
+function bestLabelFor(iri){
+  // prefer pt > en > qualquer
+  const langMap = state.labelsByLang.get(iri);
+  if(langMap){
+    if(langMap.get("pt")) return langMap.get("pt");
+    if(langMap.get("pt-br")) return langMap.get("pt-br");
+    if(langMap.get("en")) return langMap.get("en");
+    const any = [...langMap.values()][0];
+    if(any) return any;
   }
-
-  // rdfs:subClassOf
-  const subs = store.getQuads(null, NS.rdfs + "subClassOf", null, null);
-  for(const q of subs){
-    if(q.subject.termType !== "NamedNode") continue;
-    const child = q.subject.value;
-
-    // parent pode ser blank node (restrições). vamos ignorar bnodes para árvore de classes.
-    if(q.object.termType !== "NamedNode") continue;
-    const parent = q.object.value;
-
-    state.terms.classes.add(child);
-    state.terms.classes.add(parent);
-
-    addMapSet(state.terms.subclassOf, child, parent);
-    addMapSet(state.terms.childrenOf, parent, child);
-  }
-
-  // rdfs:label
-  const labels = store.getQuads(null, NS.rdfs + "label", null, null);
-  for(const q of labels){
-    if(q.subject.termType !== "NamedNode") continue;
-    if(q.object.termType !== "Literal") continue;
-    // pega primeiro label encontrado; se quiser priorizar pt, dá pra melhorar depois
-    if(!state.terms.labels.has(q.subject.value)){
-      state.terms.labels.set(q.subject.value, q.object.value);
-    }
-  }
-
-  // rdfs:comment (descrições)
-  const comments = store.getQuads(null, NS.rdfs + "comment", null, null);
-  for(const q of comments){
-    if(q.subject.termType !== "NamedNode") continue;
-    if(q.object.termType !== "Literal") continue;
-    if(!state.terms.comments.has(q.subject.value)){
-      state.terms.comments.set(q.subject.value, q.object.value);
-    }
-  }
-
-  // Dimensões: heurística prática
-  // 1) classes que são "top-level" (não têm parent NamedNode)
-  // 2) e que têm filhos (para evitar dimensões vazias)
-  const candidates = [];
-  for(const iri of state.terms.classes){
-    const parents = state.terms.subclassOf.get(iri);
-    const hasNamedParent = parents && [...parents].some(p => typeof p === "string" && p.startsWith("http"));
-    const hasChildren = state.terms.childrenOf.has(iri) && state.terms.childrenOf.get(iri).size > 0;
-
-    if(!hasNamedParent && hasChildren){
-      candidates.push(iri);
-    }
-  }
-
-  // ordena por label
-  candidates.sort((a,b)=> getLabel(a).localeCompare(getLabel(b), "pt-BR"));
-  state.dimensions = candidates;
-
-  // defaults
-  state.selectedDimension = state.dimensions[0] || null;
-  state.selectedRoot = state.selectedDimension;
+  return state.labels.get(iri) || shortIri(iri);
 }
 
-/** ===========================
- *  Comunica SPARQL setup
- *  =========================== */
-function initComuncia(){
-  // QueryEngine do bundle browser
-  state.comunica = new Comunica.QueryEngine();
-
-  // Comunica pode consultar um array de fontes RDFJS.
-  // N3.Store é compatível com RDFJS Source.
-  state.sources = [ state.store ];
+function bestPropLabelFor(iri){
+  return state.propLabel.get(iri) || shortIri(iri);
 }
 
-/** ===========================
- *  Ontology UI
- *  =========================== */
-function buildOntologyUI(){
-  // preencher dimensões
-  const dimSel = $("dimensionSelect");
-  dimSel.innerHTML = "";
-  if(state.dimensions.length === 0){
-    dimSel.innerHTML = `<option value="">(nenhuma dimensão detectada)</option>`;
+async function loadIndex(){
+  setStatus("warn","Carregando índice (classes, hierarquia, propriedades)…");
+
+  // 1) classes + labels (com linguagem)
+  {
+    const query = `
+PREFIX rdf:  <${NS.rdf}>
+PREFIX rdfs: <${NS.rdfs}>
+PREFIX owl:  <${NS.owl}>
+
+SELECT DISTINCT ?c ?label
+WHERE {
+  { ?c rdf:type owl:Class . }
+  UNION
+  { ?c rdf:type rdfs:Class . }
+  OPTIONAL { ?c rdfs:label ?label }
+}
+`;
+    const {arr} = await qBindings(query);
+    for(const b of arr){
+      const c = termToString(b.get("c"));
+      if(!c) continue;
+      state.classes.add(c);
+
+      const lab = b.get("label");
+      if(lab){
+        const lang = termLang(lab).toLowerCase();
+        if(!state.labelsByLang.has(c)) state.labelsByLang.set(c, new Map());
+        state.labelsByLang.get(c).set(lang || "_", termToString(lab));
+      }
+    }
+    // flatten best label
+    for(const c of state.classes){
+      state.labels.set(c, bestLabelFor(c));
+    }
+  }
+
+  // 2) comments
+  {
+    const query = `
+PREFIX rdfs: <${NS.rdfs}>
+SELECT DISTINCT ?c ?comment
+WHERE {
+  ?c rdfs:comment ?comment .
+}
+`;
+    const {arr} = await qBindings(query);
+    for(const b of arr){
+      const c = termToString(b.get("c"));
+      const comm = b.get("comment");
+      if(c && comm && !state.comments.has(c)){
+        state.comments.set(c, termToString(comm));
+      }
+    }
+  }
+
+  // 3) subclass edges (NamedNode only)
+  {
+    const query = `
+PREFIX rdfs: <${NS.rdfs}>
+SELECT DISTINCT ?child ?parent
+WHERE {
+  ?child rdfs:subClassOf ?parent .
+  FILTER(isIRI(?child) && isIRI(?parent))
+}
+`;
+    const {arr} = await qBindings(query);
+    for(const b of arr){
+      const child = termToString(b.get("child"));
+      const parent = termToString(b.get("parent"));
+      if(!child || !parent) continue;
+      addMapSet(state.subclassOf, child, parent);
+      addMapSet(state.childrenOf, parent, child);
+      state.classes.add(child);
+      state.classes.add(parent);
+    }
+  }
+
+  // 4) object properties + labels + domain/range
+  {
+    const query = `
+PREFIX rdf:  <${NS.rdf}>
+PREFIX rdfs: <${NS.rdfs}>
+PREFIX owl:  <${NS.owl}>
+
+SELECT DISTINCT ?p ?label ?d ?r
+WHERE {
+  ?p rdf:type owl:ObjectProperty .
+  OPTIONAL { ?p rdfs:label ?label }
+  OPTIONAL { ?p rdfs:domain ?d . FILTER(isIRI(?d)) }
+  OPTIONAL { ?p rdfs:range  ?r . FILTER(isIRI(?r)) }
+}
+`;
+    const {arr} = await qBindings(query);
+    for(const b of arr){
+      const p = termToString(b.get("p"));
+      if(!p) continue;
+      state.objProps.add(p);
+
+      const lab = b.get("label");
+      if(lab && !state.propLabel.has(p)){
+        state.propLabel.set(p, termToString(lab));
+      }
+
+      const d = termToString(b.get("d"));
+      const r = termToString(b.get("r"));
+      if(d) addMapSet(state.propDomain, p, d);
+      if(r) addMapSet(state.propRange, p, r);
+    }
+  }
+
+  // 5) annotations “completas” (tudo que estiver na tabela anexada tende a estar como annotation property)
+  // Captura literais e IRIs (exceto rdf:type e rdfs:subClassOf)
+  {
+    const query = `
+PREFIX rdf:  <${NS.rdf}>
+PREFIX rdfs: <${NS.rdfs}>
+
+SELECT DISTINCT ?s ?p ?o ?plabel
+WHERE {
+  ?s ?p ?o .
+  FILTER(isIRI(?s))
+  FILTER(?p != rdf:type && ?p != rdfs:subClassOf)
+  OPTIONAL { ?p rdfs:label ?plabel }
+}
+`;
+    const {arr} = await qBindings(query);
+    for(const b of arr){
+      const s = termToString(b.get("s"));
+      const p = b.get("p");
+      const o = b.get("o");
+      if(!s || !p || !o) continue;
+      if(!state.classes.has(s)) continue; // só anotações sobre classes
+
+      const pIri = termToString(p);
+      const pLabel = termToString(b.get("plabel")) || shortIri(pIri);
+
+      const item = {
+        p: pIri,
+        pLabel,
+        o: termToString(o),
+        oType: o.termType,
+        lang: termLang(o),
+        dt: termDatatype(o)
+      };
+      if(!state.annotations.has(s)) state.annotations.set(s, []);
+      state.annotations.get(s).push(item);
+    }
+  }
+
+  // dimensões
+  computeDimensions();
+
+  // cores default
+  seedDimensionColors();
+
+  setStatus("ok",`Ontologia pronta: ${state.classes.size} classes • ${state.objProps.size} obj props`);
+  state.loaded = true;
+}
+
+function computeDimensions(){
+  let dims = [];
+  if(state.canonicalDimensions && state.canonicalDimensions.length){
+    dims = state.canonicalDimensions.filter(d=>state.classes.has(d));
   }else{
-    for(const iri of state.dimensions){
-      const opt = document.createElement("option");
-      opt.value = iri;
-      opt.textContent = getLabel(iri);
-      dimSel.appendChild(opt);
+    // heurística: top-level com filhos
+    const cand = [];
+    for(const c of state.classes){
+      const parents = state.subclassOf.get(c);
+      const hasNamedParent = parents && [...parents].some(p => typeof p === "string" && p.startsWith("http"));
+      const hasChildren = state.childrenOf.get(c)?.size > 0;
+      if(!hasNamedParent && hasChildren) cand.push(c);
     }
-    dimSel.value = state.selectedDimension;
+    // remove imports “óbvios” (ufo/gufo/owl/rdfs)
+    const block = [
+      "http://www.w3.org/2002/07/owl#Thing",
+      "http://www.w3.org/2000/01/rdf-schema#Resource"
+    ];
+    dims = cand.filter(c => !block.includes(c));
   }
-
-  dimSel.onchange = ()=>{
-    state.selectedDimension = dimSel.value || null;
-    rebuildRootSelect();
-    renderTree();
-  };
-
-  $("classSearch").oninput = ()=>{
-    renderTree();
-  };
-
-  rebuildRootSelect();
-  renderTree();
+  dims.sort((a,b)=>bestLabelFor(a).localeCompare(bestLabelFor(b), "pt-BR"));
+  state.dims = dims;
 }
 
-function rebuildRootSelect(){
-  const rootSel = $("rootSelect");
-  rootSel.innerHTML = "";
-
-  if(!state.selectedDimension){
-    rootSel.innerHTML = `<option value="">(—)</option>`;
-    return;
+function seedDimensionColors(){
+  // palette “ok”
+  const palette = ["#7dd3fc","#a78bfa","#34d399","#fbbf24","#fb7185","#22c55e","#60a5fa","#f472b6","#f59e0b","#10b981"];
+  let i = 0;
+  for(const d of state.dims){
+    if(!state.dimColors.has(d)){
+      state.dimColors.set(d, palette[i % palette.length]);
+      i++;
+    }
   }
+}
 
-  // raízes possíveis = a própria dimensão + filhos que tenham filhos (pra evitar raiz que vira folha)
-  const roots = new Set([state.selectedDimension]);
-  const children = state.terms.childrenOf.get(state.selectedDimension) || new Set();
-  for(const c of children){
-    const hasKids = state.terms.childrenOf.has(c) && state.terms.childrenOf.get(c).size > 0;
-    if(hasKids) roots.add(c);
+/* =========================================================
+   CYTOSCAPE — setups
+   ========================================================= */
+let cyTax = null;
+let cyOnto = null;
+
+function baseCyStyle(kind){
+  // kind: "tax"|"onto"
+  return [
+    {
+      selector: 'node',
+      style: {
+        'background-color': 'data(fill)',
+        'border-color': 'data(stroke)',
+        'border-width': 2,
+        'label': 'data(label)',
+        'color': 'var(--text)',
+        'font-family': 'Inter, system-ui',
+        'font-size': 11,
+        'text-wrap': 'wrap',
+        'text-max-width': 140,
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'padding': 10,
+        'shape': 'round-rectangle',
+        'width': 'label',
+        'height': 'label',
+        'min-width': 70,
+        'min-height': 38,
+      }
+    },
+    {
+      selector: 'edge',
+      style: {
+        'curve-style': 'bezier',
+        'line-color': 'var(--edge)',
+        'width': 1.6,
+        'target-arrow-shape': 'triangle',
+        'target-arrow-color': 'var(--edge)',
+        'arrow-scale': 0.9,
+        'label': 'data(label)',
+        'font-size': 10,
+        'font-family': 'DM Mono, monospace',
+        'color': 'var(--edgeLabel)',
+        'text-rotation': 'autorotate',
+        'text-background-opacity': 1,
+        'text-background-color': 'data(labelBg)',
+        'text-background-padding': 2,
+        'text-background-shape': 'round-rectangle',
+      }
+    },
+    { selector: '.subclass', style: { 'line-style': 'solid', 'width': 1.6 } },
+    { selector: '.prop',     style: { 'line-style': 'dashed', 'width': 1.9 } },
+    { selector: '.highlight', style: { 'border-width': 4, 'border-color': 'var(--accent2)', 'background-color': 'data(fill)' } },
+    { selector: '.dimTag', style: { 'border-color': 'data(dimColor)', 'border-width': 4 } },
+    { selector: ':selected', style: { 'border-color': 'var(--accent)', 'border-width': 5 } },
+  ];
+}
+
+function applyCyStyle(cy, kind){
+  cy.style(baseCyStyle(kind));
+  cy.style().update();
+}
+
+function initCy(){
+  cyTax = cytoscape({
+    container: $("cyTax"),
+    elements: [],
+    wheelSensitivity: 0.2,
+  });
+  cyOnto = cytoscape({
+    container: $("cyOnto"),
+    elements: [],
+    wheelSensitivity: 0.2,
+  });
+  applyCyStyle(cyTax, "tax");
+  applyCyStyle(cyOnto, "onto");
+}
+
+function runLayout(cy, name){
+  let opts;
+  if(name==="dagre"){
+    opts = { name:"dagre", rankDir:"TB", nodeSep: 40, rankSep: 70, edgeSep: 10, animate: true, animationDuration: 350 };
+  }else if(name==="breadthfirst"){
+    opts = { name:"breadthfirst", directed:true, padding: 30, spacingFactor: 1.2, animate:true, animationDuration: 350 };
+  }else if(name==="concentric"){
+    opts = { name:"concentric", padding: 30, minNodeSpacing: 30, animate:true, animationDuration: 350 };
+  }else{ // "cose"
+    opts = { name:"cose-bilkent", padding: 30, animate:true, animationDuration: 450, fit:true };
   }
+  cy.layout(opts).run();
+}
 
-  const arr = [...roots].sort((a,b)=> getLabel(a).localeCompare(getLabel(b), "pt-BR"));
-  for(const iri of arr){
+function nodeData(iri, dimColor=null){
+  const lbl = bestLabelFor(iri);
+  const fill = getComputedStyle(document.body).getPropertyValue('--nodeFill').trim() || 'rgba(255,255,255,.07)';
+  const stroke = getComputedStyle(document.body).getPropertyValue('--nodeBorder').trim() || 'rgba(255,255,255,.18)';
+  return {
+    id: iri,
+    iri,
+    label: lbl,
+    fill,
+    stroke,
+    dimColor: dimColor || "transparent"
+  };
+}
+
+function edgeData(id, src, tgt, label, kind){
+  const bg = getComputedStyle(document.body).getPropertyValue('--canvas').trim() || 'rgba(0,0,0,.15)';
+  return {
+    id,
+    source: src,
+    target: tgt,
+    label: label || "",
+    labelBg: bg,
+    kind
+  };
+}
+
+/* =========================================================
+   DIMENSIONS — util
+   ========================================================= */
+function getDescendants(root){
+  // BFS over childrenOf
+  const out = new Set();
+  const q = [root];
+  const seen = new Set([root]);
+  while(q.length){
+    const cur = q.shift();
+    out.add(cur);
+    const kids = state.childrenOf.get(cur);
+    if(!kids) continue;
+    for(const k of kids){
+      if(seen.has(k)) continue;
+      seen.add(k);
+      q.push(k);
+    }
+  }
+  return out;
+}
+
+function buildDimensionDropdowns(){
+  // Taxonomy dims (multi select)
+  const sel = $("taxDimSelect");
+  sel.innerHTML = "";
+  for(const d of state.dims){
     const opt = document.createElement("option");
-    opt.value = iri;
-    opt.textContent = getLabel(iri);
-    rootSel.appendChild(opt);
+    opt.value = d;
+    opt.textContent = bestLabelFor(d);
+    sel.appendChild(opt);
   }
+  // preselect first
+  if(sel.options.length) sel.options[0].selected = true;
 
-  state.selectedRoot = arr[0] || state.selectedDimension;
-  rootSel.value = state.selectedRoot;
-
-  rootSel.onchange = ()=>{
-    state.selectedRoot = rootSel.value;
-    renderTree();
-  };
-}
-
-function matchesSearch(iri, q){
-  if(!q) return true;
-  const s = q.toLowerCase().trim();
-  const lbl = (state.terms.labels.get(iri) || "").toLowerCase();
-  return lbl.includes(s) || iri.toLowerCase().includes(s) || shortIri(iri).toLowerCase().includes(s);
-}
-
-function renderTree(){
-  const root = state.selectedRoot;
-  const q = $("classSearch").value || "";
-  const box = $("classTree");
-  box.innerHTML = "";
-
-  if(!root){
-    box.innerHTML = `<div class="muted">Nenhuma raiz selecionada.</div>`;
-    return;
+  // Tax color dim select
+  const csel = $("taxColorDim");
+  csel.innerHTML = "";
+  for(const d of state.dims){
+    const opt = document.createElement("option");
+    opt.value = d;
+    opt.textContent = bestLabelFor(d);
+    csel.appendChild(opt);
   }
+  if(csel.options.length) csel.value = csel.options[0].value;
+  syncColorPicker();
 
-  // render recursivo com filtro
-  const visited = new Set();
-
-  function buildNode(iri){
-    if(visited.has(iri)) return null;
-    visited.add(iri);
-
-    const children = [...(state.terms.childrenOf.get(iri) || [])]
-      .filter(c => matchesSearch(c, q) || hasDescendantMatch(c, q))
-      .sort((a,b)=> getLabel(a).localeCompare(getLabel(b), "pt-BR"));
-
-    const hasKids = children.length > 0;
-
-    const nodeEl = document.createElement("div");
-
-    const row = document.createElement("div");
-    row.className = "node" + (state.selectedClass === iri ? " active" : "");
-
-    const twisty = document.createElement("div");
-    twisty.className = "twisty" + (hasKids ? "" : " empty");
-    twisty.textContent = hasKids ? "+" : "•";
-
-    const lab = document.createElement("div");
-    lab.className = "label";
-    lab.innerHTML = `<b>${escapeHtml(getLabel(iri))}</b><div>${escapeHtml(shortIri(iri))}</div>`;
-
-    row.appendChild(twisty);
-    row.appendChild(lab);
-
-    // children container
-    const kidsBox = document.createElement("div");
-    kidsBox.className = "children hidden";
-
-    if(hasKids){
-      for(const c of children){
-        const cEl = buildNode(c);
-        if(cEl) kidsBox.appendChild(cEl);
-      }
-    }
-
-    // click: selecionar
-    row.addEventListener("click", (e)=>{
-      e.stopPropagation();
-      state.selectedClass = iri;
-      showClassDetail(iri);
-      // toggle expand
-      if(hasKids){
-        const open = !kidsBox.classList.contains("hidden");
-        kidsBox.classList.toggle("hidden", open);
-        twisty.textContent = open ? "+" : "–";
-      }
-      // re-render para marcar active
-      renderTree();
+  csel.onchange = syncColorPicker;
+  $("taxColorPicker").oninput = ()=>{
+    const d = csel.value;
+    state.dimColors.set(d, $("taxColorPicker").value);
+    // re-render current graphs styles (dimension border)
+    if(cyTax) cyTax.nodes().forEach(n=>{
+      const dims = n.data("dims") || [];
+      if(dims.includes(d)) n.data("dimColor", state.dimColors.get(d));
     });
+    if(cyOnto) cyOnto.nodes().forEach(n=>{
+      const dims = n.data("dims") || [];
+      if(dims.includes(d)) n.data("dimColor", state.dimColors.get(d));
+    });
+    applyCyStyle(cyTax, "tax");
+    applyCyStyle(cyOnto, "onto");
+  };
 
-    nodeEl.appendChild(row);
-    if(hasKids) nodeEl.appendChild(kidsBox);
-    return nodeEl;
+  // Ontology dim filter (single)
+  const osel = $("ontoDimSelect");
+  osel.innerHTML = `<option value="__ALL__">Todas</option>`;
+  for(const d of state.dims){
+    const opt = document.createElement("option");
+    opt.value = d;
+    opt.textContent = bestLabelFor(d);
+    osel.appendChild(opt);
   }
-
-  function hasDescendantMatch(iri, query){
-    if(!query) return true;
-    const kids = state.terms.childrenOf.get(iri);
-    if(!kids || kids.size === 0) return matchesSearch(iri, query);
-    for(const c of kids){
-      if(matchesSearch(c, query)) return true;
-      if(hasDescendantMatch(c, query)) return true;
-    }
-    return false;
-  }
-
-  // se o root não bater com busca, ainda assim renderiza se tiver descendente que bate
-  if(!matchesSearch(root, q) && !hasDescendantMatch(root, q)){
-    box.innerHTML = `<div class="muted">Nada encontrado para a busca atual nesta dimensão/raiz.</div>`;
-    return;
-  }
-
-  const rootEl = buildNode(root);
-  if(rootEl) box.appendChild(rootEl);
 }
 
-function showClassDetail(iri){
-  $("detailPill").textContent = shortIri(iri);
-  const lbl = getLabel(iri);
-  const comment = state.terms.comments.get(iri) || "—";
-  const parents = [...(state.terms.subclassOf.get(iri) || [])].map(getLabel).sort((a,b)=>a.localeCompare(b,"pt-BR"));
-  const children = [...(state.terms.childrenOf.get(iri) || [])].map(getLabel).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+function syncColorPicker(){
+  const d = $("taxColorDim").value;
+  $("taxColorPicker").value = state.dimColors.get(d) || "#7dd3fc";
+}
 
-  $("classDetail").innerHTML = `
+/* =========================================================
+   TAXONOMY (LEVE) — build graph
+   ========================================================= */
+function selectedTaxDims(){
+  const sel = $("taxDimSelect");
+  const vals = [...sel.selectedOptions].map(o=>o.value);
+  return vals.length ? vals : (state.dims[0] ? [state.dims[0]] : []);
+}
+
+function computeNodeDims(iri){
+  // class pertence a uma dimensão se estiver no fecho de subclasses daquela dimensão
+  // Para performance, vamos calcular por dimensão selecionada no build
+  return [];
+}
+
+function buildTaxonomyGraph(){
+  if(!state.loaded) return;
+
+  const dims = selectedTaxDims();
+  const mode = $("taxMode").value; // union|intersection
+
+  const sets = dims.map(d=>getDescendants(d));
+  let nodeSet = new Set();
+
+  if(mode==="intersection" && sets.length){
+    // interseção
+    nodeSet = new Set(sets[0]);
+    for(let i=1;i<sets.length;i++){
+      nodeSet = new Set([...nodeSet].filter(x=>sets[i].has(x)));
+    }
+  }else{
+    // união
+    for(const s of sets) for(const x of s) nodeSet.add(x);
+  }
+
+  // edges: subclassOf dentro do conjunto
+  const nodes = [];
+  const edges = [];
+
+  // tag dimensions on nodes for border color
+  const dimsByNode = new Map(); // iri -> [dim...]
+  for(const iri of nodeSet){
+    const belongs = dims.filter((d,idx)=>sets[idx].has(iri));
+    dimsByNode.set(iri, belongs);
+  }
+
+  for(const iri of nodeSet){
+    // pick first dim color for border tag
+    const belongs = dimsByNode.get(iri) || [];
+    const dimColor = belongs[0] ? state.dimColors.get(belongs[0]) : "transparent";
+    nodes.push({ data: { ...nodeData(iri, dimColor), dims: belongs } });
+  }
+
+  for(const child of nodeSet){
+    const parents = state.subclassOf.get(child);
+    if(!parents) continue;
+    for(const parent of parents){
+      if(!nodeSet.has(parent)) continue;
+      const id = `sub:${child}→${parent}`;
+      edges.push({ data: edgeData(id, parent, child, "subClassOf", "sub"), classes: "subclass" });
+    }
+  }
+
+  cyTax.elements().remove();
+  cyTax.add(nodes);
+  cyTax.add(edges);
+
+  // dimension tag styling
+  cyTax.nodes().forEach(n=>{
+    const d0 = (n.data("dims")||[])[0];
+    if(d0){
+      n.addClass("dimTag");
+      n.data("dimColor", state.dimColors.get(d0));
+    }
+  });
+
+  applyCyStyle(cyTax, "tax");
+
+  runLayout(cyTax, $("taxLayout").value);
+  cyTax.fit(undefined, 30);
+
+  // meta
+  $("taxMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
+
+  attachTaxTooltips();
+}
+
+function attachTaxTooltips(){
+  // tooltip leve: label + iri + comment curto
+  cyTax.nodes().forEach(node=>{
+    const iri = node.id();
+    const content = `
+      <div style="max-width:380px;">
+        <div style="font-weight:800; font-size:14px; margin-bottom:6px;">${escapeHtml(bestLabelFor(iri))}</div>
+        <div class="mono" style="font-size:11px; color:var(--muted2); word-break:break-all;">${escapeHtml(iri)}</div>
+        <div style="height:8px"></div>
+        <div style="color:var(--muted); font-size:12px; line-height:1.35;">${escapeHtml(state.comments.get(iri) || "—")}</div>
+      </div>
+    `;
+    makeTippy(node, content);
+  });
+}
+
+/* =========================================================
+   ONTOLOGY (PESADO) — build graph
+   ========================================================= */
+function buildOntologyGraph(){
+  if(!state.loaded) return;
+
+  const dim = $("ontoDimSelect").value;
+  const showSub = $("ontoShowSubclass").checked;
+  const showProps = $("ontoShowProps").checked;
+
+  // node set: all or descendants of dimension
+  let nodeSet;
+  if(dim && dim !== "__ALL__"){
+    nodeSet = getDescendants(dim);
+  }else{
+    nodeSet = new Set(state.classes);
+  }
+
+  // To keep it usable: we will only include nodes that are connected by:
+  // - subclass edges within set OR
+  // - object properties whose domain/range are within set
+  const nodes = [];
+  const edges = [];
+
+  // compute dims membership for border tag (first matching dimension from state.dims)
+  const dimsByNode = new Map();
+  // precompute descendant sets for all dimensions (heavy, but dims usually small)
+  const dimSets = new Map();
+  for(const d of state.dims){
+    dimSets.set(d, getDescendants(d));
+  }
+  for(const iri of nodeSet){
+    const belongs = [];
+    for(const d of state.dims){
+      if(dimSets.get(d).has(iri)) belongs.push(d);
+    }
+    dimsByNode.set(iri, belongs);
+  }
+
+  for(const iri of nodeSet){
+    const belongs = dimsByNode.get(iri) || [];
+    const dimColor = belongs[0] ? state.dimColors.get(belongs[0]) : "transparent";
+    nodes.push({ data: { ...nodeData(iri, dimColor), dims: belongs } });
+  }
+
+  // subclass edges
+  if(showSub){
+    for(const child of nodeSet){
+      const parents = state.subclassOf.get(child);
+      if(!parents) continue;
+      for(const parent of parents){
+        if(!nodeSet.has(parent)) continue;
+        const id = `sub:${child}→${parent}`;
+        edges.push({ data: edgeData(id, parent, child, "subClassOf", "sub"), classes: "subclass" });
+      }
+    }
+  }
+
+  // object property edges (domain->range)
+  if(showProps){
+    // We only draw edges when we can find explicit domain/range
+    for(const p of state.objProps){
+      const ds = state.propDomain.get(p) ? [...state.propDomain.get(p)] : [];
+      const rs = state.propRange.get(p) ? [...state.propRange.get(p)] : [];
+      if(ds.length===0 || rs.length===0) continue;
+
+      // Create edges for each domain-range pair that exists in current set
+      for(const d of ds){
+        if(!nodeSet.has(d)) continue;
+        for(const r of rs){
+          if(!nodeSet.has(r)) continue;
+          const id = `prop:${p}:${d}→${r}`;
+          edges.push({
+            data: edgeData(id, d, r, bestPropLabelFor(p), "prop"),
+            classes: "prop"
+          });
+        }
+      }
+    }
+  }
+
+  cyOnto.elements().remove();
+  cyOnto.add(nodes);
+  cyOnto.add(edges);
+
+  cyOnto.nodes().forEach(n=>{
+    const d0 = (n.data("dims")||[])[0];
+    if(d0){
+      n.addClass("dimTag");
+      n.data("dimColor", state.dimColors.get(d0));
+    }
+  });
+
+  applyCyStyle(cyOnto, "onto");
+  runLayout(cyOnto, $("ontoLayout").value);
+  cyOnto.fit(undefined, 30);
+
+  $("ontoMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
+
+  attachOntoTooltips();
+  bindOntoSelection();
+}
+
+function formatAnnotationList(iri){
+  // tooltip “completo”: lista tudo que capturamos em state.annotations (inclui os campos da tabela anexada se estiverem no RDF)
+  const ann = state.annotations.get(iri) || [];
+  // remove ruído: triples onde objeto é IRI e pred é muito técnico — você pode ajustar depois
+  const cleaned = ann
+    .filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment")
+    .slice(0, 60); // evita tooltip gigante
+
+  const langMap = state.labelsByLang.get(iri) || new Map();
+  const labels = [];
+  for(const [lang,lab] of langMap.entries()){
+    if(lang === "_") continue;
+    labels.push(`<span class="tag"><span class="sw" style="background:${lang.startsWith("pt") ? "var(--ok)" : "var(--accent)"}"></span>${escapeHtml(lang)}: ${escapeHtml(lab)}</span>`);
+  }
+
+  const parents = [...(state.subclassOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  const kids = [...(state.childrenOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+
+  const rows = cleaned.map(x=>{
+    const o = x.oType==="NamedNode" ? shortIri(x.o) : x.o;
+    const extra = x.oType==="Literal" ? (x.lang ? ` @${x.lang}` : (x.dt ? ` ^^${shortIri(x.dt)}` : "")) : "";
+    return `<tr><td class="mono" style="font-size:11px; color:var(--muted2);">${escapeHtml(x.pLabel)}</td><td style="font-size:12px; color:var(--muted);">${escapeHtml(o)}<span class="mono" style="color:var(--muted2);">${escapeHtml(extra)}</span></td></tr>`;
+  }).join("");
+
+  return `
+    <div style="max-width:520px;">
+      <div style="font-weight:900; font-size:14px; margin-bottom:6px;">${escapeHtml(bestLabelFor(iri))}</div>
+      <div class="mono" style="font-size:11px; color:var(--muted2); word-break:break-all;">${escapeHtml(iri)}</div>
+
+      <div style="height:8px"></div>
+      <div style="color:var(--muted); font-size:12px; line-height:1.35;">${escapeHtml(state.comments.get(iri) || "—")}</div>
+
+      ${labels.length ? `<div style="height:8px"></div><div>${labels.join("")}</div>` : ""}
+
+      <div style="height:10px"></div>
+      <div class="small">Superclasses</div>
+      <div style="color:var(--muted); font-size:12px;">${parents.length ? escapeHtml(parents.join(" • ")) : "—"}</div>
+
+      <div style="height:8px"></div>
+      <div class="small">Subclasses diretas</div>
+      <div style="color:var(--muted); font-size:12px;">${kids.length ? escapeHtml(kids.slice(0,20).join(" • ")) + (kids.length>20 ? " …" : "") : "—"}</div>
+
+      <div style="height:10px"></div>
+      <div class="small">Anotações (campos da tabela)</div>
+      <div style="height:6px"></div>
+
+      <table>
+        <thead><tr><th>Propriedade</th><th>Valor</th></tr></thead>
+        <tbody>
+          ${rows || `<tr><td colspan="2" class="muted">Sem anotações adicionais encontradas.</td></tr>`}
+        </tbody>
+      </table>
+
+      <div style="height:8px"></div>
+      <div class="small">Obs.: se algum campo da sua tabela anexada não aparecer, ele não está publicado como anotação no OWL/TTL (ou está como blank node/restrição).</div>
+    </div>
+  `;
+}
+
+function attachOntoTooltips(){
+  cyOnto.nodes().forEach(node=>{
+    const iri = node.id();
+    makeTippy(node, formatAnnotationList(iri));
+  });
+}
+
+function makeTippy(cyNode, html){
+  // cria tippy com popperRef do cytoscape
+  const ref = cyNode.popperRef();
+  const dummy = document.createElement('div');
+
+  // Evita duplicar tooltips
+  if(cyNode.data("__tippy")) {
+    try{ cyNode.data("__tippy").destroy(); }catch(e){}
+  }
+
+  const tip = tippy(dummy, {
+    getReferenceClientRect: ref.getBoundingClientRect,
+    content: () => {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      return div;
+    },
+    trigger: 'manual',
+    placement: 'top',
+    interactive: true,
+    appendTo: document.body,
+    maxWidth: 600,
+    theme: 'light-border',
+    delay: [150, 50],
+  });
+
+  cyNode.on('mouseover', () => tip.show());
+  cyNode.on('mouseout',  () => tip.hide());
+  cyNode.data("__tippy", tip);
+}
+
+function bindOntoSelection(){
+  cyOnto.off('tap');
+  cyOnto.on('tap', 'node', (evt)=>{
+    const n = evt.target;
+    const iri = n.id();
+    $("ontoDetailPill").textContent = shortIri(iri);
+    renderOntoDetail(iri);
+  });
+}
+
+function renderOntoDetail(iri){
+  const ann = state.annotations.get(iri) || [];
+  const parents = [...(state.subclassOf.get(iri)||[])];
+  const kids = [...(state.childrenOf.get(iri)||[])];
+
+  // relações por propriedades (domain/range)
+  const outgoing = [];
+  const incoming = [];
+  for(const p of state.objProps){
+    const ds = state.propDomain.get(p) ? [...state.propDomain.get(p)] : [];
+    const rs = state.propRange.get(p) ? [...state.propRange.get(p)] : [];
+    if(ds.includes(iri)){
+      for(const r of rs) outgoing.push({p, r});
+    }
+    if(rs.includes(iri)){
+      for(const d of ds) incoming.push({p, d});
+    }
+  }
+
+  const annRows = ann
+    .filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment")
+    .slice(0, 120)
+    .map(x=>{
+      const o = x.oType==="NamedNode" ? x.o : x.o;
+      const extra = x.oType==="Literal" ? (x.lang ? ` @${x.lang}` : (x.dt ? ` ^^${x.dt}` : "")) : "";
+      return `<tr><td class="mono">${escapeHtml(x.pLabel)}</td><td class="mono" style="word-break:break-all;">${escapeHtml(o)}${extra ? ` <span style="color:var(--muted2)">${escapeHtml(extra)}</span>` : ""}</td></tr>`;
+    }).join("");
+
+  $("ontoDetailBox").innerHTML = `
     <div style="display:flex; flex-direction:column; gap:10px;">
       <div>
         <div class="small">Label</div>
-        <div style="font-weight:800; font-size:16px; margin-top:2px;">${escapeHtml(lbl)}</div>
+        <div style="font-weight:900; font-size:16px; margin-top:2px;">${escapeHtml(bestLabelFor(iri))}</div>
       </div>
 
       <div>
         <div class="small">IRI</div>
-        <div class="muted" style="font-family:var(--mono); word-break:break-all;">${escapeHtml(iri)}</div>
+        <div class="mono" style="color:var(--muted2); word-break:break-all;">${escapeHtml(iri)}</div>
       </div>
 
       <div>
         <div class="small">Descrição (rdfs:comment)</div>
-        <div class="muted">${escapeHtml(comment)}</div>
+        <div class="muted">${escapeHtml(state.comments.get(iri) || "—")}</div>
       </div>
+
+      <div class="row">
+        <span class="tag"><span class="sw" style="background:var(--accent)"></span>Superclasses: ${parents.length}</span>
+        <span class="tag"><span class="sw" style="background:var(--accent2)"></span>Subclasses: ${kids.length}</span>
+        <span class="tag"><span class="sw" style="background:var(--ok)"></span>Annotations: ${ann.length}</span>
+      </div>
+
+      <div class="hr"></div>
 
       <div>
         <div class="small">Superclasses</div>
-        <div class="muted">${parents.length ? escapeHtml(parents.join(" • ")) : "—"}</div>
+        <div class="muted">${parents.length ? parents.map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR")).map(escapeHtml).join(" • ") : "—"}</div>
       </div>
-
       <div>
         <div class="small">Subclasses diretas</div>
-        <div class="muted">${children.length ? escapeHtml(children.join(" • ")) : "—"}</div>
+        <div class="muted">${kids.length ? kids.map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR")).slice(0,60).map(escapeHtml).join(" • ") + (kids.length>60 ? " …" : "") : "—"}</div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div>
+        <div class="small">Propriedades (por domínio/alcance)</div>
+        <div style="height:6px"></div>
+        <div class="small">Saindo</div>
+        <div class="muted">${outgoing.length ? outgoing.slice(0,40).map(x=>`${escapeHtml(bestPropLabelFor(x.p))} → ${escapeHtml(bestLabelFor(x.r))}`).join("<br>") : "—"}</div>
+        <div style="height:8px"></div>
+        <div class="small">Chegando</div>
+        <div class="muted">${incoming.length ? incoming.slice(0,40).map(x=>`${escapeHtml(bestLabelFor(x.d))} → ${escapeHtml(bestPropLabelFor(x.p))}`).join("<br>") : "—"}</div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div>
+        <div class="small">Anotações (tabela)</div>
+        <table>
+          <thead><tr><th>Propriedade</th><th>Valor</th></tr></thead>
+          <tbody>
+            ${annRows || `<tr><td colspan="2" class="muted">Sem anotações adicionais encontradas.</td></tr>`}
+          </tbody>
+        </table>
       </div>
     </div>
   `;
 }
 
-/** ===========================
- *  SPARQL presets + runner
- *  =========================== */
-function buildPresets(){
-  const presets = [
-    {
-      title: "Listar todas as classes (com label)",
-      query: `
-PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-
-SELECT DISTINCT ?class ?label
-WHERE {
-  ?class rdf:type owl:Class .
-  OPTIONAL { ?class rdfs:label ?label }
+/* =========================================================
+   HIGHLIGHT (tax/onto)
+   ========================================================= */
+function doHighlight(cy, query){
+  const q = (query||"").trim().toLowerCase();
+  cy.elements().removeClass("highlight");
+  if(!q) return;
+  const matches = cy.nodes().filter(n=>{
+    const iri = (n.data("iri")||"").toLowerCase();
+    const lab = (n.data("label")||"").toLowerCase();
+    return iri.includes(q) || lab.includes(q) || shortIri(iri).toLowerCase().includes(q);
+  });
+  matches.addClass("highlight");
+  if(matches.length) cy.fit(matches, 60);
 }
-ORDER BY LCASE(STR(?label))
-LIMIT 200
-`.trim()
-    },
-    {
-      title: "Listar superclasses (raízes com filhos)",
-      query: `
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT DISTINCT ?root (COUNT(DISTINCT ?child) AS ?nChildren)
-WHERE {
-  ?child rdfs:subClassOf ?root .
+/* =========================================================
+   EXPORTS (graphs)
+   ========================================================= */
+function exportCyPng(cy, filename){
+  const png = cy.png({ full: true, scale: 2, bg: "transparent" });
+  const a = document.createElement("a");
+  a.href = png;
+  a.download = filename;
+  a.click();
 }
+
+function exportCySvg(cy, filename){
+  // Cytoscape core não exporta SVG por padrão. Truque: export via PNG + avisar.
+  // Para SVG real, use cytoscape-svg plugin (se quiser, dá pra adicionar depois).
+  // Aqui: exportamos JSON do grafo (reimportável) como alternativa.
+  const json = cy.json();
+  downloadText(filename.replace(/\.svg$/i,".json"), JSON.stringify(json, null, 2), "application/json;charset=utf-8");
+  alert("SVG real exige plugin (cytoscape-svg). Exportei JSON do grafo para reuso.");
+}
+
+/* =========================================================
+   SPARQL UI (competency questions)
+   ========================================================= */
+const PRESETS = [
+  {
+    title: "CQ01 — Quais são as dimensões (raízes com mais subclasses)?",
+    desc: "Lista candidatos a dimensões pela contagem de subclasses diretas.",
+    query: `
+PREFIX rdfs: <${NS.rdfs}>
+SELECT ?root (COUNT(DISTINCT ?child) AS ?nChildren)
+WHERE { ?child rdfs:subClassOf ?root . FILTER(isIRI(?root) && isIRI(?child)) }
 GROUP BY ?root
 ORDER BY DESC(?nChildren)
 LIMIT 100
 `.trim()
-    },
-    {
-      title: "Subclasses diretas de uma classe (troque <IRI_AQUI>)",
-      query: `
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-SELECT DISTINCT ?child
-WHERE {
-  ?child rdfs:subClassOf <IRI_AQUI> .
-}
+  },
+  {
+    title: "CQ02 — Quais subclasses (diretas) de uma classe X?",
+    desc: "Troque <IRI_AQUI> pela classe desejada.",
+    query: `
+PREFIX rdfs: <${NS.rdfs}>
+SELECT ?child
+WHERE { ?child rdfs:subClassOf <IRI_AQUI> . }
 ORDER BY STR(?child)
 `.trim()
-    },
-    {
-      title: "Buscar classes por termo no label (troque \"odio\")",
-      query: `
-PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-
-SELECT DISTINCT ?class ?label
+  },
+  {
+    title: "CQ03 — Quais Object Properties existem e seus domínios/alcances?",
+    desc: "Mostra propriedades e (se definidos) domain/range.",
+    query: `
+PREFIX rdf:  <${NS.rdf}>
+PREFIX rdfs: <${NS.rdfs}>
+PREFIX owl:  <${NS.owl}>
+SELECT ?p ?label ?domain ?range
 WHERE {
-  ?class rdf:type owl:Class .
-  ?class rdfs:label ?label .
+  ?p rdf:type owl:ObjectProperty .
+  OPTIONAL { ?p rdfs:label ?label }
+  OPTIONAL { ?p rdfs:domain ?domain }
+  OPTIONAL { ?p rdfs:range ?range }
+}
+ORDER BY STR(?p)
+LIMIT 300
+`.trim()
+  },
+  {
+    title: "CQ04 — Buscar classes por termo no label",
+    desc: "Troque \"odio\" pelo termo (minúsculo).",
+    query: `
+PREFIX rdf:  <${NS.rdf}>
+PREFIX rdfs: <${NS.rdfs}>
+PREFIX owl:  <${NS.owl}>
+SELECT DISTINCT ?c ?label
+WHERE {
+  ?c rdf:type owl:Class .
+  ?c rdfs:label ?label .
   FILTER(CONTAINS(LCASE(STR(?label)), "odio"))
 }
 ORDER BY LCASE(STR(?label))
 LIMIT 200
 `.trim()
-    }
-  ];
+  },
+  {
+    title: "CQ05 — Caminhos taxonômicos (subClassOf+) entre duas classes",
+    desc: "Útil para explicar ligação por hierarquia. Troque A e B.",
+    query: `
+PREFIX rdfs: <${NS.rdfs}>
+SELECT ?mid
+WHERE {
+  <IRI_A> rdfs:subClassOf+ ?mid .
+  ?mid rdfs:subClassOf+ <IRI_B> .
+}
+LIMIT 200
+`.trim()
+  }
+];
 
-  const list = $("presetList");
-  list.innerHTML = "";
-  presets.forEach((p, idx)=>{
-    const el = document.createElement("div");
-    el.className = "item";
-    el.innerHTML = `<div class="title">${escapeHtml(p.title)}</div><div class="sub">Clique para usar</div>`;
-    el.addEventListener("click", ()=>{
-      document.querySelectorAll("#presetList .item").forEach(i=>i.classList.remove("active"));
-      el.classList.add("active");
+let lastResultRows = []; // para export CSV/JSON
+
+function buildPresetList(){
+  const box = $("presetList");
+  box.innerHTML = "";
+  PRESETS.forEach((p, idx)=>{
+    const div = document.createElement("div");
+    div.className = "card";
+    div.style.boxShadow = "none";
+    div.style.marginBottom = "10px";
+    div.innerHTML = `
+      <div class="hd">
+        <h2>${escapeHtml(p.title)}</h2>
+        <span class="pill">Preset #${idx+1}</span>
+      </div>
+      <div class="bd">
+        <div class="muted">${escapeHtml(p.desc)}</div>
+        <div style="height:10px"></div>
+        <div class="row">
+          <button class="btn primary">Usar</button>
+          <button class="btn">Copiar</button>
+        </div>
+      </div>
+    `;
+    const [useBtn, copyBtn] = div.querySelectorAll("button");
+    useBtn.addEventListener("click", ()=>{
       $("sparqlText").value = p.query;
       $("resultMeta").textContent = `Preset #${idx+1}`;
+      // troca para aba SPARQL
+      document.querySelector('.tabbtn[data-tab="sparql"]').click();
     });
-    list.appendChild(el);
+    copyBtn.addEventListener("click", async ()=>{
+      try{ await navigator.clipboard.writeText(p.query); }catch(e){}
+    });
+    box.appendChild(div);
   });
 
-  // default
-  $("sparqlText").value = presets[0].query;
+  $("sparqlText").value = PRESETS[0]?.query || "";
 }
 
 async function runSparql(){
   const query = $("sparqlText").value.trim();
   if(!query){
     $("resultBox").innerHTML = `<div class="muted">Escreva uma consulta.</div>`;
+    $("resultMeta").textContent = "—";
+    lastResultRows = [];
     return;
   }
-
   $("resultMeta").textContent = "Executando…";
   $("resultBox").innerHTML = `<div class="muted">Processando consulta SPARQL…</div>`;
+  lastResultRows = [];
 
   try{
-    const result = await state.comunica.queryBindings(query, { sources: state.sources });
-    const bindings = await result.toArray();
+    const {vars, arr} = await qBindings(query);
 
-    if(bindings.length === 0){
+    if(arr.length === 0){
       $("resultMeta").textContent = "0 linhas";
       $("resultBox").innerHTML = `<div class="muted">Sem resultados.</div>`;
       return;
     }
 
-    const vars = result.variables.map(v => v.value);
+    // construir rows simples (strings)
+    const rows = arr.slice(0, 800).map(b=>{
+      const obj = {};
+      for(const v of vars){
+        const t = b.get(v);
+        obj["?"+v] = t ? (t.termType==="NamedNode" ? t.value : t.value) : "";
+      }
+      return obj;
+    });
+    lastResultRows = rows;
 
     // render table
-    let html = `<table><thead><tr>${vars.map(v=>`<th>?${escapeHtml(v)}</th>`).join("")}</tr></thead><tbody>`;
-    for(const b of bindings.slice(0, 300)){
+    const cols = Object.keys(rows[0]);
+    let html = `<table><thead><tr>${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>`;
+    for(const r of rows.slice(0, 300)){
       html += "<tr>";
-      for(const v of vars){
-        const term = b.get(v);
-        let val = "—";
-        if(term){
-          if(term.termType === "NamedNode") val = term.value;
-          else if(term.termType === "Literal") val = term.value;
-          else val = term.value || term.id || "—";
-        }
-        html += `<td style="font-family:var(--mono); font-size:12px; word-break:break-all;">${escapeHtml(val)}</td>`;
+      for(const c of cols){
+        html += `<td class="mono" style="font-size:12px; word-break:break-all;">${escapeHtml(r[c])}</td>`;
       }
       html += "</tr>";
     }
     html += "</tbody></table>";
 
-    $("resultMeta").textContent = `${bindings.length} linhas` + (bindings.length > 300 ? " (mostrando 300)" : "");
+    $("resultMeta").textContent = `${arr.length} linhas` + (arr.length > 300 ? " (mostrando 300)" : "");
     $("resultBox").innerHTML = html;
 
   }catch(err){
@@ -937,39 +1732,125 @@ async function runSparql(){
     $("resultBox").innerHTML = `
       <div class="muted">Falha ao executar a consulta.</div>
       <div style="height:8px"></div>
-      <div class="small">${escapeHtml(String(err.message || err))}</div>
+      <div class="small mono" style="word-break:break-all;">${escapeHtml(String(err.message || err))}</div>
     `;
+    lastResultRows = [];
   }
 }
 
-/** ===========================
- *  Init
- *  =========================== */
+/* =========================================================
+   WIRING UI
+   ========================================================= */
+function wireUI(){
+  $("reloadBtn").addEventListener("click", ()=> boot().catch(()=>{}));
+
+  // TAX
+  $("taxBuildBtn").addEventListener("click", buildTaxonomyGraph);
+  $("taxFitBtn").addEventListener("click", ()=> cyTax.fit(undefined, 30));
+  $("taxResetBtn").addEventListener("click", ()=>{
+    // reset: run layout again
+    runLayout(cyTax, $("taxLayout").value);
+    cyTax.fit(undefined, 30);
+  });
+  $("taxLayout").addEventListener("change", ()=>{
+    runLayout(cyTax, $("taxLayout").value);
+  });
+  $("taxExportPngBtn").addEventListener("click", ()=> exportCyPng(cyTax, "ontohate-taxonomia.png"));
+  $("taxExportSvgBtn").addEventListener("click", ()=> exportCySvg(cyTax, "ontohate-taxonomia.svg"));
+  $("taxHighlightBtn").addEventListener("click", ()=> doHighlight(cyTax, $("taxSearch").value));
+  $("taxClearHighlightBtn").addEventListener("click", ()=> { $("taxSearch").value=""; cyTax.elements().removeClass("highlight"); });
+
+  // ONTO
+  $("ontoBuildBtn").addEventListener("click", buildOntologyGraph);
+  $("ontoFitBtn").addEventListener("click", ()=> cyOnto.fit(undefined, 30));
+  $("ontoExportPngBtn").addEventListener("click", ()=> exportCyPng(cyOnto, "ontohate-ontologia.png"));
+  $("ontoExportJsonBtn").addEventListener("click", ()=>{
+    // exporta seleção (ou nó clicado)
+    const selected = cyOnto.$(":selected");
+    const json = selected.length ? selected.jsons() : [];
+    downloadText("ontohate-selecao.json", JSON.stringify(json, null, 2), "application/json;charset=utf-8");
+  });
+  $("ontoHighlightBtn").addEventListener("click", ()=> doHighlight(cyOnto, $("ontoSearch").value));
+  $("ontoClearHighlightBtn").addEventListener("click", ()=> { $("ontoSearch").value=""; cyOnto.elements().removeClass("highlight"); });
+
+  // SPARQL
+  $("runBtn").addEventListener("click", runSparql);
+  $("clearBtn").addEventListener("click", ()=> { $("sparqlText").value=""; });
+  $("copyBtn").addEventListener("click", async ()=>{
+    try{ await navigator.clipboard.writeText($("sparqlText").value || ""); }catch(e){}
+  });
+  $("sparqlText").addEventListener("keydown", (e)=>{
+    const isMac = navigator.platform.toLowerCase().includes("mac");
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    if(mod && e.key === "Enter"){
+      e.preventDefault();
+      runSparql();
+    }
+  });
+  $("exportCsvBtn").addEventListener("click", ()=>{
+    if(!lastResultRows.length) return alert("Sem resultados para exportar.");
+    downloadText("sparql-result.csv", toCsv(lastResultRows), "text/csv;charset=utf-8");
+  });
+  $("exportJsonBtn").addEventListener("click", ()=>{
+    if(!lastResultRows.length) return alert("Sem resultados para exportar.");
+    downloadText("sparql-result.json", JSON.stringify(lastResultRows, null, 2), "application/json;charset=utf-8");
+  });
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+async function boot(){
+  setStatus("warn","Carregando ontologia…");
+
+  // reset state caches (mantém cores)
+  const keepColors = new Map(state.dimColors);
+  Object.assign(state, {
+    loaded:false,
+    classes:new Set(),
+    labels:new Map(),
+    labelsByLang:new Map(),
+    comments:new Map(),
+    subclassOf:new Map(),
+    childrenOf:new Map(),
+    objProps:new Set(),
+    propLabel:new Map(),
+    propDomain:new Map(),
+    propRange:new Map(),
+    annotations:new Map(),
+    dims:[],
+  });
+  state.dimColors = keepColors;
+
+  initEngine();
+
+  try{
+    await loadIndex();
+    buildDimensionDropdowns();
+    buildPresetList();
+
+    // inicializa grafos (primeira vez)
+    if(!cyTax || !cyOnto){
+      initCy();
+    }
+
+    // auto-build (MVP)
+    buildTaxonomyGraph();
+    buildOntologyGraph();
+
+  }catch(err){
+    console.error(err);
+    setStatus("bad","Erro ao carregar. Ver console. (CORS/URL RAW/arquivo inválido)");
+  }
+}
+
+/* =========================================================
+   START
+   ========================================================= */
 initTabs();
-
-$("reloadBtn").addEventListener("click", ()=> loadOntology().catch(()=>{}));
-$("runBtn").addEventListener("click", ()=> runSparql());
-$("clearBtn").addEventListener("click", ()=> { $("sparqlText").value=""; });
-
-$("sparqlText").addEventListener("keydown", (e)=>{
-  const isMac = navigator.platform.toLowerCase().includes("mac");
-  const mod = isMac ? e.metaKey : e.ctrlKey;
-  if(mod && e.key === "Enter"){
-    e.preventDefault();
-    runSparql();
-  }
-});
-
-// boot
-loadOntology().catch(err=>{
-  // Mensagem prática para caso RDF/XML
-  const msg = String(err?.message || err);
-  if(msg.toLowerCase().includes("unexpected") || msg.toLowerCase().includes("syntax")){
-    setStatus("bad","Erro de parse. Se sua OWL estiver em RDF/XML, converta para TTL.");
-  }else{
-    setStatus("bad","Erro ao carregar a ontologia.");
-  }
-});
+initTheme();
+wireUI();
+boot();
 </script>
 </body>
 </html>
