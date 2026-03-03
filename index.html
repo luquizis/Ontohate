@@ -174,16 +174,6 @@
       background: color-mix(in srgb, var(--ok) 12%, transparent);
       box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 12%, transparent);
     }
-    .btn.warn{
-      border-color: color-mix(in srgb, var(--warn) 55%, transparent);
-      background: color-mix(in srgb, var(--warn) 12%, transparent);
-      box-shadow: 0 0 0 4px color-mix(in srgb, var(--warn) 10%, transparent);
-    }
-    .btn.bad{
-      border-color: color-mix(in srgb, var(--bad) 55%, transparent);
-      background: color-mix(in srgb, var(--bad) 12%, transparent);
-      box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 10%, transparent);
-    }
     .input, select, textarea{
       width:100%;
       border:1px solid var(--border);
@@ -211,7 +201,6 @@
     .dot.ok{background:var(--ok)}
     .dot.bad{background:var(--bad)}
     .dot.warn{background:var(--warn)}
-
     .hidden{display:none !important;}
     .kbd{
       font-family:var(--mono);
@@ -263,20 +252,6 @@
       font-size:12px;
     }
 
-    .tag{
-      display:inline-flex;
-      gap:6px;
-      align-items:center;
-      font-family:var(--mono);
-      font-size:11px;
-      padding:3px 8px;
-      border:1px solid var(--border);
-      border-radius:999px;
-      color:var(--muted);
-      background: color-mix(in srgb, var(--panel) 25%, transparent);
-      margin:2px 6px 0 0;
-    }
-    .tag .sw{width:10px;height:10px;border-radius:999px;background:var(--accent);}
     .hr{height:1px; background:var(--border); margin:10px 0;}
     .mono{font-family:var(--mono);}
     .nowrap{white-space:nowrap;}
@@ -323,7 +298,7 @@
           <div class="hd">
             <h2>Gerador de Taxonomias (por dimensão e cruzamento)</h2>
             <div class="row">
-              <span class="pill">arraste nós • personalize cores • exporte</span>
+              <span class="pill">arraste nós • personalize • exporte</span>
             </div>
           </div>
           <div class="bd">
@@ -341,9 +316,8 @@
               <b>Como usar (nível leve)</b>
               <ul>
                 <li>Escolha uma ou mais <b>dimensões</b> e gere a taxonomia.</li>
-                <li>Use <b>cruzamento</b> para mostrar apenas classes que pertencem às dimensões selecionadas.</li>
-                <li>Arraste os nós para organizar. Layout <span class="kbd">Top-down</span>, <span class="kbd">Radial</span> ou <span class="kbd">Force</span>.</li>
-                <li>Edite cores por dimensão e exporte a visualização (PNG). (SVG real pode ser adicionado via plugin.)</li>
+                <li>Use <b>cruzamento</b> para reduzir ruído (interseção).</li>
+                <li><b>Foco de Vizinhança</b>: clique em um nó para mostrar só ele + vizinhos diretos.</li>
               </ul>
             </div>
 
@@ -379,6 +353,16 @@
 
             <div class="hr"></div>
 
+            <div class="row">
+              <label class="small nowrap" title="Ao clicar em um nó, mostra apenas vizinhos diretos (Pai/Filho/Propriedade)">
+                <input type="checkbox" id="taxFocusToggle" checked>
+                Foco de Vizinhança
+              </label>
+              <button class="btn" id="taxFocusClearBtn" title="Voltar a mostrar tudo">Limpar foco</button>
+            </div>
+
+            <div class="hr"></div>
+
             <label class="small">Cor da dimensão selecionada</label>
             <select id="taxColorDim"></select>
             <input type="color" id="taxColorPicker" style="height:44px; padding:6px 10px; border-radius:12px;">
@@ -396,6 +380,7 @@
               <button class="btn" id="taxHighlightBtn">Destacar</button>
               <button class="btn" id="taxClearHighlightBtn">Limpar destaque</button>
             </div>
+
           </div>
         </div>
       </div>
@@ -408,7 +393,7 @@
           <div class="hd">
             <h2>Ontologia Interativa (classes + propriedades + relações)</h2>
             <div class="row">
-              <span class="pill">tooltips ricos • arestas rotuladas • filtros</span>
+              <span class="pill">tooltips ricos • arestas rotuladas • foco</span>
             </div>
           </div>
           <div class="bd">
@@ -427,8 +412,7 @@
               <ul>
                 <li>Selecione uma dimensão para focar (ou <b>todas</b>).</li>
                 <li>Ative/Desative <b>subClassOf</b> e <b>Object Properties</b> (arestas com rótulos).</li>
-                <li>Passe o mouse em uma classe para ver <b>todas as anotações</b> (tooltip).</li>
-                <li>Clique para fixar e ver detalhes no painel.</li>
+                <li><b>Foco de Vizinhança</b>: clique em um nó para limpar ruído (1 salto).</li>
               </ul>
             </div>
 
@@ -457,6 +441,16 @@
               <button class="btn primary" id="ontoBuildBtn">Atualizar grafo</button>
               <button class="btn" id="ontoFitBtn">Ajustar tela</button>
               <button class="btn" id="ontoExportPngBtn">Exportar PNG</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="row">
+              <label class="small nowrap" title="Ao clicar em um nó, mostra apenas vizinhos diretos (Pai/Filho/Propriedade)">
+                <input type="checkbox" id="ontoFocusToggle" checked>
+                Foco de Vizinhança
+              </label>
+              <button class="btn" id="ontoFocusClearBtn" title="Voltar a mostrar tudo">Limpar foco</button>
             </div>
 
             <div class="hr"></div>
@@ -545,28 +539,14 @@
 <script>
 /* =========================================================
    CONFIG — base no GitHub: Ontohate_oficial.ttl
-   =========================================================
-
-   ✅ ESTE CÓDIGO PRESUME que no GitHub existe o arquivo:
-      Ontohate_oficial.ttl
-
-   Você só precisa trocar o REPO abaixo.
-   O código monta automaticamente a URL RAW:
-
-   https://raw.githubusercontent.com/<GITHUB_USER>/<GITHUB_REPO>/<BRANCH>/Ontohate_oficial.ttl
-
-   Observação:
-   - Se o arquivo estiver em subpasta, ajuste FILE_PATH.
-   - Se você publicar via GitHub Pages, também pode apontar para uma URL do pages.
-*/
+   ========================================================= */
 const GITHUB_USER = "SEU_USER_AQUI";
 const GITHUB_REPO = "SEU_REPO_AQUI";
 const BRANCH = "main";
-const FILE_PATH = "Ontohate_oficial.ttl"; // <-- nome/base exigido
+const FILE_PATH = "Ontohate_oficial.ttl"; // exigido
 
 const OWL_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}/${FILE_PATH}`;
 
-// Namespaces
 const NS = {
   rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
   rdfs: "http://www.w3.org/2000/01/rdf-schema#",
@@ -638,7 +618,7 @@ const state = {
 
   annotations: new Map(),
 
-  canonicalDimensions: [], // opcional: você pode travar aqui depois
+  canonicalDimensions: [],
   dimColors: new Map(),
   dims: [],
 };
@@ -673,8 +653,8 @@ function initTabs(){
       $("tab-tax").classList.toggle("hidden", tab !== "tax");
       $("tab-onto").classList.toggle("hidden", tab !== "onto");
       $("tab-sparql").classList.toggle("hidden", tab !== "sparql");
-      if(tab==="tax" && cyTax) cyTax.resize();
-      if(tab==="onto" && cyOnto) cyOnto.resize();
+      if(tab==="tax" && cyTax) { cyTax.resize(); cyTax.fit(undefined, 30); }
+      if(tab==="onto" && cyOnto) { cyOnto.resize(); cyOnto.fit(undefined, 30); }
     });
   });
 }
@@ -684,8 +664,8 @@ function initTheme(){
     const cur = body.getAttribute("data-theme") || "dark";
     const nxt = cur === "dark" ? "light" : "dark";
     body.setAttribute("data-theme", nxt);
-    if(cyTax) applyCyStyle(cyTax, "tax");
-    if(cyOnto) applyCyStyle(cyOnto, "onto");
+    if(cyTax) applyCyStyle(cyTax);
+    if(cyOnto) applyCyStyle(cyOnto);
   });
 }
 
@@ -717,7 +697,6 @@ function termDatatype(term){ return term?.termType==="Literal" ? (term.datatype?
 async function loadIndex(){
   setStatus("warn","Carregando Ontohate_oficial.ttl do GitHub…");
 
-  // sanity check: fetch head
   try{
     const r = await fetch(OWL_URL, {cache:"no-store"});
     if(!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -726,7 +705,7 @@ async function loadIndex(){
     throw e;
   }
 
-  // classes + labels (lang)
+  // classes + labels
   {
     const query = `
 PREFIX rdf:  <${NS.rdf}>
@@ -734,9 +713,7 @@ PREFIX rdfs: <${NS.rdfs}>
 PREFIX owl:  <${NS.owl}>
 SELECT DISTINCT ?c ?label
 WHERE {
-  { ?c rdf:type owl:Class . }
-  UNION
-  { ?c rdf:type rdfs:Class . }
+  { ?c rdf:type owl:Class . } UNION { ?c rdf:type rdfs:Class . }
   OPTIONAL { ?c rdfs:label ?label }
 }
 `;
@@ -745,7 +722,6 @@ WHERE {
       const c = termToString(b.get("c"));
       if(!c) continue;
       state.classes.add(c);
-
       const lab = b.get("label");
       if(lab){
         const lang = termLang(lab).toLowerCase();
@@ -816,12 +792,8 @@ WHERE {
       const p = termToString(b.get("p"));
       if(!p) continue;
       state.objProps.add(p);
-
       const lab = b.get("label");
-      if(lab && !state.propLabel.has(p)){
-        state.propLabel.set(p, termToString(lab));
-      }
-
+      if(lab && !state.propLabel.has(p)) state.propLabel.set(p, termToString(lab));
       const d = termToString(b.get("d"));
       const r = termToString(b.get("r"));
       if(d) addMapSet(state.propDomain, p, d);
@@ -829,7 +801,7 @@ WHERE {
     }
   }
 
-  // annotations completas (para tooltip “tabela anexa”, se estiverem no RDF)
+  // annotations completas (tooltip “tabela”)
   {
     const query = `
 PREFIX rdf:  <${NS.rdf}>
@@ -868,6 +840,7 @@ WHERE {
 
   computeDimensions();
   seedDimensionColors();
+
   setStatus("ok",`Ontohate_oficial.ttl carregado: ${state.classes.size} classes • ${state.objProps.size} props`);
   state.loaded = true;
 }
@@ -911,6 +884,7 @@ function seedDimensionColors(){
 let cyTax=null, cyOnto=null;
 
 function baseCyStyle(){
+  // NOTE: 'display: none' é via Cytoscape style (não CSS)
   return [
     {
       selector: 'node',
@@ -959,6 +933,10 @@ function baseCyStyle(){
     { selector: '.highlight', style: { 'border-width': 4, 'border-color': 'var(--accent2)' } },
     { selector: '.dimTag', style: { 'border-color': 'data(dimColor)', 'border-width': 4 } },
     { selector: ':selected', style: { 'border-color': 'var(--accent)', 'border-width': 5 } },
+
+    /* ✅ FOCO DE VIZINHANÇA */
+    { selector: '.focusDim', style: { 'opacity': 0.12 } },
+    { selector: '.focusHide', style: { 'display': 'none' } },
   ];
 }
 
@@ -1045,12 +1023,12 @@ function buildDimensionDropdowns(){
   }
   if(csel.options.length) csel.value = csel.options[0].value;
   $("taxColorPicker").value = state.dimColors.get(csel.value) || "#7dd3fc";
+
   csel.onchange = ()=> $("taxColorPicker").value = state.dimColors.get(csel.value) || "#7dd3fc";
 
   $("taxColorPicker").oninput = ()=>{
     const d = csel.value;
     state.dimColors.set(d, $("taxColorPicker").value);
-    // reapply
     if(cyTax) applyCyStyle(cyTax);
     if(cyOnto) applyCyStyle(cyOnto);
   };
@@ -1066,12 +1044,16 @@ function buildDimensionDropdowns(){
 }
 
 /* =========================================================
-   TOOLTIP (usa anotações do TTL)
+   TOOLTIP
    ========================================================= */
 function makeTippy(cyNode, html){
   const ref = cyNode.popperRef();
   const dummy = document.createElement('div');
-  if(cyNode.data("__tippy")) { try{ cyNode.data("__tippy").destroy(); }catch(e){} }
+
+  // destrói tippy anterior (se houver)
+  const old = cyNode.data("__tippy");
+  if(old) { try{ old.destroy(); }catch(e){} }
+
   const tip = tippy(dummy, {
     getReferenceClientRect: ref.getBoundingClientRect,
     content: () => { const div = document.createElement('div'); div.innerHTML = html; return div; },
@@ -1091,7 +1073,7 @@ function makeTippy(cyNode, html){
 function tooltipHtml(iri){
   const ann = (state.annotations.get(iri) || [])
     .filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment")
-    .slice(0, 80);
+    .slice(0, 100);
 
   const parents = [...(state.subclassOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
   const kids = [...(state.childrenOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
@@ -1124,6 +1106,39 @@ function tooltipHtml(iri){
       </table>
     </div>
   `;
+}
+
+/* =========================================================
+   ✅ FOCO DE VIZINHANÇA (Pai/Filho/Propriedade)
+   ========================================================= */
+const focusState = {
+  tax:  { enabled: true, active: false },
+  onto: { enabled: true, active: false },
+};
+
+function clearNeighborhoodFocus(cy){
+  cy.elements().removeClass("focusDim");
+  cy.elements().removeClass("focusHide");
+  cy.fit(undefined, 30);
+}
+
+function setNeighborhoodFocus(cy, nodeId){
+  const n = cy.getElementById(nodeId);
+  if(!n || n.empty()) return;
+
+  // Nó + vizinhos diretos (arestas subClassOf e props, porque são edges conectadas)
+  const hood = n.closedNeighborhood();
+
+  // esconde tudo e mostra só a vizinhança
+  cy.elements().addClass("focusHide");
+  hood.removeClass("focusHide");
+
+  // aplica “dim” ao restante (caso você queira só opacidade, bastaria comentar a parte focusHide)
+  cy.elements().addClass("focusDim");
+  hood.removeClass("focusDim");
+
+  n.select();
+  cy.fit(hood, 70);
 }
 
 /* =========================================================
@@ -1179,6 +1194,10 @@ function buildTaxonomyGraph(){
   runLayout(cyTax, $("taxLayout").value);
   cyTax.fit(undefined, 30);
   $("taxMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
+
+  // se havia foco ativo, limpa ao regerar
+  focusState.tax.active = false;
+  clearNeighborhoodFocus(cyTax);
 }
 
 /* =========================================================
@@ -1189,7 +1208,7 @@ function buildOntologyGraph(){
   const showSub = $("ontoShowSubclass").checked;
   const showProps = $("ontoShowProps").checked;
 
-  let nodeSet = (dim && dim!=="__ALL__") ? getDescendants(dim) : new Set(state.classes);
+  const nodeSet = (dim && dim!=="__ALL__") ? getDescendants(dim) : new Set(state.classes);
 
   const nodes=[], edges=[];
   for(const iri of nodeSet){
@@ -1226,21 +1245,16 @@ function buildOntologyGraph(){
   cyOnto.add(nodes);
   cyOnto.add(edges);
 
-  cyOnto.nodes().forEach(n=>{
-    makeTippy(n, tooltipHtml(n.id()));
-  });
-
-  cyOnto.off("tap");
-  cyOnto.on("tap","node",(evt)=>{
-    const iri = evt.target.id();
-    $("ontoDetailPill").textContent = shortIri(iri);
-    $("ontoDetailBox").innerHTML = tooltipHtml(iri);
-  });
+  cyOnto.nodes().forEach(n=> makeTippy(n, tooltipHtml(n.id())));
 
   applyCyStyle(cyOnto);
   runLayout(cyOnto, $("ontoLayout").value);
   cyOnto.fit(undefined, 30);
   $("ontoMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
+
+  // se havia foco ativo, limpa ao regerar
+  focusState.onto.active = false;
+  clearNeighborhoodFocus(cyOnto);
 }
 
 /* =========================================================
@@ -1430,6 +1444,19 @@ function wireUI(){
   $("taxHighlightBtn").addEventListener("click", ()=> doHighlight(cyTax, $("taxSearch").value));
   $("taxClearHighlightBtn").addEventListener("click", ()=> { $("taxSearch").value=""; cyTax.elements().removeClass("highlight"); });
 
+  // ✅ FOCO TAX
+  $("taxFocusToggle").addEventListener("change", ()=>{
+    focusState.tax.enabled = $("taxFocusToggle").checked;
+    if(!focusState.tax.enabled){
+      focusState.tax.active = false;
+      clearNeighborhoodFocus(cyTax);
+    }
+  });
+  $("taxFocusClearBtn").addEventListener("click", ()=>{
+    focusState.tax.active = false;
+    clearNeighborhoodFocus(cyTax);
+  });
+
   // ONTO
   $("ontoBuildBtn").addEventListener("click", buildOntologyGraph);
   $("ontoFitBtn").addEventListener("click", ()=> cyOnto.fit(undefined, 30));
@@ -1442,15 +1469,30 @@ function wireUI(){
     downloadText("ontohate-selecao.json", JSON.stringify(json, null, 2), "application/json;charset=utf-8");
   });
 
+  // ✅ FOCO ONTO
+  $("ontoFocusToggle").addEventListener("change", ()=>{
+    focusState.onto.enabled = $("ontoFocusToggle").checked;
+    if(!focusState.onto.enabled){
+      focusState.onto.active = false;
+      clearNeighborhoodFocus(cyOnto);
+    }
+  });
+  $("ontoFocusClearBtn").addEventListener("click", ()=>{
+    focusState.onto.active = false;
+    clearNeighborhoodFocus(cyOnto);
+  });
+
   // SPARQL
   $("runBtn").addEventListener("click", runSparql);
   $("clearBtn").addEventListener("click", ()=> { $("sparqlText").value=""; });
   $("copyBtn").addEventListener("click", async ()=>{ try{ await navigator.clipboard.writeText($("sparqlText").value || ""); }catch(e){} });
+
   $("sparqlText").addEventListener("keydown", (e)=>{
     const isMac = navigator.platform.toLowerCase().includes("mac");
     const mod = isMac ? e.metaKey : e.ctrlKey;
     if(mod && e.key === "Enter"){ e.preventDefault(); runSparql(); }
   });
+
   $("exportCsvBtn").addEventListener("click", ()=>{
     if(!lastResultRows.length) return alert("Sem resultados para exportar.");
     downloadText("sparql-result.csv", toCsv(lastResultRows), "text/csv;charset=utf-8");
@@ -1458,6 +1500,48 @@ function wireUI(){
   $("exportJsonBtn").addEventListener("click", ()=>{
     if(!lastResultRows.length) return alert("Sem resultados para exportar.");
     downloadText("sparql-result.json", JSON.stringify(lastResultRows, null, 2), "application/json;charset=utf-8");
+  });
+}
+
+/* =========================================================
+   CY EVENTS (inclui foco de vizinhança + detalhes)
+   ========================================================= */
+function wireCyEvents(){
+  // clique no fundo limpa foco (se ativo)
+  cyTax.on("tap", (evt)=>{
+    if(evt.target === cyTax && focusState.tax.active){
+      focusState.tax.active = false;
+      clearNeighborhoodFocus(cyTax);
+    }
+  });
+  cyOnto.on("tap", (evt)=>{
+    if(evt.target === cyOnto && focusState.onto.active){
+      focusState.onto.active = false;
+      clearNeighborhoodFocus(cyOnto);
+    }
+  });
+
+  // clique no nó aplica foco se toggle ON
+  cyTax.on("tap","node",(evt)=>{
+    const iri = evt.target.id();
+    if(focusState.tax.enabled){
+      focusState.tax.active = true;
+      setNeighborhoodFocus(cyTax, iri);
+    }
+  });
+
+  cyOnto.on("tap","node",(evt)=>{
+    const iri = evt.target.id();
+
+    // 1) detalhes sempre
+    $("ontoDetailPill").textContent = shortIri(iri);
+    $("ontoDetailBox").innerHTML = tooltipHtml(iri);
+
+    // 2) foco opcional
+    if(focusState.onto.enabled){
+      focusState.onto.active = true;
+      setNeighborhoodFocus(cyOnto, iri);
+    }
   });
 }
 
@@ -1493,7 +1577,10 @@ async function boot(){
     buildDimensionDropdowns();
     buildPresetList();
 
-    if(!cyTax || !cyOnto) initCy();
+    if(!cyTax || !cyOnto){
+      initCy();
+      wireCyEvents(); // ✅ conecta 1 vez (evita duplicar handlers)
+    }
 
     buildTaxonomyGraph();
     buildOntologyGraph();
