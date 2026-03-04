@@ -214,6 +214,16 @@
     .listItem:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--panel) 35%, transparent);}
     .listItem .t{font-weight:900; font-size:13px;}
     .listItem .s{font-family:var(--mono); font-size:11px; color:var(--muted2); margin-top:4px;}
+
+    /* loader ping */
+    .spinner{
+      width:14px; height:14px; border-radius:999px;
+      border:2px solid color-mix(in srgb, var(--muted2) 55%, transparent);
+      border-top-color: var(--accent);
+      animation: spin .9s linear infinite;
+      display:inline-block;
+    }
+    @keyframes spin { to{ transform: rotate(360deg);} }
   </style>
 </head>
 
@@ -560,10 +570,12 @@ function resetIndex(){
   state.comments = new Map();
   state.subclassOf = new Map();
   state.childrenOf = new Map();
+
   state.objProps = new Set();
   state.propLabel = new Map();
   state.propDomain = new Map();
   state.propRange = new Map();
+
   state.annotations = new Map();
   state.dims = [];
   state.loadedFrom = null;
@@ -912,7 +924,6 @@ function setNeighborhoodFocus(cy, nodeId){
 
 /* =================== Build dimension selectors =================== */
 function fillDimensions(){
-  // tax dims
   const sel = $("taxDimSelect");
   sel.innerHTML = "";
   for(const d of state.dims){
@@ -922,7 +933,6 @@ function fillDimensions(){
   }
   if(sel.options.length) sel.options[0].selected=true;
 
-  // onto dims
   const os = $("ontoDimSelect");
   os.innerHTML = `<option value="__ALL__">Todas</option>`;
   for(const d of state.dims){
@@ -1241,9 +1251,8 @@ function wireUI(){
   };
 }
 
-/* =================== BOOT (com as substituições pedidas) =================== */
+/* =================== BOOT (com timeout + progress UI) =================== */
 async function boot(){
-  // ✅ substituição: calcular URL robusta a partir da página atual
   const ttlUrl = new URL("Ontohate_oficial.ttl", window.location.href).toString();
 
   setStatus("warn","Baixando Ontohate_oficial.ttl…");
@@ -1253,6 +1262,8 @@ async function boot(){
     <div style="height:8px"></div>
     <div class="small">TTL_URL calculada:</div>
     <div class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(ttlUrl)}</div>
+    <div style="height:10px"></div>
+    <div class="muted"><span class="spinner"></span> aguardando fetch…</div>
   `);
 
   console.log("[OntoHate] page:", window.location.href);
@@ -1260,36 +1271,72 @@ async function boot(){
 
   resetIndex();
 
+  // --- fetch com timeout + cachebuster + ping visual ---
   let res;
+
+  const controller = new AbortController();
+  const timeoutMs = 20000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  const startedAt = Date.now();
+  const tickId = setInterval(() => {
+    const secs = Math.floor((Date.now() - startedAt) / 1000);
+    $("debugPill").textContent = `Baixando… ${secs}s`;
+  }, 1000);
+
   try{
-    res = await fetch(ttlUrl, { cache:"no-store" });
+    const urlNoCache = ttlUrl + (ttlUrl.includes("?") ? "&" : "?") + "v=" + Date.now();
+    console.log("[OntoHate] fetching:", urlNoCache);
+
+    res = await fetch(urlNoCache, { cache:"no-store", signal: controller.signal });
   }catch(e){
+    clearTimeout(timeoutId);
+    clearInterval(tickId);
+
     console.error("[OntoHate] fetch failed:", e);
-    setStatus("bad","Falha de rede/CORS ao buscar o TTL (ver console).");
-    setDebug("Falha", `<div class="muted">Fetch falhou.</div><div class="small mono">${escapeHtml(String(e?.message||e))}</div>`);
+    const msg = (e?.name === "AbortError")
+      ? `Timeout: download passou de ${timeoutMs/1000}s`
+      : `Falha no fetch: ${String(e?.message || e)}`;
+
+    setStatus("bad", msg);
+    setDebug("Falha", `<div class="muted">Fetch falhou.</div><div class="small mono">${escapeHtml(msg)}</div>`);
     return;
   }
 
+  clearTimeout(timeoutId);
+  clearInterval(tickId);
+
+  console.log("[OntoHate] response:", res.status, res.statusText);
+
   if(!res.ok){
-    console.error("[OntoHate] HTTP error:", res.status, res.statusText, ttlUrl);
-    setStatus("bad",`Não consegui abrir o TTL (HTTP ${res.status}).`);
+    setStatus("bad", `HTTP ${res.status} ao buscar TTL.`);
     setDebug("HTTP erro", `
-      <div class="muted">Resposta HTTP inválida.</div>
-      <div class="small">Status: <b>${escapeHtml(String(res.status))}</b> ${escapeHtml(String(res.statusText||""))}</div>
+      <div class="muted">Não consegui abrir o TTL.</div>
+      <div class="small mono">Status: ${escapeHtml(res.status)} ${escapeHtml(res.statusText || "")}</div>
       <div class="small mono" style="margin-top:6px;word-break:break-all;">${escapeHtml(ttlUrl)}</div>
     `);
     return;
   }
 
+  setStatus("warn","Lendo conteúdo (res.text)…");
+  setDebug("Lendo…", `
+    <div class="small">HTTP OK (${escapeHtml(res.status)})</div>
+    <div class="muted"><span class="spinner"></span> lendo texto…</div>
+  `);
+
   const text = await res.text();
   console.log("[OntoHate] TTL bytes:", text.length);
-  console.log("[OntoHate] TTL head:", text.slice(0, 120));
+  console.log("[OntoHate] TTL head:", text.slice(0,120));
 
   state.ttlText = text;
   state.loadedFrom = ttlUrl;
 
   setStatus("warn","Parseando Turtle…");
-  // Parse TTL -> N3.Store
+  setDebug("Parseando…", `
+    <div class="small">Bytes: <b>${escapeHtml(text.length)}</b></div>
+    <div class="muted"><span class="spinner"></span> parse do Turtle…</div>
+  `);
+
   try{
     const parser = new N3.Parser({ baseIRI: ttlUrl });
     await new Promise((resolve,reject)=>{
@@ -1307,6 +1354,8 @@ async function boot(){
   }
 
   setStatus("warn","Indexando classes/relações…");
+  setDebug("Indexando…", `<div class="muted"><span class="spinner"></span> rodando SPARQL in-memory…</div>`);
+
   try{
     await buildIndexFromStore();
   }catch(e){
@@ -1316,7 +1365,6 @@ async function boot(){
     return;
   }
 
-  // init UI after data
   fillDimensions();
   buildPresetList();
 
@@ -1337,6 +1385,9 @@ async function boot(){
     <div class="small">Resumo:</div>
     <div class="muted">${state.classes.size} classes • ${state.objProps.size} object properties • ${state.dims.length} dimensões (raízes)</div>
   `);
+
+  $("taxMeta").textContent = `${cyTax.nodes().length} nós • ${cyTax.edges().length} arestas`;
+  $("ontoMeta").textContent = `${cyOnto.nodes().length} nós • ${cyOnto.edges().length} arestas`;
 }
 
 /* =================== INIT =================== */
