@@ -8,20 +8,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Cytoscape (grafos) -->
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.29.2/dist/cytoscape.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
 
-  <!-- Tooltips -->
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
 
-  <!-- Turtle parser -->
   <script src="https://cdn.jsdelivr.net/npm/n3@1.17.3/browser/n3.min.js"></script>
 
-  <!-- SPARQL in-browser -->
   <script src="https://cdn.jsdelivr.net/npm/@comunica/query-sparql@3.1.0/browser/query-sparql.min.js"></script>
 
   <style>
@@ -215,7 +211,6 @@
     .listItem .t{font-weight:900; font-size:13px;}
     .listItem .s{font-family:var(--mono); font-size:11px; color:var(--muted2); margin-top:4px;}
 
-    /* loader ping */
     .spinner{
       width:14px; height:14px; border-radius:999px;
       border:2px solid color-mix(in srgb, var(--muted2) 55%, transparent);
@@ -238,7 +233,7 @@
           <b>Taxonomia</b> (cruzamentos + exportação), <b>Ontologia</b> (grafo interativo + propriedades + tooltips),
           <b>SPARQL</b> (questões de competência respondidas automaticamente).
         </p>
-        <small>Base (GitHub Pages): <b>./Ontohate_oficial.ttl</b> • Exportação em todas as etapas</small>
+        <small>Base (GitHub Pages): <b>./Ontohate.tll</b> • Exportação em todas as etapas</small>
       </div>
 
       <div class="tabs">
@@ -264,7 +259,6 @@
       <div class="bd" id="debugBox"><div class="muted">Ainda não carregou.</div></div>
     </div>
 
-    <!-- TAXONOMIA -->
     <section id="tab-tax">
       <div class="grid">
         <div class="card">
@@ -344,7 +338,6 @@
       </div>
     </section>
 
-    <!-- ONTOLOGIA -->
     <section id="tab-onto" class="hidden">
       <div class="grid">
         <div class="card">
@@ -419,7 +412,6 @@
       </div>
     </section>
 
-    <!-- SPARQL -->
     <section id="tab-sparql" class="hidden">
       <div class="grid">
         <div class="card">
@@ -527,35 +519,29 @@ $("themeBtn").addEventListener("click", ()=>{
 });
 $("reloadBtn").addEventListener("click", ()=> boot().catch(()=>{}));
 
-/* =================== Namespaces =================== */
 const NS = {
   rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
   rdfs: "http://www.w3.org/2000/01/rdf-schema#",
   owl:  "http://www.w3.org/2002/07/owl#",
 };
 
-/* =================== State =================== */
 const state = {
   ttlText: "",
   store: null,
   engine: null,
   sources: [],
-
   classes: new Set(),
   labelsByLang: new Map(),
   labels: new Map(),
   comments: new Map(),
   subclassOf: new Map(),
   childrenOf: new Map(),
-
   objProps: new Set(),
   propLabel: new Map(),
   propDomain: new Map(),
   propRange: new Map(),
-
   annotations: new Map(),
   dims: [],
-
   loadedFrom: null
 };
 
@@ -563,19 +549,16 @@ function resetIndex(){
   state.store = new N3.Store();
   state.engine = new Comunica.QueryEngine();
   state.sources = [state.store];
-
   state.classes = new Set();
   state.labelsByLang = new Map();
   state.labels = new Map();
   state.comments = new Map();
   state.subclassOf = new Map();
   state.childrenOf = new Map();
-
   state.objProps = new Set();
   state.propLabel = new Map();
   state.propDomain = new Map();
   state.propRange = new Map();
-
   state.annotations = new Map();
   state.dims = [];
   state.loadedFrom = null;
@@ -604,7 +587,6 @@ function bestLabelFor(iri){
 }
 function bestPropLabelFor(iri){ return state.propLabel.get(iri) || shortIri(iri); }
 
-/* =================== Comunica query helper =================== */
 async function qBindings(query){
   const res = await state.engine.queryBindings(query, { sources: state.sources });
   const arr = await res.toArray();
@@ -612,9 +594,7 @@ async function qBindings(query){
   return {vars, arr};
 }
 
-/* =================== Index from store =================== */
 async function buildIndexFromStore(){
-  // classes + labels
   {
     const q = `
 PREFIX rdf:  <${NS.rdf}>
@@ -642,7 +622,6 @@ WHERE {
     }
   }
 
-  // comments
   {
     const q = `
 PREFIX rdfs: <${NS.rdfs}>
@@ -656,7 +635,6 @@ WHERE { ?c rdfs:comment ?comment . }`;
     }
   }
 
-  // subClassOf (NamedNode only)
   {
     const q = `
 PREFIX rdfs: <${NS.rdfs}>
@@ -676,7 +654,6 @@ WHERE {
     }
   }
 
-  // object properties domain/range/label
   {
     const q = `
 PREFIX rdf:  <${NS.rdf}>
@@ -703,7 +680,6 @@ WHERE {
     }
   }
 
-  // annotations (tudo que não é rdf:type e não é subClassOf)
   {
     const q = `
 PREFIX rdf:  <${NS.rdf}>
@@ -722,14 +698,10 @@ WHERE {
       const o = b.get("o");
       if(!s || !pTerm || !o) continue;
       if(!state.classes.has(s)) continue;
-
       const pIri = termToString(pTerm);
       const pLabel = termToString(b.get("plabel")) || shortIri(pIri);
-
       const item = {
-        p: pIri,
-        pLabel,
-        o: termToString(o),
+        p: pIri, pLabel, o: termToString(o),
         oType: o.termType,
         lang: o.termType==="Literal" ? (o.language||"") : "",
         dt: o.termType==="Literal" ? (o.datatype?.value||"") : ""
@@ -739,14 +711,9 @@ WHERE {
     }
   }
 
-  // dimensions: roots with children
   {
     const cand = [];
-    const block = new Set([
-      "http://www.w3.org/2002/07/owl#Thing",
-      "http://www.w3.org/2000/01/rdf-schema#Resource"
-    ]);
-
+    const block = new Set(["http://www.w3.org/2002/07/owl#Thing", "http://www.w3.org/2000/01/rdf-schema#Resource"]);
     for(const c of state.classes){
       if(block.has(c)) continue;
       const parents = state.subclassOf.get(c);
@@ -758,113 +725,37 @@ WHERE {
   }
 }
 
-/* =================== Tooltip =================== */
 function makeTippy(cyNode, html){
   const ref = cyNode.popperRef();
   const dummy = document.createElement("div");
-
   const old = cyNode.data("__tippy");
   if(old) { try{ old.destroy(); }catch(e){} }
-
   const tip = tippy(dummy, {
     getReferenceClientRect: ref.getBoundingClientRect,
     content: ()=>{ const div=document.createElement("div"); div.innerHTML=html; return div; },
-    trigger: "manual",
-    placement: "top",
-    interactive: true,
-    appendTo: document.body,
-    maxWidth: 700,
-    theme: "light-border",
-    delay: [150, 50],
+    trigger: "manual", placement: "top", interactive: true, appendTo: document.body, maxWidth: 700, theme: "light-border", delay: [150, 50],
   });
-
   cyNode.on("mouseover", ()=> tip.show());
-  cyNode.on("mouseout",  ()=> tip.hide());
+  cyNode.on("mouseout",   ()=> tip.hide());
   cyNode.data("__tippy", tip);
 }
 
 function tooltipHtml(iri){
-  const ann = (state.annotations.get(iri) || [])
-    .filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment")
-    .slice(0, 160);
-
+  const ann = (state.annotations.get(iri) || []).filter(x => x.p !== NS.rdfs+"label" && x.p !== NS.rdfs+"comment").slice(0, 160);
   const parents = [...(state.subclassOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
   const kids = [...(state.childrenOf.get(iri)||[])].map(bestLabelFor).sort((a,b)=>a.localeCompare(b,"pt-BR"));
-
   const rows = ann.map(x=>{
     const extra = x.oType==="Literal" ? (x.lang ? ` @${x.lang}` : (x.dt ? ` ^^${shortIri(x.dt)}` : "")) : "";
-    return `<tr>
-      <td class="mono" style="font-size:11px;color:var(--muted2)">${escapeHtml(x.pLabel)}</td>
-      <td class="mono" style="font-size:11px;word-break:break-all;color:var(--muted)">${escapeHtml(x.o)} <span style="color:var(--muted2)">${escapeHtml(extra)}</span></td>
-    </tr>`;
+    return `<tr><td class="mono" style="font-size:11px;color:var(--muted2)">${escapeHtml(x.pLabel)}</td><td class="mono" style="font-size:11px;word-break:break-all;color:var(--muted)">${escapeHtml(x.o)} <span style="color:var(--muted2)">${escapeHtml(extra)}</span></td></tr>`;
   }).join("");
-
-  return `
-    <div style="max-width:680px;">
-      <div style="font-weight:900;font-size:14px;margin-bottom:6px;">${escapeHtml(bestLabelFor(iri))}</div>
-      <div class="mono" style="font-size:11px;color:var(--muted2);word-break:break-all;">${escapeHtml(iri)}</div>
-      <div style="height:8px"></div>
-      <div style="color:var(--muted);font-size:12px;line-height:1.35;">${escapeHtml(state.comments.get(iri) || "—")}</div>
-
-      <div style="height:10px"></div>
-      <div class="small">Superclasses</div>
-      <div class="muted" style="font-size:12px;">${parents.length ? escapeHtml(parents.join(" • ")) : "—"}</div>
-
-      <div style="height:8px"></div>
-      <div class="small">Subclasses diretas</div>
-      <div class="muted" style="font-size:12px;">${kids.length ? escapeHtml(kids.slice(0,30).join(" • ")) + (kids.length>30 ? " …" : "") : "—"}</div>
-
-      <div style="height:10px"></div>
-      <div class="small">Anotações</div>
-      <table>
-        <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="2" class="muted">Sem anotações adicionais.</td></tr>`}</tbody>
-      </table>
-    </div>
-  `;
+  return `<div style="max-width:680px;"><div style="font-weight:900;font-size:14px;margin-bottom:6px;">${escapeHtml(bestLabelFor(iri))}</div><div class="mono" style="font-size:11px;color:var(--muted2);word-break:break-all;">${escapeHtml(iri)}</div><div style="height:8px"></div><div style="color:var(--muted);font-size:12px;line-height:1.35;">${escapeHtml(state.comments.get(iri) || "—")}</div><div style="height:10px"></div><div class="small">Superclasses</div><div class="muted" style="font-size:12px;">${parents.length ? escapeHtml(parents.join(" • ")) : "—"}</div><div style="height:8px"></div><div class="small">Subclasses diretas</div><div class="muted" style="font-size:12px;">${kids.length ? escapeHtml(kids.slice(0,30).join(" • ")) + (kids.length>30 ? " …" : "") : "—"}</div><div style="height:10px"></div><div class="small">Anotações</div><table><thead><tr><th>Campo</th><th>Valor</th></tr></thead><tbody>${rows || `<tr><td colspan="2" class="muted">Sem anotações adicionais.</td></tr>`}</tbody></table></div>`;
 }
 
-/* =================== Cytoscape =================== */
 let cyTax=null, cyOnto=null;
-
 function baseCyStyle(){
   return [
-    { selector:"node", style:{
-      "background-color":"var(--nodeFill)",
-      "border-color":"var(--nodeBorder)",
-      "border-width":2,
-      "label":"data(label)",
-      "color":"var(--text)",
-      "font-family":"Inter, system-ui",
-      "font-size":11,
-      "text-wrap":"wrap",
-      "text-max-width":150,
-      "text-valign":"center",
-      "text-halign":"center",
-      "padding":10,
-      "shape":"round-rectangle",
-      "width":"label",
-      "height":"label",
-      "min-width":70,
-      "min-height":38,
-    }},
-    { selector:"edge", style:{
-      "curve-style":"bezier",
-      "line-color":"var(--edge)",
-      "width":1.6,
-      "target-arrow-shape":"triangle",
-      "target-arrow-color":"var(--edge)",
-      "arrow-scale":0.9,
-      "label":"data(label)",
-      "font-size":10,
-      "font-family":"DM Mono, monospace",
-      "color":"var(--edgeLabel)",
-      "text-rotation":"autorotate",
-      "text-background-opacity":1,
-      "text-background-color":"var(--canvas)",
-      "text-background-padding":2,
-      "text-background-shape":"round-rectangle",
-    }},
+    { selector:"node", style:{ "background-color":"var(--nodeFill)", "border-color":"var(--nodeBorder)", "border-width":2, "label":"data(label)", "color":"var(--text)", "font-family":"Inter, system-ui", "font-size":11, "text-wrap":"wrap", "text-max-width":150, "text-valign":"center", "text-halign":"center", "padding":10, "shape":"round-rectangle", "width":"label", "height":"label", "min-width":70, "min-height":38 }},
+    { selector:"edge", style:{ "curve-style":"bezier", "line-color":"var(--edge)", "width":1.6, "target-arrow-shape":"triangle", "target-arrow-color":"var(--edge)", "arrow-scale":0.9, "label":"data(label)", "font-size":10, "font-family":"DM Mono, monospace", "color":"var(--edgeLabel)", "text-rotation":"autorotate", "text-background-opacity":1, "text-background-color":"var(--canvas)", "text-background-padding":2, "text-background-shape":"round-rectangle" }},
     { selector:".subclass", style:{ "line-style":"solid", "width":1.6 } },
     { selector:".prop", style:{ "line-style":"dashed", "width":1.9 } },
     { selector:".highlight", style:{ "border-width":4, "border-color":"var(--accent2)" } },
@@ -903,117 +794,72 @@ function getDescendants(root){
   return out;
 }
 
-/* =================== Foco de Vizinhança =================== */
 const focusState = { tax:{enabled:true,active:false}, onto:{enabled:true,active:false} };
-function clearNeighborhoodFocus(cy){
-  cy.elements().removeClass("focusDim");
-  cy.elements().removeClass("focusHide");
-  cy.fit(undefined, 30);
-}
+function clearNeighborhoodFocus(cy){ cy.elements().removeClass("focusDim").removeClass("focusHide"); cy.fit(undefined, 30); }
 function setNeighborhoodFocus(cy, nodeId){
-  const n = cy.getElementById(nodeId);
-  if(!n || n.empty()) return;
+  const n = cy.getElementById(nodeId); if(!n || n.empty()) return;
   const hood = n.closedNeighborhood();
-  cy.elements().addClass("focusHide");
-  hood.removeClass("focusHide");
-  cy.elements().addClass("focusDim");
-  hood.removeClass("focusDim");
-  n.select();
-  cy.fit(hood, 70);
+  cy.elements().addClass("focusHide"); hood.removeClass("focusHide");
+  cy.elements().addClass("focusDim"); hood.removeClass("focusDim");
+  n.select(); cy.fit(hood, 70);
 }
 
-/* =================== Build dimension selectors =================== */
 function fillDimensions(){
-  const sel = $("taxDimSelect");
-  sel.innerHTML = "";
+  const sel = $("taxDimSelect"); sel.innerHTML = "";
   for(const d of state.dims){
-    const opt=document.createElement("option");
-    opt.value=d; opt.textContent=bestLabelFor(d);
+    const opt=document.createElement("option"); opt.value=d; opt.textContent=bestLabelFor(d);
     sel.appendChild(opt);
   }
   if(sel.options.length) sel.options[0].selected=true;
-
-  const os = $("ontoDimSelect");
-  os.innerHTML = `<option value="__ALL__">Todas</option>`;
+  const os = $("ontoDimSelect"); os.innerHTML = `<option value="__ALL__">Todas</option>`;
   for(const d of state.dims){
-    const opt=document.createElement("option");
-    opt.value=d; opt.textContent=bestLabelFor(d);
+    const opt=document.createElement("option"); opt.value=d; opt.textContent=bestLabelFor(d);
     os.appendChild(opt);
   }
 }
 
-/* =================== Build Taxonomy =================== */
 function selectedTaxDims(){
-  const sel = $("taxDimSelect");
-  const vals=[...sel.selectedOptions].map(o=>o.value);
+  const sel = $("taxDimSelect"); const vals=[...sel.selectedOptions].map(o=>o.value);
   return vals.length ? vals : (state.dims[0] ? [state.dims[0]] : []);
 }
 
 function buildTaxonomyGraph(){
   if(!state.classes.size) return;
-
-  const dims = selectedTaxDims();
-  const mode = $("taxMode").value;
+  const dims = selectedTaxDims(); const mode = $("taxMode").value;
   const sets = dims.map(d=>getDescendants(d));
-
   let nodeSet = new Set();
   if(mode==="intersection" && sets.length){
     nodeSet = new Set(sets[0]);
-    for(let i=1;i<sets.length;i++){
-      nodeSet = new Set([...nodeSet].filter(x=>sets[i].has(x)));
-    }
-  }else{
-    for(const s of sets) for(const x of s) nodeSet.add(x);
-  }
-
+    for(let i=1;i<sets.length;i++){ nodeSet = new Set([...nodeSet].filter(x=>sets[i].has(x))); }
+  }else{ for(const s of sets) for(const x of s) nodeSet.add(x); }
   const nodes=[], edges=[];
   for(const iri of nodeSet) nodes.push({ data: nodeData(iri) });
   for(const child of nodeSet){
-    const parents = state.subclassOf.get(child);
-    if(!parents) continue;
+    const parents = state.subclassOf.get(child); if(!parents) continue;
     for(const parent of parents){
       if(!nodeSet.has(parent)) continue;
       edges.push({ data: edgeData(`sub:${child}→${parent}`, parent, child, "subClassOf"), classes:"subclass" });
     }
   }
-
-  cyTax.elements().remove();
-  cyTax.add(nodes);
-  cyTax.add(edges);
+  cyTax.elements().remove(); cyTax.add(nodes); cyTax.add(edges);
   cyTax.nodes().forEach(n=> makeTippy(n, tooltipHtml(n.id())));
-  applyCyStyle(cyTax);
-  runLayout(cyTax, $("taxLayout").value);
-  cyTax.fit(undefined,30);
-
+  applyCyStyle(cyTax); runLayout(cyTax, $("taxLayout").value); cyTax.fit(undefined,30);
   $("taxMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
-  focusState.tax.active=false;
-  clearNeighborhoodFocus(cyTax);
+  focusState.tax.active=false; clearNeighborhoodFocus(cyTax);
 }
 
-/* =================== Build Ontology =================== */
 function buildOntologyGraph(){
   if(!state.classes.size) return;
-
-  const dim = $("ontoDimSelect").value;
-  const showSub = $("ontoShowSubclass").checked;
-  const showProps = $("ontoShowProps").checked;
-
+  const dim = $("ontoDimSelect").value; const showSub = $("ontoShowSubclass").checked; const showProps = $("ontoShowProps").checked;
   const nodeSet = (dim && dim!=="__ALL__") ? getDescendants(dim) : new Set(state.classes);
-
   const nodes=[], edges=[];
   for(const iri of nodeSet) nodes.push({ data: nodeData(iri) });
-
   if(showSub){
     for(const child of nodeSet){
-      const parents = state.subclassOf.get(child);
-      if(!parents) continue;
-      for(const parent of parents){
-        if(!nodeSet.has(parent)) continue;
-        edges.push({ data: edgeData(`sub:${child}→${parent}`, parent, child, "subClassOf"), classes:"subclass" });
-      }
+      const parents = state.subclassOf.get(child); if(!parents) continue;
+      for(const parent of parents){ if(!nodeSet.has(parent)) continue; edges.push({ data: edgeData(`sub:${child}→${parent}`, parent, child, "subClassOf"), classes:"subclass" }); }
     }
   }
-
   if(showProps){
     for(const p of state.objProps){
       const ds = state.propDomain.get(p) ? [...state.propDomain.get(p)] : [];
@@ -1021,96 +867,43 @@ function buildOntologyGraph(){
       if(!ds.length || !rs.length) continue;
       for(const d of ds){
         if(!nodeSet.has(d)) continue;
-        for(const r of rs){
-          if(!nodeSet.has(r)) continue;
-          edges.push({ data: edgeData(`prop:${p}:${d}→${r}`, d, r, bestPropLabelFor(p)), classes:"prop" });
-        }
+        for(const r of rs){ if(!nodeSet.has(r)) continue; edges.push({ data: edgeData(`prop:${p}:${d}→${r}`, d, r, bestPropLabelFor(p)), classes:"prop" }); }
       }
     }
   }
-
-  cyOnto.elements().remove();
-  cyOnto.add(nodes);
-  cyOnto.add(edges);
+  cyOnto.elements().remove(); cyOnto.add(nodes); cyOnto.add(edges);
   cyOnto.nodes().forEach(n=> makeTippy(n, tooltipHtml(n.id())));
-  applyCyStyle(cyOnto);
-  runLayout(cyOnto, $("ontoLayout").value);
-  cyOnto.fit(undefined,30);
-
+  applyCyStyle(cyOnto); runLayout(cyOnto, $("ontoLayout").value); cyOnto.fit(undefined,30);
   $("ontoMeta").textContent = `${nodeSet.size} classes • ${edges.length} arestas`;
-  focusState.onto.active=false;
-  clearNeighborhoodFocus(cyOnto);
+  focusState.onto.active=false; clearNeighborhoodFocus(cyOnto);
 }
 
-/* =================== Highlight + export =================== */
 function doHighlight(cy, q){
-  const s=(q||"").trim().toLowerCase();
-  cy.elements().removeClass("highlight");
-  if(!s) return;
+  const s=(q||"").trim().toLowerCase(); cy.elements().removeClass("highlight"); if(!s) return;
   const matches = cy.nodes().filter(n=>{
-    const iri=(n.data("iri")||"").toLowerCase();
-    const lab=(n.data("label")||"").toLowerCase();
+    const iri=(n.data("iri")||"").toLowerCase(); const lab=(n.data("label")||"").toLowerCase();
     return iri.includes(s) || lab.includes(s) || shortIri(iri).toLowerCase().includes(s);
   });
-  matches.addClass("highlight");
-  if(matches.length) cy.fit(matches, 60);
+  matches.addClass("highlight"); if(matches.length) cy.fit(matches, 60);
 }
 function exportCyPng(cy, filename){
   const png = cy.png({ full:true, scale:2, bg:"transparent" });
   const a=document.createElement("a"); a.href=png; a.download=filename; a.click();
 }
 
-/* =================== SPARQL presets + runner =================== */
 const PRESETS = [
-  {
-    title: "CQ01 — Dimensões (raízes com mais subclasses diretas)",
-    query: `
-PREFIX rdfs: <${NS.rdfs}>
-SELECT ?root (COUNT(DISTINCT ?child) AS ?nChildren)
-WHERE { ?child rdfs:subClassOf ?root . FILTER(isIRI(?root) && isIRI(?child)) }
-GROUP BY ?root
-ORDER BY DESC(?nChildren)
-LIMIT 100`.trim()
-  },
-  {
-    title: "CQ02 — Subclasses diretas de uma classe X",
-    query: `
-PREFIX rdfs: <${NS.rdfs}>
-SELECT ?child WHERE { ?child rdfs:subClassOf <IRI_AQUI> . }
-ORDER BY STR(?child)`.trim()
-  },
-  {
-    title: "CQ03 — Object Properties e domain/range",
-    query: `
-PREFIX rdf:  <${NS.rdf}>
-PREFIX rdfs: <${NS.rdfs}>
-PREFIX owl:  <${NS.owl}>
-SELECT ?p ?label ?domain ?range
-WHERE {
-  ?p rdf:type owl:ObjectProperty .
-  OPTIONAL { ?p rdfs:label ?label }
-  OPTIONAL { ?p rdfs:domain ?domain }
-  OPTIONAL { ?p rdfs:range  ?range }
-}
-ORDER BY STR(?p)
-LIMIT 400`.trim()
-  }
+  { title: "CQ01 — Dimensões (raízes com mais subclasses diretas)", query: `PREFIX rdfs: <${NS.rdfs}>\nSELECT ?root (COUNT(DISTINCT ?child) AS ?nChildren)\nWHERE { ?child rdfs:subClassOf ?root . FILTER(isIRI(?root) && isIRI(?child)) }\nGROUP BY ?root\nORDER BY DESC(?nChildren)\nLIMIT 100` },
+  { title: "CQ02 — Subclasses diretas de uma classe X", query: `PREFIX rdfs: <${NS.rdfs}>\nSELECT ?child WHERE { ?child rdfs:subClassOf <IRI_AQUI> . }\nORDER BY STR(?child)` },
+  { title: "CQ03 — Object Properties e domain/range", query: `PREFIX rdf:  <${NS.rdf}>\nPREFIX rdfs: <${NS.rdfs}>\nPREFIX owl:  <${NS.owl}>\nSELECT ?p ?label ?domain ?range\nWHERE {\n  ?p rdf:type owl:ObjectProperty .\n  OPTIONAL { ?p rdfs:label ?label }\n  OPTIONAL { ?p rdfs:domain ?domain }\n  OPTIONAL { ?p rdfs:range  ?range }\n}\nORDER BY STR(?p)\nLIMIT 400` }
 ];
 let lastResultRows = [];
 
 function buildPresetList(){
-  const box=$("presetList");
-  box.innerHTML="";
+  const box=$("presetList"); box.innerHTML="";
   PRESETS.forEach((p, idx)=>{
-    const div=document.createElement("div");
-    div.className="listItem";
-    div.innerHTML=`
-      <div class="t">${escapeHtml(p.title)}</div>
-      <div class="s">Clique para usar • Preset #${idx+1}</div>`;
-    div.onclick=()=>{
-      $("sparqlText").value=p.query;
-      $("resultMeta").textContent=`Preset #${idx+1}`;
-    };
+    const div=document.createElement("div"); div.className="listItem";
+    div.innerHTML=`<div class="t">${escapeHtml(p.title)}</div><div class="s">Clique para usar • Preset #${idx+1}</div>`;
+    div.onclick=()=>{ $("sparqlText").value=p.query; $("resultMeta").textContent=`Preset #${idx+1}`; };
     box.appendChild(div);
   });
   $("sparqlText").value = PRESETS[0]?.query || "";
@@ -1118,283 +911,89 @@ function buildPresetList(){
 
 async function runSparql(){
   const query=$("sparqlText").value.trim();
-  if(!query){
-    $("resultBox").innerHTML=`<div class="muted">Escreva uma consulta.</div>`;
-    $("resultMeta").textContent="—";
-    lastResultRows=[];
-    return;
-  }
-
-  $("resultMeta").textContent="Executando…";
-  $("resultBox").innerHTML=`<div class="muted">Processando…</div>`;
-  lastResultRows=[];
-
+  if(!query){ $("resultBox").innerHTML=`<div class="muted">Escreva uma consulta.</div>`; $("resultMeta").textContent="—"; lastResultRows=[]; return; }
+  $("resultMeta").textContent="Executando…"; $("resultBox").innerHTML=`<div class="muted">Processando…</div>`; lastResultRows=[];
   try{
     const res = await state.engine.queryBindings(query, { sources: state.sources });
-    const arr = await res.toArray();
-    const vars = res.variables.map(v=>v.value);
-
-    if(arr.length===0){
-      $("resultMeta").textContent="0 linhas";
-      $("resultBox").innerHTML=`<div class="muted">Sem resultados.</div>`;
-      return;
-    }
-
+    const arr = await res.toArray(); const vars = res.variables.map(v=>v.value);
+    if(arr.length===0){ $("resultMeta").textContent="0 linhas"; $("resultBox").innerHTML=`<div class="muted">Sem resultados.</div>`; return; }
     const rows = arr.slice(0,800).map(b=>{
-      const obj={};
-      for(const v of vars){
-        const t=b.get(v);
-        obj["?"+v]=t ? t.value : "";
-      }
-      return obj;
+      const obj={}; for(const v of vars){ const t=b.get(v); obj["?"+v]=t ? t.value : ""; } return obj;
     });
     lastResultRows=rows;
-
     const cols=Object.keys(rows[0]);
     let html=`<table><thead><tr>${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>`;
-    for(const r of rows.slice(0,300)){
-      html+="<tr>"+cols.map(c=>`<td class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(r[c])}</td>`).join("")+"</tr>";
-    }
+    for(const r of rows.slice(0,300)){ html+="<tr>"+cols.map(c=>`<td class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(r[c])}</td>`).join("")+"</tr>"; }
     html+="</tbody></table>";
-
     $("resultMeta").textContent = `${arr.length} linhas` + (arr.length>300 ? " (mostrando 300)" : "");
     $("resultBox").innerHTML=html;
-
   }catch(err){
-    console.error(err);
-    $("resultMeta").textContent="Erro";
-    $("resultBox").innerHTML=`<div class="muted">Falha na consulta.</div><div class="small mono">${escapeHtml(String(err.message||err))}</div>`;
+    $("resultMeta").textContent="Erro"; $("resultBox").innerHTML=`<div class="muted">Falha na consulta.</div><div class="small mono">${escapeHtml(String(err.message||err))}</div>`;
   }
 }
 
-/* =================== Wire Cytoscape events =================== */
 function wireCyEvents(){
-  // TAX
-  cyTax.on("tap",(evt)=>{
-    if(evt.target===cyTax && focusState.tax.active){
-      focusState.tax.active=false; clearNeighborhoodFocus(cyTax);
-    }
-  });
-  cyTax.on("tap","node",(evt)=>{
-    if(!focusState.tax.enabled) return;
-    focusState.tax.active=true;
-    setNeighborhoodFocus(cyTax, evt.target.id());
-  });
-
-  // ONTO
-  cyOnto.on("tap",(evt)=>{
-    if(evt.target===cyOnto && focusState.onto.active){
-      focusState.onto.active=false; clearNeighborhoodFocus(cyOnto);
-    }
-  });
-  cyOnto.on("tap","node",(evt)=>{
-    const iri=evt.target.id();
-    $("ontoDetailPill").textContent = shortIri(iri);
-    $("ontoDetailBox").innerHTML = tooltipHtml(iri);
-
-    if(!focusState.onto.enabled) return;
-    focusState.onto.active=true;
-    setNeighborhoodFocus(cyOnto, iri);
-  });
+  cyTax.on("tap",(evt)=>{ if(evt.target===cyTax && focusState.tax.active){ focusState.tax.active=false; clearNeighborhoodFocus(cyTax); } });
+  cyTax.on("tap","node",(evt)=>{ if(!focusState.tax.enabled) return; focusState.tax.active=true; setNeighborhoodFocus(cyTax, evt.target.id()); });
+  cyOnto.on("tap",(evt)=>{ if(evt.target===cyOnto && focusState.onto.active){ focusState.onto.active=false; clearNeighborhoodFocus(cyOnto); } });
+  cyOnto.on("tap","node",(evt)=>{ const iri=evt.target.id(); $("ontoDetailPill").textContent = shortIri(iri); $("ontoDetailBox").innerHTML = tooltipHtml(iri); if(!focusState.onto.enabled) return; focusState.onto.active=true; setNeighborhoodFocus(cyOnto, iri); });
 }
 
-/* =================== UI wiring =================== */
 function wireUI(){
   $("taxBuildBtn").onclick = buildTaxonomyGraph;
   $("taxFitBtn").onclick = ()=> cyTax.fit(undefined,30);
   $("taxResetBtn").onclick = ()=> { runLayout(cyTax, $("taxLayout").value); cyTax.fit(undefined,30); };
-  $("taxLayout").onchange = ()=> runLayout(cyTax, $("taxLayout").value);
-
-  $("taxFocusToggle").onchange = ()=>{
-    focusState.tax.enabled = $("taxFocusToggle").checked;
-    if(!focusState.tax.enabled){ focusState.tax.active=false; clearNeighborhoodFocus(cyTax); }
-  };
+  $("taxFocusToggle").onchange = ()=>{ focusState.tax.enabled = $("taxFocusToggle").checked; if(!focusState.tax.enabled){ focusState.tax.active=false; clearNeighborhoodFocus(cyTax); } };
   $("taxFocusClearBtn").onclick = ()=>{ focusState.tax.active=false; clearNeighborhoodFocus(cyTax); };
-
   $("taxExportPngBtn").onclick = ()=> exportCyPng(cyTax, "ontohate-taxonomia.png");
-  $("taxExportJsonBtn").onclick = ()=> downloadText("ontohate-taxonomia.json", JSON.stringify(cyTax.json(), null, 2), "application/json;charset=utf-8");
-
   $("taxHighlightBtn").onclick = ()=> doHighlight(cyTax, $("taxSearch").value);
   $("taxClearHighlightBtn").onclick = ()=>{ $("taxSearch").value=""; cyTax.elements().removeClass("highlight"); };
-
   $("ontoBuildBtn").onclick = buildOntologyGraph;
   $("ontoFitBtn").onclick = ()=> cyOnto.fit(undefined,30);
-  $("ontoLayout").onchange = ()=> runLayout(cyOnto, $("ontoLayout").value);
-  $("ontoExportPngBtn").onclick = ()=> exportCyPng(cyOnto, "ontohate-ontologia.png");
-
-  $("ontoFocusToggle").onchange = ()=>{
-    focusState.onto.enabled = $("ontoFocusToggle").checked;
-    if(!focusState.onto.enabled){ focusState.onto.active=false; clearNeighborhoodFocus(cyOnto); }
-  };
+  $("ontoFocusToggle").onchange = ()=>{ focusState.onto.enabled = $("ontoFocusToggle").checked; if(!focusState.onto.enabled){ focusState.onto.active=false; clearNeighborhoodFocus(cyOnto); } };
   $("ontoFocusClearBtn").onclick = ()=>{ focusState.onto.active=false; clearNeighborhoodFocus(cyOnto); };
-
   $("ontoHighlightBtn").onclick = ()=> doHighlight(cyOnto, $("ontoSearch").value);
   $("ontoClearHighlightBtn").onclick = ()=>{ $("ontoSearch").value=""; cyOnto.elements().removeClass("highlight"); };
-
   $("runBtn").onclick = runSparql;
-  $("clearBtn").onclick = ()=> $("sparqlText").value="";
-  $("copyBtn").onclick = async()=>{ try{ await navigator.clipboard.writeText($("sparqlText").value||""); }catch(e){} };
-
-  $("sparqlText").addEventListener("keydown",(e)=>{
-    const isMac = navigator.platform.toLowerCase().includes("mac");
-    const mod = isMac ? e.metaKey : e.ctrlKey;
-    if(mod && e.key==="Enter"){ e.preventDefault(); runSparql(); }
-  });
-
-  $("exportCsvBtn").onclick = ()=>{
-    if(!lastResultRows.length) return alert("Sem resultados para exportar.");
-    downloadText("sparql-result.csv", toCsv(lastResultRows), "text/csv;charset=utf-8");
-  };
-  $("exportJsonBtn").onclick = ()=>{
-    if(!lastResultRows.length) return alert("Sem resultados para exportar.");
-    downloadText("sparql-result.json", JSON.stringify(lastResultRows, null, 2), "application/json;charset=utf-8");
-  };
+  $("sparqlText").addEventListener("keydown",(e)=>{ const mod = navigator.platform.toLowerCase().includes("mac") ? e.metaKey : e.ctrlKey; if(mod && e.key==="Enter"){ e.preventDefault(); runSparql(); } });
+  $("exportCsvBtn").onclick = ()=>{ if(!lastResultRows.length) return alert("Sem resultados."); downloadText("sparql-result.csv", toCsv(lastResultRows), "text/csv;charset=utf-8"); };
 }
 
-/* =================== BOOT (com timeout + progress UI) =================== */
 async function boot(){
-  const ttlUrl = new URL("Ontohate_oficial.ttl", window.location.href).toString();
+  // ALTERAÇÃO PRINCIPAL: Nome do arquivo alterado para Ontohate.tll
+  const ttlUrl = new URL("Ontohate.tll", window.location.href).toString();
 
-  setStatus("warn","Baixando Ontohate_oficial.ttl…");
-  setDebug("Baixando…", `
-    <div class="small">Página atual:</div>
-    <div class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(window.location.href)}</div>
-    <div style="height:8px"></div>
-    <div class="small">TTL_URL calculada:</div>
-    <div class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(ttlUrl)}</div>
-    <div style="height:10px"></div>
-    <div class="muted"><span class="spinner"></span> aguardando fetch…</div>
-  `);
-
-  console.log("[OntoHate] page:", window.location.href);
-  console.log("[OntoHate] TTL_URL:", ttlUrl);
-
+  setStatus("warn","Baixando Ontohate.tll…");
+  setDebug("Baixando…", `<div class="muted"><span class="spinner"></span> aguardando fetch de <b>Ontohate.tll</b>…</div>`);
   resetIndex();
 
-  // --- fetch com timeout + cachebuster + ping visual ---
-  let res;
-
   const controller = new AbortController();
-  const timeoutMs = 20000;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  const startedAt = Date.now();
-  const tickId = setInterval(() => {
-    const secs = Math.floor((Date.now() - startedAt) / 1000);
-    $("debugPill").textContent = `Baixando… ${secs}s`;
-  }, 1000);
-
+  const timeoutId = setTimeout(() => controller.abort(), 20000);
   try{
     const urlNoCache = ttlUrl + (ttlUrl.includes("?") ? "&" : "?") + "v=" + Date.now();
-    console.log("[OntoHate] fetching:", urlNoCache);
-
-    res = await fetch(urlNoCache, { cache:"no-store", signal: controller.signal });
-  }catch(e){
+    const res = await fetch(urlNoCache, { cache:"no-store", signal: controller.signal });
     clearTimeout(timeoutId);
-    clearInterval(tickId);
-
-    console.error("[OntoHate] fetch failed:", e);
-    const msg = (e?.name === "AbortError")
-      ? `Timeout: download passou de ${timeoutMs/1000}s`
-      : `Falha no fetch: ${String(e?.message || e)}`;
-
-    setStatus("bad", msg);
-    setDebug("Falha", `<div class="muted">Fetch falhou.</div><div class="small mono">${escapeHtml(msg)}</div>`);
-    return;
-  }
-
-  clearTimeout(timeoutId);
-  clearInterval(tickId);
-
-  console.log("[OntoHate] response:", res.status, res.statusText);
-
-  if(!res.ok){
-    setStatus("bad", `HTTP ${res.status} ao buscar TTL.`);
-    setDebug("HTTP erro", `
-      <div class="muted">Não consegui abrir o TTL.</div>
-      <div class="small mono">Status: ${escapeHtml(res.status)} ${escapeHtml(res.statusText || "")}</div>
-      <div class="small mono" style="margin-top:6px;word-break:break-all;">${escapeHtml(ttlUrl)}</div>
-    `);
-    return;
-  }
-
-  setStatus("warn","Lendo conteúdo (res.text)…");
-  setDebug("Lendo…", `
-    <div class="small">HTTP OK (${escapeHtml(res.status)})</div>
-    <div class="muted"><span class="spinner"></span> lendo texto…</div>
-  `);
-
-  const text = await res.text();
-  console.log("[OntoHate] TTL bytes:", text.length);
-  console.log("[OntoHate] TTL head:", text.slice(0,120));
-
-  state.ttlText = text;
-  state.loadedFrom = ttlUrl;
-
-  setStatus("warn","Parseando Turtle…");
-  setDebug("Parseando…", `
-    <div class="small">Bytes: <b>${escapeHtml(text.length)}</b></div>
-    <div class="muted"><span class="spinner"></span> parse do Turtle…</div>
-  `);
-
-  try{
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    state.ttlText = text;
+    state.loadedFrom = ttlUrl;
     const parser = new N3.Parser({ baseIRI: ttlUrl });
     await new Promise((resolve,reject)=>{
-      parser.parse(text, (err, quad)=>{
-        if(err) return reject(err);
-        if(quad) state.store.addQuad(quad);
-        else resolve();
-      });
+      parser.parse(text, (err, quad)=>{ if(err) return reject(err); if(quad) state.store.addQuad(quad); else resolve(); });
     });
-  }catch(e){
-    console.error("[OntoHate] parse error:", e);
-    setStatus("bad","Erro ao parsear TTL (Turtle inválido?).");
-    setDebug("Erro no parse", `<div class="muted">Falha no parse do Turtle.</div><div class="small mono">${escapeHtml(String(e?.message||e))}</div>`);
-    return;
-  }
-
-  setStatus("warn","Indexando classes/relações…");
-  setDebug("Indexando…", `<div class="muted"><span class="spinner"></span> rodando SPARQL in-memory…</div>`);
-
-  try{
     await buildIndexFromStore();
+    fillDimensions(); buildPresetList();
+    if(!cyTax) { initCy(); wireCyEvents(); }
+    buildTaxonomyGraph(); buildOntologyGraph();
+    setStatus("ok",`OK: ${state.classes.size} classes`);
+    setDebug("OK", `<div class="small">Carregado de: Ontohate.tll</div>`);
   }catch(e){
-    console.error("[OntoHate] index error:", e);
-    setStatus("bad","Erro ao indexar (SPARQL in-memory).");
-    setDebug("Erro no índice", `<div class="muted">Falha na etapa de indexação.</div><div class="small mono">${escapeHtml(String(e?.message||e))}</div>`);
-    return;
+    setStatus("bad","Erro ao carregar Ontohate.tll");
+    setDebug("Erro", `<div class="small mono">${escapeHtml(e.message)}</div>`);
   }
-
-  fillDimensions();
-  buildPresetList();
-
-  if(!cyTax || !cyOnto){
-    initCy();
-    wireCyEvents();
-  }
-  applyCyStyle(cyTax); applyCyStyle(cyOnto);
-
-  buildTaxonomyGraph();
-  buildOntologyGraph();
-
-  setStatus("ok",`OK: ${state.classes.size} classes • ${state.objProps.size} propriedades`);
-  setDebug("OK", `
-    <div class="small">Carregado de:</div>
-    <div class="mono" style="font-size:12px;word-break:break-all;">${escapeHtml(ttlUrl)}</div>
-    <div style="height:8px"></div>
-    <div class="small">Resumo:</div>
-    <div class="muted">${state.classes.size} classes • ${state.objProps.size} object properties • ${state.dims.length} dimensões (raízes)</div>
-  `);
-
-  $("taxMeta").textContent = `${cyTax.nodes().length} nós • ${cyTax.edges().length} arestas`;
-  $("ontoMeta").textContent = `${cyOnto.nodes().length} nós • ${cyOnto.edges().length} arestas`;
 }
 
-/* =================== INIT =================== */
-initTabs();
-wireUI();
-boot();
+initTabs(); wireUI(); boot();
 </script>
-
 </body>
 </html>
