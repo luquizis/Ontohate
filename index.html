@@ -997,3 +997,73 @@ initTabs(); wireUI(); boot();
 </script>
 </body>
 </html>
+<div class="row" style="margin-left: 10px;">
+  <input type="file" id="fileInput" accept=".tll,.ttl" style="display:none" />
+  <button class="btn primary" onclick="document.getElementById('fileInput').click()">Abrir Arquivo Local</button>
+</div>
+
+<script>
+/* Nova lógica de BOOT com redundância */
+
+async function processData(text, sourceName) {
+  resetIndex();
+  try {
+    const parser = new N3.Parser({ baseIRI: window.location.href });
+    await new Promise((resolve, reject) => {
+      parser.parse(text, (err, quad) => {
+        if (err) return reject(err);
+        if (quad) state.store.addQuad(quad);
+        else resolve();
+      });
+    });
+    
+    await buildIndexFromStore();
+    fillDimensions();
+    buildPresetList();
+    if (!cyTax) { initCy(); wireCyEvents(); }
+    
+    buildTaxonomyGraph();
+    buildOntologyGraph();
+    
+    setStatus("ok", `Carregado: ${state.classes.size} classes`);
+    setDebug("Sucesso", `Fonte: <b>${sourceName}</b>`);
+  } catch (e) {
+    setStatus("bad", "Erro no processamento do conteúdo");
+    setDebug("Erro", e.message);
+  }
+}
+
+// 1. Tenta carregar automaticamente (pelo servidor)
+async function boot() {
+  const file = "Ontohate.tll";
+  setStatus("warn", "Tentando fetch automático...");
+  
+  try {
+    const res = await fetch(file + "?v=" + Date.now());
+    if (!res.ok) throw new Error("Não encontrado no servidor");
+    const text = await res.text();
+    await processData(text, file);
+  } catch (e) {
+    console.warn("Fetch falhou, aguardando arquivo manual:", e.message);
+    setStatus("warn", "Arquivo não encontrado. Use o botão 'Abrir Arquivo Local'.");
+    setDebug("Aguardando", "O fetch falhou (comum no GitHub Pages). Por favor, selecione o arquivo .tll manualmente.");
+  }
+}
+
+// 2. Listener para o seletor de arquivos (manual)
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  setStatus("warn", "Lendo arquivo local...");
+  
+  reader.onload = async (event) => {
+    await processData(event.target.result, file.name);
+  };
+  reader.readAsText(file);
+});
+
+/* Chame o boot inicial */
+boot();
+</script>
