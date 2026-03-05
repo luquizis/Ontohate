@@ -155,6 +155,16 @@ canvas.gv:active{cursor:grabbing}
     <div class="card-bd" id="dbox"><span class="muted">Aguardando…</span></div>
   </div>
 
+
+  <div class="card" style="margin-top:10px">
+    <div class="card-hd"><h2>Guia rápido (1 min)</h2></div>
+    <div class="card-bd">
+      <div class="hint" style="margin-bottom:6px"><b>1)</b> Em <b>Taxonomia</b>, selecione múltiplas dimensões e clique <b>Gerar grafo</b>.</div>
+      <div class="hint" style="margin-bottom:6px"><b>2)</b> Em <b>Ontologia</b>, comece por <b>uma dimensão</b> (evite “Todas” no início) para enxergar melhor.</div>
+      <div class="hint" style="margin-bottom:0"><b>3)</b> Em <b>SPARQL</b>, clique numa questão da coluna esquerda para ver respostas prontas.</div>
+    </div>
+  </div>
+
   <!-- TAXONOMIA -->
   <div id="page-tax" class="page on">
     <div class="gv-wrap">
@@ -219,6 +229,7 @@ canvas.gv:active{cursor:grabbing}
               <b>Somar ontologias:</b> ao selecionar múltiplas dimensões, elas são conectadas pelo nó raiz <em>Discurso de Ódio Online</em>.
             </div>
             <label class="ckrow"><input type="checkbox" id="taxRoot" checked onchange="buildTax()"> Exibir nó raiz</label>
+            <label class="ckrow"><input type="checkbox" id="taxKeepPath" checked onchange="buildTax()"> Manter caminho hierárquico (classes ancestrais)</label>
             <label class="ckrow"><input type="checkbox" id="taxColor" checked onchange="buildTax()"> Colorir por dimensão</label>
             <label class="ckrow"><input type="checkbox" id="taxEL" onchange="buildTax()"> Rótulos nas arestas</label>
             <label class="ckrow"><input type="checkbox" id="taxFocus" checked> Foco ao clicar</label>
@@ -287,7 +298,7 @@ canvas.gv:active{cursor:grabbing}
               <span style="color:rgba(200,210,230,.7);font-weight:600">──</span> <b>subClassOf</b> (linha fina com seta)
             </div>
 
-            <label style="font-size:11px;color:var(--dim)">DIMENSÃO</label>
+            <label style="font-size:11px;color:var(--dim)">DIMENSÃO <small>(comece por 1 para melhor leitura)</small></label>
             <select id="ontoDim" style="margin-bottom:8px;width:100%"></select>
 
             <label class="ckrow"><input type="checkbox" id="ontoSub" checked onchange="buildOnto()"> Hierarquia (subClassOf)</label>
@@ -1583,6 +1594,18 @@ function descendants(root){
   while(q.length){const c=q.shift();out.add(c);const k=G.childOf.get(c);if(!k)continue;for(const x of k)if(!seen.has(x)){seen.add(x);q.push(x);}}
   return out;
 }
+function ancestors(node){
+  const out=new Set();
+  const q=[node],seen=new Set([node]);
+  while(q.length){
+    const c=q.shift();
+    const ps=G.subOf.get(c); if(!ps) continue;
+    for(const p of ps){
+      if(!seen.has(p)){seen.add(p);out.add(p);q.push(p);} 
+    }
+  }
+  return out;
+}
 function dimCmap(){
   const m=new Map();
   G.dims.forEach((d,i)=>{const c=DIM_PAL[i%DIM_PAL.length];m.set(d,c);for(const x of descendants(d))m.set(x,c);});
@@ -1600,12 +1623,18 @@ function buildTax(){
   const mode=$('taxMode').value;
   const showRoot=$('taxRoot').checked;
   const useCol=$('taxColor').checked;
+  const keepPath=$('taxKeepPath').checked;
   const showEL=$('taxEL').checked;
   const ns=parseInt($('taxNS')?.value||120),ls=parseInt($('taxLS')?.value||90);
   const sets=dims.map(d=>descendants(d));
   let ns2=new Set();
   if(mode==='inter'&&sets.length){ns2=new Set(sets[0]);for(let i=1;i<sets.length;i++)ns2=new Set([...ns2].filter(x=>sets[i].has(x)));}
   else{for(const s of sets)for(const x of s)ns2.add(x);for(const d of dims)ns2.add(d);if(showRoot&&dims.length>=1)ns2.add(ROOT_IRI);}
+  if(keepPath){
+    const plus=new Set();
+    for(const n of ns2) for(const a of ancestors(n)) plus.add(a);
+    for(const a of plus) ns2.add(a);
+  }
   const nm=new Map(),nodes=[],edges=[];
   for(const iri of ns2){const n={id:iri,label:bestLabel(iri)};nm.set(iri,n);nodes.push(n);}
   for(const c of ns2){const ps=G.subOf.get(c);if(!ps)continue;for(const p of ps){if(!ns2.has(p))continue;edges.push({from:nm.get(p),to:nm.get(c),label:'subClassOf',isProp:false});}}
@@ -1630,6 +1659,7 @@ function buildOnto(){
   const useCol=$('ontoColor').checked,showEL=$('ontoEL').checked;
   const ns=parseInt($('ontoNS')?.value||120),ls=parseInt($('ontoLS')?.value||90);
   const set=dim==='__ALL__'?new Set(G.classes):descendants(dim);
+  if(dim==='__ALL__' && set.size>140 && $('ontoProps').checked){$('ontoProps').checked=false;}
   const nm=new Map(),nodes=[],edges=[];
   for(const iri of set){const n={id:iri,label:bestLabel(iri)};nm.set(iri,n);nodes.push(n);}
   if(showSub){for(const c of set){const ps=G.subOf.get(c);if(!ps)continue;for(const p of ps){if(!set.has(p))continue;edges.push({from:nm.get(p),to:nm.get(c),label:'subClassOf',isProp:false});}}}
@@ -1670,8 +1700,9 @@ function fillDims(){
   const ts=$('taxDims');ts.innerHTML='';
   for(const d of G.dims)ts.appendChild(Object.assign(document.createElement('option'),{value:d,textContent:bestLabel(d)}));
   if(ts.options.length)ts.options[0].selected=true;
-  const os=$('ontoDim');os.innerHTML='<option value="__ALL__">Todas as dimensões</option>';
+  const os=$('ontoDim');os.innerHTML='<option value="__ALL__">Todas as dimensões (denso)</option>';
   for(const d of G.dims)os.appendChild(Object.assign(document.createElement('option'),{value:d,textContent:bestLabel(d)}));
+  if(os.options.length>1) os.selectedIndex=1;
 }
 
 /* ============================================================
@@ -2056,9 +2087,9 @@ function renderTable(rows, vars) {
 
 /* ── executar query ─────────────────────────────────────────────────── */
 function runQuery() {
-  const raw = $('qbox').value.trim();
+  let raw = $('qbox').value.trim();
   if (!raw){
-    if(PRESETS && PRESETS.length){$('qbox').value=PRESETS[0].q;}
+    if(PRESETS && PRESETS.length){$('qbox').value=PRESETS[0].q; raw=$('qbox').value.trim();}
     else return;
   }
   const t0 = performance.now();
