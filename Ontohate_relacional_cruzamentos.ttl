@@ -1,0 +1,2217 @@
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix ontohate: <http://ontohate.org/ontohate#> .
+@prefix ontohatev1: <https://ontohate.org/ontohate-v2-ufo-rigor/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema1: <http://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://ontohate.org/ontohate> a owl:Ontology ;
+    rdfs:label "OntoHate (rigorosa, simplificada, baseada no XLSX)"@pt ;
+    dcterms:creator "Luiz Rogério Lopes Silva" ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dcterms:modified "2026-03-02"^^xsd:date,
+        "2026-03-05"^^xsd:date ;
+    owl:imports <https://purl.org/nemo/gufo> ;
+    owl:versionIRI <http://ontohate.org/ontohate/version/1.0.2> ;
+    owl:versionInfo "v1.0.0 + relational-crossings layer (no taxonomy change)",
+        "v1.0.2" .
+
+ontohate:Adversario_politico a owl:Class ;
+    rdfs:label "Adversario politico"@pt ;
+    rdfs:comment "Pessoa identificada por posicionamento politico divergente."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discurso político-partidário de ódio. Subclasse individual. Pessoa identificada por posicionamento político divergente."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que atua na esfera política por meio de eleição, nomeação ou designação, de forma voluntária ou remunerada, e que se coloca numa posição política contrária a do agente odiador
+pessoa que manifesta opinião contrária a do agente odiador em relação a pleitos eleitorais, políticas públicas ou que comunga de espectro político divergente
+
+[Complemento da planilha] Pode ser alvo de discurso político-partidário de ódio. Subclasse individual. Pessoa identificada por posicionamento político divergente."""@pt .
+
+ontohate:Agente_denunciante a owl:Class ;
+    rdfs:label "Agente denunciante"@pt ;
+    rdfs:comment "Agente que reporta discurso de odio."@pt,
+        "Ampliacao v2."@pt ;
+    rdfs:subClassOf ontohate:Nucleo ;
+    ontohatev1:complementoPlanilhaV1 "Agente que reporta discurso de ódio. Participa do ecossistema de moderação. Ampliação v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Agente que reporta discurso de ódio. Participa do ecossistema de moderação. Ampliação v2."@pt .
+
+ontohate:Agente_hibrido a owl:Class ;
+    rdfs:label "Agente hibrido"@pt ;
+    rdfs:comment "Agente que combina acao humana e suporte algoritmico."@pt,
+        "Ampliacao v2."@pt ;
+    rdfs:subClassOf ontohate:Agente_odiador .
+
+ontohate:Agente_influenciador a owl:Class ;
+    rdfs:label "Agente influenciador"@pt ;
+    rdfs:comment "Agente com alto alcance digital."@pt,
+        "Ampliacao v2."@pt ;
+    rdfs:subClassOf ontohate:Agente_odiador ;
+    ontohatev1:complementoPlanilhaV1 "Agente com alto alcance digital. Amplifica impactos sociais do discurso. Ampliação v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Agente com alto alcance digital. Amplifica impactos sociais do discurso. Ampliação v2."@pt .
+
+ontohate:Agente_moderador_automatico a owl:Class ;
+    rdfs:label "Agente moderador automatico"@pt ;
+    rdfs:comment "Ampliacao v2."@pt,
+        "Sistema automatizado de moderacao."@pt ;
+    rdfs:subClassOf ontohate:Agente_moderador ;
+    ontohatev1:complementoPlanilhaV1 "Sistema automatizado de moderação. Opera por algoritmos ou aprendizado de máquina. Ampliação v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Sistema automatizado de moderação. Opera por algoritmos ou aprendizado de máquina. Ampliação v2."@pt .
+
+ontohate:Agente_sintetico a owl:Class ;
+    rdfs:label "Agente sintetico"@pt ;
+    rdfs:comment "Agente nao humano que produz discurso de odio por meio de IA."@pt,
+        "Ampliacao v2."@pt ;
+    rdfs:subClassOf ontohate:Agente_odiador .
+
+ontohate:Agente_testemunha a owl:Class ;
+    rdfs:label "Agente testemunha"@pt ;
+    rdfs:comment "Agente que presencia discurso de odio."@pt,
+        "Ampliacao v2."@pt ;
+    rdfs:subClassOf ontohate:Nucleo ;
+    ontohatev1:complementoPlanilhaV1 "Agente que presencia discurso de ódio. Pode legitimar, denunciar ou silenciar. Ampliação v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Agente que presencia discurso de ódio. Pode legitimar, denunciar ou silenciar. Ampliação v2."@pt .
+
+ontohate:Agnostico a owl:Class ;
+    rdfs:label "Agnostico"@pt ;
+    rdfs:comment "Pessoa que afirma nao ser possivel conhecer a existencia de divindade."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discriminação religiosa. Subclasse individual. Pessoa que afirma não ser possível conhecer a existência de divindade."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que afirma desconhecimento a respeito da existência de divindades, e, que portanto, não afirma e nem refuta a existência delas
+
+[Complemento da planilha] Pode ser alvo de discriminação religiosa. Subclasse individual. Pessoa que afirma não ser possível conhecer a existência de divindade."""@pt .
+
+ontohate:Alcance a owl:Class ;
+    rdfs:label "Alcance"@pt ;
+    rdfs:comment "Dimensao de impacto mensuravel."@pt,
+        "Extensao quantitativa da exposicao de um conteudo odiento."@pt ;
+    rdfs:subClassOf ontohate:Manifestacao ;
+    ontohatev1:complementoPlanilhaV1 "Extensão quantitativa da exposição de um conteúdo odiento. Mede visualizações, interações ou impressões. Dimensão de impacto mensurável."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Extensão quantitativa da exposição de um conteúdo odiento. Mede visualizações, interações ou impressões. Dimensão de impacto mensurável."@pt .
+
+ontohate:Ameaca a owl:Class ;
+    rdfs:label "Ameaca"@pt ;
+    rdfs:comment "Declaracao de intencao de causar dano."@pt,
+        "Pode configurar ilicito."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que usa de intimidações implícitas ou explícitas, sem violência explícita se o destinatário-vítima modificar o seu comportamento, abandonar os seus pedidos de direitos ou concordar com os argumentos do agente odiador"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Produz intimidação e medo. Pode configurar ilícito. Declaração de intenção de causar dano."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que usa de intimidações implícitas ou explícitas, sem violência explícita se o destinatário-vítima modificar o seu comportamento, abandonar os seus pedidos de direitos ou concordar com os argumentos do agente odiador
+
+[Complemento da planilha] Produz intimidação e medo. Pode configurar ilícito. Declaração de intenção de causar dano."""@pt .
+
+ontohate:Amplificacao a owl:Class ;
+    rdfs:label "Amplificacao"@pt ;
+    rdfs:comment "Processo pelo qual a plataforma aumenta visibilidade de determinado conteudo."@pt,
+        "Relaciona-se a dinamica de viralizacao."@pt ;
+    rdfs:subClassOf ontohate:Sistema_algoritmico ;
+    ontohatev1:complementoPlanilhaV1 "Processo pelo qual a plataforma aumenta visibilidade de determinado conteúdo. Pode ocorrer via recomendação, trending ou ranqueamento. Relaciona-se à dinâmica de viralização."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Processo pelo qual a plataforma aumenta visibilidade de determinado conteúdo. Pode ocorrer via recomendação, trending ou ranqueamento. Relaciona-se à dinâmica de viralização."@pt .
+
+ontohate:Animalizacao a owl:Class ;
+    rdfs:label "Animalizacao"@pt ;
+    rdfs:comment "Comparacao da vitima a animal."@pt,
+        "Estrategia de desumanizacao."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que faz co-relação ou usa de comparação entre o destinatário-vítima e animais para denegar suas identidades"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Reduz humanidade. Estratégia de desumanização. Comparação da vítima a animal."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que faz co-relação ou usa de comparação entre o destinatário-vítima e animais para denegar suas identidades
+
+[Complemento da planilha] Reduz humanidade. Estratégia de desumanização. Comparação da vítima a animal."""@pt .
+
+ontohate:Antonimia_odienta a owl:Class ;
+    rdfs:label "Antonimia odienta"@pt ;
+    rdfs:comment "Estrategia linguistica indireta."@pt,
+        "Uso de oposicao semantica para inferiorizacao indireta."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 """Gênero discursivo odiento que usa de figura de linguagem antonomásia para amenizar ou camuflar o discurso de ódio
+O agente odiador substitui o nome próprio (de uma pessoa ou grupo) por um nome comum e vice-versa, com uma relação lógica e inconfundível entre si, usada para depreciar, diminuir e ofender"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Atua por contraste simbólico. Estratégia linguística indireta. Uso de oposição semântica para inferiorização indireta."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que usa de figura de linguagem antonomásia para amenizar ou camuflar o discurso de ódio
+O agente odiador substitui o nome próprio (de uma pessoa ou grupo) por um nome comum e vice-versa, com uma relação lógica e inconfundível entre si, usada para depreciar, diminuir e ofender
+
+[Complemento da planilha] Atua por contraste simbólico. Estratégia linguística indireta. Uso de oposição semântica para inferiorização indireta."""@pt .
+
+ontohate:Aprovacao_social a owl:Class ;
+    rdfs:label "Aprovacao social"@pt ;
+    rdfs:comment "Disposicao social."@pt,
+        "Modo mental relacionado a busca por reconhecimento ou validacao social."@pt ;
+    rdfs:subClassOf ontohate:Modo_mental .
+
+ontohate:Argumento_de_inferioridade_da_vitima a owl:Class ;
+    rdfs:label "Argumento de inferioridade da vitima"@pt ;
+    rdfs:comment "Desqualificacao moral ou social da vitima."@pt,
+        "Estrategia central do discurso."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 """Gênero discurso odiento que defende que o destinatário-vítima deve submeter-se à vontade ou adotar algumas das características do agente odiador ou do grupo ao qual pertence ou se identifica
+Considera o destinatário-vítima um ser inferior, de menor prestígio, e que por isso não tem direitos ou que alguns dos seus direitos devem ser limitados"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Sustenta exclusão e desumanização. Estratégia central do discurso. Desqualificação moral ou social da vítima."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discurso odiento que defende que o destinatário-vítima deve submeter-se à vontade ou adotar algumas das características do agente odiador ou do grupo ao qual pertence ou se identifica
+Considera o destinatário-vítima um ser inferior, de menor prestígio, e que por isso não tem direitos ou que alguns dos seus direitos devem ser limitados
+
+[Complemento da planilha] Sustenta exclusão e desumanização. Estratégia central do discurso. Desqualificação moral ou social da vítima."""@pt .
+
+ontohate:Argumento_de_normalidade_do_tratamento a owl:Class ;
+    rdfs:label "Argumento de normalidade do tratamento"@pt ;
+    rdfs:comment "Estrategia de banalizacao."@pt,
+        "Naturalizacao do tratamento discriminatorio."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que defende que o agente odiador ou grupo ao qual o odiador pertence ou se identifica que é considerado normal, enquanto que o destinatário-vítima é desviante, desnatural e/ou corrompido"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Apresenta ataque como prática aceitável. Estratégia de banalização. Naturalização do tratamento discriminatório."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que defende que o agente odiador ou grupo ao qual o odiador pertence ou se identifica que é considerado normal, enquanto que o destinatário-vítima é desviante, desnatural e/ou corrompido
+
+[Complemento da planilha] Apresenta ataque como prática aceitável. Estratégia de banalização. Naturalização do tratamento discriminatório."""@pt .
+
+ontohate:Argumento_de_superioridade_do_odiador a owl:Class ;
+    rdfs:label "Argumento de superioridade do odiador"@pt ;
+    rdfs:comment "Afirmacao de hierarquia moral ou social."@pt,
+        "Estrategia de legitimacao."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 """Gênero discursivo odiento que defende que o agente odiador ou grupo ao qual pertence ou se identifica é superior, de acordo com seus próprios critérios, em relação ao destinatário-vítima
+Defende o tratamento preferencial ao grupo do odiador"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Legitima exclusão da vítima. Estratégia de legitimação. Afirmação de hierarquia moral ou social."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que defende que o agente odiador ou grupo ao qual pertence ou se identifica é superior, de acordo com seus próprios critérios, em relação ao destinatário-vítima
+Defende o tratamento preferencial ao grupo do odiador
+
+[Complemento da planilha] Legitima exclusão da vítima. Estratégia de legitimação. Afirmação de hierarquia moral ou social."""@pt .
+
+ontohate:Arrogancia_moral a owl:Class ;
+    rdfs:label "Arrogancia moral"@pt ;
+    rdfs:comment "Disposicao avaliativa."@pt,
+        "Disposicao baseada na percepcao de superioridade moral."@pt ;
+    rdfs:subClassOf ontohate:Modo_mental .
+
+ontohate:Assexual a owl:Class ;
+    rdfs:label "Assexual"@pt ;
+    rdfs:comment "Pessoa com ausencia ou baixa atracao sexual."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discriminação identitária. Subclasse individual. Pessoa com ausência ou baixa atração sexual."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que não têm interesse na atividade sexual e que a orientação sexual é de um espectro cinza (gray spectre)
+O espectro cinza é onde as interações sexuais são de outra dimensão. O indivíduo assexual não considera o ato sexual como definidor de uma relação afetiva, nem sua efetivação para o desenvolvimento do prazer.
+
+[Complemento da planilha] Pode ser alvo de discriminação identitária. Subclasse individual. Pessoa com ausência ou baixa atração sexual."""@pt .
+
+ontohate:Ateu a owl:Class ;
+    rdfs:label "Ateu"@pt ;
+    rdfs:comment "Pessoa que nao professa crenca religiosa."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de intolerância religiosa. Subclasse individual. Pessoa que não professa crença religiosa."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa com ausência de crença em quaisquer divindades
+
+[Complemento da planilha] Pode ser alvo de intolerância religiosa. Subclasse individual. Pessoa que não professa crença religiosa."""@pt .
+
+ontohate:Bissexual a owl:Class ;
+    rdfs:label "Bissexual"@pt ;
+    rdfs:comment "Pessoa com atracao por mais de um genero."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de bifobia. Subclasse individual. Pessoa com atração por mais de um gênero."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que é sexualmente e/ou romanticamente atraída por pessoas com gênero/sexo ou gêneros como o dela e aquelas com gênero/sexo ou gêneros diferentes do seu
+
+[Complemento da planilha] Pode ser alvo de bifobia. Subclasse individual. Pessoa com atração por mais de um gênero."""@pt .
+
+ontohate:Bot_social a owl:Class ;
+    rdfs:label "Bot social"@pt ;
+    rdfs:comment "Conta automatizada utilizada para produzir ou amplificar discurso odiento."@pt,
+        "Estrategia automatizada."@pt ;
+    rdfs:subClassOf ontohate:Recursos_Tecnicos ;
+    ontohatev1:complementoPlanilhaV1 "Conta automatizada utilizada para produzir ou amplificar discurso odiento. Pode simular comportamento humano. Estratégia automatizada."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conta automatizada utilizada para produzir ou amplificar discurso odiento. Pode simular comportamento humano. Estratégia automatizada."@pt .
+
+ontohate:Bystander a owl:Class ;
+    rdfs:label "Bystander"@pt ;
+    rdfs:comment "Importante para dinamica social do fenomeno."@pt,
+        "Usuario que presencia o discurso de odio sem ser autor nem vitima direta."@pt ;
+    rdfs:subClassOf ontohate:Audiencia ;
+    ontohatev1:complementoPlanilhaV1 "Usuário que presencia o discurso de ódio sem ser autor nem vítima direta. Pode reagir, denunciar ou amplificar indiretamente o conteúdo. Importante para dinâmica social do fenômeno."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Usuário que presencia o discurso de ódio sem ser autor nem vítima direta. Pode reagir, denunciar ou amplificar indiretamente o conteúdo. Importante para dinâmica social do fenômeno."@pt .
+
+ontohate:Calunia a owl:Class ;
+    rdfs:label "Calunia"@pt ;
+    rdfs:comment "Atribuicao falsa de fato desonroso."@pt,
+        "Pode configurar ilicito."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que acusa o destinatário-vítima de praticar algum crime ou contravenção sem que exista comprovação"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Visa prejudicar reputação. Pode configurar ilícito. Atribuição falsa de fato desonroso."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que acusa o destinatário-vítima de praticar algum crime ou contravenção sem que exista comprovação
+
+[Complemento da planilha] Visa prejudicar reputação. Pode configurar ilícito. Atribuição falsa de fato desonroso."""@pt .
+
+ontohate:Candomblecista a owl:Class ;
+    rdfs:label "Candomblecista"@pt ;
+    rdfs:comment "Pessoa praticante do candomble."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de intolerância religiosa. Subclasse individual. Pessoa praticante do candomblé."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que segue a religião afro-brasileira do candomblé
+
+[Complemento da planilha] Pode ser alvo de intolerância religiosa. Subclasse individual. Pessoa praticante do candomblé."""@pt .
+
+ontohate:Coletivo_politico a owl:Class ;
+    rdfs:label "Coletivo politico"@pt ;
+    rdfs:comment "Grupo organizado em torno de identidade politica."@pt,
+        "Subclasse coletiva."@pt ;
+    rdfs:subClassOf ontohate:Grupo_de_pessoas_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de hostilidade partidária. Subclasse coletiva. Grupo organizado em torno de identidade política."@pt ;
+    ontohatev1:conceitoFonteV1 """Partidos políticos, comissões políticas, organizações que atuam em alguma esfera política ou institucional
+
+[Complemento da planilha] Pode ser alvo de hostilidade partidária. Subclasse coletiva. Grupo organizado em torno de identidade política."""@pt .
+
+ontohate:Comentario_odiento a owl:Class ;
+    rdfs:label "Comentario odiento"@pt ;
+    rdfs:comment "Forma interacional."@pt,
+        "Intervencao textual inserida em interacao digital."@pt ;
+    rdfs:subClassOf ontohate:Recursos_de_Forma ;
+    ontohatev1:complementoPlanilhaV1 "Intervenção textual inserida em interação digital. Frequentemente ocorre como resposta provocativa. Forma interacional."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Intervenção textual inserida em interação digital. Frequentemente ocorre como resposta provocativa. Forma interacional."@pt .
+
+ontohate:Conspiracao a owl:Class ;
+    rdfs:label "Conspiracao"@pt ;
+    rdfs:comment "Estrategia de mobilizacao."@pt,
+        "Narrativa conspiratoria contra grupo social."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que insinua ou afirma que o destinatário-vítima faz parte de uma conspiração contra o país/sociedade, servindo a interesses maliciosos"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode mobilizar coletividade contra vítima. Estratégia de mobilização. Narrativa conspiratória contra grupo social."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que insinua ou afirma que o destinatário-vítima faz parte de uma conspiração contra o país/sociedade, servindo a interesses maliciosos
+
+[Complemento da planilha] Pode mobilizar coletividade contra vítima. Estratégia de mobilização. Narrativa conspiratória contra grupo social."""@pt .
+
+ontohate:Conteudo_multimodal a owl:Class ;
+    rdfs:label "Conteudo multimodal"@pt ;
+    rdfs:comment "Ampliacao contemporanea."@pt,
+        "Conteudo que integra multiplos modos comunicacionais."@pt ;
+    rdfs:subClassOf ontohate:Recursos_Tecnicos ;
+    ontohatev1:complementoPlanilhaV1 "Conteúdo que integra múltiplos modos comunicacionais. Combina texto, imagem e áudio em formatos digitais recentes. Ampliação contemporânea."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conteúdo que integra múltiplos modos comunicacionais. Combina texto, imagem e áudio em formatos digitais recentes. Ampliação contemporânea."@pt .
+
+ontohate:Contexto_academico a owl:Class ;
+    rdfs:label "Contexto academico"@pt ;
+    rdfs:comment "Contexto vinculado a debates e ambientes educacionais ou cientificos."@pt,
+        "Derivado da tese."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:associacaoDiscursoOdioV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente o discurso acadêmico, científico e/ou erudito (como uma página de um especialista em determinado campo do conhecimento, de uma instituição de ensino)
+eventos ou episódios em que ocorra uma argumentação ou contra-argumentação científica"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode envolver produção de conhecimento, conflitos institucionais ou controvérsias públicas. Derivado da tese. Contexto vinculado a debates e ambientes educacionais ou científicos."@pt ;
+    ontohatev1:conceitoFonteV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente o discurso acadêmico, científico e/ou erudito (como uma página de um especialista em determinado campo do conhecimento, de uma instituição de ensino)
+eventos ou episódios em que ocorra uma argumentação ou contra-argumentação científica
+
+[Complemento da planilha] Pode envolver produção de conhecimento, conflitos institucionais ou controvérsias públicas. Derivado da tese. Contexto vinculado a debates e ambientes educacionais ou científicos."""@pt .
+
+ontohate:Contexto_algoritmico a owl:Class ;
+    rdfs:label "Contexto algoritmico"@pt ;
+    rdfs:comment "Ampliacao ontologica contemporanea."@pt,
+        "Contexto mediado por sistemas algoritmicos de recomendacao e ranqueamento."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:complementoPlanilhaV1 "Contexto mediado por sistemas algorítmicos de recomendação e ranqueamento. Influencia visibilidade, amplificação e priorização de conteúdo. Ampliação ontológica contemporânea."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Contexto mediado por sistemas algorítmicos de recomendação e ranqueamento. Influencia visibilidade, amplificação e priorização de conteúdo. Ampliação ontológica contemporânea."@pt .
+
+ontohate:Contexto_artistico a owl:Class ;
+    rdfs:label "Contexto artistico"@pt ;
+    rdfs:comment "Contexto relacionado a manifestacoes culturais e artisticas."@pt,
+        "Derivado da tese."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:associacaoDiscursoOdioV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente o discurso artístico (como uma página de um ator, cantor, celebridade, sub-celebridade ou orgão ou instituição artistíca) eventos ou episódios em que a postura, declaração ou o próprio artista está em evidência
+eventos ou episódios em que a postura, declaração ou o próprio artista está em evidência"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode envolver disputas simbólicas e representacionais. Derivado da tese. Contexto relacionado a manifestações culturais e artísticas."@pt ;
+    ontohatev1:conceitoFonteV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente o discurso artístico (como uma página de um ator, cantor, celebridade, sub-celebridade ou orgão ou instituição artistíca) eventos ou episódios em que a postura, declaração ou o próprio artista está em evidência
+eventos ou episódios em que a postura, declaração ou o próprio artista está em evidência
+
+[Complemento da planilha] Pode envolver disputas simbólicas e representacionais. Derivado da tese. Contexto relacionado a manifestações culturais e artísticas."""@pt .
+
+ontohate:Contexto_de_evento_gatilho a owl:Class ;
+    rdfs:label "Contexto de evento gatilho"@pt ;
+    rdfs:comment "Contexto ativado por acontecimentos especificos que desencadeiam manifestacoes odientas."@pt,
+        "Derivado da nocao de “eventos gatilho” da tese."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:complementoPlanilhaV1 "Pode incluir eventos midiáticos, crises políticas ou fatos violentos. Derivado da noção de “eventos gatilho” da tese. Contexto ativado por acontecimentos específicos que desencadeiam manifestações odientas."@pt ;
+    ontohatev1:conceitoFonteV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais, dos mais diversos atores sociais, a partir de um "evento gatilho", ou seja, após inferências causais como um ataque terrorista, uma decisão judicial ou um evento político
+Exemplo do que aconteceu com a decisão da Suprema Corte Americana sobre casamento entre pessoas do mesmo sexo ou os ataques terroristas em Paris em 2015
+
+[Complemento da planilha] Pode incluir eventos midiáticos, crises políticas ou fatos violentos. Derivado da noção de “eventos gatilho” da tese. Contexto ativado por acontecimentos específicos que desencadeiam manifestações odientas."""@pt .
+
+ontohate:Contexto_de_normas_culturais a owl:Class ;
+    rdfs:label "Contexto de normas culturais"@pt ;
+    rdfs:comment "Contexto baseado em valores, costumes e normas sociais compartilhadas."@pt,
+        "Fundamentacao sociocultural da tese."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:associacaoDiscursoOdioV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente as normas sociológicas, econômicas e históricas (como uma página de veículo ou profissionais da imprensa, organizações da sociedade civil)
+eventos ou episódios em que problemas sociais, especialmente os que envolvem direitos humanos, são expostos e discutidos"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode reforçar ou legitimar práticas discriminatórias. Fundamentação sociocultural da tese. Contexto baseado em valores, costumes e normas sociais compartilhadas."@pt ;
+    ontohatev1:conceitoFonteV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente as normas sociológicas, econômicas e históricas (como uma página de veículo ou profissionais da imprensa, organizações da sociedade civil)
+eventos ou episódios em que problemas sociais, especialmente os que envolvem direitos humanos, são expostos e discutidos
+
+[Complemento da planilha] Pode reforçar ou legitimar práticas discriminatórias. Fundamentação sociocultural da tese. Contexto baseado em valores, costumes e normas sociais compartilhadas."""@pt .
+
+ontohate:Contexto_de_plataforma_fechada a owl:Class ;
+    rdfs:label "Contexto de plataforma fechada"@pt ;
+    rdfs:comment "Ampliacao estrutural v2."@pt,
+        "Contexto em que o discurso circula em ambientes privados ou restritos."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:complementoPlanilhaV1 "Contexto em que o discurso circula em ambientes privados ou restritos. Pode favorecer radicalização ou menor visibilidade pública. Ampliação estrutural v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Contexto em que o discurso circula em ambientes privados ou restritos. Pode favorecer radicalização ou menor visibilidade pública. Ampliação estrutural v2."@pt .
+
+ontohate:Contexto_global a owl:Class ;
+    rdfs:label "Contexto global"@pt ;
+    rdfs:comment "Contexto vinculado a dinamicas transnacionais ou globais."@pt,
+        "Relacionado a dimensao digital transfronteirica."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:complementoPlanilhaV1 "Contexto vinculado a dinâmicas transnacionais ou globais. Pode envolver circulação internacional do discurso. Relacionado à dimensão digital transfronteiriça."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Contexto vinculado a dinâmicas transnacionais ou globais. Pode envolver circulação internacional do discurso. Relacionado à dimensão digital transfronteiriça."@pt .
+
+ontohate:Contexto_local a owl:Class ;
+    rdfs:label "Contexto local"@pt ;
+    rdfs:comment "Aparece nas questoes de competencia."@pt,
+        "Contexto vinculado a realidades regionais ou comunitarias especificas."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:complementoPlanilhaV1 "Contexto vinculado a realidades regionais ou comunitárias específicas. Considera dinâmicas sociais circunscritas geograficamente. Aparece nas questões de competência."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Contexto vinculado a realidades regionais ou comunitárias específicas. Considera dinâmicas sociais circunscritas geograficamente. Aparece nas questões de competência."@pt .
+
+ontohate:Contexto_politico a owl:Class ;
+    rdfs:label "Contexto politico"@pt ;
+    rdfs:comment "Contexto relacionado a disputas, ideologias ou eventos politicos."@pt,
+        "Derivado das questoes de competencia da tese."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:associacaoDiscursoOdioV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente o discurso político (como uma página de político, partido político, orgão ou instituição política)
+eventos ou episódios em que haja propaganda política, proximidade com pleitos eleitorais ou que a postura, declaração ou a própria agente político está em evidência"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode envolver campanhas eleitorais, polarização e conflitos partidários. Derivado das questões de competência da tese. Contexto relacionado a disputas, ideologias ou eventos políticos."@pt ;
+    ontohatev1:conceitoFonteV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente o discurso político (como uma página de político, partido político, orgão ou instituição política)
+eventos ou episódios em que haja propaganda política, proximidade com pleitos eleitorais ou que a postura, declaração ou a própria agente político está em evidência
+
+[Complemento da planilha] Pode envolver campanhas eleitorais, polarização e conflitos partidários. Derivado das questões de competência da tese. Contexto relacionado a disputas, ideologias ou eventos políticos."""@pt .
+
+ontohate:Contexto_religioso a owl:Class ;
+    rdfs:label "Contexto religioso"@pt ;
+    rdfs:comment "Contexto relacionado a crencas, praticas ou conflitos religiosos."@pt,
+        "Presente na fundamentacao da tese."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:associacaoDiscursoOdioV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente o discurso religioso (como uma página de um padre, pastor ou de uma instituição religiosa)
+eventos ou episódios em que práticas, dogmas, doutrinas ou pressupostos religiosos são questionados ou postos em discussão"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode envolver disputas inter-religiosas ou intolerância confessional. Presente na fundamentação da tese. Contexto relacionado a crenças, práticas ou conflitos religiosos."@pt ;
+    ontohatev1:conceitoFonteV1 """Circunstâncias em que o discurso é manifestado em perfis, páginas ou ambientes digitais em que é vigente o discurso religioso (como uma página de um padre, pastor ou de uma instituição religiosa)
+eventos ou episódios em que práticas, dogmas, doutrinas ou pressupostos religiosos são questionados ou postos em discussão
+
+[Complemento da planilha] Pode envolver disputas inter-religiosas ou intolerância confessional. Presente na fundamentação da tese. Contexto relacionado a crenças, práticas ou conflitos religiosos."""@pt .
+
+ontohate:Contexto_transplataforma a owl:Class ;
+    rdfs:label "Contexto transplataforma"@pt ;
+    rdfs:comment "Ampliacao analitica v2."@pt,
+        "Contexto caracterizado pela circulacao do discurso entre multiplas plataformas digitais."@pt ;
+    rdfs:subClassOf ontohate:Contexto ;
+    ontohatev1:complementoPlanilhaV1 "Contexto caracterizado pela circulação do discurso entre múltiplas plataformas digitais. Pode envolver coordenação e replicação estratégica. Ampliação analítica v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Contexto caracterizado pela circulação do discurso entre múltiplas plataformas digitais. Pode envolver coordenação e replicação estratégica. Ampliação analítica v2."@pt .
+
+ontohate:Crenca_na_normalidade a owl:Class ;
+    rdfs:label "Crenca na normalidade"@pt ;
+    rdfs:comment "Conviccao de que determinado tratamento e legitimo ou natural."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Crenca ;
+    ontohatev1:complementoPlanilhaV1 "Convicção de que determinado tratamento é legítimo ou natural. Refere-se à naturalização de práticas discriminatórias. Subclasse específica."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Convicção de que determinado tratamento é legítimo ou natural. Refere-se à naturalização de práticas discriminatórias. Subclasse específica."@pt .
+
+ontohate:Crenca_na_ordem_social a owl:Class ;
+    rdfs:label "Crenca na ordem social"@pt ;
+    rdfs:comment "Conviccao na preservacao de hierarquias sociais estabelecidas."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Crenca ;
+    ontohatev1:complementoPlanilhaV1 "Convicção na preservação de hierarquias sociais estabelecidas. Legitima desigualdades estruturais como necessárias ou adequadas. Subclasse específica."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Convicção na preservação de hierarquias sociais estabelecidas. Legitima desigualdades estruturais como necessárias ou adequadas. Subclasse específica."@pt .
+
+ontohate:Crenca_na_superioridade a owl:Class ;
+    rdfs:label "Crenca na superioridade"@pt ;
+    rdfs:comment "Conviccao na superioridade do agente ou de seu grupo."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Crenca .
+
+ontohate:Crenca_na_tradicao a owl:Class ;
+    rdfs:label "Crenca na tradicao"@pt ;
+    rdfs:comment "Conviccao fundamentada na manutencao de valores tradicionais."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Crenca ;
+    ontohatev1:complementoPlanilhaV1 "Convicção fundamentada na manutenção de valores tradicionais. Pode sustentar rejeição a mudanças sociais e reconhecimento de direitos. Subclasse específica."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Convicção fundamentada na manutenção de valores tradicionais. Pode sustentar rejeição a mudanças sociais e reconhecimento de direitos. Subclasse específica."@pt .
+
+ontohate:Crenca_religiosa a owl:Class ;
+    rdfs:label "Crenca religiosa"@pt ;
+    rdfs:comment "Conviccao baseada em doutrina ou fe religiosa."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Crenca .
+
+ontohate:Decisao_de_moderacao a owl:Class ;
+    rdfs:label "Decisao de moderacao"@pt ;
+    rdfs:comment "Ato institucional de intervencao sobre conteudo classificado."@pt,
+        "Conecta analise e acao normativa."@pt ;
+    rdfs:subClassOf ontohate:Sistema_de_moderacao ;
+    ontohatev1:complementoPlanilhaV1 "Ato institucional de intervenção sobre conteúdo classificado. Pode resultar em remoção, restrição, advertência ou arquivamento. Conecta análise e ação normativa."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Ato institucional de intervenção sobre conteúdo classificado. Pode resultar em remoção, restrição, advertência ou arquivamento. Conecta análise e ação normativa."@pt .
+
+ontohate:Deepfake_odiento a owl:Class ;
+    rdfs:label "Deepfake odiento"@pt ;
+    rdfs:comment "Relaciona-se a IA generativa."@pt,
+        "Uso de midia sintetica gerada por IA para ataque."@pt ;
+    rdfs:subClassOf ontohate:Recursos_Tecnicos ;
+    ontohatev1:complementoPlanilhaV1 "Uso de mídia sintética gerada por IA para ataque. Pode manipular imagem ou voz da vítima. Relaciona-se à IA generativa."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Uso de mídia sintética gerada por IA para ataque. Pode manipular imagem ou voz da vítima. Relaciona-se à IA generativa."@pt .
+
+ontohate:Demonizacao a owl:Class ;
+    rdfs:label "Demonizacao"@pt ;
+    rdfs:comment "Construcao da vitima como ameaca moral ou social."@pt,
+        "Estrategia simbolica."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que usa de palavras de maldição, originárias de textos sagrados, para \"amaldiçoar\" o destinatário-vítima"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Justifica perseguição. Estratégia simbólica. Construção da vítima como ameaça moral ou social."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que usa de palavras de maldição, originárias de textos sagrados, para "amaldiçoar" o destinatário-vítima
+
+[Complemento da planilha] Justifica perseguição. Estratégia simbólica. Construção da vítima como ameaça moral ou social."""@pt .
+
+ontohate:Depressao a owl:Class ;
+    rdfs:label "Depressao"@pt ;
+    rdfs:comment "Estado emocional persistente de tristeza ou desanimo."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Dano_psicologico ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser agravado por exposição contínua ao discurso de ódio. Subclasse específica. Estado emocional persistente de tristeza ou desânimo."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano psicológico que desperta um transtorno afetivo manifestado por humor disfórico ou perda de interesse ou prazer nas atividades habituais
+A perturbação do humor é proeminente e relativamente persistente
+
+[Complemento da planilha] Pode ser agravado por exposição contínua ao discurso de ódio. Subclasse específica. Estado emocional persistente de tristeza ou desânimo."""@pt .
+
+ontohate:Desejo a owl:Class ;
+    rdfs:label "Desejo"@pt ;
+    rdfs:comment "Disposicao volitiva."@pt,
+        "Estado mental voltado a obtencao de determinado resultado."@pt ;
+    rdfs:subClassOf ontohate:Modo_mental ;
+    ontohatev1:complementoPlanilhaV1 "Estado mental voltado à obtenção de determinado resultado. No contexto do discurso de ódio online, pode envolver a intenção de causar danos simbólicos, sociais ou psicológicos. Disposição volitiva."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Estado mental voltado à obtenção de determinado resultado. No contexto do discurso de ódio online, pode envolver a intenção de causar danos simbólicos, sociais ou psicológicos. Disposição volitiva."@pt .
+
+ontohate:Desinformacao a owl:Class ;
+    rdfs:label "Desinformacao"@pt ;
+    rdfs:comment "Estrategia manipulativa."@pt,
+        "Uso intencional de informacao falsa para prejudicar grupo."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que usa de informação com impressão desequilibrada, super simplificada ou enganosa da realidade, com fins de prejudicar o destinatário-vítima e/ou manipular sua opinião"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode reforçar estereótipos e medo moral. Estratégia manipulativa. Uso intencional de informação falsa para prejudicar grupo."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que usa de informação com impressão desequilibrada, super simplificada ou enganosa da realidade, com fins de prejudicar o destinatário-vítima e/ou manipular sua opinião
+
+[Complemento da planilha] Pode reforçar estereótipos e medo moral. Estratégia manipulativa. Uso intencional de informação falsa para prejudicar grupo."""@pt .
+
+ontohate:Desumanizacao a owl:Class ;
+    rdfs:label "Desumanizacao"@pt ;
+    rdfs:comment "Processo de negacao da dignidade humana da vitima."@pt,
+        "Subclasse conceitual."@pt ;
+    rdfs:subClassOf ontohate:Dano_social ;
+    ontohatev1:complementoPlanilhaV1 "Reforça inferiorização simbólica e exclusão social. Subclasse conceitual. Processo de negação da dignidade humana da vítima."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano social que resulta no tratamento desigual do destinatário-vítima
+Interfere no reconhecimento de sua dignidade de pessoa, o que inclui não reconhecê-lo como ser humano
+
+[Complemento da planilha] Reforça inferiorização simbólica e exclusão social. Subclasse conceitual. Processo de negação da dignidade humana da vítima."""@pt .
+
+ontohate:Difamacao a owl:Class ;
+    rdfs:label "Difamacao"@pt ;
+    rdfs:comment "Conecta com dano moral."@pt,
+        "Divulgacao de informacao ofensiva a reputacao."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 """Gênero discursivo odiento que diminue a reputação ou a boa reputação do destinatário-vítima
+Imputação ofensiva atribuída contra a honorabilidade de alguém com a intenção de desacreditá-lo na sociedade em que vive, e provocar contra ele desprezo ou menosprezo público"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Afeta honra e imagem social. Conecta com dano moral. Divulgação de informação ofensiva à reputação."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que diminue a reputação ou a boa reputação do destinatário-vítima
+Imputação ofensiva atribuída contra a honorabilidade de alguém com a intenção de desacreditá-lo na sociedade em que vive, e provocar contra ele desprezo ou menosprezo público
+
+[Complemento da planilha] Afeta honra e imagem social. Conecta com dano moral. Divulgação de informação ofensiva à reputação."""@pt .
+
+ontohate:Dificuldade_de_respiracao a owl:Class ;
+    rdfs:label "Dificuldade de respiracao"@pt ;
+    rdfs:comment "Alteracao fisiologica relacionada a estados de estresse intenso."@pt,
+        "Subclasse de Dano_fisico."@pt ;
+    rdfs:subClassOf ontohate:Dano_fisico ;
+    ontohatev1:complementoPlanilhaV1 "Alteração fisiológica relacionada a estados de estresse intenso. Pode ocorrer em situações de intimidação ou ameaça persistente. Subclasse de Dano_fisico."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Alteração fisiológica relacionada a estados de estresse intenso. Pode ocorrer em situações de intimidação ou ameaça persistente. Subclasse de Dano_fisico."@pt .
+
+ontohate:Direitos_negados a owl:Class ;
+    rdfs:label "Direitos negados"@pt ;
+    rdfs:comment "Argumentacao para retirada de direitos."@pt,
+        "Estrategia normativa."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 """Gênero discursivo odiento que disputa ou nega direitos civis ou políticos ao destinatário-vítima, incluindo os direitos de representação política, atividade política, direito de manifestação ou direito de comparecer ou falar em público
+Usa do fundamento de que o destinatário-vítima é uma minoria."""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Legitima exclusão jurídica. Estratégia normativa. Argumentação para retirada de direitos."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que disputa ou nega direitos civis ou políticos ao destinatário-vítima, incluindo os direitos de representação política, atividade política, direito de manifestação ou direito de comparecer ou falar em público
+Usa do fundamento de que o destinatário-vítima é uma minoria. Também advoga chamada para uma ação que tem como objetivo impedir o acesso aos direitos do destinatário-vítima
+
+[Complemento da planilha] Legitima exclusão jurídica. Estratégia normativa. Argumentação para retirada de direitos."""@pt .
+
+ontohate:Discurso_LGBTQIfobico a owl:Class ;
+    rdfs:label "Discurso LGBTQIfobico"@pt ;
+    rdfs:comment "Classe especifica sob Natureza_principal (via Natureza_afetiva)."@pt,
+        "Discurso de odio direcionado a pessoas LGBTQIA+."@pt ;
+    rdfs:subClassOf ontohate:Natureza_afetiva ;
+    ontohatev1:associacaoDiscursoOdioV1 "Discurso de ódio de natureza afetiva, direcionado a comunidade LGBTQIA+"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Mobiliza hostilidade baseada em orientação sexual e/ou identidade de gênero. Classe específica sob Natureza_principal (via Natureza_afetiva). Discurso de ódio direcionado a pessoas LGBTQIA+."@pt ;
+    ontohatev1:conceitoFonteV1 """Discurso de ódio de natureza afetiva, direcionado a comunidade LGBTQIA+
+
+[Complemento da planilha] Mobiliza hostilidade baseada em orientação sexual e/ou identidade de gênero. Classe específica sob Natureza_principal (via Natureza_afetiva). Discurso de ódio direcionado a pessoas LGBTQIA+."""@pt .
+
+ontohate:Discurso_antissemita a owl:Class ;
+    rdfs:label "Discurso antissemita"@pt ;
+    rdfs:comment "Classe especifica sob Natureza_principal; pode participar de interseccionalidade."@pt,
+        "Discurso de odio direcionado contra pessoas judias."@pt ;
+    rdfs:subClassOf ontohate:Natureza_dispositiva ;
+    ontohatev1:associacaoDiscursoOdioV1 "Discurso de ódio de natureza disposita e afiliativa, direcionado a semitas, especialmente judeus e árabes, e que nega o holocausto"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Mobiliza preconceitos e estereótipos antissemitas, podendo articular dimensão religiosa e étnica. Classe específica sob Natureza_principal; pode participar de interseccionalidade. Discurso de ódio direcionado contra pessoas judias."@pt ;
+    ontohatev1:conceitoFonteV1 """Discurso de ódio de natureza disposita e afiliativa, direcionado a semitas, especialmente judeus e árabes, e que nega o holocausto
+
+[Complemento da planilha] Mobiliza preconceitos e estereótipos antissemitas, podendo articular dimensão religiosa e étnica. Classe específica sob Natureza_principal; pode participar de interseccionalidade. Discurso de ódio direcionado contra pessoas judias."""@pt .
+
+ontohate:Discurso_aporofobico a owl:Class ;
+    rdfs:label "Discurso aporofobico"@pt ;
+    rdfs:comment "Classe especifica sob Natureza_principal."@pt,
+        "Discurso de odio direcionado a pessoas em situacao de pobreza ou vulnerabilidade economica."@pt ;
+    rdfs:subClassOf ontohate:Natureza_por_conduta ;
+    ontohatev1:associacaoDiscursoOdioV1 "Discurso de ódio por conduta, direcionado às pessoas pobres, desamparadas e/ou que não apresentam o aspecto de quem tem algum poder aquisitivo ou posição social relevante no sistema capitalista, atribuindo-lhes à culpa absoluta por sua condição."@pt ;
+    ontohatev1:complementoPlanilhaV1 "Baseia-se na rejeição a condições socioeconômicas. Classe específica sob Natureza_principal. Discurso de ódio direcionado a pessoas em situação de pobreza ou vulnerabilidade econômica."@pt ;
+    ontohatev1:conceitoFonteV1 """Discurso de ódio por conduta, direcionado às pessoas pobres, desamparadas e/ou que não apresentam o aspecto de quem tem algum poder aquisitivo ou posição social relevante no sistema capitalista, atribuindo-lhes à culpa absoluta por sua condição.
+
+[Complemento da planilha] Baseia-se na rejeição a condições socioeconômicas. Classe específica sob Natureza_principal. Discurso de ódio direcionado a pessoas em situação de pobreza ou vulnerabilidade econômica."""@pt .
+
+ontohate:Discurso_capacitista a owl:Class ;
+    rdfs:label "Discurso capacitista"@pt ;
+    rdfs:comment "Classe especifica sob Natureza_principal."@pt,
+        "Discurso de odio direcionado contra pessoas com deficiencia."@pt ;
+    rdfs:subClassOf ontohate:Natureza_por_atributos ;
+    ontohatev1:associacaoDiscursoOdioV1 "Discurso de ódio por atributos, direcionado às pessoas com deficiência de natureza física, mental, intelectual ou sensorial, considerando que a deficiência as define como menos capazes"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Mobiliza desvalorização e estigmatização de capacidades físicas ou cognitivas. Classe específica sob Natureza_principal. Discurso de ódio direcionado contra pessoas com deficiência."@pt ;
+    ontohatev1:conceitoFonteV1 """Discurso de ódio por atributos, direcionado às pessoas com deficiência de natureza física, mental, intelectual ou sensorial, considerando que a deficiência as define como menos capazes
+
+[Complemento da planilha] Mobiliza desvalorização e estigmatização de capacidades físicas ou cognitivas. Classe específica sob Natureza_principal. Discurso de ódio direcionado contra pessoas com deficiência."""@pt .
+
+ontohate:Discurso_de_odio_por_aparencia a owl:Class ;
+    rdfs:label "Discurso de odio por aparencia"@pt ;
+    rdfs:comment "Discurso de odio baseado na aparencia corporal."@pt,
+        "No arranjo V2, fica sob Natureza_por_atributos."@pt ;
+    rdfs:subClassOf ontohate:Natureza_por_atributos ;
+    ontohatev1:associacaoDiscursoOdioV1 """Discurso de ódio por atributos, direcionado às pessoas por conta de sua aparência física, em especial flacidez, excesso de gordura e/ou que estão fora do padrão de beleza tido como ideal pelo agente odiador ou grupo ao qual pertence ou se identifica
+Geralmente associa beleza, saúde e potência."""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Inclui ataques associados à gordofobia e discriminação estética. No arranjo V2, fica sob Natureza_por_atributos. Discurso de ódio baseado na aparência corporal."@pt ;
+    ontohatev1:conceitoFonteV1 """Discurso de ódio por atributos, direcionado às pessoas por conta de sua aparência física, em especial flacidez, excesso de gordura e/ou que estão fora do padrão de beleza tido como ideal pelo agente odiador ou grupo ao qual pertence ou se identifica
+Geralmente associa beleza, saúde e potência.
+
+[Complemento da planilha] Inclui ataques associados à gordofobia e discriminação estética. No arranjo V2, fica sob Natureza_por_atributos. Discurso de ódio baseado na aparência corporal."""@pt .
+
+ontohate:Discurso_etarista a owl:Class ;
+    rdfs:label "Discurso etarista"@pt ;
+    rdfs:comment "Discurso de odio direcionado contra pessoas com base na idade."@pt,
+        "No arranjo V2, fica sob Natureza_por_atributos."@pt ;
+    rdfs:subClassOf ontohate:Natureza_por_atributos ;
+    ontohatev1:associacaoDiscursoOdioV1 """Discurso de ódio por atributos e por conduta direcionado às pessoas idosas, refletindo uma resistência frequente ao curso natural do envelhecimento
+O discurso de ódio etário associa as pessoas de mais idade a seres mais frágeis e improdutivos, atribuindo-lhes à culpa absoluta por sua condição."""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Mobiliza estigmas e inferiorização associados ao envelhecimento ou faixa etária. No arranjo V2, fica sob Natureza_por_atributos. Discurso de ódio direcionado contra pessoas com base na idade."@pt ;
+    ontohatev1:conceitoFonteV1 """Discurso de ódio por atributos e por conduta direcionado às pessoas idosas, refletindo uma resistência frequente ao curso natural do envelhecimento
+O discurso de ódio etário associa as pessoas de mais idade a seres mais frágeis e improdutivos, atribuindo-lhes à culpa absoluta por sua condição.
+
+[Complemento da planilha] Mobiliza estigmas e inferiorização associados ao envelhecimento ou faixa etária. No arranjo V2, fica sob Natureza_por_atributos. Discurso de ódio direcionado contra pessoas com base na idade."""@pt .
+
+ontohate:Discurso_intolerante_religioso a owl:Class ;
+    rdfs:label "Discurso intolerante religioso"@pt ;
+    rdfs:comment "Classe especifica sob Natureza_principal."@pt,
+        "Discurso de odio baseado em intolerancia religiosa."@pt ;
+    rdfs:subClassOf ontohate:Natureza_dispositiva ;
+    ontohatev1:complementoPlanilhaV1 "Discurso de ódio baseado em intolerância religiosa. Ataca indivíduos ou grupos com base em crenças, práticas ou pertença religiosa. Classe específica sob Natureza_principal."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Discurso de ódio baseado em intolerância religiosa. Ataca indivíduos ou grupos com base em crenças, práticas ou pertença religiosa. Classe específica sob Natureza_principal."@pt .
+
+ontohate:Discurso_misogino a owl:Class ;
+    rdfs:label "Discurso misogino"@pt ;
+    rdfs:comment "Classe especifica sob Natureza_principal."@pt,
+        "Discurso de odio direcionado contra mulheres."@pt ;
+    rdfs:subClassOf ontohate:Natureza_por_atributos ;
+    ontohatev1:associacaoDiscursoOdioV1 "Discurso de ódio por atributos, direcionado às mulheres, e, por extensão, a tudo que está associado com os estereótipos tradicionalmente femininos, considerando como de menor prestígio social."@pt ;
+    ontohatev1:complementoPlanilhaV1 "Mobiliza inferiorização e hostilidade baseada em gênero. Classe específica sob Natureza_principal. Discurso de ódio direcionado contra mulheres."@pt ;
+    ontohatev1:conceitoFonteV1 """Discurso de ódio por atributos, direcionado às mulheres, e, por extensão, a tudo que está associado com os estereótipos tradicionalmente femininos, considerando como de menor prestígio social.
+
+[Complemento da planilha] Mobiliza inferiorização e hostilidade baseada em gênero. Classe específica sob Natureza_principal. Discurso de ódio direcionado contra mulheres."""@pt .
+
+ontohate:Discurso_politico_partidario a owl:Class ;
+    rdfs:label "Discurso politico partidario"@pt ;
+    rdfs:comment "Classe especifica sob Natureza_principal."@pt,
+        "Discurso de odio direcionado a adversarios politicos ou partidarios."@pt ;
+    rdfs:subClassOf ontohate:Natureza_dispositiva ;
+    ontohatev1:complementoPlanilhaV1 "Discurso de ódio direcionado a adversários políticos ou partidários. Mobiliza hostilidade baseada em alinhamento político percebido. Classe específica sob Natureza_principal."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Discurso de ódio direcionado a adversários políticos ou partidários. Mobiliza hostilidade baseada em alinhamento político percebido. Classe específica sob Natureza_principal."@pt .
+
+ontohate:Discurso_racialista a owl:Class ;
+    rdfs:label "Discurso racialista"@pt ;
+    rdfs:comment "Discurso de odio baseado em hierarquizacao racial."@pt,
+        "No arranjo V2, fica sob Natureza_por_atributos; interseccionalidade via combinacao."@pt ;
+    rdfs:subClassOf ontohate:Natureza_por_atributos ;
+    ontohatev1:associacaoDiscursoOdioV1 """Discurso de ódio de natureza afiliativa e por atributos, direcionado às pessoas por sua raça, etnia e/ou cor da pele, especialmente membros de grupos racialmente identificados como negros e indígenas
+É manifestado de várias formas, principalmente pelo juízo baseado em estereótipos acerca de indivíduos e pela atribuição de tratamento diferenciado, inferior, ultrajante, sustentado pela produção social, cultural e política da identidade racial/étnica."""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Mobiliza inferiorização e estereótipos associados a raça/etnia. No arranjo V2, fica sob Natureza_por_atributos; interseccionalidade via combinação. Discurso de ódio baseado em hierarquização racial."@pt ;
+    ontohatev1:conceitoFonteV1 """Discurso de ódio de natureza afiliativa e por atributos, direcionado às pessoas por sua raça, etnia e/ou cor da pele, especialmente membros de grupos racialmente identificados como negros e indígenas
+É manifestado de várias formas, principalmente pelo juízo baseado em estereótipos acerca de indivíduos e pela atribuição de tratamento diferenciado, inferior, ultrajante, sustentado pela produção social, cultural e política da identidade racial/étnica.
+
+[Complemento da planilha] Mobiliza inferiorização e estereótipos associados a raça/etnia. No arranjo V2, fica sob Natureza_por_atributos; interseccionalidade via combinação. Discurso de ódio baseado em hierarquização racial."""@pt .
+
+ontohate:Discurso_xenofobico a owl:Class ;
+    rdfs:label "Discurso xenofobico"@pt ;
+    rdfs:comment "Classe especifica sob Natureza_principal (via Natureza_afiliativa)."@pt,
+        "Discurso de odio direcionado contra estrangeiros, migrantes ou grupos percebidos como “de fora”."@pt ;
+    rdfs:subClassOf ontohate:Natureza_afiliativa ;
+    ontohatev1:associacaoDiscursoOdioV1 "Discurso de ódio de natureza afiliativa, direcionado àquele que não é natural do lugar do agente odiador, incluindo imigrantes e migrantes"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Baseia-se na rejeição a origem nacional, cultural ou comunitária. Classe específica sob Natureza_principal (via Natureza_afiliativa). Discurso de ódio direcionado contra estrangeiros, migrantes ou grupos percebidos como “de fora”."@pt ;
+    ontohatev1:conceitoFonteV1 """Discurso de ódio de natureza afiliativa, direcionado àquele que não é natural do lugar do agente odiador, incluindo imigrantes e migrantes
+
+[Complemento da planilha] Baseia-se na rejeição a origem nacional, cultural ou comunitária. Classe específica sob Natureza_principal (via Natureza_afiliativa). Discurso de ódio direcionado contra estrangeiros, migrantes ou grupos percebidos como “de fora”."""@pt .
+
+ontohate:Dissidente_religioso a owl:Class ;
+    rdfs:label "Dissidente religioso"@pt ;
+    rdfs:comment "Pessoa que diverge de determinada tradicao religiosa dominante."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode sofrer intolerância religiosa. Subclasse individual. Pessoa que diverge de determinada tradição religiosa dominante."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que discorda e/ou recusa os preceitos de uma religião
+
+[Complemento da planilha] Pode sofrer intolerância religiosa. Subclasse individual. Pessoa que diverge de determinada tradição religiosa dominante."""@pt .
+
+ontohate:Diversao a owl:Class ;
+    rdfs:label "Diversao"@pt ;
+    rdfs:comment "Disposicao motivacional."@pt,
+        "Modo mental associado a busca de entretenimento na manifestacao do discurso de odio."@pt ;
+    rdfs:subClassOf ontohate:Modo_mental .
+
+ontohate:Emoji_como_recurso_odiento a owl:Class ;
+    rdfs:label "Emoji como recurso odiento"@pt ;
+    rdfs:comment "Estrategia semantica digital."@pt,
+        "Uso codificado de emojis para sinalizar hostilidade."@pt ;
+    rdfs:subClassOf ontohate:Recursos_Tecnicos ;
+    ontohatev1:complementoPlanilhaV1 "Uso codificado de emojis para sinalizar hostilidade. Pode funcionar como código de grupo ou evasão de moderação. Estratégia semântica digital."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Uso codificado de emojis para sinalizar hostilidade. Pode funcionar como código de grupo ou evasão de moderação. Estratégia semântica digital."@pt .
+
+ontohate:Estereotipo_negativo a owl:Class ;
+    rdfs:label "Estereotipo negativo"@pt ;
+    rdfs:comment "Elemento recorrente na tese."@pt,
+        "Generalizacao depreciativa aplicada a grupo social."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que defende que todos os membros do grupo do destinatário-vítima tem certas características/comportamentos negativos, ou desprezíveis, ou antissociais que justificam a sua discriminação e invalidam os seus pedidos de certos direitos ou de igualdade de tratamento"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Sustenta preconceito estrutural. Elemento recorrente na tese. Generalização depreciativa aplicada a grupo social."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que defende que todos os membros do grupo do destinatário-vítima tem certas características/comportamentos negativos, ou desprezíveis, ou antissociais que justificam a sua discriminação e invalidam os seus pedidos de certos direitos ou de igualdade de tratamento
+
+[Complemento da planilha] Sustenta preconceito estrutural. Elemento recorrente na tese. Generalização depreciativa aplicada a grupo social."""@pt .
+
+ontohate:Estrangeiro a owl:Class ;
+    rdfs:label "Estrangeiro"@pt ;
+    rdfs:comment "Pessoa de nacionalidade distinta do pais de referencia."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de xenofobia. Subclasse individual. Pessoa de nacionalidade distinta do país de referência."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que não é natural do lugar do agente odiador
+O estrangeiro pode ser imigrantes, migrantes ou refugiados
+
+[Complemento da planilha] Pode ser alvo de xenofobia. Subclasse individual. Pessoa de nacionalidade distinta do país de referência."""@pt .
+
+ontohate:Etnofaulismo a owl:Class ;
+    rdfs:label "Etnofaulismo"@pt ;
+    rdfs:comment "Estrategia linguistica."@pt,
+        "Uso de termos etnicos pejorativos para inferiorizacao."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que usa de insultos, xingamento, epítetos depreciativos ou linguajar chulo para  atacar o destinatário-vítima"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Reforça identidade negativa associada a grupo. Estratégia linguística. Uso de termos étnicos pejorativos para inferiorização."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que usa de insultos, xingamento, epítetos depreciativos ou linguajar chulo para  atacar o destinatário-vítima
+
+[Complemento da planilha] Reforça identidade negativa associada a grupo. Estratégia linguística. Uso de termos étnicos pejorativos para inferiorização."""@pt .
+
+ontohate:Eufemismo_odiento a owl:Class ;
+    rdfs:label "Eufemismo odiento"@pt ;
+    rdfs:comment "Estrategia de evasao."@pt,
+        "Uso de suavizacao linguistica para ocultar hostilidade."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 """Gênero discursivo odiento que usa de figura de linguagem eufemismo para amenizar ou camuflar o discurso de ódio
+O agente odiador substitui o termo de ódio por outros equivalentes, com semântica de caráter grotesco, perturbador ou ofensivo"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Reduz detectabilidade. Estratégia de evasão. Uso de suavização linguística para ocultar hostilidade."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que usa de figura de linguagem eufemismo para amenizar ou camuflar o discurso de ódio
+O agente odiador substitui o termo de ódio por outros equivalentes, com semântica de caráter grotesco, perturbador ou ofensivo
+
+[Complemento da planilha] Reduz detectabilidade. Estratégia de evasão. Uso de suavização linguística para ocultar hostilidade."""@pt .
+
+ontohate:Evidencia_computacional a owl:Class ;
+    rdfs:label "Evidencia computacional"@pt ;
+    rdfs:comment "Importante para auditabilidade e transparencia."@pt,
+        "Registro tecnico produzido por sistemas automatizados para fundamentar avaliacao."@pt ;
+    rdfs:subClassOf ontohate:Sistema_de_moderacao ;
+    ontohatev1:complementoPlanilhaV1 "Registro técnico produzido por sistemas automatizados para fundamentar avaliação. Inclui scores, logs, embeddings e rastros digitais. Importante para auditabilidade e transparência."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Registro técnico produzido por sistemas automatizados para fundamentar avaliação. Inclui scores, logs, embeddings e rastros digitais. Importante para auditabilidade e transparência."@pt .
+
+ontohate:Exclusao a owl:Class ;
+    rdfs:label "Exclusao"@pt ;
+    rdfs:comment "Conecta com dano social."@pt,
+        "Negacao de participacao ou direitos."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 """Gênero discursivo odiento que exige a exclusão do destinatário-vítima argumentando que o grupo do agente odiador é o “dono” legítimo do país/espaço e, por conseguinte, capaz de invalidar reivindicações pelos direitos do destinatário-vítima
+Defende que o país/espaço pertence ao grupo do agente odiador."""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser política ou simbólica. Conecta com dano social. Negação de participação ou direitos."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que exige a exclusão do destinatário-vítima argumentando que o grupo do agente odiador é o “dono” legítimo do país/espaço e, por conseguinte, capaz de invalidar reivindicações pelos direitos do destinatário-vítima
+Defende que o país/espaço pertence ao grupo do agente odiador. Portanto, o destinatário-vítima não tem legitimidade para pedir direitos, existir, manter seus costumes ou tradições no território do país/espaço; implica que o agente odiador ou grupo ao qual o odiador pertence ou com o qual se identifica é dono do país, logo tem um estatuto tolerado, primazia política e menos motivos para reclamações já que são a maioria do país
+
+[Complemento da planilha] Pode ser política ou simbólica. Conecta com dano social. Negação de participação ou direitos."""@pt .
+
+ontohate:Exclusao_dos_espacos a owl:Class ;
+    rdfs:label "Exclusao dos espacos"@pt ;
+    rdfs:comment "Restricao de acesso a espacos sociais ou institucionais."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Dano_social ;
+    ontohatev1:complementoPlanilhaV1 "Pode ocorrer de forma formal ou informal. Subclasse específica. Restrição de acesso a espaços sociais ou institucionais."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano social que resulta na exclusão, expulsão ou negação de acesso do destinatário-vítima em espaços públicos
+
+[Complemento da planilha] Pode ocorrer de forma formal ou informal. Subclasse específica. Restrição de acesso a espaços sociais ou institucionais."""@pt .
+
+ontohate:Expulsao a owl:Class ;
+    rdfs:label "Expulsao"@pt ;
+    rdfs:comment "Estrategia radical."@pt,
+        "Proposicao de retirada territorial ou simbolica."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 """Gênero discursivo odiento  que exige a expulsão do destinatário-vítima com base no argumento de que o país/espaço pertence ao grupo do agente odiador
+O gênero discursivo também defende expressamente a expulsão do destinatário-vítima, com ou sem motivos ou argumentos específicos para tal ou por divergências de opiniões"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Nega pertencimento social. Estratégia radical. Proposição de retirada territorial ou simbólica."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento  que exige a expulsão do destinatário-vítima com base no argumento de que o país/espaço pertence ao grupo do agente odiador
+O gênero discursivo também defende expressamente a expulsão do destinatário-vítima, com ou sem motivos ou argumentos específicos para tal ou por divergências de opiniões
+
+[Complemento da planilha] Nega pertencimento social. Estratégia radical. Proposição de retirada territorial ou simbólica."""@pt .
+
+ontohate:Facebook a ontohate:Plataforma_digital,
+        owl:NamedIndividual ;
+    rdfs:label "Facebook"@pt .
+
+ontohate:Falta_de_poder a owl:Class ;
+    rdfs:label "Falta de poder"@pt ;
+    rdfs:comment "Percepcao ou condicao de impotencia social."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Dano_social ;
+    ontohatev1:complementoPlanilhaV1 "Pode resultar da exposição constante ao discurso de ódio. Subclasse específica. Percepção ou condição de impotência social."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano social que resulta na manutenção de desequilíbrios de poder dentro das hierarquias sociais
+O destinatário-vítima é impedido de ascender socialmente
+
+[Complemento da planilha] Pode resultar da exposição constante ao discurso de ódio. Subclasse específica. Percepção ou condição de impotência social."""@pt .
+
+ontohate:Gay a owl:Class ;
+    rdfs:label "Gay"@pt ;
+    rdfs:comment "Pessoa com orientacao homossexual masculina."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de homofobia. Subclasse individual. Pessoa com orientação homossexual masculina."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa com identidade de gênero masculina que tem atração sexual por pessoas do mesmo gênero/sexo ou da mesma área de gênero
+Exemplo: um homem sendo atraído por uma pessoa transmasculina), especialmente entre dois homens.
+
+[Complemento da planilha] Pode ser alvo de homofobia. Subclasse individual. Pessoa com orientação homossexual masculina."""@pt .
+
+ontohate:Gorda_escrota a owl:NamedIndividual ;
+    rdfs:label "Gorda escrota"@pt .
+
+ontohate:Governanca_plataforma a owl:Class ;
+    rdfs:label "Governanca plataforma"@pt ;
+    rdfs:comment "Dimensao politico-institucional."@pt,
+        "Estrutura institucional responsavel pela definicao de regras e praticas de moderacao."@pt ;
+    rdfs:subClassOf ontohate:Plataforma_digital ;
+    ontohatev1:complementoPlanilhaV1 "Estrutura institucional responsável pela definição de regras e práticas de moderação. Envolve decisões corporativas e estratégias de enforcement. Dimensão político-institucional."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Estrutura institucional responsável pela definição de regras e práticas de moderação. Envolve decisões corporativas e estratégias de enforcement. Dimensão político-institucional."@pt .
+
+ontohate:Hashtag_coordenada a owl:Class ;
+    rdfs:label "Hashtag coordenada"@pt ;
+    rdfs:comment "Relevante para deteccao computacional."@pt,
+        "Uso articulado de hashtags para campanhas coordenadas."@pt ;
+    rdfs:subClassOf ontohate:Recursos_Tecnicos ;
+    ontohatev1:complementoPlanilhaV1 "Uso articulado de hashtags para campanhas coordenadas. Indica mobilização coletiva organizada. Relevante para detecção computacional."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Uso articulado de hashtags para campanhas coordenadas. Indica mobilização coletiva organizada. Relevante para detecção computacional."@pt .
+
+ontohate:Hashtag_odienta a owl:Class ;
+    rdfs:label "Hashtag odienta"@pt ;
+    rdfs:comment "Forma organizacional."@pt,
+        "Marcador tematico utilizado para indexar discurso odiento."@pt ;
+    rdfs:subClassOf ontohate:Recursos_de_Forma ;
+    ontohatev1:complementoPlanilhaV1 "Marcador temático utilizado para indexar discurso odiento. Facilita agregação e visibilidade de conteúdos similares. Forma organizacional."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Marcador temático utilizado para indexar discurso odiento. Facilita agregação e visibilidade de conteúdos similares. Forma organizacional."@pt .
+
+ontohate:Hater_distribuidor a owl:Class ;
+    rdfs:label "Hater distribuidor"@pt ;
+    rdfs:comment "Hater que compartilha conteudo odiento."@pt,
+        "Papel especifico."@pt ;
+    rdfs:subClassOf ontohate:Hater ;
+    ontohatev1:associacaoDiscursoOdioV1 "Papel atribuído ao agente odiador humano ou dispositivo odiador que compartilha o discurso de ódio produzido pelo hater produtor em suas plataformas digitais"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Contribui para amplificação. Papel específico. Hater que compartilha conteúdo odiento."@pt ;
+    ontohatev1:conceitoFonteV1 """Papel atribuído ao agente odiador humano ou dispositivo odiador que compartilha o discurso de ódio produzido pelo hater produtor em suas plataformas digitais
+
+[Complemento da planilha] Contribui para amplificação. Papel específico. Hater que compartilha conteúdo odiento."""@pt .
+
+ontohate:Hater_enganador a owl:Class ;
+    rdfs:label "Hater enganador"@pt ;
+    rdfs:comment "Hater que manipula informacoes para atacar."@pt,
+        "Papel especifico."@pt ;
+    rdfs:subClassOf ontohate:Hater ;
+    ontohatev1:associacaoDiscursoOdioV1 "Papel atribuído ao agente odiador humano ou dispositivo odiador que usa de acusações falsas,  insinuações e desinformação para criar e intensificar o ódio ao destinatário-vítima"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Atua estrategicamente para produzir dano simbólico. Papel específico. Hater que manipula informações para atacar."@pt ;
+    ontohatev1:conceitoFonteV1 """Papel atribuído ao agente odiador humano ou dispositivo odiador que usa de acusações falsas,  insinuações e desinformação para criar e intensificar o ódio ao destinatário-vítima
+
+[Complemento da planilha] Atua estrategicamente para produzir dano simbólico. Papel específico. Hater que manipula informações para atacar."""@pt .
+
+ontohate:Hater_fantasiador a owl:Class ;
+    rdfs:label "Hater fantasiador"@pt ;
+    rdfs:comment "Hater que constroi narrativas distorcidas."@pt,
+        "Papel especifico."@pt ;
+    rdfs:subClassOf ontohate:Hater ;
+    ontohatev1:complementoPlanilhaV1 "Hater que constrói narrativas distorcidas. Utiliza desinformação para atacar. Papel específico."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Hater que constrói narrativas distorcidas. Utiliza desinformação para atacar. Papel específico."@pt .
+
+ontohate:Hater_oportunista a owl:Class ;
+    rdfs:label "Hater oportunista"@pt ;
+    rdfs:comment "Hater que atua em eventos gatilho."@pt,
+        "Papel especifico."@pt ;
+    rdfs:subClassOf ontohate:Hater ;
+    ontohatev1:associacaoDiscursoOdioV1 "Papel atribuído ao agente odiador humano ou dispositivo odiador que aproveitando de incidentes particulares ou eventos gatilhos, como um ataque terrorista, manifesta discurso de ódio ao destinatário-vítima"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Aproveita contextos favoráveis. Papel específico. Hater que atua em eventos gatilho."@pt ;
+    ontohatev1:conceitoFonteV1 """Papel atribuído ao agente odiador humano ou dispositivo odiador que aproveitando de incidentes particulares ou eventos gatilhos, como um ataque terrorista, manifesta discurso de ódio ao destinatário-vítima
+
+[Complemento da planilha] Aproveita contextos favoráveis. Papel específico. Hater que atua em eventos gatilho."""@pt .
+
+ontohate:Hater_produtor a owl:Class ;
+    rdfs:label "Hater produtor"@pt ;
+    rdfs:comment "Hater que cria conteudo odiento."@pt,
+        "Papel especifico."@pt ;
+    rdfs:subClassOf ontohate:Hater ;
+    ontohatev1:associacaoDiscursoOdioV1 "Papel atribuído ao agente odiador humano ou dispositivo odiador que produz e publica discurso de ódio em plataformas digitais"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Atua como origem do discurso. Papel específico. Hater que cria conteúdo odiento."@pt ;
+    ontohatev1:conceitoFonteV1 """Papel atribuído ao agente odiador humano ou dispositivo odiador que produz e publica discurso de ódio em plataformas digitais
+
+[Complemento da planilha] Atua como origem do discurso. Papel específico. Hater que cria conteúdo odiento."""@pt .
+
+ontohate:Haterbot a owl:Class ;
+    rdfs:label "Haterbot"@pt ;
+    rdfs:comment "Bot programado para produzir ou amplificar discurso de odio."@pt,
+        "Subclasse tecnica."@pt ;
+    rdfs:subClassOf ontohate:Dispositivo_odiador ;
+    ontohatev1:associacaoDiscursoOdioV1 """Dispositivo odiador que promove discurso de ódio nas plataformas digitais, construindo grupos de ódio e apoiando líderes de opinião que promovem o ódio
+Os hatersbots moldam narrativas por meio de diversas manobras, como distorcer ou consternar para aumentar o volume de mensagens que manifestam ódio."""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Opera automaticamente em plataformas digitais. Subclasse técnica. Bot programado para produzir ou amplificar discurso de ódio."@pt ;
+    ontohatev1:conceitoFonteV1 """Dispositivo odiador que promove discurso de ódio nas plataformas digitais, construindo grupos de ódio e apoiando líderes de opinião que promovem o ódio
+Os hatersbots moldam narrativas por meio de diversas manobras, como distorcer ou consternar para aumentar o volume de mensagens que manifestam ódio.
+
+[Complemento da planilha] Opera automaticamente em plataformas digitais. Subclasse técnica. Bot programado para produzir ou amplificar discurso de ódio."""@pt .
+
+ontohate:Humor a owl:Class ;
+    rdfs:label "Humor"@pt ;
+    rdfs:comment "Estrategia de dissimulacao."@pt,
+        "Uso de comicidade para disfarcar agressao."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 """Gênero discursivo odiento que usa de ridicularização, aspectos lúdicos, exagero, ironia, sarcasmo, duplo sentido, distorção, piadas, relatos cômicos, charadas, metáforas, poemas e músicas para desqualificar o destinatário-vítima e/ou justificar a discriminação e maus tratos
+Geralmente associado ao Tom Humorístico e ao comportamento do Troll"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Permite negação posterior do ataque. Estratégia de dissimulação. Uso de comicidade para disfarçar agressão."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que usa de ridicularização, aspectos lúdicos, exagero, ironia, sarcasmo, duplo sentido, distorção, piadas, relatos cômicos, charadas, metáforas, poemas e músicas para desqualificar o destinatário-vítima e/ou justificar a discriminação e maus tratos
+Geralmente associado ao Tom Humorístico e ao comportamento do Troll
+
+[Complemento da planilha] Permite negação posterior do ataque. Estratégia de dissimulação. Uso de comicidade para disfarçar agressão."""@pt .
+
+ontohate:Idoso a owl:Class ;
+    rdfs:label "Idoso"@pt ;
+    rdfs:comment "Pessoa em faixa etaria avancada."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de etarismo. Subclasse individual. Pessoa em faixa etária avançada."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa com idade igual ou superior a 60 (sessenta) anos
+
+[Complemento da planilha] Pode ser alvo de etarismo. Subclasse individual. Pessoa em faixa etária avançada."""@pt .
+
+ontohate:Imagem_de_odio a owl:Class ;
+    rdfs:label "Imagem de odio"@pt ;
+    rdfs:comment "Conteudo visual utilizado para inferiorizacao ou ataque simbolico."@pt,
+        "Forma visual."@pt ;
+    rdfs:subClassOf ontohate:Recursos_de_Forma ;
+    ontohatev1:associacaoDiscursoOdioV1 "Recurso que inclui fotografias, ilustrações, emojis, emoticons, kaoemojis, bitmap, vetores, gráficos, tabelas ou infográficos com manifestação explícita ou velada de discurso de ódio"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode reforçar estereótipos e desumanização. Forma visual. Conteúdo visual utilizado para inferiorização ou ataque simbólico."@pt ;
+    ontohatev1:conceitoFonteV1 """Recurso que inclui fotografias, ilustrações, emojis, emoticons, kaoemojis, bitmap, vetores, gráficos, tabelas ou infográficos com manifestação explícita ou velada de discurso de ódio
+
+[Complemento da planilha] Pode reforçar estereótipos e desumanização. Forma visual. Conteúdo visual utilizado para inferiorização ou ataque simbólico."""@pt .
+
+ontohate:Imigrante a owl:Class ;
+    rdfs:label "Imigrante"@pt ;
+    rdfs:comment "Pessoa que migrou para outro pais."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discriminação social. Subclasse individual. Pessoa que migrou para outro país."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que migra a um determinado território, ou seja, para um outro país
+A expressão adequada a ser utilizada é imigrante internacional. O termo imigrante vem da junção entre migrare, “mudar de residência/ condição” + in “para dentro”, ao assumir o ponto de vista do país em que a pessoa entrou e permaneceu, ela é Imigrante (que veio de “lá”, para viver “aqui”)
+
+[Complemento da planilha] Pode ser alvo de discriminação social. Subclasse individual. Pessoa que migrou para outro país."""@pt .
+
+ontohate:Incels a owl:Class ;
+    rdfs:label "Incels"@pt ;
+    rdfs:comment "Grupo de agentes odiadores associado a ideologias misoginas online."@pt,
+        "Grupo ideologico especifico."@pt ;
+    rdfs:subClassOf ontohate:Agente_odiador ;
+    ontohatev1:complementoPlanilhaV1 "Expressa hostilidade direcionada principalmente a mulheres. Grupo ideológico específico. Grupo de agentes odiadores associado a ideologias misóginas online."@pt ;
+    ontohatev1:conceitoFonteV1 """Agente odiador que deseja fazer sexo, mas foi incapaz de encontrar um parceiro disposto e que por conta disso passa a promover discurso misógino e LGBTQIfóbico
+
+[Complemento da planilha] Expressa hostilidade direcionada principalmente a mulheres. Grupo ideológico específico. Grupo de agentes odiadores associado a ideologias misóginas online."""@pt .
+
+ontohate:Incitacao_a_violencia a owl:Class ;
+    rdfs:label "Incitacao a violencia"@pt ;
+    rdfs:comment "Convocacao explicita ou implicita a agressao."@pt,
+        "Estrategia de escalada."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que usa de chamadas para a violência física explícita e/ou advoga para ações violentas de cárater psicológico, sexual, patrimonial ou moral contra o destinatário-vítima"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode anteceder dano físico. Estratégia de escalada. Convocação explícita ou implícita à agressão."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que usa de chamadas para a violência física explícita e/ou advoga para ações violentas de cárater psicológico, sexual, patrimonial ou moral contra o destinatário-vítima
+
+[Complemento da planilha] Pode anteceder dano físico. Estratégia de escalada. Convocação explícita ou implícita à agressão."""@pt .
+
+ontohate:Indicador_de_risco_odiento a owl:Class ;
+    rdfs:label "Indicador de risco odiento"@pt ;
+    rdfs:comment "Fundamental para moderacao algoritmica."@pt,
+        "Metrica ou sinal utilizado para estimar probabilidade de conteudo odiento."@pt ;
+    rdfs:subClassOf ontohate:Sistema_de_moderacao ;
+    ontohatev1:complementoPlanilhaV1 "Métrica ou sinal utilizado para estimar probabilidade de conteúdo odiento. Pode derivar de denúncias, padrões linguísticos ou modelos preditivos. Fundamental para moderação algorítmica."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Métrica ou sinal utilizado para estimar probabilidade de conteúdo odiento. Pode derivar de denúncias, padrões linguísticos ou modelos preditivos. Fundamental para moderação algorítmica."@pt .
+
+ontohate:Indigena a owl:Class ;
+    rdfs:label "Indigena"@pt ;
+    rdfs:comment "Pessoa pertencente a povo indigena."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discriminação étnica. Subclasse individual. Pessoa pertencente a povo indígena."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa de origem e ascendência pré-colombiana que se identifica e é identificado como pertencente a um grupo étnico cujas características culturais o distinguem da sociedade nacional
+
+[Complemento da planilha] Pode ser alvo de discriminação étnica. Subclasse individual. Pessoa pertencente a povo indígena."""@pt .
+
+ontohate:Infraestrutura_tecnica a owl:Class ;
+    rdfs:label "Infraestrutura tecnica"@pt ;
+    rdfs:comment "Base material e arquitetural da plataforma digital."@pt,
+        "Dimensao tecnica estrutural."@pt ;
+    rdfs:subClassOf ontohate:Plataforma_digital ;
+    ontohatev1:complementoPlanilhaV1 "Base material e arquitetural da plataforma digital. Inclui servidores, banco de dados, APIs e sistemas de distribuição. Dimensão técnica estrutural."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Base material e arquitetural da plataforma digital. Inclui servidores, banco de dados, APIs e sistemas de distribuição. Dimensão técnica estrutural."@pt .
+
+ontohate:Inimigos_da_nacao a owl:Class ;
+    rdfs:label "Inimigos da nacao"@pt ;
+    rdfs:comment "Estrategia nacionalista."@pt,
+        "Representacao da vitima como ameaca nacional."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que insinua ou afirma que o destinatário-vítima é inimigo do Estado, das pessoas ou da sociedade, ou que é uma ameaça, uma desgraça para o país ou culpado pela má imagem do país"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Associa grupo a traição. Estratégia nacionalista. Representação da vítima como ameaça nacional."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que insinua ou afirma que o destinatário-vítima é inimigo do Estado, das pessoas ou da sociedade, ou que é uma ameaça, uma desgraça para o país ou culpado pela má imagem do país
+
+[Complemento da planilha] Associa grupo a traição. Estratégia nacionalista. Representação da vítima como ameaça nacional."""@pt .
+
+ontohate:Insonia a owl:Class ;
+    rdfs:label "Insonia"@pt ;
+    rdfs:comment "Disturbio do sono decorrente de sofrimento associado ao discurso de odio."@pt,
+        "Subclasse de Dano_fisico."@pt ;
+    rdfs:subClassOf ontohate:Dano_fisico ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser resultado de ansiedade ou medo prolongado. Subclasse de Dano_fisico. Distúrbio do sono decorrente de sofrimento associado ao discurso de ódio."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano físico que resulta na dificuldade de iniciar o sono, mantê-lo continuamente durante a noite ou o despertar antes do horário desejado
+
+[Complemento da planilha] Pode ser resultado de ansiedade ou medo prolongado. Subclasse de Dano_fisico. Distúrbio do sono decorrente de sofrimento associado ao discurso de ódio."""@pt .
+
+ontohate:Intencao a owl:Class ;
+    rdfs:label "Intencao"@pt ;
+    rdfs:comment "Disposicao finalistica."@pt,
+        "Estado mental orientado a realizacao de uma acao discursiva."@pt,
+        "Estado mental voltado a realizacao de acao deliberada."@pt,
+        "Repetida na lista original."@pt ;
+    rdfs:subClassOf ontohate:Modo_mental .
+
+ontohate:Judeu a owl:Class ;
+    rdfs:label "Judeu"@pt ;
+    rdfs:comment "Pessoa identificada pela religiao judaica."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de antissemitismo. Subclasse individual. Pessoa identificada pela religião judaica."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que professa a religião monoteísta judaica, o Judaismo
+
+[Complemento da planilha] Pode ser alvo de antissemitismo. Subclasse individual. Pessoa identificada pela religião judaica."""@pt .
+
+ontohate:Lesbica a owl:Class ;
+    rdfs:label "Lesbica"@pt ;
+    rdfs:comment "Mulher com orientacao homossexual."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de lesbofobia. Subclasse individual. Mulher com orientação homossexual."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa com identidade de gênero feminina que se sente atraída por pessoas com identidade de gênero feminina, ou atração por pessoas que se identificam dentro de uma área de gênero feminina
+A área de gênero feminina inclue pessoas transfemininas, pessoas não-binárias, mulheres não-binárias, demigirls, etc.
+
+[Complemento da planilha] Pode ser alvo de lesbofobia. Subclasse individual. Mulher com orientação homossexual."""@pt .
+
+ontohate:Linguagem_discriminatoria a owl:Class ;
+    rdfs:label "Linguagem discriminatoria"@pt ;
+    rdfs:comment "Linguagem que estabelece distincoes hierarquizantes entre grupos ou individuos."@pt,
+        "Subclasse associada a dimensao normativa do ataque."@pt ;
+    rdfs:subClassOf ontohate:Manifestacao_explicita ;
+    ontohatev1:complementoPlanilhaV1 "Linguagem que estabelece distinções hierarquizantes entre grupos ou indivíduos. Pode fundamentar exclusão ou tratamento desigual com base em características atribuídas. Subclasse associada à dimensão normativa do ataque."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Linguagem que estabelece distinções hierarquizantes entre grupos ou indivíduos. Pode fundamentar exclusão ou tratamento desigual com base em características atribuídas. Subclasse associada à dimensão normativa do ataque."@pt .
+
+ontohate:Linguagem_excludente a owl:Class ;
+    rdfs:label "Linguagem excludente"@pt ;
+    rdfs:comment "Linguagem que nega pertencimento ou participacao social ao destinatario-vitima."@pt,
+        "Subclasse associada a exclusao social discursiva."@pt ;
+    rdfs:subClassOf ontohate:Manifestacao_explicita ;
+    ontohatev1:complementoPlanilhaV1 "Linguagem que nega pertencimento ou participação social ao destinatário-vítima. Pode sugerir expulsão simbólica ou retirada de direitos. Subclasse associada à exclusão social discursiva."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Linguagem que nega pertencimento ou participação social ao destinatário-vítima. Pode sugerir expulsão simbólica ou retirada de direitos. Subclasse associada à exclusão social discursiva."@pt .
+
+ontohate:Linguagem_pejorativa a owl:Class ;
+    rdfs:label "Linguagem pejorativa"@pt ;
+    rdfs:comment "Subclasse de linguagem explicita."@pt,
+        "Uso de termos depreciativos para desqualificar o destinatario-vitima."@pt ;
+    rdfs:subClassOf ontohate:Manifestacao_explicita ;
+    ontohatev1:complementoPlanilhaV1 "Uso de termos depreciativos para desqualificar o destinatário-vítima. Expressa inferiorização explícita por meio de adjetivação negativa ou insulto direto. Subclasse de linguagem explícita."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Uso de termos depreciativos para desqualificar o destinatário-vítima. Expressa inferiorização explícita por meio de adjetivação negativa ou insulto direto. Subclasse de linguagem explícita."@pt .
+
+ontohate:Manifestacao_velada a owl:Class ;
+    rdfs:label "Manifestacao velada"@pt ;
+    rdfs:comment "Deriva da questao de competencia da tese."@pt,
+        "Manifestacao em que o conteudo odiento e apresentado de forma indireta ou implicita."@pt ;
+    rdfs:subClassOf ontohate:Manifestacao ;
+    ontohatev1:associacaoDiscursoOdioV1 """Publicação ou resposta a publicação, aparentemente neutra, que não provoca danos imediatos, mas alimenta uma violência moral, preconceito, discriminação e ódio ao destinatário-vítima
+Pode conter  argumentos de proteção moral e social"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode utilizar ironia, ambiguidade, eufemismo ou estratégias discursivas que dificultam identificação imediata. Deriva da questão de competência da tese. Manifestação em que o conteúdo odiento é apresentado de forma indireta ou implícita."@pt ;
+    ontohatev1:conceitoFonteV1 """Publicação ou resposta a publicação, aparentemente neutra, que não provoca danos imediatos, mas alimenta uma violência moral, preconceito, discriminação e ódio ao destinatário-vítima
+Pode conter  argumentos de proteção moral e social
+
+[Complemento da planilha] Pode utilizar ironia, ambiguidade, eufemismo ou estratégias discursivas que dificultam identificação imediata. Deriva da questão de competência da tese. Manifestação em que o conteúdo odiento é apresentado de forma indireta ou implícita."""@pt .
+
+ontohate:Manutencao_de_estereotipos_negativos a owl:Class ;
+    rdfs:label "Manutencao de estereotipos negativos"@pt ;
+    rdfs:comment "Reforco de representacoes sociais depreciativas."@pt,
+        "Subclasse estrutural."@pt ;
+    rdfs:subClassOf ontohate:Dano_social ;
+    ontohatev1:complementoPlanilhaV1 "Contribui para perpetuação de desigualdades estruturais. Subclasse estrutural. Reforço de representações sociais depreciativas."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano social que resulta na permanência de elementos reforçadores das discriminações
+Promove generalizações e impede o desenvolvimento social do destinatário-vítima. O destinatário-vítima passa a acreditar em estereótipos negativos, o que o leva a se envolver em outras condutas prejudiciais
+
+[Complemento da planilha] Contribui para perpetuação de desigualdades estruturais. Subclasse estrutural. Reforço de representações sociais depreciativas."""@pt .
+
+ontohate:Meme_de_odio a owl:Class ;
+    rdfs:label "Meme de odio"@pt ;
+    rdfs:comment "Conteudo hibrido que combina imagem e texto para ataque simbolico."@pt,
+        "Forma multimodal simbolica."@pt ;
+    rdfs:subClassOf ontohate:Recursos_de_Forma ;
+    ontohatev1:associacaoDiscursoOdioV1 "Recurso que inclui texto combinado com uma imagem, ilustração, gif, vídeo ou várias imagens com manifestação explícita ou velada de discurso de ódio"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode mascarar hostilidade sob humor. Forma multimodal simbólica. Conteúdo híbrido que combina imagem e texto para ataque simbólico."@pt ;
+    ontohatev1:conceitoFonteV1 """Recurso que inclui texto combinado com uma imagem, ilustração, gif, vídeo ou várias imagens com manifestação explícita ou velada de discurso de ódio
+
+[Complemento da planilha] Pode mascarar hostilidade sob humor. Forma multimodal simbólica. Conteúdo híbrido que combina imagem e texto para ataque simbólico."""@pt .
+
+ontohate:Migrante a owl:Class ;
+    rdfs:label "Migrante"@pt ;
+    rdfs:comment "Pessoa em deslocamento territorial interno ou externo."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode sofrer estigmatização social. Subclasse individual. Pessoa em deslocamento territorial interno ou externo."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que se desloca em espaço circunscrito a um território nacional.
+
+[Complemento da planilha] Pode sofrer estigmatização social. Subclasse individual. Pessoa em deslocamento territorial interno ou externo."""@pt .
+
+ontohate:Moderacao_automatizada a owl:Class ;
+    rdfs:label "Moderacao automatizada"@pt ;
+    rdfs:comment "Conecta com Agente_moderador_automatico."@pt,
+        "Processo de avaliacao realizado por sistemas automatizados."@pt ;
+    rdfs:subClassOf ontohate:Sistema_de_moderacao ;
+    ontohatev1:complementoPlanilhaV1 "Processo de avaliação realizado por sistemas automatizados. Utiliza modelos de classificação e aprendizado de máquina. Conecta com Agente_moderador_automatico."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Processo de avaliação realizado por sistemas automatizados. Utiliza modelos de classificação e aprendizado de máquina. Conecta com Agente_moderador_automatico."@pt .
+
+ontohate:Moderacao_humana a owl:Class ;
+    rdfs:label "Moderacao humana"@pt ;
+    rdfs:comment "Conecta com Agente_moderador."@pt,
+        "Processo de avaliacao realizado por moderadores humanos."@pt ;
+    rdfs:subClassOf ontohate:Sistema_de_moderacao ;
+    ontohatev1:complementoPlanilhaV1 "Processo de avaliação realizado por moderadores humanos. Envolve interpretação contextual e aplicação de regras. Conecta com Agente_moderador."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Processo de avaliação realizado por moderadores humanos. Envolve interpretação contextual e aplicação de regras. Conecta com Agente_moderador."@pt .
+
+ontohate:Movimento_dos_trabalhadores_sem_terra a owl:Class ;
+    rdfs:label "Movimento dos trabalhadores sem terra"@pt ;
+    rdfs:comment "Movimento social organizado em torno da reforma agraria."@pt,
+        "Subclasse coletiva."@pt ;
+    rdfs:subClassOf ontohate:Grupo_de_pessoas_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discurso político de ódio. Subclasse coletiva. Movimento social organizado em torno da reforma agrária."@pt ;
+    ontohatev1:conceitoFonteV1 """Coletivo que “luta pela terra, pela reforma agrária e pelo socialismo”, mas não se identifica como um movimento revolucionário
+
+[Complemento da planilha] Pode ser alvo de discurso político de ódio. Subclasse coletiva. Movimento social organizado em torno da reforma agrária."""@pt .
+
+ontohate:Muculmano a owl:Class ;
+    rdfs:label "Muculmano"@pt ;
+    rdfs:comment "Pessoa identificada pela religiao islamica."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida .
+
+ontohate:Mulher_cisgenero a owl:Class ;
+    rdfs:label "Mulher cisgenero"@pt ;
+    rdfs:comment "Pessoa que se identifica com o genero atribuido ao nascer."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discurso misógino ou discriminatório. Subclasse individual. Pessoa que se identifica com o gênero atribuído ao nascer."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa cuja identidade é feminina, baseada em conceituações sociais e culturais de ser mulher, geralmente (mas nem sempre) refletidas por variações anatômicas específicas, combinações de cromossomos e/ou hormônios sexuais
+
+[Complemento da planilha] Pode ser alvo de discurso misógino ou discriminatório. Subclasse individual. Pessoa que se identifica com o gênero atribuído ao nascer."""@pt .
+
+ontohate:Natureza_interseccional a owl:Class ;
+    rdfs:label "Natureza interseccional"@pt ;
+    rdfs:comment "Dimensao que indica combinacao de multiplas naturezas no mesmo ataque."@pt,
+        "Mudanca V2: nao substitui a natureza principal; e dimensao combinatoria."@pt ;
+    rdfs:subClassOf ontohate:Natureza ;
+    ontohatev1:complementoPlanilhaV1 "Dimensão que indica combinação de múltiplas naturezas no mesmo ataque. Expressa sobreposição de categorias quando o discurso mobiliza mais de uma natureza principal. Mudança V2: não substitui a natureza principal; é dimensão combinatória."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Dimensão que indica combinação de múltiplas naturezas no mesmo ataque. Expressa sobreposição de categorias quando o discurso mobiliza mais de uma natureza principal. Mudança V2: não substitui a natureza principal; é dimensão combinatória."@pt .
+
+ontohate:Negro a owl:Class ;
+    rdfs:label "Negro"@pt ;
+    rdfs:comment "Pessoa identificada racialmente como negra."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de racismo. Subclasse individual. Pessoa identificada racialmente como negra."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que se autodeclara preto ou pardo ou definição análoga.
+
+[Complemento da planilha] Pode ser alvo de racismo. Subclasse individual. Pessoa identificada racialmente como negra."""@pt .
+
+ontohate:Nivel_de_severidade a owl:Class ;
+    rdfs:label "Nivel de severidade"@pt ;
+    rdfs:comment "Classificacao da gravidade do conteudo identificado."@pt,
+        "Conecta analise a decisao."@pt ;
+    rdfs:subClassOf ontohate:Sistema_de_moderacao ;
+    ontohatev1:complementoPlanilhaV1 "Classificação da gravidade do conteúdo identificado. Pode orientar diferentes níveis de intervenção. Conecta análise a decisão."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Classificação da gravidade do conteúdo identificado. Pode orientar diferentes níveis de intervenção. Conecta análise a decisão."@pt .
+
+ontohate:Obeso a owl:Class ;
+    rdfs:label "Obeso"@pt ;
+    rdfs:comment "Pessoa classificada clinicamente como obesa."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Gordo ;
+    ontohatev1:associacaoDiscursoOdioV1 "Normalmente o discurso de ódio é contra pessoas gordas, independente se sejam obesos ou não,  sem atribuir distinção."@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode sofrer discriminação baseada em aparência corporal. Subclasse específica. Pessoa classificada clinicamente como obesa."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa com excesso de gordura corporal em quantidade que determine prejuízos à saúde
+Classicamente, uma pessoa é considerada obesa quando seu Índice de Massa Corporal (IMC) é maior ou igual a 30 kg/m² e a faixa de peso normal varia entre 18,5 e 24,9 kg/m² . Todavia, a obesidade é uma condição clinica e médica , enquanto que pessoa gorda é marcador social pautado na estética. Normalmente o discurso de ódio é contra pessoas gordas, independente se sejam obesos ou não,  sem atribuir distinção.
+
+[Complemento da planilha] Pode sofrer discriminação baseada em aparência corporal. Subclasse específica. Pessoa classificada clinicamente como obesa."""@pt .
+
+ontohate:Pansexual a owl:Class ;
+    rdfs:label "Pansexual"@pt ;
+    rdfs:comment "Pessoa com atracao independente de genero."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discurso discriminatório. Subclasse individual. Pessoa com atração independente de gênero."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa com orientação sexual caracterizada pelo potencial de atração estética, amor romântico e/ou desejo sexual por pessoas, independentemente de sua identidade de gênero ou sexo biológico
+O pansexual se atrae por todos os gêneros sexuais, sem distinção e não se limitando à binária de gênero homem/mulher. O conceito considera a atração, por exemplo, por pessoas transexuais e não-binárias (indivíduos que não se compreendem nem como homens, nem como mulheres).
+
+[Complemento da planilha] Pode ser alvo de discurso discriminatório. Subclasse individual. Pessoa com atração independente de gênero."""@pt .
+
+ontohate:Pertencer_ao_grupo a owl:Class ;
+    rdfs:label "Pertencer ao grupo"@pt ;
+    rdfs:comment "Disposicao identitaria."@pt,
+        "Modo mental associado a identificacao coletiva."@pt ;
+    rdfs:subClassOf ontohate:Modo_mental ;
+    ontohatev1:complementoPlanilhaV1 "Modo mental associado à identificação coletiva. Relaciona-se à motivação de reforçar vínculos grupais por meio da hostilidade contra o destinatário-vítima. Disposição identitária."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Modo mental associado à identificação coletiva. Relaciona-se à motivação de reforçar vínculos grupais por meio da hostilidade contra o destinatário-vítima. Disposição identitária."@pt .
+
+ontohate:Pessoa_com_deficiencia a owl:Class ;
+    rdfs:label "Pessoa com deficiencia"@pt ;
+    rdfs:comment "Pessoa com deficiencia fisica, sensorial ou intelectual."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de capacitismo. Subclasse individual. Pessoa com deficiência física, sensorial ou intelectual."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que tem impedimento de longo prazo de natureza física, mental, intelectual ou sensorial
+O impedimento, em interação com uma ou mais barreiras, pode obstruir sua participação plena e efetiva na sociedade em igualdade de condições com as demais pessoas
+
+[Complemento da planilha] Pode ser alvo de capacitismo. Subclasse individual. Pessoa com deficiência física, sensorial ou intelectual."""@pt .
+
+ontohate:Pessoa_em_situacao_de_rua a owl:Class ;
+    rdfs:label "Pessoa em situacao de rua"@pt ;
+    rdfs:comment "Pessoa em condicao de vulnerabilidade habitacional."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de aporofobia. Subclasse individual. Pessoa em condição de vulnerabilidade habitacional."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa em pobreza extrema, com vínculos familiares interrompidos ou fragilizados e a inexistência de moradia convencional regular, e que utiliza os logradouros públicos e as áreas degradadas como espaço de moradia e de sustento, de forma temporária ou permanente
+A pessoa em situação de rua também usa as unidades de acolhimento para pernoite temporário ou como moradia provisória. São chamados popularmente de sem-teto, contudo, há duas categorias distintas: aqueles que estão nas ruas de modo difuso e os sem-teto, organizados em movimentos sociais (ou não), mas que ocupam prédios ou construções abandonadas nas grandes cidades
+
+[Complemento da planilha] Pode ser alvo de aporofobia. Subclasse individual. Pessoa em condição de vulnerabilidade habitacional."""@pt .
+
+ontohate:Populacao_LGBTQIA a owl:Class ;
+    rdfs:label "Populacao LGBTQIA"@pt ;
+    rdfs:comment "Coletividade de pessoas com identidades LGBTQIA+."@pt,
+        "Subclasse coletiva."@pt ;
+    rdfs:subClassOf ontohate:Grupo_de_pessoas_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discriminação sistêmica. Subclasse coletiva. Coletividade de pessoas com identidades LGBTQIA+."@pt ;
+    ontohatev1:conceitoFonteV1 """Grupo de indivíduos que engloba Lésbicas, Gays, Bissexuais, Transgêneros, Travestis, Transexuais, Queer, Intersexo, Assexuados e demais orientações sexuais e identidades de gênero em não conformidade com a cisgênero-heteronormatividade
+
+[Complemento da planilha] Pode ser alvo de discriminação sistêmica. Subclasse coletiva. Coletividade de pessoas com identidades LGBTQIA+."""@pt .
+
+ontohate:Populacao_indigena a owl:Class ;
+    rdfs:label "Populacao indigena"@pt ;
+    rdfs:comment "Grupo social identificado como populacao indigena."@pt,
+        "Subclasse coletiva."@pt ;
+    rdfs:subClassOf ontohate:Grupo_de_pessoas_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode sofrer discriminação étnica coletiva. Subclasse coletiva. Grupo social identificado como população indígena."@pt ;
+    ontohatev1:conceitoFonteV1 """Grupo de indivíduos, famílias ou comunidades índias, quer vivendo em estado de completo isolamento em relação aos outros setores da comunhão nacional, quer em contatos intermitentes ou permanentes, sem contudo estarem neles integrados
+
+[Complemento da planilha] Pode sofrer discriminação étnica coletiva. Subclasse coletiva. Grupo social identificado como população indígena."""@pt .
+
+ontohate:Populacao_negra a owl:Class ;
+    rdfs:label "Populacao negra"@pt ;
+    rdfs:comment "Grupo social identificado como populacao negra."@pt,
+        "Subclasse coletiva."@pt ;
+    rdfs:subClassOf ontohate:Grupo_de_pessoas_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de racismo estrutural. Subclasse coletiva. Grupo social identificado como população negra."@pt ;
+    ontohatev1:conceitoFonteV1 """Grupo de indivíduos que engloba negros, pretos e pardos ou definição análoga
+
+[Complemento da planilha] Pode ser alvo de racismo estrutural. Subclasse coletiva. Grupo social identificado como população negra."""@pt .
+
+ontohate:Pressao_alta a owl:Class ;
+    rdfs:label "Pressao alta"@pt ;
+    rdfs:comment "Alteracao fisiologica associada ao estresse provocado pelo discurso de odio."@pt,
+        "Subclasse de Dano_fisico."@pt ;
+    rdfs:subClassOf ontohate:Dano_fisico ;
+    ontohatev1:complementoPlanilhaV1 "Pode decorrer de exposição recorrente a manifestações odientas. Subclasse de Dano_fisico. Alteração fisiológica associada ao estresse provocado pelo discurso de ódio."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano físico que resulta no aumento da pressão arterial da pessoa
+
+[Complemento da planilha] Pode decorrer de exposição recorrente a manifestações odientas. Subclasse de Dano_fisico. Alteração fisiológica associada ao estresse provocado pelo discurso de ódio."""@pt .
+
+ontohate:Proposicao_interseccional a owl:Class ;
+    rdfs:subClassOf ontohate:Proposicao_odienta ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( ontohate:Proposicao_odienta [ a owl:Restriction ;
+                        owl:minQualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                        owl:onClass ontohate:Natureza_principal ;
+                        owl:onProperty ontohate:tem_natureza_principal ] ) ] .
+
+ontohate:Queer a owl:Class ;
+    rdfs:label "Queer"@pt ;
+    rdfs:comment "Pessoa que se identifica fora das normas tradicionais de genero ou sexualidade."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de estigmatização. Subclasse individual. Pessoa que se identifica fora das normas tradicionais de gênero ou sexualidade."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa, em especial mais jovem, cuja orientação sexual não é exclusivamente heterossexual
+. De modo geral, para as pessoas que se identificam como “queer”, os termos lésbica, gay, e bissexual são percebidos como rótulos que restringem a amplitude e a vivência da sexualidade. O termo ‘queer’ também é utilizado por alguns para descrever sua identidade e/ou expressão de gênero. Quando a letra Q aparece ao final da sigla LGBTI+, geralmente significa queer e, às vezes, ‘questioning’ (questionamento de gêneros). A identitária "queer" também pode ser vista como um termo guarda-chuva de vivências de pessoas que possuem corpos que estão em  não-conformidade com os padrões hetero-cisgenero-normativos e que por isso são mais marginalizados.
+
+[Complemento da planilha] Pode ser alvo de estigmatização. Subclasse individual. Pessoa que se identifica fora das normas tradicionais de gênero ou sexualidade."""@pt .
+
+ontohate:Raiva_interna a owl:Class ;
+    rdfs:label "Raiva interna"@pt ;
+    rdfs:comment "Estado emocional de indignacao ou revolta internalizada."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Dano_psicologico ;
+    ontohatev1:complementoPlanilhaV1 "Estado emocional de indignação ou revolta internalizada. Pode gerar sofrimento prolongado ou tensão psíquica. Subclasse específica."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Estado emocional de indignação ou revolta internalizada. Pode gerar sofrimento prolongado ou tensão psíquica. Subclasse específica."@pt .
+
+ontohate:Rede_de_agentes_odiadores a owl:Class ;
+    rdfs:label "Rede de agentes odiadores"@pt ;
+    rdfs:comment "Ampliacao v2."@pt,
+        "Conjunto coordenado de agentes odiadores."@pt ;
+    rdfs:subClassOf ontohate:Agente_odiador ;
+    ontohatev1:complementoPlanilhaV1 "Conjunto coordenado de agentes odiadores. Modela campanhas organizadas. Ampliação v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto coordenado de agentes odiadores. Modela campanhas organizadas. Ampliação v2."@pt .
+
+ontohate:Refugiado a owl:Class ;
+    rdfs:label "Refugiado"@pt ;
+    rdfs:comment "Pessoa que busca protecao internacional por perseguicao."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de hostilidade xenófoba. Subclasse individual. Pessoa que busca proteção internacional por perseguição."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que se encontram fora do seu próprio território nacional, devido ao temor de perseguição e risco de violência, isto é, pessoas que foram forçadas a deixarem seu país de origem, e requerem “proteção internacional”.
+O termo tem suas raízes em instrumentos legais internacionais, notadamente a Convenção sobre o Estatuto dos Refugiados, de 1951, o Protocolo de 1967 e a Convenção de 1969 da Organização da Unidade Africana (OUA).
+
+[Complemento da planilha] Pode ser alvo de hostilidade xenófoba. Subclasse individual. Pessoa que busca proteção internacional por perseguição."""@pt .
+
+ontohate:Regra_comunitaria a owl:Class ;
+    rdfs:label "Regra comunitaria"@pt ;
+    rdfs:comment "Derivacao operacional da politica de uso."@pt,
+        "Norma especifica aplicada a comunidade da plataforma."@pt ;
+    rdfs:subClassOf ontohate:Politica_de_uso ;
+    ontohatev1:complementoPlanilhaV1 "Norma específica aplicada à comunidade da plataforma. Pode incluir diretrizes sobre discurso de ódio e assédio. Derivação operacional da política de uso."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Norma específica aplicada à comunidade da plataforma. Pode incluir diretrizes sobre discurso de ódio e assédio. Derivação operacional da política de uso."@pt .
+
+ontohate:Restricoes_a_capacidade_de_se_identificar_como_membro_do_grupo a owl:Class ;
+    rdfs:label "Restricoes a capacidade de se identificar como membro do grupo"@pt ;
+    rdfs:comment "Limitacao na autoidentificacao coletiva da vitima."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Dano_social ;
+    ontohatev1:complementoPlanilhaV1 "Limitação na autoidentificação coletiva da vítima. Pode afetar pertencimento e identidade social. Subclasse específica."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Limitação na autoidentificação coletiva da vítima. Pode afetar pertencimento e identidade social. Subclasse específica."@pt .
+
+ontohate:Retirada_de_oportunidades_expressivas a owl:Class ;
+    rdfs:label "Retirada de oportunidades expressivas"@pt ;
+    rdfs:comment "Limitacao da capacidade de manifestacao publica da vitima."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Dano_social ;
+    ontohatev1:complementoPlanilhaV1 "Pode decorrer de intimidação ou autocensura. Subclasse específica. Limitação da capacidade de manifestação pública da vítima."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano social que resulta no desfavorecimento do destinatário-vítima no convívio social
+Efetiva a negação da igualdade de oportunidades e direitos. Exemplo: é recusado a moradia a alguém com base em sua raça
+
+[Complemento da planilha] Pode decorrer de intimidação ou autocensura. Subclasse específica. Limitação da capacidade de manifestação pública da vítima."""@pt .
+
+ontohate:Sentimento_de_medo a owl:Class ;
+    rdfs:label "Sentimento de medo"@pt ;
+    rdfs:comment "Experiencia emocional de temor ou inseguranca."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Dano_psicologico ;
+    ontohatev1:complementoPlanilhaV1 "Pode levar à retração comunicativa ou isolamento. Subclasse específica. Experiência emocional de temor ou insegurança."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano psicológico que desperta a aversão, receio ou pânico do destinatário-vítima em se expressar no debate público, sofrer alguma retaliação online ou na vida real
+
+[Complemento da planilha] Pode levar à retração comunicativa ou isolamento. Subclasse específica. Experiência emocional de temor ou insegurança."""@pt .
+
+ontohate:Silenciamento_no_debate_publico a owl:Class ;
+    rdfs:label "Silenciamento no debate publico"@pt ;
+    rdfs:comment "Exclusao da vitima da esfera publica de discussao."@pt,
+        "Subclasse especifica."@pt ;
+    rdfs:subClassOf ontohate:Dano_social ;
+    ontohatev1:complementoPlanilhaV1 "Contribui para invisibilização social. Subclasse específica. Exclusão da vítima da esfera pública de discussão."@pt ;
+    ontohatev1:conceitoFonteV1 """É um dano social que subordina e silencia o destinatário-vítima, levando-o a abandonar ou ignorar a discussão e/ou o debate público
+Prejudica a participação igualitária na deliberação democrática
+
+[Complemento da planilha] Contribui para invisibilização social. Subclasse específica. Exclusão da vítima da esfera pública de discussão."""@pt .
+
+ontohate:Subumanizacao a owl:Class ;
+    rdfs:label "Subumanizacao"@pt ;
+    rdfs:comment "Estrategia extrema."@pt,
+        "Representacao da vitima como menos que humana."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que faz co-relação ou usa de comparação entre o destinatário-vítima e pragas ou sub-humano"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Facilita legitimação da violência. Estratégia extrema. Representação da vítima como menos que humana."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que faz co-relação ou usa de comparação entre o destinatário-vítima e pragas ou sub-humano
+
+[Complemento da planilha] Facilita legitimação da violência. Estratégia extrema. Representação da vítima como menos que humana."""@pt .
+
+ontohate:Supremacia_branca a owl:Class ;
+    rdfs:label "Supremacia branca"@pt ;
+    rdfs:comment "Estrategia ideologica estruturante."@pt,
+        "Ideologia de hierarquizacao racial utilizada como fundamento do ataque."@pt ;
+    rdfs:subClassOf ontohate:Estrategias_Discursivas ;
+    ontohatev1:associacaoDiscursoOdioV1 "Gênero discursivo odiento que advoga a falsa ideia da superioridade natural do homem branco"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Afirma superioridade racial normativa. Estratégia ideológica estruturante. Ideologia de hierarquização racial utilizada como fundamento do ataque."@pt ;
+    ontohatev1:conceitoFonteV1 """Gênero discursivo odiento que advoga a falsa ideia da superioridade natural do homem branco
+
+[Complemento da planilha] Afirma superioridade racial normativa. Estratégia ideológica estruturante. Ideologia de hierarquização racial utilizada como fundamento do ataque."""@pt .
+
+ontohate:Texto_odiento a owl:Class ;
+    rdfs:label "Texto odiento"@pt ;
+    rdfs:comment "Conteudo textual utilizado para expressar hostilidade."@pt,
+        "Forma basica de manifestacao."@pt ;
+    rdfs:subClassOf ontohate:Recursos_de_Forma ;
+    ontohatev1:complementoPlanilhaV1 "Conteúdo textual utilizado para expressar hostilidade. Pode conter insultos, estereótipos ou incitação. Forma básica de manifestação."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conteúdo textual utilizado para expressar hostilidade. Pode conter insultos, estereótipos ou incitação. Forma básica de manifestação."@pt .
+
+ontohate:Tom_ameacador a owl:Class ;
+    rdfs:label "Tom ameacador"@pt ;
+    rdfs:comment "Diferente de “Ameaca” (estrategia); aqui e a forma expressiva."@pt,
+        "Tom que comunica intimidacao ou promessa de dano."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:complementoPlanilhaV1 "Tom que comunica intimidação ou promessa de dano. Pode anteceder violência simbólica ou física. Diferente de “Ameaca” (estratégia); aqui é a forma expressiva."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Tom que comunica intimidação ou promessa de dano. Pode anteceder violência simbólica ou física. Diferente de “Ameaca” (estratégia); aqui é a forma expressiva."@pt .
+
+ontohate:Tom_aparentemente_neutro a owl:Class ;
+    rdfs:label "Tom aparentemente neutro"@pt ;
+    rdfs:comment "Ampliacao tipologica na v2."@pt,
+        "Tom com aparencia descritiva/objetiva que naturaliza exclusao."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:complementoPlanilhaV1 "Tom com aparência descritiva/objetiva que naturaliza exclusão. Apresenta preconceito como “fato” ou “opinião racional”. Ampliação tipológica na v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Tom com aparência descritiva/objetiva que naturaliza exclusão. Apresenta preconceito como “fato” ou “opinião racional”. Ampliação tipológica na v2."@pt .
+
+ontohate:Tom_deboche a owl:Class ;
+    rdfs:label "Tom deboche"@pt ;
+    rdfs:comment "Ampliacao tipologica na v2."@pt,
+        "Tom de escarnio e ridicularizacao indireta."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:complementoPlanilhaV1 "Tom de escárnio e ridicularização indireta. Opera por ironia agressiva e exposição pública. Ampliação tipológica na v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Tom de escárnio e ridicularização indireta. Opera por ironia agressiva e exposição pública. Ampliação tipológica na v2."@pt .
+
+ontohate:Tom_desumanizante a owl:Class ;
+    rdfs:label "Tom desumanizante"@pt ;
+    rdfs:comment "Conecta-se a animalizacao/subumanizacao/demonizacao (estrategias), sem duplicar."@pt,
+        "Tom que expressa desprezo e reducao simbolica da vitima."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:complementoPlanilhaV1 "Tom que expressa desprezo e redução simbólica da vítima. Intensifica exclusão e legitima violência. Conecta-se a animalização/subumanização/demonização (estratégias), sem duplicar."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Tom que expressa desprezo e redução simbólica da vítima. Intensifica exclusão e legitima violência. Conecta-se a animalização/subumanização/demonização (estratégias), sem duplicar."@pt .
+
+ontohate:Tom_eufemistico a owl:Class ;
+    rdfs:label "Tom eufemistico"@pt ;
+    rdfs:comment "Complementa “Eufemismo_odiento” (estrategia), sem redundancia."@pt,
+        "Tom que suaviza ou oculta agressao por linguagem “polida” ou mitigada."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:complementoPlanilhaV1 "Tom que suaviza ou oculta agressão por linguagem “polida” ou mitigada. Reduz detectabilidade e facilita circulação. Complementa “Eufemismo_odiento” (estratégia), sem redundância."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Tom que suaviza ou oculta agressão por linguagem “polida” ou mitigada. Reduz detectabilidade e facilita circulação. Complementa “Eufemismo_odiento” (estratégia), sem redundância."@pt .
+
+ontohate:Tom_humoristico a owl:Class ;
+    rdfs:label "Tom humoristico"@pt ;
+    rdfs:comment "Diferente de “Humor” (estrategia); aqui e tonalidade."@pt,
+        "Tom que utiliza comicidade para mascarar agressao."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:associacaoDiscursoOdioV1 "Componente do recurso textual do discurso de ódio online que remete à ideia de comicidade, de riso e descontração"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Permite ambiguidade e negação posterior do ataque. Diferente de “Humor” (estratégia); aqui é tonalidade. Tom que utiliza comicidade para mascarar agressão."@pt ;
+    ontohatev1:conceitoFonteV1 """Componente do recurso textual do discurso de ódio online que remete à ideia de comicidade, de riso e descontração
+
+[Complemento da planilha] Permite ambiguidade e negação posterior do ataque. Diferente de “Humor” (estratégia); aqui é tonalidade. Tom que utiliza comicidade para mascarar agressão."""@pt .
+
+ontohate:Tom_incitador a owl:Class ;
+    rdfs:label "Tom incitador"@pt ;
+    rdfs:comment "Diferente de “Incitacao_a_violencia” (estrategia); aqui e intensidade expressiva."@pt,
+        "Tom que estimula ou celebra agressao contra a vitima."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:complementoPlanilhaV1 "Tom que estimula ou celebra agressão contra a vítima. Intensifica mobilização coletiva. Diferente de “Incitacao_a_violencia” (estratégia); aqui é intensidade expressiva."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Tom que estimula ou celebra agressão contra a vítima. Intensifica mobilização coletiva. Diferente de “Incitacao_a_violencia” (estratégia); aqui é intensidade expressiva."@pt .
+
+ontohate:Tom_insultuoso a owl:Class ;
+    rdfs:label "Tom insultuoso"@pt ;
+    rdfs:comment "Presente implicitamente na v1; formalizado na v2."@pt,
+        "Tom marcado por xingamentos diretos e adjetivacao depreciativa."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:complementoPlanilhaV1 "Tom marcado por xingamentos diretos e adjetivação depreciativa. Expressa hostilidade explícita e ataque frontal. Presente implicitamente na v1; formalizado na v2."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Tom marcado por xingamentos diretos e adjetivação depreciativa. Expressa hostilidade explícita e ataque frontal. Presente implicitamente na v1; formalizado na v2."@pt .
+
+ontohate:Tom_moralizante a owl:Class ;
+    rdfs:label "Tom moralizante"@pt ;
+    rdfs:comment "Complementa argumentos de superioridade/inferioridade (estrategias)."@pt,
+        "Tom de julgamento moral e superioridade normativa."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:complementoPlanilhaV1 "Tom de julgamento moral e superioridade normativa. Legitima hierarquização social e exclusão. Complementa argumentos de superioridade/inferioridade (estratégias)."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Tom de julgamento moral e superioridade normativa. Legitima hierarquização social e exclusão. Complementa argumentos de superioridade/inferioridade (estratégias)."@pt .
+
+ontohate:Tom_sarcastico a owl:Class ;
+    rdfs:label "Tom sarcastico"@pt ;
+    rdfs:comment "Ampliacao tipologica na v2."@pt,
+        "Tom baseado em inversao semantica e ironia hostil."@pt ;
+    rdfs:subClassOf ontohate:Tom_do_discurso ;
+    ontohatev1:associacaoDiscursoOdioV1 "Componente do recurso textual do discurso de ódio online que remete à ideia de ironia, cinismo e zombaria do agente odiador ao destinatário-vítima"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode operar como evasão discursiva. Ampliação tipológica na v2. Tom baseado em inversão semântica e ironia hostil."@pt ;
+    ontohatev1:conceitoFonteV1 """Componente do recurso textual do discurso de ódio online que remete à ideia de ironia, cinismo e zombaria do agente odiador ao destinatário-vítima
+
+[Complemento da planilha] Pode operar como evasão discursiva. Ampliação tipológica na v2. Tom baseado em inversão semântica e ironia hostil."""@pt .
+
+ontohate:Trabalhador_sem_terra a owl:Class ;
+    rdfs:label "Trabalhador sem terra"@pt ;
+    rdfs:comment "Pessoa vinculada a movimentos de luta por terra."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de hostilidade política. Subclasse individual. Pessoa vinculada a movimentos de luta por terra."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que é membro do Movimento dos Trabalhadores Sem Terra e/ou que conquistou a terra por meio da luta e organização dos trabalhadores rurais
+
+[Complemento da planilha] Pode ser alvo de hostilidade política. Subclasse individual. Pessoa vinculada a movimentos de luta por terra."""@pt .
+
+ontohate:Transgenero a owl:Class ;
+    rdfs:label "Transgenero"@pt ;
+    rdfs:comment "Pessoa cuja identidade de genero difere do sexo atribuido ao nascer."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de transfobia. Subclasse individual. Pessoa cuja identidade de gênero difere do sexo atribuído ao nascer."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que têm uma identidade de gênero ou expressão de gênero que difere do sexo atribuído.
+Em alguns casos selecionados, as pessoas transgênero são chamadas de transexuais se desejam assistência médica para fazer a transição de um sexo para outro. "Transgênero" é um termo abrangente que inclue pessoas cuja identidade de gênero é o oposto de seu sexo atribuído (homens trans e mulheres trans), pessoas que não são exclusivamente masculinas ou femininas (pessoas que são genderqueer ou não-binário, incluindo bigênero, pangênero, gênero fluido ou agênero), pessoas que pertencem ou são conceituadas como um terceiro gênero;   não se identificar com papéis de gênero culturalmente convencionais e categorias de masculino ou feminino; ter mudado a identidade de gênero de masculino para feminino ou feminino para masculino, ou se identificar com elementos de ambos, ou ter alguma outra identidade de gênero.
+
+[Complemento da planilha] Pode ser alvo de transfobia. Subclasse individual. Pessoa cuja identidade de gênero difere do sexo atribuído ao nascer."""@pt .
+
+ontohate:Travesti a owl:Class ;
+    rdfs:label "Travesti"@pt ;
+    rdfs:comment "Pessoa que se identifica com identidade de genero distinta do sexo atribuido ao nascer."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de discriminação de gênero. Subclasse individual. Pessoa que se identifica com identidade de gênero distinta do sexo atribuído ao nascer."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que foi atribuída ao sexo masculino no nascimento e que tem uma identidade de gênero feminina, transfeminina ou "femme"
+Travesti está ligada a uma identidade sociopolítica local. O termo é de origem latino americano que inicialmente remetia a identificação de pessoas latinas. Há possibilidade de travestis não binárias; Travesti não se submete ou deseja se submeter a cirurgias de confirmação de gênero (particularmente genitoplastia)
+
+[Complemento da planilha] Pode ser alvo de discriminação de gênero. Subclasse individual. Pessoa que se identifica com identidade de gênero distinta do sexo atribuído ao nascer."""@pt .
+
+ontohate:Troll a owl:Class ;
+    rdfs:label "Troll"@pt ;
+    rdfs:comment "Agente odiador que provoca ou perturba interacoes digitais."@pt,
+        "Foco na provocacao."@pt ;
+    rdfs:subClassOf ontohate:Agente_odiador ;
+    ontohatev1:complementoPlanilhaV1 "Atua com intenção de gerar conflito ou desestabilização discursiva. Foco na provocação. Agente odiador que provoca ou perturba interações digitais."@pt ;
+    ontohatev1:conceitoFonteV1 """Agente odiador humano que incentiva discussões e conflitos na Internet, por meio de formatos inadequados e alheios ao tema
+O intuito do troll é perturbar ou provocar o destinatário-vítima ou exacerbar conflitos para os propósitos de sua própria diversão. Usa ironia, sarcasmo e tom humorístico para demonstrar sua hostilidade e abusar verbalmente do destinatário-vítima. Tem traços de personalidade caracterizados pela manipulação dos outros e insensibilidade (narcisismo, maquiavelismo, psicopatia e sadismo).
+
+[Complemento da planilha] Atua com intenção de gerar conflito ou desestabilização discursiva. Foco na provocação. Agente odiador que provoca ou perturba interações digitais."""@pt .
+
+ontohate:Trollbot a owl:Class ;
+    rdfs:label "Trollbot"@pt ;
+    rdfs:comment "Bot programado para provocar interacoes conflituosas."@pt,
+        "Subclasse tecnica."@pt ;
+    rdfs:subClassOf ontohate:Dispositivo_odiador ;
+    ontohatev1:complementoPlanilhaV1 "Simula comportamento humano. Subclasse técnica. Bot programado para provocar interações conflituosas."@pt ;
+    ontohatev1:conceitoFonteV1 """Dispositivo odiador que usa de ataques sistemáticos para desestabilizar alvos pré-determinados em publicações, fóruns e comunidades online, espalhando rumores, especulações e informações falsas.
+O trollbot usa de ironia e sarcasmo, e as vezes "humor" para demonstrar sua hostilidade e abusar verbalmente do destinatário-vítima
+
+[Complemento da planilha] Simula comportamento humano. Subclasse técnica. Bot programado para provocar interações conflituosas."""@pt .
+
+ontohate:Video_de_odio a owl:Class ;
+    rdfs:label "Video de odio"@pt ;
+    rdfs:comment "Conteudo audiovisual utilizado para difusao de ataque."@pt,
+        "Forma audiovisual."@pt ;
+    rdfs:subClassOf ontohate:Recursos_de_Forma ;
+    ontohatev1:associacaoDiscursoOdioV1 "Recurso que inclui vídeos gravados, vídeos ao vivo, gif ou qualquer outro produto audiovisual com manifestação explícita ou velada de discurso de ódio"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Combina imagem e som para intensificar impacto. Forma audiovisual. Conteúdo audiovisual utilizado para difusão de ataque."@pt ;
+    ontohatev1:conceitoFonteV1 """Recurso que inclui vídeos gravados, vídeos ao vivo, gif ou qualquer outro produto audiovisual com manifestação explícita ou velada de discurso de ódio
+
+[Complemento da planilha] Combina imagem e som para intensificar impacto. Forma audiovisual. Conteúdo audiovisual utilizado para difusão de ataque."""@pt .
+
+ontohate:X_antigo_Twitter a ontohate:Plataforma_digital,
+        owl:NamedIndividual ;
+    rdfs:label "X (antigo Twitter)"@pt .
+
+ontohate:YouTube a ontohate:Plataforma_digital,
+        owl:NamedIndividual ;
+    rdfs:label "YouTube"@pt .
+
+ontohate:_AllDisjoint_Dimensoes a owl:AllDisjointClasses ;
+    owl:members ( ontohate:Consequencia ontohate:Contexto ontohate:Destinatario_vitima ontohate:Manifestacao ontohate:Moderacao ontohate:Motivacao ontohate:Natureza ontohate:Nucleo ontohate:Proposicao_odienta ontohate:Recursos ) .
+
+ontohate:coisa_de_mulherzinha a owl:NamedIndividual ;
+    rdfs:label "coisa de mulherzinha"@pt .
+
+ontohate:expressa_conteudo a owl:ObjectProperty ;
+    rdfs:label "expressa conteudo"@pt ;
+    rdfs:comment "Relaciona o evento de discurso ao conteudo informacional expresso."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Conteudo .
+
+ontohate:porta_conteudo a owl:ObjectProperty ;
+    rdfs:domain ontohate:Recursos ;
+    rdfs:range ontohate:Conteudo ;
+    rdfs:subPropertyOf ontohatev1:porta .
+
+ontohate:porta_proposicao a owl:ObjectProperty ;
+    rdfs:domain ontohate:Recursos ;
+    rdfs:range ontohate:Proposicao_odienta ;
+    rdfs:subPropertyOf ontohatev1:porta .
+
+ontohate:potencializa_dano a owl:ObjectProperty ;
+    rdfs:domain ontohate:Proposicao_odienta ;
+    rdfs:range ontohate:Consequencia .
+
+ontohate:realiza_estrategia a owl:ObjectProperty ;
+    rdfs:domain ontohate:Proposicao_odienta ;
+    rdfs:range ontohate:Manifestacao ;
+    rdfs:subPropertyOf ontohatev1:aplicaEstrategia .
+
+ontohate:sobre_destinatario a owl:ObjectProperty ;
+    rdfs:domain ontohate:Proposicao_odienta ;
+    rdfs:range ontohate:Destinatario_vitima ;
+    rdfs:subPropertyOf ontohatev1:temDestinatario .
+
+ontohate:tem_moderacao a owl:ObjectProperty ;
+    rdfs:label "tem moderacao"@pt ;
+    rdfs:comment "Relaciona um discurso a acoes/processos de moderacao."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Moderacao .
+
+ontohate:tem_nucleo a owl:ObjectProperty ;
+    rdfs:label "tem nucleo"@pt ;
+    rdfs:comment "Relaciona um discurso ao seu nucleo conceitual."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Nucleo .
+
+ontohate:tinha_que_ser_preto a owl:NamedIndividual ;
+    rdfs:label "tinha que ser preto"@pt .
+
+ontohate:visa_produzir a owl:ObjectProperty ;
+    rdfs:domain ontohate:Motivacao ;
+    rdfs:range ontohate:Consequencia ;
+    rdfs:subPropertyOf ontohatev1:visaProduzir .
+
+ontohatev1:associacaoDiscursoOdioV1 a owl:AnnotationProperty ;
+    rdfs:label "Associação ao discurso de ódio (V1)"@pt ;
+    rdfs:comment "Trechos (ou resumo) indicando como o conceito é mobilizado no ecossistema de discurso de ódio online na OntoHate, derivados da fonte V1."@pt .
+
+ontohatev1:atuaEmPlataforma a owl:ObjectProperty ;
+    rdfs:label "atuaEmPlataforma"@pt ;
+    rdfs:comment "Relação inferida: o portador atua/participa em uma plataforma digital quando participa de uma interação odienta que ocorre na plataforma."@pt ;
+    rdfs:domain ontohate:Moderacao ;
+    rdfs:range ontohate:Plataforma_digital ;
+    owl:propertyChainAxiom [ ] .
+
+ontohatev1:complementoPlanilhaV1 a owl:AnnotationProperty ;
+    rdfs:label "Complemento (planilha V1)"@pt ;
+    rdfs:comment "Trechos complementares importados da planilha (colunas Observações/Observação/Comments) para enriquecer o conceito fonte, sem alterar a definição oficial."@pt .
+
+ontohatev1:conceitoFonteV1 a owl:AnnotationProperty ;
+    rdfs:label "Conceito (fonte V1)"@pt ;
+    rdfs:comment "Conceito importado da versão V1 (observacaoV1), preservado como fonte textual sem alterar a definição oficial da classe."@pt .
+
+ontohatev1:eCompostaPor a owl:ObjectProperty,
+        owl:TransitiveProperty ;
+    rdfs:comment "Propriedade mereológica no padrão has-part (eCompostaPor). Intenção: relação de composição; inversa de parteDe; declarada como transitiva."@pt,
+        "Relação todo-parte: uma entidade é composta por outras."@pt ;
+    rdfs:domain ontohate:Coisa ;
+    rdfs:range ontohate:Coisa ;
+    owl:equivalentProperty schema1:hasPart ;
+    owl:inverseOf ontohatev1:parteDe .
+
+ontohatev1:executa a owl:ObjectProperty ;
+    rdfs:label "executa"@pt ;
+    rdfs:comment "Relação: um sistema técnico executa um processo (ex.: processo algorítmico)."@pt .
+
+ontohatev1:expressaProposicao a owl:ObjectProperty ;
+    rdfs:comment "Relação semântica: um conteúdo/expressão odienta expressa uma proposição odienta."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Proposicao_odienta .
+
+ontohatev1:inereEm a owl:ObjectProperty ;
+    rdfs:comment "Propriedade estrutural (inereEm). Intenção: um modo/qualidade inere em uma entidade portadora; alinhável ao padrão 'inheres in'."@pt,
+        "Relação de inerência (UFO): papel/qualidade/modo depende de e inere em seu portador."@pt ;
+    rdfs:domain ontohate:Coisa ;
+    rdfs:range ontohate:Coisa ;
+    owl:inverseOf ontohatev1:porta .
+
+ontohatev1:ocorreEmPlataforma a owl:ObjectProperty ;
+    rdfs:label "ocorreEmPlataforma"@pt ;
+    rdfs:comment "Liga uma interação odienta à plataforma digital onde ocorre."@pt ;
+    rdfs:domain ontohate:Contexto ;
+    rdfs:range ontohate:Plataforma_digital .
+
+ontohatev1:participaDeEvento a owl:ObjectProperty ;
+    rdfs:label "participaDeEvento"@pt ;
+    rdfs:comment "Relação inferida: o portador participa de um evento (ex.: evento de discurso de ódio) quando participa de uma interação que ocorre no evento."@pt ;
+    owl:inverseOf ontohatev1:temParticipanteNoEvento ;
+    owl:propertyChainAxiom [ ] .
+
+ontohatev1:possuiModoIntencional a owl:ObjectProperty ;
+    rdfs:comment "Liga pessoa a um modo intencional (modo mental) que ela porta."@pt .
+
+ontohatev1:possuiTom a owl:ObjectProperty ;
+    rdfs:comment "Liga comentário ao tom do discurso."@pt .
+
+ontohatev1:temObjetivo a owl:ObjectProperty ;
+    rdfs:comment "Liga modo intencional ao objetivo pretendido."@pt .
+
+ontohatev1:temPapel a owl:ObjectProperty ;
+    rdfs:comment "Liga um relator aos papéis que ele sustenta."@pt .
+
+ontohatev1:temParticipanteNaInteracao a owl:ObjectProperty ;
+    rdfs:label "temParticipanteNaInteracao"@pt ;
+    rdfs:comment "Relação inferida: liga uma interação odienta ao portador (pessoa/grupo/sistema) que participa via papéis."@pt ;
+    owl:inverseOf ontohatev1:participaDeInteracao ;
+    owl:propertyChainAxiom [ ] .
+
+ontohate:Agente_moderador a owl:Class ;
+    rdfs:label "Agente moderador"@pt ;
+    rdfs:comment "Agente responsavel por avaliar ou remover conteudo."@pt,
+        "Participante regulador."@pt ;
+    rdfs:subClassOf ontohate:Nucleo ;
+    ontohatev1:associacaoDiscursoOdioV1 "Agente humano ou não-humano responsável pela arbitragem de conteúdo abusivo, incluindo possível conteúdo de ódio, sinalizado por usuários ou detectado proativamente por recursos de Inteligência Artificial"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Atua de forma humana ou automatizada. Participante regulador. Agente responsável por avaliar ou remover conteúdo."@pt ;
+    ontohatev1:conceitoFonteV1 """Agente humano ou não-humano responsável pela arbitragem de conteúdo abusivo, incluindo possível conteúdo de ódio, sinalizado por usuários ou detectado proativamente por recursos de Inteligência Artificial
+
+[Complemento da planilha] Atua de forma humana ou automatizada. Participante regulador. Agente responsável por avaliar ou remover conteúdo."""@pt .
+
+ontohate:Audiencia a owl:Class ;
+    rdfs:label "Audiencia"@pt ;
+    rdfs:comment "Categoria estrutural de recepcao."@pt,
+        "Conjunto de usuarios potencial ou efetivamente expostos ao conteudo."@pt ;
+    rdfs:subClassOf ontohate:Plataforma_digital ;
+    ontohatev1:complementoPlanilhaV1 "Conjunto de usuários potencial ou efetivamente expostos ao conteúdo. Pode incluir seguidores diretos e usuários alcançados por recomendação. Categoria estrutural de recepção."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de usuários potencial ou efetivamente expostos ao conteúdo. Pode incluir seguidores diretos e usuários alcançados por recomendação. Categoria estrutural de recepção."@pt .
+
+ontohate:Evento_de_discurso_de_odio a owl:Class ;
+    rdfs:label "Evento de discurso de odio"@pt ;
+    rdfs:comment "Eventos relacionados ao fenomeno do discurso de odio."@pt,
+        "Instanciacao do fenomeno."@pt,
+        "Ocorrencia especifica do discurso de odio online."@pt ;
+    rdfs:subClassOf ontohate:Universo_de_evento ;
+    ontohatev1:complementoPlanilhaV1 "Ocorrência específica do discurso de ódio online. Relaciona agente odiador, vítima e contexto. Instanciação do fenômeno."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Ocorrência específica do discurso de ódio online. Relaciona agente odiador, vítima e contexto. Instanciação do fenômeno."@pt .
+
+ontohate:Gordo a owl:Class ;
+    rdfs:label "Gordo"@pt ;
+    rdfs:comment "Pessoa com corpo gordo."@pt,
+        "Subclasse individual."@pt ;
+    rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de gordofobia. Subclasse individual. Pessoa com corpo gordo."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa com excesso de gordura corporal
+
+[Complemento da planilha] Pode ser alvo de gordofobia. Subclasse individual. Pessoa com corpo gordo."""@pt .
+
+ontohate:Modo_intencional a owl:Class ;
+    rdfs:label "Modo intencional"@pt ;
+    rdfs:comment "Classe estruturante."@pt,
+        "Estrutura intencional associada ao agente odiador."@pt ;
+    rdfs:subClassOf ontohate:Motivacao ;
+    ontohatev1:complementoPlanilhaV1 "Estrutura intencional associada ao agente odiador. Organiza as disposições mentais que orientam a manifestação do discurso de ódio online. Classe estruturante."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Estrutura intencional associada ao agente odiador. Organiza as disposições mentais que orientam a manifestação do discurso de ódio online. Classe estruturante."@pt .
+
+ontohate:Natureza_afetiva a owl:Class ;
+    rdfs:label "Natureza afetiva"@pt ;
+    rdfs:comment "Natureza baseada em afetividade, orientacao sexual e identidade de genero."@pt,
+        "Reinterpretacao V2 da categoria V1 “afetiva”."@pt ;
+    rdfs:subClassOf ontohate:Natureza_principal ;
+    ontohatev1:complementoPlanilhaV1 "Natureza baseada em afetividade, orientação sexual e identidade de gênero. Direciona o ataque à dimensão afetivo-sexual atribuída ao destinatário-vítima. Reinterpretação V2 da categoria V1 “afetiva”."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza baseada em afetividade, orientação sexual e identidade de gênero. Direciona o ataque à dimensão afetivo-sexual atribuída ao destinatário-vítima. Reinterpretação V2 da categoria V1 “afetiva”."@pt .
+
+ontohate:Natureza_afiliativa a owl:Class ;
+    rdfs:label "Natureza afiliativa"@pt ;
+    rdfs:comment "Natureza baseada em afiliacoes coletivas, etnia, cultura, nacionalidade ou comunidade."@pt,
+        "Reinterpretacao V2 da categoria V1 “afiliativa”."@pt ;
+    rdfs:subClassOf ontohate:Natureza_principal ;
+    ontohatev1:complementoPlanilhaV1 "Natureza baseada em afiliações coletivas, etnia, cultura, nacionalidade ou comunidade. Direciona o ataque ao pertencimento grupal atribuído ao destinatário-vítima. Reinterpretação V2 da categoria V1 “afiliativa”."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza baseada em afiliações coletivas, etnia, cultura, nacionalidade ou comunidade. Direciona o ataque ao pertencimento grupal atribuído ao destinatário-vítima. Reinterpretação V2 da categoria V1 “afiliativa”."@pt .
+
+ontohate:Natureza_por_conduta a owl:Class ;
+    rdfs:label "Natureza por conduta"@pt ;
+    rdfs:comment "Natureza baseada em conduta, comportamento, modo de vida ou condicao social atribuida ao destinatario-vitima."@pt,
+        "Reinterpretacao V2 da categoria V1 “por conduta”."@pt ;
+    rdfs:subClassOf ontohate:Natureza_principal ;
+    ontohatev1:complementoPlanilhaV1 "Natureza baseada em conduta, comportamento, modo de vida ou condição social atribuída ao destinatário-vítima. Direciona hostilidade a práticas sociais e posições socioeconômicas. Reinterpretação V2 da categoria V1 “por conduta”."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza baseada em conduta, comportamento, modo de vida ou condição social atribuída ao destinatário-vítima. Direciona hostilidade a práticas sociais e posições socioeconômicas. Reinterpretação V2 da categoria V1 “por conduta”."@pt .
+
+ontohate:Politica_de_uso a owl:Class ;
+    rdfs:label "Politica de uso"@pt ;
+    rdfs:comment "Conjunto de normas formais que regulam comportamento e conteudo na plataforma."@pt,
+        "Dimensao normativa."@pt ;
+    rdfs:subClassOf ontohate:Plataforma_digital ;
+    ontohatev1:complementoPlanilhaV1 "Conjunto de normas formais que regulam comportamento e conteúdo na plataforma. Define limites, permissões e critérios de moderação. Dimensão normativa."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de normas formais que regulam comportamento e conteúdo na plataforma. Define limites, permissões e critérios de moderação. Dimensão normativa."@pt .
+
+ontohate:Qualidade_expressiva a owl:Class ;
+    rdfs:label "Qualidade expressiva"@pt ;
+    rdfs:comment "Classe-ponte para manter rigor UFO sem importar UFO inteira."@pt,
+        "Qualidade que caracteriza dimensoes expressivas do enunciado odiento."@pt ;
+    rdfs:subClassOf ontohate:Recursos ;
+    ontohatev1:complementoPlanilhaV1 "Qualidade que caracteriza dimensões expressivas do enunciado odiento. Abrange tonalidade, intensidade e estilo de enunciação. Classe-ponte para manter rigor UFO sem importar UFO inteira."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Qualidade que caracteriza dimensões expressivas do enunciado odiento. Abrange tonalidade, intensidade e estilo de enunciação. Classe-ponte para manter rigor UFO sem importar UFO inteira."@pt .
+
+ontohate:Sistema_algoritmico a owl:Class ;
+    rdfs:label "Sistema algoritmico"@pt ;
+    rdfs:comment "Conecta com Contexto_algoritmico."@pt,
+        "Conjunto de mecanismos automatizados que organizam visibilidade e circulacao de conteudo."@pt ;
+    rdfs:subClassOf ontohate:Plataforma_digital ;
+    ontohatev1:complementoPlanilhaV1 "Conjunto de mecanismos automatizados que organizam visibilidade e circulação de conteúdo. Envolve recomendação, ranqueamento, priorização e detecção automática. Conecta com Contexto_algoritmico."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de mecanismos automatizados que organizam visibilidade e circulação de conteúdo. Envolve recomendação, ranqueamento, priorização e detecção automática. Conecta com Contexto_algoritmico."@pt .
+
+ontohate:Universo_de_evento a owl:Class ;
+    rdfs:label "Universal de evento"@pt,
+        "Universo de evento"@pt ;
+    rdfs:comment "Camada que agrupa eventos do dominio."@pt,
+        "Classe de fundamentacao."@pt,
+        "Classe fundamentada na UFO-C que representa universais relacionados a eventos."@pt ;
+    rdfs:subClassOf ontohate:Coisa ;
+    ontohatev1:complementoPlanilhaV1 "Classe fundamentada na UFO-C que representa universais relacionados a eventos. Serve como base ontológica para modelar ocorrências no domínio do discurso de ódio online. Classe de fundamentação."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Classe fundamentada na UFO-C que representa universais relacionados a eventos. Serve como base ontológica para modelar ocorrências no domínio do discurso de ódio online. Classe de fundamentação."@pt .
+
+ontohate:tem_consequencia a owl:ObjectProperty ;
+    rdfs:label "tem consequencia"@pt ;
+    rdfs:comment "Relaciona um discurso a consequencias/impactos."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Consequencia ;
+    owl:equivalentProperty ontohatev1:geraConsequencia .
+
+ontohate:tem_destinatario a owl:ObjectProperty ;
+    rdfs:label "tem destinatario vitima"@pt ;
+    rdfs:comment "Relaciona um discurso ao(s) destinatario(s)/vitima(s)."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Destinatario_vitima ;
+    owl:equivalentProperty ontohatev1:temDestinatario .
+
+ontohate:tem_manifestacao a owl:ObjectProperty ;
+    rdfs:label "tem manifestacao"@pt ;
+    rdfs:comment "Relaciona um discurso a formas de manifestacao."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Manifestacao ;
+    owl:equivalentProperty ontohatev1:temManifestacao .
+
+ontohate:tem_motivacao a owl:ObjectProperty ;
+    rdfs:label "tem motivacao"@pt ;
+    rdfs:comment "Relaciona um discurso a motivacoes."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Motivacao ;
+    owl:equivalentProperty ontohatev1:temMotivacao .
+
+ontohate:tem_natureza_principal a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ;
+            owl:unionOf ( ontohate:Discurso_de_odio ontohate:Proposicao_odienta ) ] ;
+    rdfs:range ontohate:Natureza_principal ;
+    rdfs:subPropertyOf ontohate:tem_natureza .
+
+ontohate:usa_recurso a owl:ObjectProperty ;
+    rdfs:label "usa recurso"@pt ;
+    rdfs:comment "Relaciona um discurso a recursos/estrategias utilizadas."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Recursos ;
+    owl:equivalentProperty ontohatev1:usaRecurso .
+
+ontohatev1:aplicaEstrategia a owl:ObjectProperty ;
+    rdfs:comment "Liga comentário às estratégias discursivas empregadas."@pt ;
+    rdfs:domain ontohate:Proposicao_odienta ;
+    rdfs:range ontohate:Manifestacao .
+
+ontohatev1:geraConsequencia a owl:ObjectProperty ;
+    rdfs:comment "Liga evento às consequências/danos gerados."@pt,
+        "Propriedade legada (compatibilidade). Use tem_consequencia como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Consequencia ;
+    owl:deprecated true ;
+    owl:equivalentProperty ontohate:tem_consequencia .
+
+ontohatev1:ocorreEm a owl:ObjectProperty ;
+    rdfs:comment "Liga um relator ao evento no qual ocorre."@pt,
+        "Propriedade legada (compatibilidade). Use ocorre_em como propriedade canônica."@pt ;
+    owl:deprecated true ;
+    owl:equivalentProperty ontohate:ocorre_em .
+
+ontohatev1:ocorreEmContexto a owl:ObjectProperty ;
+    rdfs:comment "Liga evento ao contexto."@pt,
+        "Propriedade legada (compatibilidade). Use ocorre_em como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Contexto ;
+    owl:deprecated true ;
+    owl:equivalentProperty ontohate:ocorre_em .
+
+ontohatev1:parteDe a owl:ObjectProperty,
+        owl:TransitiveProperty ;
+    rdfs:comment "Inversa de eCompostaPor."@pt,
+        "Propriedade mereológica no padrão part-of (parteDe). Intenção: relação de inclusão estrutural entre entidades; declarada como transitiva."@pt ;
+    rdfs:domain ontohate:Coisa ;
+    rdfs:range ontohate:Coisa ;
+    owl:equivalentProperty schema1:isPartOf .
+
+ontohatev1:participaDeInteracao a owl:ObjectProperty ;
+    rdfs:label "participaDeInteracao"@pt ;
+    rdfs:comment "Inversa de temParticipanteNaInteracao: o portador participa de uma interação odienta."@pt .
+
+ontohatev1:temManifestacao a owl:ObjectProperty ;
+    rdfs:comment "Liga evento ao tipo de manifestação."@pt,
+        "Propriedade legada (compatibilidade). Use tem_manifestacao como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Manifestacao ;
+    owl:deprecated true ;
+    owl:equivalentProperty ontohate:tem_manifestacao .
+
+ontohatev1:temMotivacao a owl:ObjectProperty ;
+    rdfs:comment "Liga o evento de discurso de ódio ao modo intencional relevante."@pt,
+        "Propriedade legada (compatibilidade). Use tem_motivacao como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Motivacao ;
+    owl:deprecated true ;
+    owl:equivalentProperty ontohate:tem_motivacao .
+
+ontohatev1:temNatureza a owl:ObjectProperty ;
+    rdfs:comment "Liga evento à natureza do discurso de ódio."@pt,
+        "Propriedade legada (compatibilidade). Use tem_natureza como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Natureza ;
+    owl:deprecated true ;
+    owl:equivalentProperty ontohate:tem_natureza .
+
+ontohatev1:temParticipanteNoEvento a owl:ObjectProperty ;
+    rdfs:label "temParticipanteNoEvento"@pt ;
+    rdfs:comment "Inversa de participaDeEvento: o evento tem como participante um portador (pessoa/grupo/sistema)."@pt .
+
+ontohatev1:usaRecurso a owl:ObjectProperty ;
+    rdfs:comment "Liga uma interação odienta aos recursos empregados (forma/técnico/estratégia)."@pt,
+        "Propriedade legada (compatibilidade). Use usa_recurso como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Recursos ;
+    owl:deprecated true ;
+    owl:equivalentProperty ontohate:usa_recurso .
+
+ontohatev1:visaProduzir a owl:ObjectProperty ;
+    rdfs:comment "Liga objetivo odiento às consequências/danos que pretende produzir."@pt ;
+    rdfs:domain ontohate:Motivacao ;
+    rdfs:range ontohate:Consequencia .
+
+ontohate:Conteudo a owl:Class ;
+    rdfs:label "Conteudo"@pt ;
+    rdfs:comment "Entidade informacional (texto, imagem, audio, video)."@pt ;
+    rdfs:subClassOf ontohate:Proposicao_odienta ;
+    ontohatev1:complementoPlanilhaV1 "Conteúdo que integra múltiplos modos comunicacionais. Combina texto, imagem e áudio em formatos digitais recentes. Ampliação contemporânea."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conteúdo que integra múltiplos modos comunicacionais. Combina texto, imagem e áudio em formatos digitais recentes. Ampliação contemporânea."@pt .
+
+ontohate:Dispositivo_odiador a owl:Class ;
+    rdfs:label "Dispositivo odiador"@pt ;
+    rdfs:comment "Agente nao humano."@pt,
+        "Sistema tecnico utilizado para disseminar discurso de odio."@pt ;
+    rdfs:subClassOf ontohate:Nucleo ;
+    ontohatev1:complementoPlanilhaV1 "Sistema técnico utilizado para disseminar discurso de ódio. Inclui mecanismos automatizados de amplificação. Agente não humano."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Sistema técnico utilizado para disseminar discurso de ódio. Inclui mecanismos automatizados de amplificação. Agente não humano."@pt .
+
+ontohate:ocorre_em a owl:ObjectProperty ;
+    rdfs:label "ocorre em"@pt ;
+    rdfs:comment "Relaciona um discurso ao contexto em que ocorre."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Contexto ;
+    owl:equivalentProperty ontohatev1:ocorreEm,
+        ontohatev1:ocorreEmContexto .
+
+ontohate:tem_natureza a owl:ObjectProperty ;
+    rdfs:label "tem natureza"@pt ;
+    rdfs:comment "Relaciona um discurso a qualidades/caracteristicas."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Natureza ;
+    owl:equivalentProperty ontohatev1:temNatureza .
+
+ontohatev1:temDestinatario a owl:ObjectProperty ;
+    rdfs:comment "Liga interação ao papel de vítima/destinatário."@pt,
+        "Propriedade legada (compatibilidade). Use tem_destinatario como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Destinatario_vitima ;
+    owl:deprecated true ;
+    owl:equivalentProperty ontohate:tem_destinatario .
+
+ontohate:Dano_fisico a owl:Class ;
+    rdfs:label "Dano fisico"@pt ;
+    rdfs:comment "Ampliacao necessaria para completude ontologica."@pt,
+        "Dano que afeta a integridade corporal da vitima."@pt ;
+    rdfs:subClassOf ontohate:Dano_provocado ;
+    ontohatev1:complementoPlanilhaV1 "Dano que afeta a integridade corporal da vítima. Pode ocorrer como consequência indireta da manifestação do discurso de ódio. Ampliação necessária para completude ontológica."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Dano que afeta a integridade corporal da vítima. Pode ocorrer como consequência indireta da manifestação do discurso de ódio. Ampliação necessária para completude ontológica."@pt .
+
+ontohate:Dano_provocado a owl:Class ;
+    rdfs:label "Dano provocado"@pt ;
+    rdfs:comment "Classe base da V1."@pt,
+        "Consequencia resultante da manifestacao do discurso de odio online."@pt ;
+    rdfs:subClassOf ontohate:Consequencia ;
+    ontohatev1:associacaoDiscursoOdioV1 """Situação provocada pela manifestação do discurso de ódio de um agente odiador que prejudica um destinatário-vítima
+o prejuízo decorrente é de caráter físico, psicológico ou social"""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Refere-se aos efeitos produzidos sobre o destinatário-vítima ou sobre o ambiente social. Classe base da V1. Consequência resultante da manifestação do discurso de ódio online."@pt ;
+    ontohatev1:conceitoFonteV1 """Situação provocada pela manifestação do discurso de ódio de um agente odiador que prejudica um destinatário-vítima
+o prejuízo decorrente é de caráter físico, psicológico ou social
+
+[Complemento da planilha] Refere-se aos efeitos produzidos sobre o destinatário-vítima ou sobre o ambiente social. Classe base da V1. Consequência resultante da manifestação do discurso de ódio online."""@pt .
+
+ontohate:Dano_psicologico a owl:Class ;
+    rdfs:label "Dano psicologico"@pt ;
+    rdfs:comment "Dano relacionado ao sofrimento emocional da vitima."@pt,
+        "Dimensao central na tese."@pt ;
+    rdfs:subClassOf ontohate:Dano_provocado ;
+    ontohatev1:complementoPlanilhaV1 "Dano relacionado ao sofrimento emocional da vítima. Envolve impactos subjetivos decorrentes da manifestação odienta. Dimensão central na tese."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Dano relacionado ao sofrimento emocional da vítima. Envolve impactos subjetivos decorrentes da manifestação odienta. Dimensão central na tese."@pt .
+
+ontohate:Manifestacao_explicita a owl:Class ;
+    rdfs:label "Manifestacao explicita"@pt ;
+    rdfs:comment "Deriva da questao de competencia da tese."@pt,
+        "Manifestacao em que o conteudo odiento e apresentado de forma direta e identificavel."@pt ;
+    rdfs:subClassOf ontohate:Manifestacao ;
+    ontohatev1:associacaoDiscursoOdioV1 "Publicação ou resposta a publicação, explicitamente odiosa, que tem como objetivo provocar danos ou tratamento desigual ao destinatário-vítima"@pt ;
+    ontohatev1:complementoPlanilhaV1 "A hostilidade é expressa de maneira clara, sem disfarces semânticos ou ambiguidade intencional. Deriva da questão de competência da tese. Manifestação em que o conteúdo odiento é apresentado de forma direta e identificável."@pt ;
+    ontohatev1:conceitoFonteV1 """Publicação ou resposta a publicação, explicitamente odiosa, que tem como objetivo provocar danos ou tratamento desigual ao destinatário-vítima
+
+[Complemento da planilha] A hostilidade é expressa de maneira clara, sem disfarces semânticos ou ambiguidade intencional. Deriva da questão de competência da tese. Manifestação em que o conteúdo odiento é apresentado de forma direta e identificável."""@pt .
+
+ontohate:Natureza_dispositiva a owl:Class ;
+    rdfs:label "Natureza dispositiva"@pt ;
+    rdfs:comment "Natureza baseada em disposicoes, crencas e conviccoes ideologicas."@pt,
+        "Reinterpretacao V2 da categoria V1 “dispositiva”."@pt ;
+    rdfs:subClassOf ontohate:Natureza_principal ;
+    ontohatev1:complementoPlanilhaV1 "Natureza baseada em disposições, crenças e convicções ideológicas. Direciona hostilidade a posições religiosas ou político-partidárias atribuídas ao destinatário-vítima. Reinterpretação V2 da categoria V1 “dispositiva”."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza baseada em disposições, crenças e convicções ideológicas. Direciona hostilidade a posições religiosas ou político-partidárias atribuídas ao destinatário-vítima. Reinterpretação V2 da categoria V1 “dispositiva”."@pt .
+
+ontohatev1:porta a owl:ObjectProperty ;
+    rdfs:comment "Inversa de inereEm: o portador porta um papel/qualidade/modo."@pt,
+        "Propriedade estrutural (porta). Intenção: uma entidade porta/possui outra como característica/atributo dependente; alinhável ao padrão 'bears/has'."@pt ;
+    rdfs:domain ontohate:Coisa,
+        ontohate:Recursos ;
+    rdfs:range ontohate:Coisa,
+        ontohate:Proposicao_odienta .
+
+ontohate:Crenca a owl:Class ;
+    rdfs:label "Crenca"@pt ;
+    rdfs:comment "Classe intermediaria."@pt,
+        "Estado mental de conviccao ou aceitacao de uma proposicao."@pt ;
+    rdfs:subClassOf ontohate:Modo_mental ;
+    ontohatev1:complementoPlanilhaV1 "Convicção fundamentada na manutenção de valores tradicionais. Pode sustentar rejeição a mudanças sociais e reconhecimento de direitos. Subclasse específica."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Convicção fundamentada na manutenção de valores tradicionais. Pode sustentar rejeição a mudanças sociais e reconhecimento de direitos. Subclasse específica."@pt .
+
+ontohate:Grupo_de_pessoas_com_caracteristica_protegida a owl:Class ;
+    rdfs:label "Grupo de pessoas com caracteristica protegida"@pt ;
+    rdfs:comment "Classe intermediaria coletiva."@pt,
+        "Coletividade que compartilha caracteristica protegida."@pt ;
+    rdfs:subClassOf ontohate:Destinatario_vitima ;
+    ontohatev1:complementoPlanilhaV1 "Coletividade que compartilha característica protegida. Pode ser alvo de hostilidade direcionada ao grupo. Classe intermediária coletiva."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Coletividade que compartilha característica protegida. Pode ser alvo de hostilidade direcionada ao grupo. Classe intermediária coletiva."@pt .
+
+ontohate:Hater a owl:Class ;
+    rdfs:label "Hater"@pt ;
+    rdfs:comment "Categoria comportamental."@pt,
+        "Tipo de agente odiador que produz ou dissemina conteudo odiento."@pt ;
+    rdfs:subClassOf ontohate:Agente_odiador ;
+    ontohatev1:associacaoDiscursoOdioV1 """Pessoa que manifesta discurso de ódio em plataformas digitais
+Geralmente os haters odeiam de forma gratuita, sem motivo evidente, mobilizando ações violentas e ataques ao destinatário-vítima Os haters desempenham papel de produtor, oportunista, enganador, fantasista ou distribuídor."""@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode assumir diferentes papéis na circulação do discurso. Categoria comportamental. Tipo de agente odiador que produz ou dissemina conteúdo odiento."@pt ;
+    ontohatev1:conceitoFonteV1 """Pessoa que manifesta discurso de ódio em plataformas digitais
+Geralmente os haters odeiam de forma gratuita, sem motivo evidente, mobilizando ações violentas e ataques ao destinatário-vítima Os haters desempenham papel de produtor, oportunista, enganador, fantasista ou distribuídor.
+
+[Complemento da planilha] Pode assumir diferentes papéis na circulação do discurso. Categoria comportamental. Tipo de agente odiador que produz ou dissemina conteúdo odiento."""@pt .
+
+ontohate:Moderacao a owl:Class ;
+    rdfs:label "Moderacao"@pt ;
+    rdfs:comment "Acoes/processos de moderacao e governanca."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Conjunto de mecanismos responsáveis por avaliar e intervir sobre conteúdos. Pode operar de forma humana, automatizada ou híbrida. Classe central da moderação."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de mecanismos responsáveis por avaliar e intervir sobre conteúdos. Pode operar de forma humana, automatizada ou híbrida. Classe central da moderação."@pt .
+
+ontohate:Natureza_por_atributos a owl:Class ;
+    rdfs:label "Natureza por atributos"@pt ;
+    rdfs:comment "Natureza baseada em atributos fisicos, biologicos, corporais ou marcadores sociais atribuidos ao corpo."@pt,
+        "Reinterpretacao V2 da categoria V1 “por atributos”."@pt ;
+    rdfs:subClassOf ontohate:Natureza_principal ;
+    ontohatev1:complementoPlanilhaV1 "Natureza baseada em atributos físicos, biológicos, corporais ou marcadores sociais atribuídos ao corpo. Direciona o ataque a características corporais ou marcadores como raça/idade/aparência. Reinterpretação V2 da categoria V1 “por atributos”."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza baseada em atributos físicos, biológicos, corporais ou marcadores sociais atribuídos ao corpo. Direciona o ataque a características corporais ou marcadores como raça/idade/aparência. Reinterpretação V2 da categoria V1 “por atributos”."@pt .
+
+ontohate:Recursos_Tecnicos a owl:Class ;
+    rdfs:label "Recursos Tecnicos"@pt ;
+    rdfs:comment "Classe intermediaria estrutural."@pt,
+        "Recursos baseados em sistemas tecnicos ou automatizados."@pt ;
+    rdfs:subClassOf ontohate:Recursos ;
+    ontohatev1:complementoPlanilhaV1 "Recursos baseados em sistemas técnicos ou automatizados. Dependem de mediação tecnológica para amplificação ou produção. Classe intermediária estrutural."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Recursos baseados em sistemas técnicos ou automatizados. Dependem de mediação tecnológica para amplificação ou produção. Classe intermediária estrutural."@pt .
+
+ontohate:Natureza a owl:Class ;
+    rdfs:label "Natureza"@pt ;
+    rdfs:comment "Qualidades/caracteristicas do discurso (ex.: discriminatorio)."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt .
+
+ontohate:Recursos_de_Forma a owl:Class ;
+    rdfs:label "Recursos de Forma"@pt ;
+    rdfs:comment "Classe intermediaria estrutural."@pt,
+        "Recursos relacionados a forma material da manifestacao."@pt ;
+    rdfs:subClassOf ontohate:Recursos ;
+    ontohatev1:complementoPlanilhaV1 "Recursos relacionados à forma material da manifestação. Correspondem ao suporte midiático do discurso. Classe intermediária estrutural."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Recursos relacionados à forma material da manifestação. Correspondem ao suporte midiático do discurso. Classe intermediária estrutural."@pt .
+
+ontohate:Sistema_de_moderacao a owl:Class ;
+    rdfs:label "Sistema de moderacao"@pt ;
+    rdfs:comment "Classe central da moderacao."@pt,
+        "Conjunto de mecanismos responsaveis por avaliar e intervir sobre conteudos."@pt ;
+    rdfs:subClassOf ontohate:Plataforma_digital ;
+    ontohatev1:complementoPlanilhaV1 "Conjunto de mecanismos responsáveis por avaliar e intervir sobre conteúdos. Pode operar de forma humana, automatizada ou híbrida. Classe central da moderação."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de mecanismos responsáveis por avaliar e intervir sobre conteúdos. Pode operar de forma humana, automatizada ou híbrida. Classe central da moderação."@pt .
+
+ontohate:Agente_odiador a owl:Class ;
+    rdfs:label "Agente odiador"@pt ;
+    rdfs:comment "Agente social que manifesta o discurso de odio online."@pt,
+        "Participante ativo do evento."@pt ;
+    rdfs:subClassOf ontohate:Nucleo ;
+    ontohatev1:associacaoDiscursoOdioV1 "Agente humano ou não-humano que produz, distribui e/ou permite que o discurso de ódio permaneça em plataformas digitais"@pt ;
+    ontohatev1:complementoPlanilhaV1 "Atua motivado por crenças, intenções ou disposições. Participante ativo do evento. Agente social que manifesta o discurso de ódio online."@pt ;
+    ontohatev1:conceitoFonteV1 """Agente humano ou não-humano que produz, distribui e/ou permite que o discurso de ódio permaneça em plataformas digitais
+
+[Complemento da planilha] Atua motivado por crenças, intenções ou disposições. Participante ativo do evento. Agente social que manifesta o discurso de ódio online."""@pt .
+
+ontohate:Dano_social a owl:Class ;
+    rdfs:label "Dano social"@pt ;
+    rdfs:comment "Dano relacionado a posicao social da vitima."@pt,
+        "Dimensao estrutural da tese."@pt ;
+    rdfs:subClassOf ontohate:Dano_provocado ;
+    ontohatev1:complementoPlanilhaV1 "Dano relacionado à posição social da vítima. Afeta reconhecimento, participação e pertencimento social. Dimensão estrutural da tese."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Dano relacionado à posição social da vítima. Afeta reconhecimento, participação e pertencimento social. Dimensão estrutural da tese."@pt .
+
+ontohate:Destinatario_vitima a owl:Class ;
+    rdfs:label "Destinatario vitima"@pt ;
+    rdfs:comment "Agente social alvo do discurso de odio online."@pt,
+        "Papeis/grupos alvo do discurso."@pt,
+        "Polo passivo do evento."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio,
+        ontohate:Nucleo .
+
+ontohate:Modo_mental a owl:Class ;
+    rdfs:label "Modo mental"@pt ;
+    rdfs:comment "Classe abstrata."@pt,
+        "Dimensao mental que fundamenta crencas, desejos e intencoes."@pt ;
+    rdfs:subClassOf ontohate:Modo_intencional ;
+    ontohatev1:complementoPlanilhaV1 "Dimensão mental que fundamenta crenças, desejos e intenções. Constitui a base psicológica que sustenta o modo intencional do agente odiador. Classe abstrata."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Dimensão mental que fundamenta crenças, desejos e intenções. Constitui a base psicológica que sustenta o modo intencional do agente odiador. Classe abstrata."@pt .
+
+ontohate:Motivacao a owl:Class ;
+    rdfs:label "Motivacao"@pt ;
+    rdfs:comment "Intencoes/justificativas que orientam o discurso."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio .
+
+ontohate:Natureza_principal a owl:Class ;
+    rdfs:label "Natureza principal"@pt ;
+    rdfs:comment "Mudanca V2: natureza principal unica (cardinalidade = 1)."@pt,
+        "Natureza predominante do ataque no discurso de odio online."@pt ;
+    rdfs:subClassOf ontohate:Natureza ;
+    ontohatev1:complementoPlanilhaV1 "Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt .
+
+ontohate:Consequencia a owl:Class ;
+    rdfs:label "Consequencia"@pt ;
+    rdfs:comment "Efeitos/danos/impactos associados."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio .
+
+ontohate:Coisa a owl:Class ;
+    rdfs:label "Coisa"@pt ;
+    rdfs:comment "Raiz do dominio (continuante/entidade geral)."@pt ;
+    rdfs:subClassOf owl:Thing .
+
+ontohate:Manifestacao a owl:Class ;
+    rdfs:label "Manifestacao"@pt ;
+    rdfs:comment "Formas de expressao/realizacao do discurso (texto, meme etc.)."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Manifestação em que o conteúdo odiento é apresentado de forma indireta ou implícita. Pode utilizar ironia, ambiguidade, eufemismo ou estratégias discursivas que dificultam identificação imediata. Deriva da questão de competência da tese."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Manifestação em que o conteúdo odiento é apresentado de forma indireta ou implícita. Pode utilizar ironia, ambiguidade, eufemismo ou estratégias discursivas que dificultam identificação imediata. Deriva da questão de competência da tese."@pt .
+
+ontohate:Nucleo a owl:Class ;
+    rdfs:label "Nucleo"@pt ;
+    rdfs:comment "Conteudo/estrutura conceitual central do discurso."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio .
+
+ontohate:Tom_do_discurso a owl:Class ;
+    rdfs:label "Tom do discurso"@pt ;
+    rdfs:comment "Nao e Recurso_de_Forma; inere em Comentario_odiento via possuiTom."@pt,
+        "Qualidade expressiva que caracteriza a maneira como o comentario odiento e enunciado."@pt ;
+    rdfs:subClassOf ontohate:Qualidade_expressiva ;
+    ontohatev1:complementoPlanilhaV1 "Qualidade expressiva que caracteriza a maneira como o comentário odiento é enunciado. Modula intensidade, aceitabilidade e impacto simbólico do ataque. Não é Recurso_de_Forma; inere em Comentario_odiento via possuiTom."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Qualidade expressiva que caracteriza a maneira como o comentário odiento é enunciado. Modula intensidade, aceitabilidade e impacto simbólico do ataque. Não é Recurso_de_Forma; inere em Comentario_odiento via possuiTom."@pt .
+
+ontohate:Plataforma_digital a owl:Class ;
+    rdfs:label "Plataforma digital"@pt ;
+    rdfs:comment "Ambiente sociotecnico onde o discurso de odio e produzido, circula e e moderado."@pt,
+        "Conceito robusto derivado da tese."@pt ;
+    rdfs:subClassOf ontohate:Moderacao ;
+    ontohatev1:complementoPlanilhaV1 "Ambiente sociotécnico onde o discurso de ódio é produzido, circula e é moderado. Integra infraestrutura técnica, regras privadas, sistemas algorítmicos e práticas de governança. Conceito robusto derivado da tese."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Ambiente sociotécnico onde o discurso de ódio é produzido, circula e é moderado. Integra infraestrutura técnica, regras privadas, sistemas algorítmicos e práticas de governança. Conceito robusto derivado da tese."@pt .
+
+ontohate:Recursos a owl:Class ;
+    rdfs:label "Recursos"@pt ;
+    rdfs:comment "Recursos tecnicos e estrategias discursivas."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Recursos relacionados à forma material da manifestação. Correspondem ao suporte midiático do discurso. Classe intermediária estrutural."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Recursos relacionados à forma material da manifestação. Correspondem ao suporte midiático do discurso. Classe intermediária estrutural."@pt .
+
+ontohate:Proposicao_odienta a owl:Class ;
+    rdfs:label "Proposicao odienta"@pt ;
+    rdfs:comment "Conteudo proposicional que expressa hostilidade ou inferiorizacao."@pt,
+        "Elemento semantico do discurso."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Conteúdo proposicional que expressa hostilidade ou inferiorização. Constitui a unidade semântica do discurso de ódio manifestado pelo agente odiador. Elemento semântico do discurso."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conteúdo proposicional que expressa hostilidade ou inferiorização. Constitui a unidade semântica do discurso de ódio manifestado pelo agente odiador. Elemento semântico do discurso."@pt .
+
+ontohate:Contexto a owl:Class ;
+    rdfs:label "Contexto"@pt ;
+    rdfs:comment "Contexto sociocomunicacional e situacional."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt .
+
+ontohate:Estrategias_Discursivas a owl:Class ;
+    rdfs:label "Estrategias Discursivas"@pt ;
+    rdfs:comment "Classe intermediaria estrutural."@pt,
+        "Recursos retoricos utilizados para estruturar e legitimar o ataque odiento."@pt ;
+    rdfs:subClassOf ontohate:Recursos ;
+    ontohatev1:complementoPlanilhaV1 "Recursos retóricos utilizados para estruturar e legitimar o ataque odiento. Operam no nível argumentativo e simbólico. Classe intermediária estrutural."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Recursos retóricos utilizados para estruturar e legitimar o ataque odiento. Operam no nível argumentativo e simbólico. Classe intermediária estrutural."@pt .
+
+ontohate:Pessoa_com_caracteristica_protegida a owl:Class ;
+    rdfs:label "Pessoa com caracteristica protegida"@pt ;
+    rdfs:comment "Classe intermediaria."@pt,
+        "Pessoa que possui caracteristica protegida socialmente."@pt ;
+    rdfs:subClassOf ontohate:Destinatario_vitima ;
+    ontohatev1:associacaoDiscursoOdioV1 "Vítima do discurso de ódio online por conta de característica protegidas, extrínseca ou intrínsicas."@pt ;
+    ontohatev1:complementoPlanilhaV1 "Pode ser alvo de hostilidade com base em identidade, condição ou pertencimento. Classe intermediária. Pessoa que possui característica protegida socialmente."@pt ;
+    ontohatev1:conceitoFonteV1 """Vítima do discurso de ódio online por conta de característica protegidas, extrínseca ou intrínsicas.
+A pessoa com característica protegida pertence a um grupo de pessoas com características protegidas
+
+[Complemento da planilha] Pode ser alvo de hostilidade com base em identidade, condição ou pertencimento. Classe intermediária. Pessoa que possui característica protegida socialmente."""@pt .
+
+ontohate:Discurso_de_odio a owl:Class ;
+    rdfs:label "Discurso de odio"@pt,
+        "Discurso de odio online"@pt ;
+    rdfs:comment "Classe central da ontologia."@pt,
+        "Evento comunicacional de expressao/circulacao de odio."@pt,
+        "Fenomeno comunicativo manifestado em Plataformas Digitais."@pt ;
+    rdfs:subClassOf ontohate:Evento_de_discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( ontohate:Consequencia ontohate:Contexto ontohate:Destinatario_vitima ontohate:Manifestacao ontohate:Moderacao ontohate:Motivacao ontohate:Natureza ontohate:Nucleo ontohate:Recursos ) .
+
