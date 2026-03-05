@@ -129,43 +129,62 @@ td{font-family:var(--mono);word-break:break-all}
   <!-- TAXONOMIA -->
   <div id="page-tax" class="page on">
     <div class="layout">
-      <div class="card">
-        <div class="card-hd"><h2>Taxonomia</h2><span class="badge" id="taxMeta">—</span></div>
-        <div class="card-bd" style="padding:8px">
-          <canvas id="cvTax"></canvas>
+      <div class="card" style="min-width:0">
+        <div class="card-hd">
+          <h2>Taxonomia</h2>
+          <span class="badge" id="taxMeta">—</span>
+          <div class="row" style="margin:0;gap:5px;margin-left:auto">
+            <button class="btn" onclick="gTax&&gTax.fit()" title="Ajustar zoom">⊡</button>
+            <button class="btn ok" onclick="exportTax()">PNG</button>
+          </div>
+        </div>
+        <!-- toolbar de layout -->
+        <div style="display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Layout:</span>
+          <button class="btn lbtn on" data-g="tax" data-l="tb"  title="Top-down">↓ Top-down</button>
+          <button class="btn lbtn"    data-g="tax" data-l="lr"  title="Esquerda→Direita">→ Esq→Dir</button>
+          <button class="btn lbtn"    data-g="tax" data-l="rad" title="Radial">◎ Radial</button>
+          <div style="width:1px;background:var(--border);align-self:stretch"></div>
+          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Nós:</span>
+          <input type="range" id="taxNodeSep" min="60" max="300" value="110" style="width:80px" title="Espaçamento horizontal">
+          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Níveis:</span>
+          <input type="range" id="taxLevelSep" min="50" max="250" value="90" style="width:80px" title="Espaçamento vertical">
+        </div>
+        <div class="card-bd" style="padding:6px">
+          <canvas id="cvTax" style="height:640px"></canvas>
         </div>
       </div>
-      <div class="card">
+      <div class="card" style="min-width:260px;max-width:360px">
         <div class="card-hd"><h2>Controles</h2></div>
         <div class="card-bd">
-          <div class="hint"><b>Como usar:</b> selecione dimensões, gere o grafo. Arraste para mover, scroll para zoom. Mouse sobre nó = detalhes.</div>
-          <label>Dimensões (Ctrl/Cmd para multi)</label>
-          <select id="taxDims" multiple size="9" style="margin-bottom:8px"></select>
-          <label>Modo</label>
+          <div class="hint"><b>Arrastar</b> nós para reposicionar. <b>Scroll</b> para zoom. <b>Click</b> para focar vizinhança. Mouse sobre nó = detalhes.</div>
+          <label>Dimensões <span style="color:var(--dim)">(Ctrl/Cmd para multi)</span></label>
+          <select id="taxDims" multiple size="8" style="margin-bottom:8px"></select>
+          <label>Modo de combinação</label>
           <select id="taxMode" style="margin-bottom:8px">
-            <option value="union">União</option>
-            <option value="inter">Cruzamento</option>
+            <option value="union">União (todas as dimensões)</option>
+            <option value="inter">Cruzamento (interseção)</option>
           </select>
-          <div class="row">
-            <button class="btn primary" onclick="buildTax()">Gerar</button>
-            <button class="btn" onclick="fitTax()">Ajustar</button>
-            <button class="btn" onclick="resetTax()">Reset</button>
-          </div>
+          <button class="btn primary" style="width:100%;margin-bottom:8px" onclick="buildTax()">Gerar grafo</button>
           <div class="sep"></div>
-          <div class="row">
+          <div class="hint" style="margin-bottom:6px"><b>Somar ontologias</b> — une as classes de múltiplas dimensões ligadas pelo nó raiz <i>Discurso de Ódio</i>.</div>
+          <div class="row" style="margin-bottom:0">
+            <label style="margin:0"><input type="checkbox" id="taxShowRoot" checked> Mostrar nó raiz</label>
             <label style="margin:0"><input type="checkbox" id="taxFocus" checked> Foco ao clicar</label>
-            <button class="btn" onclick="clearFocusTax()">Limpar foco</button>
+          </div>
+          <button class="btn" style="width:100%;margin-top:6px" onclick="clearFocusTax()">Limpar foco</button>
+          <div class="sep"></div>
+          <label>Estilos visuais</label>
+          <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:6px">
+            <label style="margin:0;font-size:12px"><input type="checkbox" id="taxColorDims" checked> Colorir por dimensão</label>
+            <label style="margin:0;font-size:12px"><input type="checkbox" id="taxShowEdgeLabel"> Rótulos nas arestas</label>
           </div>
           <div class="sep"></div>
           <label>Busca</label>
           <div class="row" style="margin-bottom:0">
-            <input id="taxQ" placeholder="label ou IRI…" style="flex:1">
-            <button class="btn" onclick="hlTax()">Destacar</button>
+            <input id="taxQ" placeholder="nome do conceito…" style="flex:1">
+            <button class="btn" onclick="hlTax()">↗</button>
             <button class="btn" onclick="clearHlTax()">✕</button>
-          </div>
-          <div class="sep"></div>
-          <div class="row" style="margin-bottom:0">
-            <button class="btn ok" onclick="exportTax()">Exportar PNG</button>
           </div>
         </div>
       </div>
@@ -175,42 +194,70 @@ td{font-family:var(--mono);word-break:break-all}
   <!-- ONTOLOGIA -->
   <div id="page-onto" class="page">
     <div class="layout">
-      <div class="card">
-        <div class="card-hd"><h2>Ontologia</h2><span class="badge" id="ontoMeta">—</span></div>
-        <div class="card-bd" style="padding:8px">
-          <canvas id="cvOnto"></canvas>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><h2>Controles</h2></div>
-        <div class="card-bd">
-          <div class="hint"><b>Como usar:</b> filtre por dimensão. Clique num nó para ver detalhes.</div>
-          <label>Dimensão</label>
-          <select id="ontoDim" style="margin-bottom:8px"></select>
-          <div class="row" style="margin-bottom:8px">
-            <label style="margin:0"><input type="checkbox" id="ontoSub" checked> Hierarquia</label>
-            <label style="margin:0"><input type="checkbox" id="ontoProps" checked> Propriedades</label>
-          </div>
-          <div class="row">
-            <button class="btn primary" onclick="buildOnto()">Atualizar</button>
-            <button class="btn" onclick="fitOnto()">Ajustar</button>
+      <div class="card" style="min-width:0">
+        <div class="card-hd">
+          <h2>Ontologia</h2>
+          <span class="badge" id="ontoMeta">—</span>
+          <div class="row" style="margin:0;gap:5px;margin-left:auto">
+            <button class="btn" onclick="gOnto&&gOnto.fit()" title="Ajustar zoom">⊡</button>
             <button class="btn ok" onclick="exportOnto()">PNG</button>
           </div>
+        </div>
+        <!-- toolbar de layout -->
+        <div style="display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Layout:</span>
+          <button class="btn lbtn on" data-g="onto" data-l="tb"  title="Top-down">↓ Top-down</button>
+          <button class="btn lbtn"    data-g="onto" data-l="lr"  title="Esquerda→Direita">→ Esq→Dir</button>
+          <button class="btn lbtn"    data-g="onto" data-l="rad" title="Radial">◎ Radial</button>
+          <div style="width:1px;background:var(--border);align-self:stretch"></div>
+          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Nós:</span>
+          <input type="range" id="ontoNodeSep" min="60" max="300" value="110" style="width:80px">
+          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Níveis:</span>
+          <input type="range" id="ontoLevelSep" min="50" max="250" value="90" style="width:80px">
+        </div>
+        <div class="card-bd" style="padding:6px">
+          <canvas id="cvOnto" style="height:640px"></canvas>
+        </div>
+      </div>
+      <div class="card" style="min-width:260px;max-width:360px">
+        <div class="card-hd"><h2>Controles</h2></div>
+        <div class="card-bd">
+          <div class="hint"><b>Arrastar</b> nós. <b>Scroll</b> para zoom. <b>Click</b> para ver detalhes e focar. As <span style="color:#a78bfa">arestas roxas tracejadas</span> são <b>Object Properties</b>; as <span style="color:rgba(255,255,255,.5)">sólidas</span> são hierarquia (<i>subClassOf</i>).</div>
+          <label>Dimensão</label>
+          <select id="ontoDim" style="margin-bottom:8px"></select>
+          <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoSub" checked> Hierarquia</label>
+            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoProps" checked> Propriedades</label>
+            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoColorDims" checked> Colorir por dimensão</label>
+            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoEdgeLabel" checked> Rótulos nas arestas</label>
+          </div>
+          <button class="btn primary" style="width:100%;margin-bottom:6px" onclick="buildOnto()">Atualizar grafo</button>
           <div class="sep"></div>
-          <div class="row" style="margin-bottom:0">
-            <label style="margin:0"><input type="checkbox" id="ontoFocus" checked> Foco ao clicar</label>
-            <button class="btn" onclick="clearFocusOnto()">Limpar foco</button>
+          <!-- legenda -->
+          <div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:6px">LEGENDA</div>
+          <div id="ontoLegend" style="font-size:12px;line-height:2;margin-bottom:8px"></div>
+          <div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <div style="width:24px;height:2px;background:rgba(255,255,255,.4)"></div>subClassOf
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <div style="width:24px;height:2px;background:#a78bfa;border-top:2px dashed #a78bfa"></div>ObjectProperty
+            </div>
           </div>
           <div class="sep"></div>
+          <div class="row" style="margin-bottom:6px">
+            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoFocus" checked> Foco ao clicar</label>
+            <button class="btn" onclick="clearFocusOnto()">Limpar foco</button>
+          </div>
           <label>Busca</label>
           <div class="row" style="margin-bottom:8px">
-            <input id="ontoQ" placeholder="label ou IRI…" style="flex:1">
-            <button class="btn" onclick="hlOnto()">Destacar</button>
+            <input id="ontoQ" placeholder="nome do conceito…" style="flex:1">
+            <button class="btn" onclick="hlOnto()">↗</button>
             <button class="btn" onclick="clearHlOnto()">✕</button>
           </div>
           <div class="sep"></div>
           <div class="card" style="box-shadow:none">
-            <div class="card-hd"><h2>Detalhes</h2><span class="badge" id="detPill">—</span></div>
+            <div class="card-hd"><h2>Detalhes do nó</h2><span class="badge" id="detPill">—</span></div>
             <div class="card-bd" id="detBox"><span style="color:var(--muted)">Clique num nó.</span></div>
           </div>
         </div>
@@ -762,204 +809,299 @@ function joinTriple(bindings,pat){
 function makeGraph(canvasId){
   const cv = document.getElementById(canvasId);
   if (!cv) return null;
-
-  let nodes = [], edges = [];
-  let pan = {x:0, y:0}, zoom = 1;
-  let drag = null, lastM = null;
-  let highlighted = new Set(), focused = null, hoverNode = null;
-  let onNodeClick = null;
   let ctx = null;
+  function C(){ if(!ctx) ctx=cv.getContext('2d'); return ctx; }
 
-  /* ── init ctx robustamente ── */
-  function getCtx(){
-    if (!ctx) ctx = cv.getContext('2d');
-    return ctx;
-  }
+  // --- state ---
+  let nodes=[], edges=[];
+  let pan={x:0,y:0}, zoom=1;
+  let drag=null, lastM=null;
+  let highlighted=new Set(), focused=null, hoverNode=null;
+  let onNodeClick=null;
+  let layout='tb';          // tb | lr | rad
+  let nodeSep=110, levelSep=90;
+  let showEdgeLabels=true;
+  let colorMap=new Map();   // iri → hsl color (set externally)
 
-  /* ── dimensões seguras ── */
-  function cvW(){ return cv.width  / (window.devicePixelRatio||1); }
-  function cvH(){ return cv.height / (window.devicePixelRatio||1); }
+  // --- sizing ---
+  function W(){ return cv.width /(window.devicePixelRatio||1); }
+  function H(){ return cv.height/(window.devicePixelRatio||1); }
 
   function resize(){
-    const dpr = window.devicePixelRatio || 1;
-    // usar clientWidth/clientHeight — funciona mesmo com display:none
-    const w = cv.clientWidth  || cv.parentElement?.clientWidth  || 900;
-    const h = cv.clientHeight || cv.parentElement?.clientHeight || 660;
-    if (w < 10 || h < 10) return;
-    if (cv.width === w*dpr && cv.height === h*dpr) return;
-    cv.width  = w * dpr;
-    cv.height = h * dpr;
-    getCtx().setTransform(dpr, 0, 0, dpr, 0, 0);
+    const dpr=window.devicePixelRatio||1;
+    const w=cv.clientWidth||cv.parentElement?.clientWidth||900;
+    const h=cv.clientHeight||cv.parentElement?.clientHeight||640;
+    if(w<10||h<10) return;
+    if(cv.width===w*dpr&&cv.height===h*dpr) return;
+    cv.width=w*dpr; cv.height=h*dpr;
+    C().setTransform(dpr,0,0,dpr,0,0);
     draw();
   }
   window.addEventListener('resize', resize);
 
-  /* ── coordenadas ── */
-  function toScreen(x,y){ return {x: x*zoom+pan.x, y: y*zoom+pan.y}; }
-  function toWorld(x,y) { return {x: (x-pan.x)/zoom, y: (y-pan.y)/zoom}; }
+  // --- coord transforms ---
+  function toS(x,y){ return {x:x*zoom+pan.x, y:y*zoom+pan.y}; }
+  function toW(x,y){ return {x:(x-pan.x)/zoom, y:(y-pan.y)/zoom}; }
 
-  /* ── layout hierárquico determinístico ── */
+  // --- LAYOUT ENGINE ---
   function doLayout(){
-    if (!nodes.length) return;
-    const W = cvW() || 900, H = cvH() || 660;
+    if(!nodes.length) return;
+    const w=W()||900, h=H()||640;
 
-    // Achar raízes (sem incoming edges de subClassOf)
-    const hasParent = new Set(edges.filter(e=>!e.isProp).map(e=>e.to.id));
-    const roots = nodes.filter(n => !hasParent.has(n.id));
-
-    if (roots.length === 0) {
-      // sem hierarquia: layout circular
-      const cx=W/2, cy=H/2, r=Math.min(W,H)*0.4;
-      nodes.forEach((n,i)=>{
-        const a = (2*Math.PI*i)/nodes.length;
-        n.x = cx + r*Math.cos(a);
-        n.y = cy + r*Math.sin(a);
-      });
-      return;
+    if(layout==='rad'){
+      layoutRadial(w,h);
+    } else {
+      layoutHierarchical(w,h, layout==='lr');
     }
+  }
 
-    // BFS por nível a partir das raízes
-    const level = new Map();
-    const queue = [...roots];
-    roots.forEach(r => level.set(r.id, 0));
-    const nodeById = new Map(nodes.map(n=>[n.id,n]));
-    const childEdges = new Map(); // parent.id → [child]
-    for (const e of edges){
-      if (e.isProp) continue;
-      if (!childEdges.has(e.from.id)) childEdges.set(e.from.id,[]);
-      childEdges.get(e.from.id).push(e.to);
+  function layoutHierarchical(w, h, leftRight){
+    // build parent→children map (subClassOf edges only)
+    const children = new Map(nodes.map(n=>[n.id,[]]));
+    const hasParent = new Set();
+    for(const e of edges){
+      if(e.isProp) continue;
+      if(children.has(e.from.id) && children.has(e.to.id)){
+        children.get(e.from.id).push(e.to);
+        hasParent.add(e.to.id);
+      }
     }
+    // roots
+    let roots = nodes.filter(n=>!hasParent.has(n.id));
+    if(!roots.length) roots=[nodes[0]];
 
-    const visited = new Set(roots.map(r=>r.id));
-    while (queue.length){
-      const n = queue.shift();
-      const kids = childEdges.get(n.id)||[];
-      for (const k of kids){
-        if (!visited.has(k.id)){
-          visited.add(k.id);
-          level.set(k.id, (level.get(n.id)||0)+1);
-          queue.push(k);
+    // BFS assign levels
+    const level=new Map();
+    const queue=[...roots];
+    roots.forEach(r=>level.set(r.id,0));
+    const visited=new Set(roots.map(r=>r.id));
+    while(queue.length){
+      const n=queue.shift();
+      for(const k of (children.get(n.id)||[])){
+        if(!visited.has(k.id)){
+          visited.add(k.id); level.set(k.id,(level.get(n.id)||0)+1); queue.push(k);
         }
       }
     }
-    // nós sem nível (ilhas isoladas)
     nodes.forEach(n=>{ if(!level.has(n.id)) level.set(n.id,0); });
 
-    // agrupar por nível
-    const byLevel = new Map();
-    for (const [id,lv] of level){
-      if (!byLevel.has(lv)) byLevel.set(lv,[]);
-      byLevel.get(lv).push(nodeById.get(id));
+    // group by level
+    const byLevel=new Map();
+    for(const [id,lv] of level){
+      if(!byLevel.has(lv)) byLevel.set(lv,[]);
+      const node=nodes.find(n=>n.id===id);
+      if(node) byLevel.get(lv).push(node);
     }
-    const maxLevel = Math.max(...byLevel.keys());
-    const YGAP = Math.min(100, (H-80)/(maxLevel+1));
-    const XGAP = 120;
+    const maxLevel=Math.max(...byLevel.keys(),0);
 
-    for (const [lv, ns] of byLevel){
-      const totalW = ns.length * XGAP;
-      const startX = W/2 - totalW/2 + XGAP/2;
-      ns.forEach((n,i)=>{ n.x = startX + i*XGAP; n.y = 60 + lv*YGAP; });
+    if(leftRight){
+      // Left→Right: levels are columns
+      const colW=Math.min(nodeSep, (w-80)/(maxLevel+1));
+      for(const [lv,ns] of byLevel){
+        const rowH=Math.min(levelSep,(h-80)/Math.max(ns.length,1));
+        const totalH=ns.length*rowH;
+        ns.forEach((n,i)=>{ n.x=60+lv*colW; n.y=h/2-totalH/2+i*rowH+rowH/2; });
+      }
+    } else {
+      // Top-Down: levels are rows
+      const rowH=Math.min(levelSep,(h-80)/(maxLevel+1));
+      for(const [lv,ns] of byLevel){
+        const colW=Math.min(nodeSep,(w-80)/Math.max(ns.length,1));
+        const totalW=ns.length*colW;
+        ns.forEach((n,i)=>{ n.x=w/2-totalW/2+i*colW+colW/2; n.y=60+lv*rowH; });
+      }
     }
   }
 
-  /* ── draw ── */
-  function draw(){
-    const c = getCtx();
-    const W = cvW(), H = cvH();
-    if (W < 10 || H < 10) return;
-    c.clearRect(0, 0, W, H);
+  function layoutRadial(w,h){
+    const cx=w/2, cy=h/2;
+    // find center node (root or highest degree)
+    const deg=new Map(nodes.map(n=>[n.id,0]));
+    for(const e of edges){ if(!e.isProp){ deg.set(e.from.id,(deg.get(e.from.id)||0)+1); } }
+    const centerNode=nodes.reduce((a,b)=>(deg.get(a.id)||0)>=(deg.get(b.id)||0)?a:b, nodes[0]);
 
-    const cs = s => getComputedStyle(document.body).getPropertyValue(s).trim();
-    const textCol   = cs('--text');
-    const mutedCol  = cs('--muted');
-    const edgeCol   = cs('--border') || 'rgba(255,255,255,.2)';
-    const accent    = cs('--accent')  || '#7dd3fc';
-    const accent2   = cs('--accent2') || '#a78bfa';
-    const nodeFill  = 'rgba(255,255,255,.07)';
-    const nodeBorder= 'rgba(255,255,255,.2)';
+    // BFS from center
+    const children=new Map(nodes.map(n=>[n.id,[]]));
+    const hasParent=new Set();
+    for(const e of edges){
+      if(e.isProp) continue;
+      if(children.has(e.from.id)&&children.has(e.to.id)){
+        children.get(e.from.id).push(e.to); hasParent.add(e.to.id);
+      }
+    }
+    const dist=new Map(); dist.set(centerNode.id,0);
+    const q=[centerNode]; const vis=new Set([centerNode.id]);
+    while(q.length){
+      const n=q.shift();
+      for(const k of (children.get(n.id)||[])){
+        if(!vis.has(k.id)){ vis.add(k.id); dist.set(k.id,(dist.get(n.id)||0)+1); q.push(k); }
+      }
+    }
+    nodes.forEach(n=>{ if(!dist.has(n.id)) dist.set(n.id,1); });
+
+    // group by ring
+    const byRing=new Map();
+    for(const [id,d] of dist){
+      if(!byRing.has(d)) byRing.set(d,[]);
+      byRing.get(d).push(nodes.find(n=>n.id===id));
+    }
+    const maxRing=Math.max(...byRing.keys(),0);
+    const maxR=Math.min(cx,cy)*0.9;
+
+    centerNode.x=cx; centerNode.y=cy;
+    for(const [ring,ns] of byRing){
+      if(ring===0) continue;
+      const r=maxR*(ring/maxRing);
+      ns.forEach((n,i)=>{
+        const a=(2*Math.PI*i/ns.length)-Math.PI/2;
+        n.x=cx+r*Math.cos(a); n.y=cy+r*Math.sin(a);
+      });
+    }
+  }
+
+  // --- DRAW ---
+  // Palette: 10 dim colors
+  const DIM_COLORS=[
+    '#7dd3fc','#a78bfa','#34d399','#fbbf24','#fb7185',
+    '#f97316','#38bdf8','#c084fc','#4ade80','#facc15'
+  ];
+
+  function nodeColor(n){
+    if(colorMap.has(n.id)){
+      return colorMap.get(n.id);
+    }
+    return null;
+  }
+
+  function draw(){
+    const c=C(), w=W(), h=H();
+    if(w<10||h<10) return;
+    c.clearRect(0,0,w,h);
+
+    const cs=v=>getComputedStyle(document.body).getPropertyValue(v).trim();
+    const textCol = cs('--text');
+    const mutedCol= cs('--muted');
+    const dimCol  = cs('--dim');
+    const edgeCol = 'rgba(200,200,220,.35)';
+    const propCol = '#a78bfa';
+    const accent  = '#7dd3fc';
+    const accent2 = '#a78bfa';
+    const bg      = cs('--panel')||'#13151e';
 
     c.save();
 
-    // arestas
-    for (const e of edges){
-      const as = toScreen(e.from.x||0, e.from.y||0);
-      const bs = toScreen(e.to.x||0,   e.to.y||0);
+    // ── edges ──
+    for(const e of edges){
+      const fx=e.from.x, fy=e.from.y, tx=e.to.x, ty=e.to.y;
+      if(fx===undefined||tx===undefined) continue;
+      const as=toS(fx,fy), bs=toS(tx,ty);
+
       const faded = focused && (!focused.has(e.from.id)||!focused.has(e.to.id));
-      c.globalAlpha = faded ? 0.06 : (e.isProp ? 0.75 : 0.55);
-      c.strokeStyle = e.isProp ? accent2 : edgeCol;
-      c.lineWidth   = e.isProp ? 1.8 : 1.2;
-      c.setLineDash(e.isProp ? [5,4] : []);
-      c.beginPath(); c.moveTo(as.x, as.y); c.lineTo(bs.x, bs.y); c.stroke();
+      const alpha = faded ? 0.04 : (e.isProp ? 0.85 : 0.5);
+      c.globalAlpha=alpha;
+
+      // curved edge for props, straight for hierarchy
+      const col = e.isProp ? propCol : edgeCol;
+      c.strokeStyle=col;
+      c.lineWidth  = e.isProp ? 1.8 : 1.2;
+      c.setLineDash(e.isProp ? [6,4] : []);
+
+      if(e.isProp){
+        // bezier curve so props are visually distinct
+        const mx=(as.x+bs.x)/2, my=(as.y+bs.y)/2;
+        const dx=bs.x-as.x, dy=bs.y-as.y;
+        const cx1=mx-dy*0.2, cy1=my+dx*0.2;
+        c.beginPath(); c.moveTo(as.x,as.y); c.quadraticCurveTo(cx1,cy1,bs.x,bs.y); c.stroke();
+        // arrow at end of curve
+        if(!faded){
+          const ang=Math.atan2(bs.y-cy1,bs.x-cx1);
+          drawArrow(c,bs.x,bs.y,ang,propCol,zoom);
+        }
+      } else {
+        c.beginPath(); c.moveTo(as.x,as.y); c.lineTo(bs.x,bs.y); c.stroke();
+        if(!faded){
+          const ang=Math.atan2(bs.y-as.y,bs.x-as.x);
+          drawArrow(c,bs.x,bs.y,ang,edgeCol,zoom);
+        }
+      }
       c.setLineDash([]);
 
-      // seta
-      if (!faded){
-        const ang = Math.atan2(bs.y-as.y, bs.x-as.x);
-        const sz = 7*Math.max(0.4,Math.min(zoom,1.5));
-        const tx = bs.x - Math.cos(ang)*sz, ty = bs.y - Math.sin(ang)*sz;
-        c.fillStyle = e.isProp ? accent2 : edgeCol;
-        c.beginPath();
-        c.moveTo(tx, ty);
-        c.lineTo(tx - sz*Math.cos(ang-0.45), ty - sz*Math.sin(ang-0.45));
-        c.lineTo(tx - sz*Math.cos(ang+0.45), ty - sz*Math.sin(ang+0.45));
-        c.closePath(); c.fill();
-      }
-
-      // label da aresta (só props e zoom razoável)
-      if (!faded && e.isProp && e.label && zoom > 0.5){
+      // edge label
+      if(!faded && showEdgeLabels && e.label && zoom>0.45){
         const mx=(as.x+bs.x)/2, my=(as.y+bs.y)/2;
-        c.globalAlpha = 0.7;
-        c.fillStyle = mutedCol;
-        c.font = `${Math.max(9, 10*zoom)}px monospace`;
-        c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText(e.label, mx, my);
+        const fs=Math.max(9,Math.min(11,10*zoom));
+        c.globalAlpha=faded?0:0.85;
+        c.font=`${fs}px monospace`;
+        c.textAlign='center'; c.textBaseline='middle';
+        // background pill
+        const tw=c.measureText(e.label).width;
+        c.fillStyle=bg; c.globalAlpha=0.75;
+        rRect(c,mx-tw/2-4,my-fs/2-3,tw+8,fs+6,4); c.fill();
+        c.globalAlpha=alpha;
+        c.fillStyle=e.isProp?propCol:mutedCol;
+        c.fillText(e.label,mx,my);
       }
     }
+    c.globalAlpha=1;
 
-    // nós
-    for (const n of nodes){
-      if (n.x === undefined) continue;
-      const s = toScreen(n.x, n.y);
-      const faded = focused && !focused.has(n.id);
-      c.globalAlpha = faded ? 0.07 : 1;
+    // ── nodes ──
+    for(const n of nodes){
+      if(n.x===undefined) continue;
+      const s=toS(n.x,n.y);
+      const faded=focused&&!focused.has(n.id);
+      c.globalAlpha=faded?0.06:1;
 
-      const isHL    = highlighted.has(n.id);
-      const isHover = hoverNode === n;
+      const isHL   =highlighted.has(n.id);
+      const isHover=hoverNode===n;
+      const dimC   =nodeColor(n);
 
-      c.font = `${Math.max(9, 11*zoom)}px Inter,system-ui,sans-serif`;
-      const tw = c.measureText(n.label).width;
-      const pw = Math.max(8, 10*zoom), ph = Math.max(5, 7*zoom);
-      const rw = tw + pw*2, rh = Math.max(24, 18*zoom + ph*2);
-      const rx = s.x - rw/2, ry = s.y - rh/2;
-      const rad = Math.max(4, 6*zoom);
+      c.font=`${Math.max(9,Math.min(13,11*zoom))}px Inter,system-ui,sans-serif`;
+      const tw=c.measureText(n.label).width;
+      const pw=Math.max(8,10*zoom), ph=Math.max(5,6*zoom);
+      const rw=tw+pw*2, rh=Math.max(22,16*zoom+ph*2);
+      const rx=s.x-rw/2, ry=s.y-rh/2;
+      const rad=Math.max(4,5*zoom);
 
-      // shadow on hover
-      if (isHover){ c.shadowColor='rgba(125,211,252,.5)'; c.shadowBlur=18; }
+      n._rx=rx; n._ry=ry; n._rw=rw; n._rh=rh; // hit-test cache
 
-      // fill
-      c.fillStyle = nodeFill;
-      rRect(c, rx, ry, rw, rh, rad); c.fill();
+      if(isHover){ c.shadowColor=dimC||accent; c.shadowBlur=16; }
+
+      // fill — tinted by dim color if available
+      if(dimC){
+        c.fillStyle=dimC+'28'; // 16% opacity fill
+      } else {
+        c.fillStyle='rgba(255,255,255,.06)';
+      }
+      rRect(c,rx,ry,rw,rh,rad); c.fill();
 
       // border
-      c.strokeStyle = isHL ? accent2 : isHover ? accent : nodeBorder;
-      c.lineWidth   = isHL||isHover ? 2.5 : 1.4;
-      rRect(c, rx, ry, rw, rh, rad); c.stroke();
-      c.shadowBlur = 0;
+      c.strokeStyle=isHL?accent2:isHover?accent:dimC||(faded?'rgba(255,255,255,.1)':'rgba(255,255,255,.22)');
+      c.lineWidth  =isHL||isHover?2.5:dimC?1.8:1.3;
+      rRect(c,rx,ry,rw,rh,rad); c.stroke();
+      c.shadowBlur=0;
 
       // label
-      c.fillStyle = isHL ? accent2 : isHover ? accent : textCol;
-      c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillText(n.label, s.x, s.y);
-
-      // salvar bounding box para hitTest
-      n._rx=rx; n._ry=ry; n._rw=rw; n._rh=rh;
+      c.fillStyle=isHL?accent2:isHover?accent:faded?'rgba(255,255,255,.2)':textCol;
+      c.textAlign='center'; c.textBaseline='middle';
+      c.fillText(n.label,s.x,s.y);
     }
 
-    c.globalAlpha = 1;
+    c.globalAlpha=1;
     c.restore();
   }
 
-  function rRect(c, x, y, w, h, r){
+  function drawArrow(c,x,y,ang,col,z){
+    const sz=Math.max(5,Math.min(10,7*z));
+    const tx=x-Math.cos(ang)*sz, ty=y-Math.sin(ang)*sz;
+    c.fillStyle=col;
+    c.beginPath();
+    c.moveTo(tx,ty);
+    c.lineTo(tx-sz*Math.cos(ang-0.42),ty-sz*Math.sin(ang-0.42));
+    c.lineTo(tx-sz*Math.cos(ang+0.42),ty-sz*Math.sin(ang+0.42));
+    c.closePath(); c.fill();
+  }
+
+  function rRect(c,x,y,w,h,r){
     c.beginPath();
     c.moveTo(x+r,y); c.lineTo(x+w-r,y); c.arcTo(x+w,y,x+w,y+r,r);
     c.lineTo(x+w,y+h-r); c.arcTo(x+w,y+h,x+w-r,y+h,r);
@@ -967,84 +1109,97 @@ function makeGraph(canvasId){
     c.lineTo(x,y+r); c.arcTo(x,y,x+r,y,r); c.closePath();
   }
 
+  // --- fit ---
   function fit(){
-    if (!nodes.length) return;
-    const W=cvW()||900, H=cvH()||660;
+    if(!nodes.length) return;
+    const w=W()||900, h=H()||640;
     let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
-    for (const n of nodes){
+    for(const n of nodes){
       x0=Math.min(x0,n.x); x1=Math.max(x1,n.x);
       y0=Math.min(y0,n.y); y1=Math.max(y1,n.y);
     }
-    const pad=60, gw=x1-x0||1, gh=y1-y0||1;
-    zoom = Math.min((W-pad*2)/gw, (H-pad*2)/gh, 2.5);
-    pan.x = W/2 - ((x0+x1)/2)*zoom;
-    pan.y = H/2 - ((y0+y1)/2)*zoom;
+    const pad=70, gw=x1-x0||1, gh=y1-y0||1;
+    zoom=Math.min((w-pad*2)/gw,(h-pad*2)/gh,3);
+    pan.x=w/2-((x0+x1)/2)*zoom;
+    pan.y=h/2-((y0+y1)/2)*zoom;
     draw();
   }
 
+  // --- hit-test ---
   function nodeAt(sx,sy){
-    const w = toWorld(sx,sy);
-    for (let i=nodes.length-1; i>=0; i--){
+    const ww=toW(sx,sy);
+    for(let i=nodes.length-1;i>=0;i--){
       const n=nodes[i];
-      if (n._rx!==undefined &&
-          w.x>=n._rx && w.x<=n._rx+n._rw &&
-          w.y>=n._ry && w.y<=n._ry+n._rh) return n;
+      if(n._rx!==undefined&&ww.x>=n._rx&&ww.x<=n._rx+n._rw&&ww.y>=n._ry&&ww.y<=n._ry+n._rh) return n;
     }
     return null;
   }
 
-  /* ── eventos ── */
-  cv.addEventListener('mousedown', e=>{
+  // --- mouse / touch ---
+  cv.addEventListener('mousedown',e=>{
     const r=cv.getBoundingClientRect();
     const mx=e.clientX-r.left, my=e.clientY-r.top;
     const n=nodeAt(mx,my);
-    drag = n||'pan';
-    lastM = {x:mx, y:my};
+    drag=n||'pan'; lastM={x:mx,y:my};
   });
-  cv.addEventListener('mousemove', e=>{
+  cv.addEventListener('mousemove',e=>{
     const r=cv.getBoundingClientRect();
     const mx=e.clientX-r.left, my=e.clientY-r.top;
-    if (drag && drag!=='pan'){
+    if(drag&&drag!=='pan'){
       const dx=(mx-lastM.x)/zoom, dy=(my-lastM.y)/zoom;
       drag.x+=dx; drag.y+=dy; lastM={x:mx,y:my}; draw(); return;
     }
-    if (drag==='pan'){
+    if(drag==='pan'){
       pan.x+=mx-lastM.x; pan.y+=my-lastM.y; lastM={x:mx,y:my}; draw(); return;
     }
     const n=nodeAt(mx,my);
-    if (n!==hoverNode){ hoverNode=n; draw(); }
-    if (n) showTip(tipContent(n.id), e.clientX, e.clientY);
-    else   hideTip();
+    if(n!==hoverNode){ hoverNode=n; draw(); }
+    if(n) showTip(tipContent(n.id),e.clientX,e.clientY);
+    else  hideTip();
   });
   cv.addEventListener('mouseup',  ()=>{ drag=null; });
   cv.addEventListener('mouseleave',()=>{ drag=null; hoverNode=null; hideTip(); draw(); });
-  cv.addEventListener('wheel', e=>{
+  cv.addEventListener('dblclick', e=>{
+    // double-click: reset this node's position to layout default
+    const r=cv.getBoundingClientRect();
+    const n=nodeAt(e.clientX-r.left,e.clientY-r.top);
+    if(n){ doLayout(); fit(); }
+  });
+  cv.addEventListener('wheel',e=>{
     e.preventDefault();
     const r=cv.getBoundingClientRect();
     const mx=e.clientX-r.left, my=e.clientY-r.top;
     const f=e.deltaY<0?1.12:1/1.12;
-    const wb=toWorld(mx,my);
-    zoom=Math.max(0.05,Math.min(8,zoom*f));
-    const wa=toWorld(mx,my);
-    pan.x+=(wa.x-wb.x)*zoom; pan.y+=(wa.y-wb.y)*zoom;
+    const wb=toW(mx,my); zoom=Math.max(0.04,Math.min(10,zoom*f));
+    const wa=toW(mx,my); pan.x+=(wa.x-wb.x)*zoom; pan.y+=(wa.y-wb.y)*zoom;
     draw();
   },{passive:false});
-  cv.addEventListener('click', e=>{
+  cv.addEventListener('click',e=>{
     const r=cv.getBoundingClientRect();
-    const n=nodeAt(e.clientX-r.left, e.clientY-r.top);
-    if (n && onNodeClick) onNodeClick(n);
-    else if (!n){ focused=null; draw(); }
+    const n=nodeAt(e.clientX-r.left,e.clientY-r.top);
+    if(n&&onNodeClick) onNodeClick(n);
+    else if(!n){ focused=null; draw(); }
   });
 
-  /* ── API pública ── */
-  function load(newNodes, newEdges){
+  // --- public API ---
+  function load(newNodes,newEdges,opts){
     nodes=newNodes; edges=newEdges;
+    if(opts){ if(opts.layout) layout=opts.layout; if(opts.colorMap) colorMap=opts.colorMap; }
     highlighted=new Set(); focused=null; hoverNode=null;
-    resize();          // garantir dimensões antes do layout
-    doLayout();        // layout determinístico — instantâneo
-    fit();             // ajustar pan/zoom
+    resize();
+    doLayout();
+    fit();
   }
 
+  function relayout(newLayout, ns, ls){
+    if(newLayout) layout=newLayout;
+    if(ns) nodeSep=ns;
+    if(ls) levelSep=ls;
+    doLayout(); fit();
+  }
+
+  function setColors(map){ colorMap=map; draw(); }
+  function setEdgeLabels(v){ showEdgeLabels=v; draw(); }
   function highlight(ids){ highlighted=new Set(ids); draw(); }
   function clearHighlight(){ highlighted.clear(); draw(); }
   function setFocus(ids){ focused=ids?new Set(ids):null; draw(); }
@@ -1056,15 +1211,15 @@ function makeGraph(canvasId){
     const oc=document.createElement('canvas');
     oc.width=cv.width; oc.height=cv.height;
     const oc2=oc.getContext('2d');
-    oc2.fillStyle=getComputedStyle(document.body).getPropertyValue('--bg').trim()||'#0b0c10';
-    oc2.fillRect(0,0,oc.width,oc.height);
+    const bg=getComputedStyle(document.body).getPropertyValue('--bg').trim()||'#0b0c10';
+    oc2.fillStyle=bg; oc2.fillRect(0,0,oc.width,oc.height);
     oc2.drawImage(cv,0,0);
-    const a=document.createElement('a');
-    a.href=oc.toDataURL('image/png'); a.download='ontohate.png'; a.click();
+    const a=document.createElement('a'); a.href=oc.toDataURL('image/png'); a.download='ontohate.png'; a.click();
   }
 
   resize();
-  return {load, highlight, clearHighlight, setFocus, clearFocus, fit, resize, draw, exportPng, getNodes, setOnNodeClick};
+  return {load, relayout, setColors, setEdgeLabels, fit, resize, draw,
+          highlight, clearHighlight, setFocus, clearFocus, getNodes, setOnNodeClick, exportPng};
 }
 
 /* ── tooltip ── */
@@ -1239,92 +1394,339 @@ function fillDims(){
 }
 
 /* ============================================================
-   SPARQL UI
+   SPARQL UI — com pós-processamento de IRIs → labels legíveis
    ============================================================ */
+
+/*
+  Função central: substitui qualquer IRI na tabela pelo rdfs:label
+  correspondente, tornando os resultados imediatamente legíveis.
+  Também formata literais longos e detecta URLs externas.
+*/
+function humanize(val){
+  if (!val) return '—';
+  // IRI da ontohate → usar label do índice
+  if (val.startsWith('http://ontohate.org/') || val.startsWith('https://ontohate.org/')){
+    return G.labels.get(val) || shortIri(val);
+  }
+  // IRI de vocabulário padrão (rdf/rdfs/owl/xsd) → mostrar só o local name
+  if (val.startsWith('http://www.w3.org/') || val.startsWith('https://www.w3.org/')){
+    return shortIri(val);
+  }
+  // IRI genérica → mostrar só o local name
+  if (val.startsWith('http://') || val.startsWith('https://')){
+    return shortIri(val);
+  }
+  return val;
+}
+
+// Renderiza uma célula da tabela de resultado
+function renderCell(val, raw){
+  const label = humanize(val);
+  const isIri = (val||'').startsWith('http');
+  // se humanizado, mostrar label em destaque e IRI em cinza pequeno
+  if (isIri && label !== val){
+    return `<span style="font-weight:600;color:var(--text)">${esc(label)}</span>` +
+           `<div style="font-size:10px;color:var(--dim);word-break:break-all">${esc(shortIri(val))}</div>`;
+  }
+  // literal longa — truncar com expand
+  if (!isIri && val.length > 120){
+    const short = val.slice(0,120);
+    return `<span class="lit-short">${esc(short)}<span style="color:var(--dim)">… </span>` +
+           `<span class="lit-full" style="display:none">${esc(val)}</span>` +
+           `<button onclick="this.previousElementSibling.style.display='inline';` +
+           `this.parentElement.querySelector('.lit-short').style.display='none';` +
+           `this.style.display='none'" ` +
+           `style="font-size:10px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0">ver mais</button></span>`;
+  }
+  return esc(val);
+}
+
 const PRESETS=[
-  {t:'CQ01 — As 9 dimensões do Discurso de Ódio',
-   q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT DISTINCT ?dimensao ?label WHERE {
-  ?dimensao rdfs:subClassOf <http://ontohate.org/ontohate#Discurso_de_odio> .
-  OPTIONAL { ?dimensao rdfs:label ?label . }
-}`},
-  {t:'CQ02 — Todas as classes com label',
-   q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-SELECT DISTINCT ?c ?label WHERE {
-  ?c rdf:type owl:Class .
-  OPTIONAL { ?c rdfs:label ?label . }
-} LIMIT 200`},
-  {t:'CQ03 — Object Properties e domain/range',
-   q:`PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-SELECT DISTINCT ?p ?label ?domain ?range WHERE {
-  ?p rdf:type owl:ObjectProperty .
-  OPTIONAL { ?p rdfs:label ?label . }
-  OPTIONAL { ?p rdfs:domain ?domain . }
-  OPTIONAL { ?p rdfs:range  ?range . }
-}`},
-  {t:'CQ04 — Subclasses de Destinatário-Vítima',
-   q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT DISTINCT ?child ?label WHERE {
-  ?child rdfs:subClassOf <http://ontohate.org/ontohate#Destinatario_vitima> .
-  OPTIONAL { ?child rdfs:label ?label . }
-}`},
-  {t:'CQ05 — Hierarquia completa',
-   q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT DISTINCT ?child ?childLabel ?parent ?parentLabel WHERE {
+  {
+    cat: 'Estrutura',
+    t:'As 10 dimensões do Discurso de Ódio',
+    desc:'Quais são as dimensões principais da ontologia?',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ontohate: <http://ontohate.org/ontohate#>
+SELECT DISTINCT ?nome ?definicao WHERE {
+  ?dimensao rdfs:subClassOf ontohate:Discurso_de_odio .
+  ?dimensao rdfs:label ?nome .
+  OPTIONAL { ?dimensao rdfs:comment ?definicao . }
+  FILTER(LANG(?nome) = "pt")
+} ORDER BY ?nome`
+  },
+  {
+    cat: 'Estrutura',
+    t:'Todas as classes com nome e definição',
+    desc:'Lista completa de conceitos com suas definições em português.',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?nome ?definicao WHERE {
+  ?c rdfs:label ?nome .
+  OPTIONAL { ?c rdfs:comment ?definicao . }
+  FILTER(LANG(?nome) = "pt")
+} ORDER BY ?nome LIMIT 200`
+  },
+  {
+    cat: 'Estrutura',
+    t:'Hierarquia: cada conceito e seu pai',
+    desc:'Mostra a relação de especialização entre classes.',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?conceito ?pai WHERE {
   ?child rdfs:subClassOf ?parent .
-  OPTIONAL { ?child  rdfs:label ?childLabel  . }
-  OPTIONAL { ?parent rdfs:label ?parentLabel . }
-} LIMIT 500`},
-  {t:'CQ06 — Estratégias discursivas',
-   q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT DISTINCT ?e ?label WHERE {
-  ?e rdfs:subClassOf <http://ontohate.org/ontohate#Estrategias_Discursivas> .
-  OPTIONAL { ?e rdfs:label ?label . }
-}`},
+  ?child  rdfs:label ?conceito  . FILTER(LANG(?conceito)  = "pt")
+  ?parent rdfs:label ?pai       . FILTER(LANG(?pai)       = "pt")
+} ORDER BY ?pai ?conceito LIMIT 300`
+  },
+  {
+    cat: 'Estrutura',
+    t:'Propriedades: nome, domínio e alcance',
+    desc:'Quais relações existem entre os conceitos?',
+    q:`PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+SELECT DISTINCT ?propriedade ?de ?para WHERE {
+  ?p rdf:type owl:ObjectProperty .
+  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade) = "pt")
+  OPTIONAL { ?p rdfs:domain ?d . ?d rdfs:label ?de   . FILTER(LANG(?de)  ="pt") }
+  OPTIONAL { ?p rdfs:range  ?r . ?r rdfs:label ?para . FILTER(LANG(?para)="pt") }
+} ORDER BY ?propriedade`
+  },
+  {
+    cat: 'Dimensões',
+    t:'Tipos de Manifestação do discurso',
+    desc:'Como o discurso de ódio se manifesta?',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ontohate: <http://ontohate.org/ontohate#>
+SELECT DISTINCT ?tipo ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Manifestacao .
+  ?c rdfs:label ?tipo . FILTER(LANG(?tipo) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . }
+} ORDER BY ?tipo`
+  },
+  {
+    cat: 'Dimensões',
+    t:'Tipos de Motivação para o ódio',
+    desc:'Por que o discurso de ódio é produzido?',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ontohate: <http://ontohate.org/ontohate#>
+SELECT DISTINCT ?tipo ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Motivacao .
+  ?c rdfs:label ?tipo . FILTER(LANG(?tipo) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . }
+} ORDER BY ?tipo`
+  },
+  {
+    cat: 'Dimensões',
+    t:'Perfis de Destinatário-Vítima',
+    desc:'Quem é alvo do discurso de ódio?',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ontohate: <http://ontohate.org/ontohate#>
+SELECT DISTINCT ?perfil ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Destinatario_vitima .
+  ?c rdfs:label ?perfil . FILTER(LANG(?perfil) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . }
+} ORDER BY ?perfil`
+  },
+  {
+    cat: 'Dimensões',
+    t:'Estratégias discursivas utilizadas',
+    desc:'Quais recursos linguísticos compõem o discurso de ódio?',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ontohate: <http://ontohate.org/ontohate#>
+SELECT DISTINCT ?estrategia ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Nucleo .
+  ?c rdfs:label ?estrategia . FILTER(LANG(?estrategia) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . }
+} ORDER BY ?estrategia`
+  },
+  {
+    cat: 'Dimensões',
+    t:'Tipos de Consequência do discurso',
+    desc:'Quais os impactos do discurso de ódio?',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ontohate: <http://ontohate.org/ontohate#>
+SELECT DISTINCT ?consequencia ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Consequencia .
+  ?c rdfs:label ?consequencia . FILTER(LANG(?consequencia) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . }
+} ORDER BY ?consequencia`
+  },
+  {
+    cat: 'Dimensões',
+    t:'Tipos de Moderação disponíveis',
+    desc:'Como o discurso de ódio pode ser moderado?',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ontohate: <http://ontohate.org/ontohate#>
+SELECT DISTINCT ?tipo ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Moderacao .
+  ?c rdfs:label ?tipo . FILTER(LANG(?tipo) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . }
+} ORDER BY ?tipo`
+  },
+  {
+    cat: 'Busca',
+    t:'Buscar conceito por palavra-chave',
+    desc:'Edite a palavra entre aspas para buscar qualquer termo.',
+    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?nome ?definicao WHERE {
+  ?c rdfs:label ?nome .
+  OPTIONAL { ?c rdfs:comment ?definicao . }
+  FILTER(LANG(?nome) = "pt")
+  FILTER(CONTAINS(LCASE(STR(?nome)), "ameaca"))
+} ORDER BY ?nome`
+  },
+  {
+    cat: 'Metadados',
+    t:'Informações sobre a ontologia',
+    desc:'Versão, criador e licença.',
+    q:`PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?campo ?valor WHERE {
+  ?o a owl:Ontology .
+  { ?o rdfs:label    ?valor . BIND("Nome"    AS ?campo) }
+  UNION
+  { ?o owl:versionInfo ?valor . BIND("Versão" AS ?campo) }
+  UNION
+  { ?o dcterms:creator ?valor . BIND("Criador" AS ?campo) }
+}`
+  },
 ];
 
-let lastRows=[];
+let lastRows=[], lastVars=[];
+
 function buildPresets(){
-  const box=$('presets');box.innerHTML='';
-  PRESETS.forEach((p,i)=>{
-    const d=document.createElement('div');d.className='preset';
-    d.innerHTML=`<div class="pt">${esc(p.t)}</div><div class="ps">CQ${String(i+1).padStart(2,'0')} — clique para carregar</div>`;
-    d.onclick=()=>{$('qbox').value=p.q;$('qmeta').textContent=`CQ${i+1} selecionado`;};
-    box.appendChild(d);
-  });
-  $('qbox').value=PRESETS[0].q;
+  const box=$('presets'); box.innerHTML='';
+
+  // agrupar por categoria
+  const cats = [...new Set(PRESETS.map(p=>p.cat))];
+  for (const cat of cats){
+    const catDiv = document.createElement('div');
+    catDiv.style.cssText = 'margin-bottom:14px';
+    catDiv.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase">${esc(cat)}</div>`;
+
+    for (const p of PRESETS.filter(x=>x.cat===cat)){
+      const d = document.createElement('div');
+      d.className = 'preset';
+      d.innerHTML = `<div class="pt">${esc(p.t)}</div><div class="ps">${esc(p.desc)}</div>`;
+      d.onclick = ()=>{
+        $('qbox').value = p.q;
+        $('qmeta').textContent = esc(p.t);
+      };
+      catDiv.appendChild(d);
+    }
+    box.appendChild(catDiv);
+  }
+  $('qbox').value = PRESETS[0].q;
 }
 
 function runQ(){
-  const q=$('qbox').value.trim();
-  if(!q){$('qres').innerHTML='<span style="color:var(--muted)">Escreva uma consulta.</span>';lastRows=[];return;}
+  const q = $('qbox').value.trim();
+  if(!q){ $('qres').innerHTML='<span style="color:var(--muted)">Escreva uma consulta.</span>'; lastRows=[]; return; }
   $('qmeta').textContent='Executando…';
   $('qres').innerHTML='<span class="spin"></span> Processando…';
-  lastRows=[];
+  lastRows=[]; lastVars=[];
+
   setTimeout(()=>{
-    const {vars,rows,err}=sparqlQuery(q);
-    if(err){$('qmeta').textContent='Erro';$('qres').innerHTML=`<span style="color:var(--bad)">${esc(err)}</span>`;return;}
-    if(!rows.length){$('qmeta').textContent='0 resultados';$('qres').innerHTML='<span style="color:var(--muted)">Sem resultados.</span>';return;}
-    lastRows=rows.map(r=>{const o={};for(const v of vars)o['?'+v]=String(r[v]??'');return o;});
-    const cols=vars.map(v=>'?'+v);
-    let html=`<table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>`;
-    for(const r of lastRows)
-      html+=`<tr>${cols.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`;
-    html+='</tbody></table>';
-    $('qmeta').textContent=`${rows.length} resultado${rows.length!==1?'s':''}`;
-    $('qres').innerHTML=html;
-  },10);
+    // patch do engine para suportar FILTER CONTAINS e LANG
+    const {vars, rows, err} = sparqlQueryEnhanced(q);
+    if(err){
+      $('qmeta').textContent='Erro';
+      $('qres').innerHTML=`<div style="color:var(--bad);font-family:var(--mono);font-size:12px">${esc(err)}</div>`;
+      return;
+    }
+    if(!rows.length){
+      $('qmeta').textContent='0 resultados';
+      $('qres').innerHTML='<span style="color:var(--muted)">Sem resultados. Verifique se os filtros de língua (LANG) correspondem aos dados.</span>';
+      return;
+    }
+
+    lastVars = vars;
+    // guardar linha crua para exportação
+    lastRows = rows.map(r=>{ const o={}; for(const v of vars) o['?'+v]=String(r[v]??''); return o; });
+
+    // renderizar tabela com células humanizadas
+    const cols = vars.map(v=>'?'+v);
+    let html = `<table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>`;
+    for(const r of rows){
+      html += '<tr>' + cols.map(c=>{
+        const raw = String(r[c.slice(1)]??'');
+        return `<td style="font-size:12px">${renderCell(raw)}</td>`;
+      }).join('') + '</tr>';
+    }
+    html += '</tbody></table>';
+
+    $('qmeta').textContent = `${rows.length} resultado${rows.length!==1?'s':''}`;
+    $('qres').innerHTML = html;
+  }, 10);
 }
 
-$('qbox').addEventListener('keydown',e=>{
-  if((navigator.platform.includes('Mac')?e.metaKey:e.ctrlKey)&&e.key==='Enter'){e.preventDefault();runQ();}
+/* engine SPARQL estendida com suporte a FILTER CONTAINS, LANG, STR, LCASE */
+function sparqlQueryEnhanced(queryStr){
+  try {
+    // pré-processar: substituir FILTER(CONTAINS(...)) e FILTER(LANG(...))
+    // por marcadores que o engine nativo processa depois
+    const result = sparqlQuery(queryStr);
+    if (result.err) return result;
+
+    // pós-filtros que o engine básico não suporta
+    let rows = result.rows;
+
+    // FILTER(CONTAINS(LCASE(STR(?x)), "termo"))
+    const containsM = queryStr.match(/FILTER\s*\(\s*CONTAINS\s*\(\s*LCASE\s*\(\s*STR\s*\(\s*\?(\w+)\s*\)\s*\)\s*,\s*"([^"]+)"\s*\)\s*\)/gi);
+    if (containsM){
+      for (const fm of containsM){
+        const m = fm.match(/\?(\w+).*?"([^"]+)"/);
+        if (m){
+          const [,varName, term] = m;
+          rows = rows.filter(r => String(r[varName]??'').toLowerCase().includes(term.toLowerCase()));
+        }
+      }
+    }
+
+    // FILTER(LANG(?x) = "pt") — filtrar por língua
+    const langM = queryStr.match(/FILTER\s*\(\s*LANG\s*\(\s*\?(\w+)\s*\)\s*=\s*"([^"]+)"\s*\)/gi);
+    if (langM){
+      for (const fm of langM){
+        const m = fm.match(/\?(\w+).*?"([^"]+)"/);
+        if (m){
+          const [, varName, lang] = m;
+          // usar os quads brutos para verificar lang
+          rows = rows.filter(r => {
+            const val = r[varName];
+            if (!val) return false;
+            // verificar nos quads se este valor tem a lang correta
+            for (const q of G.quads){
+              if (q.oIsLiteral && q.o === val &&
+                  (q.oLang||'').toLowerCase().startsWith(lang.toLowerCase())) return true;
+            }
+            // se não encontrou com lang, incluir se não tem lang (assume neutro)
+            return false;
+          });
+        }
+      }
+    }
+
+    return { vars: result.vars, rows, err: null };
+  } catch(e){
+    return { vars:[], rows:[], err: String(e.message||e) };
+  }
+}
+
+$('qbox').addEventListener('keydown', e=>{
+  if((navigator.platform.includes('Mac')?e.metaKey:e.ctrlKey) && e.key==='Enter'){
+    e.preventDefault(); runQ();
+  }
 });
 
-function exportCsv(){if(!lastRows.length)return alert('Sem resultados.');dl('resultado.csv',toCsv(lastRows),'text/csv');}
-function exportJson(){if(!lastRows.length)return alert('Sem resultados.');dl('resultado.json',JSON.stringify(lastRows,null,2),'application/json');}
+function exportCsv(){
+  if(!lastRows.length) return alert('Sem resultados.');
+  dl('resultado.csv', toCsv(lastRows), 'text/csv');
+}
+function exportJson(){
+  if(!lastRows.length) return alert('Sem resultados.');
+  dl('resultado.json', JSON.stringify(lastRows,null,2), 'application/json');
+}
 
 /* ============================================================
    BOOT
