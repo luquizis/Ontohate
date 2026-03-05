@@ -19,3 +19,8 @@ Depois, abra no navegador:
 - `http://localhost:8000/index.html`
 
 > Se alguma funcionalidade depender de carregamento de arquivos via navegador, usar servidor local costuma evitar bloqueios de CORS/segurança do modo `file://`.
+
+## Deploy (GitHub Pages)
+Para evitar falhas intermitentes do builder padrão (ex.: `Failed to resolve action download info` / `Internal server error`), o repositório inclui workflow dedicado em `.github/workflows/pages.yml` usando `actions/checkout@v4`, `actions/configure-pages@v5`, `actions/upload-pages-artifact@v3` e `actions/deploy-pages@v4`.
+
+No GitHub, configure em **Settings → Pages → Source = GitHub Actions**.
