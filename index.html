@@ -127,7 +127,7 @@ canvas.gv:active{cursor:grabbing}
 <div id="tip"></div>
 
 <header>
-  <h1>OntoHate</h1>
+  <div><h1>OntoHate</h1><div style="font-size:11px;color:var(--muted)">Explorador de Taxonomia, Ontologia e SPARQL</div></div>
   <div class="tabs">
     <button class="tab on" data-tab="tax">Taxonomia</button>
     <button class="tab" data-tab="onto">Ontologia</button>
@@ -1163,6 +1163,8 @@ function makeGraph(id){
   let hl=new Set(),focused=null,hover=null,clickCb=null;
   let layout='tb',nodeSep=120,levelSep=90,showEL=false,colorMap=new Map();
 
+  function nodeLabel(txt,max=26){const s=String(txt||'');return s.length>max?s.slice(0,max-1)+'…':s;}
+
   function resize(){
     const d=dpr(),w=cv.clientWidth||cv.parentElement?.clientWidth||900,h=cv.clientHeight||cv.parentElement?.clientHeight||640;
     if(w<10||h<10)return;
@@ -1202,15 +1204,15 @@ function makeGraph(id){
       const colW = Math.min(nodeSep, (gW-100)/(maxL+1));
       for(const[l,ns] of byL){
         const total = ns.length;
-        const gap   = Math.max(levelSep*0.6, Math.min(levelSep, (gH-80)/Math.max(total,1)));
+        const gap   = Math.max(64, Math.max(levelSep*0.75, Math.min(levelSep*1.25, (gH-80)/Math.max(total,1))));
         const h0    = gH/2 - (total-1)*gap/2;
         ns.forEach((nd,i)=>{ nd.x = 60+l*colW; nd.y = h0+i*gap; });
       }
     } else {
-      const rowH = Math.min(levelSep, (gH-80)/(maxL+1));
+      const rowH = Math.max(72, Math.min(levelSep, (gH-80)/(maxL+1)));
       for(const[l,ns] of byL){
         const total = ns.length;
-        const estW  = ns.map(nd=>Math.max(80, nd.label.length*7.5+28));
+        const estW  = ns.map(nd=>{const t=nodeLabel(nd.label,26);return Math.max(88, t.length*8+32);});
         const totalW= estW.reduce((a,b)=>a+b,0)+Math.max(0,total-1)*Math.max(12, nodeSep-80);
         let x       = gW/2 - totalW/2;
         const y     = 60 + l*rowH;
@@ -1335,7 +1337,8 @@ function makeGraph(id){
       /* tamanho do nó baseado na riqueza da label */
       const fs=Math.max(9,Math.min(13,11*zoom));
       c.font=`${isHL?'bold ':''} ${fs}px Inter,system-ui,sans-serif`;
-      const tw=c.measureText(n.label).width;
+      const lbl=nodeLabel(n.label,26);
+      const tw=c.measureText(lbl).width;
       const px=Math.max(9,11*zoom), py=Math.max(6,7*zoom);
       const rw=tw+px*2, rh=Math.max(24,16*zoom+py*2);
       const rx=s.x-rw/2, ry=s.y-rh/2, rad=Math.max(5,6*zoom);
@@ -1363,7 +1366,7 @@ function makeGraph(id){
       /* label */
       c.fillStyle=isHL?'#f0abfc':isHov?AC:fad?'rgba(255,255,255,.18)':TC;
       c.textAlign='center';c.textBaseline='middle';
-      c.fillText(n.label,s.x,s.y);
+      c.fillText(lbl,s.x,s.y);
 
       /* indicador de filhos (pequeno ponto/número quando recolhido) */
       if(zoom>0.5){
@@ -1400,7 +1403,7 @@ function makeGraph(id){
     if(!nodes.length)return;const w=W()||900,h=H()||640;
     let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
     for(const n of nodes)if(n.x!=null){x0=Math.min(x0,n.x);x1=Math.max(x1,n.x);y0=Math.min(y0,n.y);y1=Math.max(y1,n.y);}
-    const pad=80,gw=x1-x0||1,gh=y1-y0||1;
+    const pad=110,gw=x1-x0||1,gh=y1-y0||1;
     zoom=Math.min((w-pad*2)/gw,(h-pad*2)/gh,3);
     pan.x=w/2-((x0+x1)/2)*zoom;pan.y=h/2-((y0+y1)/2)*zoom;draw();
   }
@@ -2053,6 +2056,9 @@ function runQuery() {
 
   $('qmeta').textContent = `${rows.length} resultado${rows.length!==1?'s':''} · ${ms}ms`;
   $('qres').innerHTML = renderTable(rows, lastVars);
+  if(!rows.length){
+    $('qres').innerHTML += `<div style="padding:10px 12px;color:var(--dim);font-size:12px">Dica: clique em uma questão de competência à esquerda para executar uma consulta pronta.</div>`;
+  }
 }
 
 /* ── exportar ───────────────────────────────────────────────────────── */
@@ -2126,6 +2132,10 @@ async function processText(text, source='arquivo.ttl'){
     buildTax();
     buildOnto();
     buildPresets();
+    if(PRESETS && PRESETS.length && !$('qbox').value.trim()){
+      $('qbox').value = PRESETS[0].q;
+      runQuery();
+    }
 
     $('detPill').textContent='—';
     $('detBox').innerHTML='<div style="color:var(--muted)">Clique em um nó para ver detalhes.</div>';
