@@ -2114,17 +2114,19 @@ const BUNDLED_TTL = `@prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix schema: <http://schema.org/> .
+@prefix schema1: <http://schema.org/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://ontohate.org/ontohate> a owl:Ontology ;
     rdfs:label "OntoHate (rigorosa, simplificada, baseada no XLSX)"@pt ;
     dcterms:creator "Luiz Rogério Lopes Silva" ;
     dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
-    dcterms:modified "2026-03-02"^^xsd:date ;
+    dcterms:modified "2026-03-02"^^xsd:date,
+        "2026-03-05"^^xsd:date ;
     owl:imports <https://purl.org/nemo/gufo> ;
     owl:versionIRI <http://ontohate.org/ontohate/version/1.0.2> ;
-    owl:versionInfo "v1.0.2" .
+    owl:versionInfo "v1.0.0 + relational-crossings layer (no taxonomy change)",
+        "v1.0.2" .
 
 ontohate:Adversario_politico a owl:Class ;
     rdfs:label "Adversario politico"@pt ;
@@ -3375,6 +3377,14 @@ ontohate:Pressao_alta a owl:Class ;
 
 [Complemento da planilha] Pode decorrer de exposição recorrente a manifestações odientas. Subclasse de Dano_fisico. Alteração fisiológica associada ao estresse provocado pelo discurso de ódio."""@pt .
 
+ontohate:Proposicao_interseccional a owl:Class ;
+    rdfs:subClassOf ontohate:Proposicao_odienta ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( ontohate:Proposicao_odienta [ a owl:Restriction ;
+                        owl:minQualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                        owl:onClass ontohate:Natureza_principal ;
+                        owl:onProperty ontohate:tem_natureza_principal ] ) ] .
+
 ontohate:Queer a owl:Class ;
     rdfs:label "Queer"@pt ;
     rdfs:comment "Pessoa que se identifica fora das normas tradicionais de genero ou sexualidade."@pt,
@@ -3650,6 +3660,9 @@ ontohate:YouTube a ontohate:Plataforma_digital,
         owl:NamedIndividual ;
     rdfs:label "YouTube"@pt .
 
+ontohate:_AllDisjoint_Dimensoes a owl:AllDisjointClasses ;
+    owl:members ( ontohate:Consequencia ontohate:Contexto ontohate:Destinatario_vitima ontohate:Manifestacao ontohate:Moderacao ontohate:Motivacao ontohate:Natureza ontohate:Nucleo ontohate:Proposicao_odienta ontohate:Recursos ) .
+
 ontohate:coisa_de_mulherzinha a owl:NamedIndividual ;
     rdfs:label "coisa de mulherzinha"@pt .
 
@@ -3658,6 +3671,30 @@ ontohate:expressa_conteudo a owl:ObjectProperty ;
     rdfs:comment "Relaciona o evento de discurso ao conteudo informacional expresso."@pt ;
     rdfs:domain ontohate:Discurso_de_odio ;
     rdfs:range ontohate:Conteudo .
+
+ontohate:porta_conteudo a owl:ObjectProperty ;
+    rdfs:domain ontohate:Recursos ;
+    rdfs:range ontohate:Conteudo ;
+    rdfs:subPropertyOf ontohatev1:porta .
+
+ontohate:porta_proposicao a owl:ObjectProperty ;
+    rdfs:domain ontohate:Recursos ;
+    rdfs:range ontohate:Proposicao_odienta ;
+    rdfs:subPropertyOf ontohatev1:porta .
+
+ontohate:potencializa_dano a owl:ObjectProperty ;
+    rdfs:domain ontohate:Proposicao_odienta ;
+    rdfs:range ontohate:Consequencia .
+
+ontohate:realiza_estrategia a owl:ObjectProperty ;
+    rdfs:domain ontohate:Proposicao_odienta ;
+    rdfs:range ontohate:Manifestacao ;
+    rdfs:subPropertyOf ontohatev1:aplicaEstrategia .
+
+ontohate:sobre_destinatario a owl:ObjectProperty ;
+    rdfs:domain ontohate:Proposicao_odienta ;
+    rdfs:range ontohate:Destinatario_vitima ;
+    rdfs:subPropertyOf ontohatev1:temDestinatario .
 
 ontohate:tem_moderacao a owl:ObjectProperty ;
     rdfs:label "tem moderacao"@pt ;
@@ -3674,8 +3711,10 @@ ontohate:tem_nucleo a owl:ObjectProperty ;
 ontohate:tinha_que_ser_preto a owl:NamedIndividual ;
     rdfs:label "tinha que ser preto"@pt .
 
-ontohatev1:aplicaEstrategia a owl:ObjectProperty ;
-    rdfs:comment "Liga comentário às estratégias discursivas empregadas."@pt .
+ontohate:visa_produzir a owl:ObjectProperty ;
+    rdfs:domain ontohate:Motivacao ;
+    rdfs:range ontohate:Consequencia ;
+    rdfs:subPropertyOf ontohatev1:visaProduzir .
 
 ontohatev1:associacaoDiscursoOdioV1 a owl:AnnotationProperty ;
     rdfs:label "Associação ao discurso de ódio (V1)"@pt ;
@@ -3684,6 +3723,8 @@ ontohatev1:associacaoDiscursoOdioV1 a owl:AnnotationProperty ;
 ontohatev1:atuaEmPlataforma a owl:ObjectProperty ;
     rdfs:label "atuaEmPlataforma"@pt ;
     rdfs:comment "Relação inferida: o portador atua/participa em uma plataforma digital quando participa de uma interação odienta que ocorre na plataforma."@pt ;
+    rdfs:domain ontohate:Moderacao ;
+    rdfs:range ontohate:Plataforma_digital ;
     owl:propertyChainAxiom [ ] .
 
 ontohatev1:complementoPlanilhaV1 a owl:AnnotationProperty ;
@@ -3700,7 +3741,7 @@ ontohatev1:eCompostaPor a owl:ObjectProperty,
         "Relação todo-parte: uma entidade é composta por outras."@pt ;
     rdfs:domain ontohate:Coisa ;
     rdfs:range ontohate:Coisa ;
-    owl:equivalentProperty schema:hasPart ;
+    owl:equivalentProperty schema1:hasPart ;
     owl:inverseOf ontohatev1:parteDe .
 
 ontohatev1:executa a owl:ObjectProperty ;
@@ -3708,7 +3749,9 @@ ontohatev1:executa a owl:ObjectProperty ;
     rdfs:comment "Relação: um sistema técnico executa um processo (ex.: processo algorítmico)."@pt .
 
 ontohatev1:expressaProposicao a owl:ObjectProperty ;
-    rdfs:comment "Relação semântica: um conteúdo/expressão odienta expressa uma proposição odienta."@pt .
+    rdfs:comment "Relação semântica: um conteúdo/expressão odienta expressa uma proposição odienta."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Proposicao_odienta .
 
 ontohatev1:inereEm a owl:ObjectProperty ;
     rdfs:comment "Propriedade estrutural (inereEm). Intenção: um modo/qualidade inere em uma entidade portadora; alinhável ao padrão 'inheres in'."@pt,
@@ -3719,7 +3762,9 @@ ontohatev1:inereEm a owl:ObjectProperty ;
 
 ontohatev1:ocorreEmPlataforma a owl:ObjectProperty ;
     rdfs:label "ocorreEmPlataforma"@pt ;
-    rdfs:comment "Liga uma interação odienta à plataforma digital onde ocorre."@pt .
+    rdfs:comment "Liga uma interação odienta à plataforma digital onde ocorre."@pt ;
+    rdfs:domain ontohate:Contexto ;
+    rdfs:range ontohate:Plataforma_digital .
 
 ontohatev1:participaDeEvento a owl:ObjectProperty ;
     rdfs:label "participaDeEvento"@pt ;
@@ -3745,9 +3790,6 @@ ontohatev1:temParticipanteNaInteracao a owl:ObjectProperty ;
     owl:inverseOf ontohatev1:participaDeInteracao ;
     owl:propertyChainAxiom [ ] .
 
-ontohatev1:visaProduzir a owl:ObjectProperty ;
-    rdfs:comment "Liga objetivo odiento às consequências/danos que pretende produzir."@pt .
-
 ontohate:Agente_moderador a owl:Class ;
     rdfs:label "Agente moderador"@pt ;
     rdfs:comment "Agente responsavel por avaliar ou remover conteudo."@pt,
@@ -3766,13 +3808,6 @@ ontohate:Audiencia a owl:Class ;
     rdfs:subClassOf ontohate:Plataforma_digital ;
     ontohatev1:complementoPlanilhaV1 "Conjunto de usuários potencial ou efetivamente expostos ao conteúdo. Pode incluir seguidores diretos e usuários alcançados por recomendação. Categoria estrutural de recepção."@pt ;
     ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de usuários potencial ou efetivamente expostos ao conteúdo. Pode incluir seguidores diretos e usuários alcançados por recomendação. Categoria estrutural de recepção."@pt .
-
-ontohate:Conteudo a owl:Class ;
-    rdfs:label "Conteudo"@pt ;
-    rdfs:comment "Entidade informacional (texto, imagem, audio, video)."@pt ;
-    rdfs:subClassOf ontohate:Proposicao_odienta ;
-    ontohatev1:complementoPlanilhaV1 "Conteúdo que integra múltiplos modos comunicacionais. Combina texto, imagem e áudio em formatos digitais recentes. Ampliação contemporânea."@pt ;
-    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conteúdo que integra múltiplos modos comunicacionais. Combina texto, imagem e áudio em formatos digitais recentes. Ampliação contemporânea."@pt .
 
 ontohate:Evento_de_discurso_de_odio a owl:Class ;
     rdfs:label "Evento de discurso de odio"@pt ;
@@ -3833,14 +3868,6 @@ ontohate:Politica_de_uso a owl:Class ;
     ontohatev1:complementoPlanilhaV1 "Conjunto de normas formais que regulam comportamento e conteúdo na plataforma. Define limites, permissões e critérios de moderação. Dimensão normativa."@pt ;
     ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de normas formais que regulam comportamento e conteúdo na plataforma. Define limites, permissões e critérios de moderação. Dimensão normativa."@pt .
 
-ontohate:Proposicao_odienta a owl:Class ;
-    rdfs:label "Proposicao odienta"@pt ;
-    rdfs:comment "Conteudo proposicional que expressa hostilidade ou inferiorizacao."@pt,
-        "Elemento semantico do discurso."@pt ;
-    rdfs:subClassOf ontohate:Discurso_de_odio ;
-    ontohatev1:complementoPlanilhaV1 "Conteúdo proposicional que expressa hostilidade ou inferiorização. Constitui a unidade semântica do discurso de ódio manifestado pelo agente odiador. Elemento semântico do discurso."@pt ;
-    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conteúdo proposicional que expressa hostilidade ou inferiorização. Constitui a unidade semântica do discurso de ódio manifestado pelo agente odiador. Elemento semântico do discurso."@pt .
-
 ontohate:Qualidade_expressiva a owl:Class ;
     rdfs:label "Qualidade expressiva"@pt ;
     rdfs:comment "Classe-ponte para manter rigor UFO sem importar UFO inteira."@pt,
@@ -3895,12 +3922,11 @@ ontohate:tem_motivacao a owl:ObjectProperty ;
     rdfs:range ontohate:Motivacao ;
     owl:equivalentProperty ontohatev1:temMotivacao .
 
-ontohate:tem_natureza a owl:ObjectProperty ;
-    rdfs:label "tem natureza"@pt ;
-    rdfs:comment "Relaciona um discurso a qualidades/caracteristicas."@pt ;
-    rdfs:domain ontohate:Discurso_de_odio ;
-    rdfs:range ontohate:Natureza ;
-    owl:equivalentProperty ontohatev1:temNatureza .
+ontohate:tem_natureza_principal a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ;
+            owl:unionOf ( ontohate:Discurso_de_odio ontohate:Proposicao_odienta ) ] ;
+    rdfs:range ontohate:Natureza_principal ;
+    rdfs:subPropertyOf ontohate:tem_natureza .
 
 ontohate:usa_recurso a owl:ObjectProperty ;
     rdfs:label "usa recurso"@pt ;
@@ -3909,9 +3935,16 @@ ontohate:usa_recurso a owl:ObjectProperty ;
     rdfs:range ontohate:Recursos ;
     owl:equivalentProperty ontohatev1:usaRecurso .
 
+ontohatev1:aplicaEstrategia a owl:ObjectProperty ;
+    rdfs:comment "Liga comentário às estratégias discursivas empregadas."@pt ;
+    rdfs:domain ontohate:Proposicao_odienta ;
+    rdfs:range ontohate:Manifestacao .
+
 ontohatev1:geraConsequencia a owl:ObjectProperty ;
     rdfs:comment "Liga evento às consequências/danos gerados."@pt,
         "Propriedade legada (compatibilidade). Use tem_consequencia como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Consequencia ;
     owl:deprecated true ;
     owl:equivalentProperty ontohate:tem_consequencia .
 
@@ -3924,6 +3957,8 @@ ontohatev1:ocorreEm a owl:ObjectProperty ;
 ontohatev1:ocorreEmContexto a owl:ObjectProperty ;
     rdfs:comment "Liga evento ao contexto."@pt,
         "Propriedade legada (compatibilidade). Use ocorre_em como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Contexto ;
     owl:deprecated true ;
     owl:equivalentProperty ontohate:ocorre_em .
 
@@ -3933,39 +3968,33 @@ ontohatev1:parteDe a owl:ObjectProperty,
         "Propriedade mereológica no padrão part-of (parteDe). Intenção: relação de inclusão estrutural entre entidades; declarada como transitiva."@pt ;
     rdfs:domain ontohate:Coisa ;
     rdfs:range ontohate:Coisa ;
-    owl:equivalentProperty schema:isPartOf .
+    owl:equivalentProperty schema1:isPartOf .
 
 ontohatev1:participaDeInteracao a owl:ObjectProperty ;
     rdfs:label "participaDeInteracao"@pt ;
     rdfs:comment "Inversa de temParticipanteNaInteracao: o portador participa de uma interação odienta."@pt .
 
-ontohatev1:porta a owl:ObjectProperty ;
-    rdfs:comment "Inversa de inereEm: o portador porta um papel/qualidade/modo."@pt,
-        "Propriedade estrutural (porta). Intenção: uma entidade porta/possui outra como característica/atributo dependente; alinhável ao padrão 'bears/has'."@pt ;
-    rdfs:domain ontohate:Coisa ;
-    rdfs:range ontohate:Coisa .
-
-ontohatev1:temDestinatario a owl:ObjectProperty ;
-    rdfs:comment "Liga interação ao papel de vítima/destinatário."@pt,
-        "Propriedade legada (compatibilidade). Use tem_destinatario como propriedade canônica."@pt ;
-    owl:deprecated true ;
-    owl:equivalentProperty ontohate:tem_destinatario .
-
 ontohatev1:temManifestacao a owl:ObjectProperty ;
     rdfs:comment "Liga evento ao tipo de manifestação."@pt,
         "Propriedade legada (compatibilidade). Use tem_manifestacao como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Manifestacao ;
     owl:deprecated true ;
     owl:equivalentProperty ontohate:tem_manifestacao .
 
 ontohatev1:temMotivacao a owl:ObjectProperty ;
     rdfs:comment "Liga o evento de discurso de ódio ao modo intencional relevante."@pt,
         "Propriedade legada (compatibilidade). Use tem_motivacao como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Motivacao ;
     owl:deprecated true ;
     owl:equivalentProperty ontohate:tem_motivacao .
 
 ontohatev1:temNatureza a owl:ObjectProperty ;
     rdfs:comment "Liga evento à natureza do discurso de ódio."@pt,
         "Propriedade legada (compatibilidade). Use tem_natureza como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Natureza ;
     owl:deprecated true ;
     owl:equivalentProperty ontohate:tem_natureza .
 
@@ -3976,8 +4005,22 @@ ontohatev1:temParticipanteNoEvento a owl:ObjectProperty ;
 ontohatev1:usaRecurso a owl:ObjectProperty ;
     rdfs:comment "Liga uma interação odienta aos recursos empregados (forma/técnico/estratégia)."@pt,
         "Propriedade legada (compatibilidade). Use usa_recurso como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Recursos ;
     owl:deprecated true ;
     owl:equivalentProperty ontohate:usa_recurso .
+
+ontohatev1:visaProduzir a owl:ObjectProperty ;
+    rdfs:comment "Liga objetivo odiento às consequências/danos que pretende produzir."@pt ;
+    rdfs:domain ontohate:Motivacao ;
+    rdfs:range ontohate:Consequencia .
+
+ontohate:Conteudo a owl:Class ;
+    rdfs:label "Conteudo"@pt ;
+    rdfs:comment "Entidade informacional (texto, imagem, audio, video)."@pt ;
+    rdfs:subClassOf ontohate:Proposicao_odienta ;
+    ontohatev1:complementoPlanilhaV1 "Conteúdo que integra múltiplos modos comunicacionais. Combina texto, imagem e áudio em formatos digitais recentes. Ampliação contemporânea."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conteúdo que integra múltiplos modos comunicacionais. Combina texto, imagem e áudio em formatos digitais recentes. Ampliação contemporânea."@pt .
 
 ontohate:Dispositivo_odiador a owl:Class ;
     rdfs:label "Dispositivo odiador"@pt ;
@@ -3995,10 +4038,20 @@ ontohate:ocorre_em a owl:ObjectProperty ;
     owl:equivalentProperty ontohatev1:ocorreEm,
         ontohatev1:ocorreEmContexto .
 
-ontohate:Consequencia a owl:Class ;
-    rdfs:label "Consequencia"@pt ;
-    rdfs:comment "Efeitos/danos/impactos associados."@pt ;
-    rdfs:subClassOf ontohate:Discurso_de_odio .
+ontohate:tem_natureza a owl:ObjectProperty ;
+    rdfs:label "tem natureza"@pt ;
+    rdfs:comment "Relaciona um discurso a qualidades/caracteristicas."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Natureza ;
+    owl:equivalentProperty ontohatev1:temNatureza .
+
+ontohatev1:temDestinatario a owl:ObjectProperty ;
+    rdfs:comment "Liga interação ao papel de vítima/destinatário."@pt,
+        "Propriedade legada (compatibilidade). Use tem_destinatario como propriedade canônica."@pt ;
+    rdfs:domain ontohate:Discurso_de_odio ;
+    rdfs:range ontohate:Destinatario_vitima ;
+    owl:deprecated true ;
+    owl:equivalentProperty ontohate:tem_destinatario .
 
 ontohate:Dano_fisico a owl:Class ;
     rdfs:label "Dano fisico"@pt ;
@@ -4040,18 +4093,6 @@ ontohate:Manifestacao_explicita a owl:Class ;
 
 [Complemento da planilha] A hostilidade é expressa de maneira clara, sem disfarces semânticos ou ambiguidade intencional. Deriva da questão de competência da tese. Manifestação em que o conteúdo odiento é apresentado de forma direta e identificável."""@pt .
 
-ontohate:Moderacao a owl:Class ;
-    rdfs:label "Moderacao"@pt ;
-    rdfs:comment "Acoes/processos de moderacao e governanca."@pt ;
-    rdfs:subClassOf ontohate:Discurso_de_odio ;
-    ontohatev1:complementoPlanilhaV1 "Conjunto de mecanismos responsáveis por avaliar e intervir sobre conteúdos. Pode operar de forma humana, automatizada ou híbrida. Classe central da moderação."@pt ;
-    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de mecanismos responsáveis por avaliar e intervir sobre conteúdos. Pode operar de forma humana, automatizada ou híbrida. Classe central da moderação."@pt .
-
-ontohate:Motivacao a owl:Class ;
-    rdfs:label "Motivacao"@pt ;
-    rdfs:comment "Intencoes/justificativas que orientam o discurso."@pt ;
-    rdfs:subClassOf ontohate:Discurso_de_odio .
-
 ontohate:Natureza_dispositiva a owl:Class ;
     rdfs:label "Natureza dispositiva"@pt ;
     rdfs:comment "Natureza baseada em disposicoes, crencas e conviccoes ideologicas."@pt,
@@ -4060,20 +4101,13 @@ ontohate:Natureza_dispositiva a owl:Class ;
     ontohatev1:complementoPlanilhaV1 "Natureza baseada em disposições, crenças e convicções ideológicas. Direciona hostilidade a posições religiosas ou político-partidárias atribuídas ao destinatário-vítima. Reinterpretação V2 da categoria V1 “dispositiva”."@pt ;
     ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza baseada em disposições, crenças e convicções ideológicas. Direciona hostilidade a posições religiosas ou político-partidárias atribuídas ao destinatário-vítima. Reinterpretação V2 da categoria V1 “dispositiva”."@pt .
 
-ontohate:Destinatario_vitima a owl:Class ;
-    rdfs:label "Destinatario vitima"@pt ;
-    rdfs:comment "Agente social alvo do discurso de odio online."@pt,
-        "Papeis/grupos alvo do discurso."@pt,
-        "Polo passivo do evento."@pt ;
-    rdfs:subClassOf ontohate:Discurso_de_odio,
-        ontohate:Nucleo .
-
-ontohate:Natureza a owl:Class ;
-    rdfs:label "Natureza"@pt ;
-    rdfs:comment "Qualidades/caracteristicas do discurso (ex.: discriminatorio)."@pt ;
-    rdfs:subClassOf ontohate:Discurso_de_odio ;
-    ontohatev1:complementoPlanilhaV1 "Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt ;
-    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt .
+ontohatev1:porta a owl:ObjectProperty ;
+    rdfs:comment "Inversa de inereEm: o portador porta um papel/qualidade/modo."@pt,
+        "Propriedade estrutural (porta). Intenção: uma entidade porta/possui outra como característica/atributo dependente; alinhável ao padrão 'bears/has'."@pt ;
+    rdfs:domain ontohate:Coisa,
+        ontohate:Recursos ;
+    rdfs:range ontohate:Coisa,
+        ontohate:Proposicao_odienta .
 
 ontohate:Crenca a owl:Class ;
     rdfs:label "Crenca"@pt ;
@@ -4104,12 +4138,12 @@ Geralmente os haters odeiam de forma gratuita, sem motivo evidente, mobilizando 
 
 [Complemento da planilha] Pode assumir diferentes papéis na circulação do discurso. Categoria comportamental. Tipo de agente odiador que produz ou dissemina conteúdo odiento."""@pt .
 
-ontohate:Manifestacao a owl:Class ;
-    rdfs:label "Manifestacao"@pt ;
-    rdfs:comment "Formas de expressao/realizacao do discurso (texto, meme etc.)."@pt ;
+ontohate:Moderacao a owl:Class ;
+    rdfs:label "Moderacao"@pt ;
+    rdfs:comment "Acoes/processos de moderacao e governanca."@pt ;
     rdfs:subClassOf ontohate:Discurso_de_odio ;
-    ontohatev1:complementoPlanilhaV1 "Manifestação em que o conteúdo odiento é apresentado de forma indireta ou implícita. Pode utilizar ironia, ambiguidade, eufemismo ou estratégias discursivas que dificultam identificação imediata. Deriva da questão de competência da tese."@pt ;
-    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Manifestação em que o conteúdo odiento é apresentado de forma indireta ou implícita. Pode utilizar ironia, ambiguidade, eufemismo ou estratégias discursivas que dificultam identificação imediata. Deriva da questão de competência da tese."@pt .
+    ontohatev1:complementoPlanilhaV1 "Conjunto de mecanismos responsáveis por avaliar e intervir sobre conteúdos. Pode operar de forma humana, automatizada ou híbrida. Classe central da moderação."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de mecanismos responsáveis por avaliar e intervir sobre conteúdos. Pode operar de forma humana, automatizada ou híbrida. Classe central da moderação."@pt .
 
 ontohate:Natureza_por_atributos a owl:Class ;
     rdfs:label "Natureza por atributos"@pt ;
@@ -4119,14 +4153,6 @@ ontohate:Natureza_por_atributos a owl:Class ;
     ontohatev1:complementoPlanilhaV1 "Natureza baseada em atributos físicos, biológicos, corporais ou marcadores sociais atribuídos ao corpo. Direciona o ataque a características corporais ou marcadores como raça/idade/aparência. Reinterpretação V2 da categoria V1 “por atributos”."@pt ;
     ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza baseada em atributos físicos, biológicos, corporais ou marcadores sociais atribuídos ao corpo. Direciona o ataque a características corporais ou marcadores como raça/idade/aparência. Reinterpretação V2 da categoria V1 “por atributos”."@pt .
 
-ontohate:Natureza_principal a owl:Class ;
-    rdfs:label "Natureza principal"@pt ;
-    rdfs:comment "Mudanca V2: natureza principal unica (cardinalidade = 1)."@pt,
-        "Natureza predominante do ataque no discurso de odio online."@pt ;
-    rdfs:subClassOf ontohate:Natureza ;
-    ontohatev1:complementoPlanilhaV1 "Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt ;
-    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt .
-
 ontohate:Recursos_Tecnicos a owl:Class ;
     rdfs:label "Recursos Tecnicos"@pt ;
     rdfs:comment "Classe intermediaria estrutural."@pt,
@@ -4135,12 +4161,12 @@ ontohate:Recursos_Tecnicos a owl:Class ;
     ontohatev1:complementoPlanilhaV1 "Recursos baseados em sistemas técnicos ou automatizados. Dependem de mediação tecnológica para amplificação ou produção. Classe intermediária estrutural."@pt ;
     ontohatev1:conceitoFonteV1 "[Fonte: planilha] Recursos baseados em sistemas técnicos ou automatizados. Dependem de mediação tecnológica para amplificação ou produção. Classe intermediária estrutural."@pt .
 
-ontohate:Recursos a owl:Class ;
-    rdfs:label "Recursos"@pt ;
-    rdfs:comment "Recursos tecnicos e estrategias discursivas."@pt ;
+ontohate:Natureza a owl:Class ;
+    rdfs:label "Natureza"@pt ;
+    rdfs:comment "Qualidades/caracteristicas do discurso (ex.: discriminatorio)."@pt ;
     rdfs:subClassOf ontohate:Discurso_de_odio ;
-    ontohatev1:complementoPlanilhaV1 "Recursos relacionados à forma material da manifestação. Correspondem ao suporte midiático do discurso. Classe intermediária estrutural."@pt ;
-    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Recursos relacionados à forma material da manifestação. Correspondem ao suporte midiático do discurso. Classe intermediária estrutural."@pt .
+    ontohatev1:complementoPlanilhaV1 "Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt .
 
 ontohate:Recursos_de_Forma a owl:Class ;
     rdfs:label "Recursos de Forma"@pt ;
@@ -4177,6 +4203,14 @@ ontohate:Dano_social a owl:Class ;
     ontohatev1:complementoPlanilhaV1 "Dano relacionado à posição social da vítima. Afeta reconhecimento, participação e pertencimento social. Dimensão estrutural da tese."@pt ;
     ontohatev1:conceitoFonteV1 "[Fonte: planilha] Dano relacionado à posição social da vítima. Afeta reconhecimento, participação e pertencimento social. Dimensão estrutural da tese."@pt .
 
+ontohate:Destinatario_vitima a owl:Class ;
+    rdfs:label "Destinatario vitima"@pt ;
+    rdfs:comment "Agente social alvo do discurso de odio online."@pt,
+        "Papeis/grupos alvo do discurso."@pt,
+        "Polo passivo do evento."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio,
+        ontohate:Nucleo .
+
 ontohate:Modo_mental a owl:Class ;
     rdfs:label "Modo mental"@pt ;
     rdfs:comment "Classe abstrata."@pt,
@@ -4185,9 +4219,22 @@ ontohate:Modo_mental a owl:Class ;
     ontohatev1:complementoPlanilhaV1 "Dimensão mental que fundamenta crenças, desejos e intenções. Constitui a base psicológica que sustenta o modo intencional do agente odiador. Classe abstrata."@pt ;
     ontohatev1:conceitoFonteV1 "[Fonte: planilha] Dimensão mental que fundamenta crenças, desejos e intenções. Constitui a base psicológica que sustenta o modo intencional do agente odiador. Classe abstrata."@pt .
 
-ontohate:Nucleo a owl:Class ;
-    rdfs:label "Nucleo"@pt ;
-    rdfs:comment "Conteudo/estrutura conceitual central do discurso."@pt ;
+ontohate:Motivacao a owl:Class ;
+    rdfs:label "Motivacao"@pt ;
+    rdfs:comment "Intencoes/justificativas que orientam o discurso."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio .
+
+ontohate:Natureza_principal a owl:Class ;
+    rdfs:label "Natureza principal"@pt ;
+    rdfs:comment "Mudanca V2: natureza principal unica (cardinalidade = 1)."@pt,
+        "Natureza predominante do ataque no discurso de odio online."@pt ;
+    rdfs:subClassOf ontohate:Natureza ;
+    ontohatev1:complementoPlanilhaV1 "Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Natureza predominante do ataque no discurso de ódio online. Cada manifestação deve ser classificada por uma natureza principal para fins de representação e análise. Mudança V2: natureza principal única (cardinalidade = 1)."@pt .
+
+ontohate:Consequencia a owl:Class ;
+    rdfs:label "Consequencia"@pt ;
+    rdfs:comment "Efeitos/danos/impactos associados."@pt ;
     rdfs:subClassOf ontohate:Discurso_de_odio .
 
 ontohate:Coisa a owl:Class ;
@@ -4195,13 +4242,17 @@ ontohate:Coisa a owl:Class ;
     rdfs:comment "Raiz do dominio (continuante/entidade geral)."@pt ;
     rdfs:subClassOf owl:Thing .
 
-ontohate:Plataforma_digital a owl:Class ;
-    rdfs:label "Plataforma digital"@pt ;
-    rdfs:comment "Ambiente sociotecnico onde o discurso de odio e produzido, circula e e moderado."@pt,
-        "Conceito robusto derivado da tese."@pt ;
-    rdfs:subClassOf ontohate:Moderacao ;
-    ontohatev1:complementoPlanilhaV1 "Ambiente sociotécnico onde o discurso de ódio é produzido, circula e é moderado. Integra infraestrutura técnica, regras privadas, sistemas algorítmicos e práticas de governança. Conceito robusto derivado da tese."@pt ;
-    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Ambiente sociotécnico onde o discurso de ódio é produzido, circula e é moderado. Integra infraestrutura técnica, regras privadas, sistemas algorítmicos e práticas de governança. Conceito robusto derivado da tese."@pt .
+ontohate:Manifestacao a owl:Class ;
+    rdfs:label "Manifestacao"@pt ;
+    rdfs:comment "Formas de expressao/realizacao do discurso (texto, meme etc.)."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Manifestação em que o conteúdo odiento é apresentado de forma indireta ou implícita. Pode utilizar ironia, ambiguidade, eufemismo ou estratégias discursivas que dificultam identificação imediata. Deriva da questão de competência da tese."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Manifestação em que o conteúdo odiento é apresentado de forma indireta ou implícita. Pode utilizar ironia, ambiguidade, eufemismo ou estratégias discursivas que dificultam identificação imediata. Deriva da questão de competência da tese."@pt .
+
+ontohate:Nucleo a owl:Class ;
+    rdfs:label "Nucleo"@pt ;
+    rdfs:comment "Conteudo/estrutura conceitual central do discurso."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio .
 
 ontohate:Tom_do_discurso a owl:Class ;
     rdfs:label "Tom do discurso"@pt ;
@@ -4211,20 +4262,33 @@ ontohate:Tom_do_discurso a owl:Class ;
     ontohatev1:complementoPlanilhaV1 "Qualidade expressiva que caracteriza a maneira como o comentário odiento é enunciado. Modula intensidade, aceitabilidade e impacto simbólico do ataque. Não é Recurso_de_Forma; inere em Comentario_odiento via possuiTom."@pt ;
     ontohatev1:conceitoFonteV1 "[Fonte: planilha] Qualidade expressiva que caracteriza a maneira como o comentário odiento é enunciado. Modula intensidade, aceitabilidade e impacto simbólico do ataque. Não é Recurso_de_Forma; inere em Comentario_odiento via possuiTom."@pt .
 
+ontohate:Plataforma_digital a owl:Class ;
+    rdfs:label "Plataforma digital"@pt ;
+    rdfs:comment "Ambiente sociotecnico onde o discurso de odio e produzido, circula e e moderado."@pt,
+        "Conceito robusto derivado da tese."@pt ;
+    rdfs:subClassOf ontohate:Moderacao ;
+    ontohatev1:complementoPlanilhaV1 "Ambiente sociotécnico onde o discurso de ódio é produzido, circula e é moderado. Integra infraestrutura técnica, regras privadas, sistemas algorítmicos e práticas de governança. Conceito robusto derivado da tese."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Ambiente sociotécnico onde o discurso de ódio é produzido, circula e é moderado. Integra infraestrutura técnica, regras privadas, sistemas algorítmicos e práticas de governança. Conceito robusto derivado da tese."@pt .
+
+ontohate:Recursos a owl:Class ;
+    rdfs:label "Recursos"@pt ;
+    rdfs:comment "Recursos tecnicos e estrategias discursivas."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Recursos relacionados à forma material da manifestação. Correspondem ao suporte midiático do discurso. Classe intermediária estrutural."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Recursos relacionados à forma material da manifestação. Correspondem ao suporte midiático do discurso. Classe intermediária estrutural."@pt .
+
+ontohate:Proposicao_odienta a owl:Class ;
+    rdfs:label "Proposicao odienta"@pt ;
+    rdfs:comment "Conteudo proposicional que expressa hostilidade ou inferiorizacao."@pt,
+        "Elemento semantico do discurso."@pt ;
+    rdfs:subClassOf ontohate:Discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Conteúdo proposicional que expressa hostilidade ou inferiorização. Constitui a unidade semântica do discurso de ódio manifestado pelo agente odiador. Elemento semântico do discurso."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conteúdo proposicional que expressa hostilidade ou inferiorização. Constitui a unidade semântica do discurso de ódio manifestado pelo agente odiador. Elemento semântico do discurso."@pt .
+
 ontohate:Contexto a owl:Class ;
     rdfs:label "Contexto"@pt ;
     rdfs:comment "Contexto sociocomunicacional e situacional."@pt ;
     rdfs:subClassOf ontohate:Discurso_de_odio ;
-    ontohatev1:complementoPlanilhaV1 "Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt ;
-    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt .
-
-ontohate:Discurso_de_odio a owl:Class ;
-    rdfs:label "Discurso de odio"@pt,
-        "Discurso de odio online"@pt ;
-    rdfs:comment "Classe central da ontologia."@pt,
-        "Evento comunicacional de expressao/circulacao de odio."@pt,
-        "Fenomeno comunicativo manifestado em Plataformas Digitais."@pt ;
-    rdfs:subClassOf ontohate:Evento_de_discurso_de_odio ;
     ontohatev1:complementoPlanilhaV1 "Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt ;
     ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt .
 
@@ -4247,6 +4311,16 @@ ontohate:Pessoa_com_caracteristica_protegida a owl:Class ;
 A pessoa com característica protegida pertence a um grupo de pessoas com características protegidas
 
 [Complemento da planilha] Pode ser alvo de hostilidade com base em identidade, condição ou pertencimento. Classe intermediária. Pessoa que possui característica protegida socialmente."""@pt .
+
+ontohate:Discurso_de_odio a owl:Class ;
+    rdfs:label "Discurso de odio"@pt,
+        "Discurso de odio online"@pt ;
+    rdfs:comment "Classe central da ontologia."@pt,
+        "Evento comunicacional de expressao/circulacao de odio."@pt,
+        "Fenomeno comunicativo manifestado em Plataformas Digitais."@pt ;
+    rdfs:subClassOf ontohate:Evento_de_discurso_de_odio ;
+    ontohatev1:complementoPlanilhaV1 "Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt ;
+    ontohatev1:conceitoFonteV1 "[Fonte: planilha] Conjunto de circunstâncias socioculturais e situacionais nas quais o discurso de ódio é produzido e circula. Influencia interpretação, alcance e impacto da manifestação odienta. Classe estruturante da subontologia."@pt .
 
 [] a owl:AllDisjointClasses ;
     owl:members ( ontohate:Consequencia ontohate:Contexto ontohate:Destinatario_vitima ontohate:Manifestacao ontohate:Moderacao ontohate:Motivacao ontohate:Natureza ontohate:Nucleo ontohate:Recursos ) .
