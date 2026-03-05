@@ -1184,7 +1184,7 @@ function makeGraph(id){
   function bfsLv(roots,ch){
     const lv=new Map(),vis=new Set(roots.map(r=>r.id)),q=[...roots];
     roots.forEach(r=>lv.set(r.id,0));
-    while(q.length){const n=q.shift();for(const k of(cmap2.get(n.id)||[]))if(!vis.has(k.id)){vis.add(k.id);lv.set(k.id,(lv.get(n.id)||0)+1);q.push(k);}}
+    while(q.length){const n=q.shift();for(const k of(ch.get(n.id)||[]))if(!vis.has(k.id)){vis.add(k.id);lv.set(k.id,(lv.get(n.id)||0)+1);q.push(k);}}
     nodes.forEach(n=>{if(!lv.has(n.id))lv.set(n.id,0);});return lv;
   }
   function doHier(lr){
@@ -1225,7 +1225,7 @@ function makeGraph(id){
   }
 
   function doRadial(){
-    const{ch:cmap2,roots}=treeMap(), center=roots[0]||nodes[0];
+    const{ch,roots}=treeMap(), center=roots[0]||nodes[0];
     const dist=new Map([[center.id,0]]), vis=new Set([center.id]), q=[center];
     while(q.length){
       const n=q.shift();
@@ -1239,7 +1239,7 @@ function makeGraph(id){
       const n=nodes.find(n=>n.id===id);if(n)byR.get(d).push(n);
     }
     const maxR=Math.max(...byR.keys(),0);
-    const cx=cw()/2, cy=H()/2;
+    const cx=W()/2, cy=H()/2;
     const mr=Math.min(cx,cy)*0.85;
     center.x=cx; center.y=cy;
     for(const[r,ns]of byR){
