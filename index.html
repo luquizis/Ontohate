@@ -93,6 +93,34 @@ td{font-family:var(--mono);word-break:break-all}
 }
 #tip.on{opacity:1}
 #dbg{margin-bottom:12px}
+
+/* ── graph view ── */
+.gv-wrap{display:grid;grid-template-columns:1fr 290px;gap:12px;align-items:start}
+@media(max-width:900px){.gv-wrap{grid-template-columns:1fr}}
+.cv-box{position:relative}
+canvas.gv{display:block;width:100%;height:640px;cursor:grab;border-radius:10px;
+  background:color-mix(in srgb,var(--bg) 65%,transparent)}
+canvas.gv:active{cursor:grabbing}
+/* layout toggle buttons */
+.ltog{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px}
+.ltog button{border:none;background:transparent;color:var(--muted);padding:5px 11px;
+  cursor:pointer;font-size:12px;font-weight:600;transition:.12s;white-space:nowrap}
+.ltog button.on{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+/* sliders */
+.srow{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:var(--muted)}
+.srow input[type=range]{flex:1;accent-color:var(--accent)}
+.srow span.val{min-width:30px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+/* legend */
+.dim-legend{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+.dim-legend-row{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.dim-swatch{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+/* edge legend */
+.edge-legend{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
+.edge-legend-row{display:flex;align-items:center;gap:8px}
+/* checkboxes */
+.ckrow{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);
+  cursor:pointer;margin-bottom:4px}
+
 </style>
 </head>
 <body data-theme="dark">
@@ -128,63 +156,84 @@ td{font-family:var(--mono);word-break:break-all}
 
   <!-- TAXONOMIA -->
   <div id="page-tax" class="page on">
-    <div class="layout">
-      <div class="card" style="min-width:0">
-        <div class="card-hd">
-          <h2>Taxonomia</h2>
-          <span class="badge" id="taxMeta">—</span>
-          <div class="row" style="margin:0;gap:5px;margin-left:auto">
-            <button class="btn" onclick="gTax&&gTax.fit()" title="Ajustar zoom">⊡</button>
-            <button class="btn ok" onclick="exportTax()">PNG</button>
+    <div class="gv-wrap">
+      <div>
+        <div class="card">
+          <div class="card-hd" style="flex-wrap:wrap;gap:6px">
+            <h2>Taxonomia</h2>
+            <span class="badge" id="taxMeta">—</span>
+            <div style="display:flex;gap:4px;align-items:center;margin-left:auto">
+              <button class="btn" onclick="gTax&&gTax.fit()" title="Ajustar zoom">⊡ Ajustar</button>
+              <button class="btn ok" onclick="gTax&&gTax.exportPng()">PNG</button>
+            </div>
           </div>
-        </div>
-        <!-- toolbar de layout -->
-        <div style="display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center">
-          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Layout:</span>
-          <button class="btn lbtn on" data-g="tax" data-l="tb"  title="Top-down">↓ Top-down</button>
-          <button class="btn lbtn"    data-g="tax" data-l="lr"  title="Esquerda→Direita">→ Esq→Dir</button>
-          <button class="btn lbtn"    data-g="tax" data-l="rad" title="Radial">◎ Radial</button>
-          <div style="width:1px;background:var(--border);align-self:stretch"></div>
-          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Nós:</span>
-          <input type="range" id="taxNodeSep" min="60" max="300" value="110" style="width:80px" title="Espaçamento horizontal">
-          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Níveis:</span>
-          <input type="range" id="taxLevelSep" min="50" max="250" value="90" style="width:80px" title="Espaçamento vertical">
-        </div>
-        <div class="card-bd" style="padding:6px">
-          <canvas id="cvTax" style="height:640px"></canvas>
+          <!-- toolbar layout -->
+          <div style="padding:6px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">LAYOUT</span>
+            <div class="ltog">
+              <button class="on" data-g="tax" data-l="tb">↓ Top-down</button>
+              <button data-g="tax" data-l="lr">→ Esq-Dir</button>
+              <button data-g="tax" data-l="rad">◎ Radial</button>
+            </div>
+            <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">ESPAÇAMENTO</span>
+            <div class="srow" style="margin:0;flex:1;max-width:280px">
+              <span>Nós</span>
+              <input type="range" id="taxNS" min="50" max="350" value="120" oninput="taxNSV.textContent=this.value;relayoutG('tax')">
+              <span class="val" id="taxNSV">120</span>
+              <span>Níveis</span>
+              <input type="range" id="taxLS" min="40" max="280" value="90"  oninput="taxLSV.textContent=this.value;relayoutG('tax')">
+              <span class="val" id="taxLSV">90</span>
+            </div>
+          </div>
+          <div class="card-bd" style="padding:6px">
+            <canvas id="cvTax" class="gv"></canvas>
+          </div>
         </div>
       </div>
-      <div class="card" style="min-width:260px;max-width:360px">
-        <div class="card-hd"><h2>Controles</h2></div>
-        <div class="card-bd">
-          <div class="hint"><b>Arrastar</b> nós para reposicionar. <b>Scroll</b> para zoom. <b>Click</b> para focar vizinhança. Mouse sobre nó = detalhes.</div>
-          <label>Dimensões <span style="color:var(--dim)">(Ctrl/Cmd para multi)</span></label>
-          <select id="taxDims" multiple size="8" style="margin-bottom:8px"></select>
-          <label>Modo de combinação</label>
-          <select id="taxMode" style="margin-bottom:8px">
-            <option value="union">União (todas as dimensões)</option>
-            <option value="inter">Cruzamento (interseção)</option>
-          </select>
-          <button class="btn primary" style="width:100%;margin-bottom:8px" onclick="buildTax()">Gerar grafo</button>
-          <div class="sep"></div>
-          <div class="hint" style="margin-bottom:6px"><b>Somar ontologias</b> — une as classes de múltiplas dimensões ligadas pelo nó raiz <i>Discurso de Ódio</i>.</div>
-          <div class="row" style="margin-bottom:0">
-            <label style="margin:0"><input type="checkbox" id="taxShowRoot" checked> Mostrar nó raiz</label>
-            <label style="margin:0"><input type="checkbox" id="taxFocus" checked> Foco ao clicar</label>
-          </div>
-          <button class="btn" style="width:100%;margin-top:6px" onclick="clearFocusTax()">Limpar foco</button>
-          <div class="sep"></div>
-          <label>Estilos visuais</label>
-          <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:6px">
-            <label style="margin:0;font-size:12px"><input type="checkbox" id="taxColorDims" checked> Colorir por dimensão</label>
-            <label style="margin:0;font-size:12px"><input type="checkbox" id="taxShowEdgeLabel"> Rótulos nas arestas</label>
-          </div>
-          <div class="sep"></div>
-          <label>Busca</label>
-          <div class="row" style="margin-bottom:0">
-            <input id="taxQ" placeholder="nome do conceito…" style="flex:1">
-            <button class="btn" onclick="hlTax()">↗</button>
-            <button class="btn" onclick="clearHlTax()">✕</button>
+      <!-- side panel -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="card">
+          <div class="card-hd"><h2>Controles</h2></div>
+          <div class="card-bd">
+            <div class="hint" style="font-size:12px;margin-bottom:8px">
+              <b>Arrastar</b> nós para mover •
+              <b>Scroll</b> para zoom •
+              <b>Clique</b> foca vizinhança •
+              <b>Duplo clique</b> reaplica layout
+            </div>
+
+            <label style="font-size:11px;color:var(--dim)">DIMENSÕES <small>(Ctrl/Cmd para múltiplas)</small></label>
+            <select id="taxDims" multiple size="7" style="margin-bottom:8px;width:100%"></select>
+
+            <label style="font-size:11px;color:var(--dim)">MODO</label>
+            <select id="taxMode" style="margin-bottom:8px;width:100%">
+              <option value="union">União — todas as dimensões selecionadas</option>
+              <option value="inter">Cruzamento — apenas classes em comum</option>
+            </select>
+
+            <button class="btn primary" style="width:100%;margin-bottom:4px" onclick="buildTax()">Gerar grafo</button>
+
+            <div class="sep"></div>
+            <div class="hint" style="font-size:12px;margin-bottom:6px">
+              <b>Somar ontologias:</b> ao selecionar múltiplas dimensões, elas são conectadas pelo nó raiz <em>Discurso de Ódio Online</em>.
+            </div>
+            <label class="ckrow"><input type="checkbox" id="taxRoot" checked onchange="buildTax()"> Exibir nó raiz</label>
+            <label class="ckrow"><input type="checkbox" id="taxColor" checked onchange="buildTax()"> Colorir por dimensão</label>
+            <label class="ckrow"><input type="checkbox" id="taxEL" onchange="buildTax()"> Rótulos nas arestas</label>
+            <label class="ckrow"><input type="checkbox" id="taxFocus" checked> Foco ao clicar</label>
+            <button class="btn" style="width:100%;margin-top:2px" onclick="gTax&&gTax.clearFocus()">Limpar foco</button>
+
+            <div class="sep"></div>
+            <label style="font-size:11px;color:var(--dim)">BUSCA</label>
+            <div class="row" style="margin-bottom:0">
+              <input id="taxQ" placeholder="nome do conceito…" style="flex:1">
+              <button class="btn" onclick="hlG('tax')">↗</button>
+              <button class="btn" onclick="clHlG('tax')">✕</button>
+            </div>
+
+            <div class="sep"></div>
+            <label style="font-size:11px;color:var(--dim)">LEGENDA DE DIMENSÕES</label>
+            <div id="taxLeg" class="dim-legend"></div>
           </div>
         </div>
       </div>
@@ -193,72 +242,98 @@ td{font-family:var(--mono);word-break:break-all}
 
   <!-- ONTOLOGIA -->
   <div id="page-onto" class="page">
-    <div class="layout">
-      <div class="card" style="min-width:0">
-        <div class="card-hd">
-          <h2>Ontologia</h2>
-          <span class="badge" id="ontoMeta">—</span>
-          <div class="row" style="margin:0;gap:5px;margin-left:auto">
-            <button class="btn" onclick="gOnto&&gOnto.fit()" title="Ajustar zoom">⊡</button>
-            <button class="btn ok" onclick="exportOnto()">PNG</button>
+    <div class="gv-wrap">
+      <div>
+        <div class="card">
+          <div class="card-hd" style="flex-wrap:wrap;gap:6px">
+            <h2>Ontologia</h2>
+            <span class="badge" id="ontoMeta">—</span>
+            <div style="display:flex;gap:4px;align-items:center;margin-left:auto">
+              <button class="btn" onclick="gOnto&&gOnto.fit()">⊡ Ajustar</button>
+              <button class="btn ok" onclick="gOnto&&gOnto.exportPng()">PNG</button>
+            </div>
           </div>
-        </div>
-        <!-- toolbar de layout -->
-        <div style="display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center">
-          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Layout:</span>
-          <button class="btn lbtn on" data-g="onto" data-l="tb"  title="Top-down">↓ Top-down</button>
-          <button class="btn lbtn"    data-g="onto" data-l="lr"  title="Esquerda→Direita">→ Esq→Dir</button>
-          <button class="btn lbtn"    data-g="onto" data-l="rad" title="Radial">◎ Radial</button>
-          <div style="width:1px;background:var(--border);align-self:stretch"></div>
-          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Nós:</span>
-          <input type="range" id="ontoNodeSep" min="60" max="300" value="110" style="width:80px">
-          <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">Níveis:</span>
-          <input type="range" id="ontoLevelSep" min="50" max="250" value="90" style="width:80px">
-        </div>
-        <div class="card-bd" style="padding:6px">
-          <canvas id="cvOnto" style="height:640px"></canvas>
+          <!-- toolbar layout -->
+          <div style="padding:6px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">LAYOUT</span>
+            <div class="ltog">
+              <button class="on" data-g="onto" data-l="tb">↓ Top-down</button>
+              <button data-g="onto" data-l="lr">→ Esq-Dir</button>
+              <button data-g="onto" data-l="rad">◎ Radial</button>
+            </div>
+            <span style="font-size:11px;color:var(--dim);font-family:var(--mono)">ESPAÇAMENTO</span>
+            <div class="srow" style="margin:0;flex:1;max-width:280px">
+              <span>Nós</span>
+              <input type="range" id="ontoNS" min="50" max="350" value="120" oninput="ontoNSV.textContent=this.value;relayoutG('onto')">
+              <span class="val" id="ontoNSV">120</span>
+              <span>Níveis</span>
+              <input type="range" id="ontoLS" min="40" max="280" value="90"  oninput="ontoLSV.textContent=this.value;relayoutG('onto')">
+              <span class="val" id="ontoLSV">90</span>
+            </div>
+          </div>
+          <div class="card-bd" style="padding:6px">
+            <canvas id="cvOnto" class="gv"></canvas>
+          </div>
         </div>
       </div>
-      <div class="card" style="min-width:260px;max-width:360px">
-        <div class="card-hd"><h2>Controles</h2></div>
-        <div class="card-bd">
-          <div class="hint"><b>Arrastar</b> nós. <b>Scroll</b> para zoom. <b>Click</b> para ver detalhes e focar. As <span style="color:#a78bfa">arestas roxas tracejadas</span> são <b>Object Properties</b>; as <span style="color:rgba(255,255,255,.5)">sólidas</span> são hierarquia (<i>subClassOf</i>).</div>
-          <label>Dimensão</label>
-          <select id="ontoDim" style="margin-bottom:8px"></select>
-          <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">
-            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoSub" checked> Hierarquia</label>
-            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoProps" checked> Propriedades</label>
-            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoColorDims" checked> Colorir por dimensão</label>
-            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoEdgeLabel" checked> Rótulos nas arestas</label>
-          </div>
-          <button class="btn primary" style="width:100%;margin-bottom:6px" onclick="buildOnto()">Atualizar grafo</button>
-          <div class="sep"></div>
-          <!-- legenda -->
-          <div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:6px">LEGENDA</div>
-          <div id="ontoLegend" style="font-size:12px;line-height:2;margin-bottom:8px"></div>
-          <div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap">
-            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-              <div style="width:24px;height:2px;background:rgba(255,255,255,.4)"></div>subClassOf
+      <!-- side panel -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="card">
+          <div class="card-hd"><h2>Controles</h2></div>
+          <div class="card-bd">
+            <div class="hint" style="font-size:12px;margin-bottom:8px">
+              <span style="color:#a78bfa;font-weight:600">━ ━</span> <b>ObjectProperty</b> (linha roxa curva com rótulo)<br>
+              <span style="color:rgba(200,210,230,.7);font-weight:600">──</span> <b>subClassOf</b> (linha fina com seta)
             </div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-              <div style="width:24px;height:2px;background:#a78bfa;border-top:2px dashed #a78bfa"></div>ObjectProperty
+
+            <label style="font-size:11px;color:var(--dim)">DIMENSÃO</label>
+            <select id="ontoDim" style="margin-bottom:8px;width:100%"></select>
+
+            <label class="ckrow"><input type="checkbox" id="ontoSub" checked onchange="buildOnto()"> Hierarquia (subClassOf)</label>
+            <label class="ckrow"><input type="checkbox" id="ontoProps" checked onchange="buildOnto()"> Object Properties</label>
+            <button class="btn primary" style="width:100%;margin:4px 0 8px" onclick="buildOnto()">Atualizar grafo</button>
+
+            <div class="sep"></div>
+            <div class="edge-legend">
+              <div class="edge-legend-row">
+                <svg width="36" height="12" style="flex-shrink:0">
+                  <line x1="2" y1="6" x2="30" y2="6" stroke="rgba(200,210,230,.65)" stroke-width="1.5"/>
+                  <polygon points="26,3 34,6 26,9" fill="rgba(200,210,230,.65)"/>
+                </svg>
+                subClassOf
+              </div>
+              <div class="edge-legend-row">
+                <svg width="36" height="12" style="flex-shrink:0">
+                  <path d="M2,9 Q18,2 34,8" stroke="#a78bfa" stroke-width="2" fill="none" stroke-dasharray="5,3"/>
+                  <polygon points="30,5 36,9 29,11" fill="#a78bfa"/>
+                </svg>
+                ObjectProperty
+              </div>
             </div>
-          </div>
-          <div class="sep"></div>
-          <div class="row" style="margin-bottom:6px">
-            <label style="margin:0;font-size:12px"><input type="checkbox" id="ontoFocus" checked> Foco ao clicar</label>
-            <button class="btn" onclick="clearFocusOnto()">Limpar foco</button>
-          </div>
-          <label>Busca</label>
-          <div class="row" style="margin-bottom:8px">
-            <input id="ontoQ" placeholder="nome do conceito…" style="flex:1">
-            <button class="btn" onclick="hlOnto()">↗</button>
-            <button class="btn" onclick="clearHlOnto()">✕</button>
-          </div>
-          <div class="sep"></div>
-          <div class="card" style="box-shadow:none">
-            <div class="card-hd"><h2>Detalhes do nó</h2><span class="badge" id="detPill">—</span></div>
-            <div class="card-bd" id="detBox"><span style="color:var(--muted)">Clique num nó.</span></div>
+
+            <div class="sep"></div>
+            <label class="ckrow"><input type="checkbox" id="ontoColor" checked onchange="buildOnto()"> Colorir por dimensão</label>
+            <label class="ckrow"><input type="checkbox" id="ontoEL" checked onchange="buildOnto()"> Rótulos nas arestas</label>
+            <label class="ckrow"><input type="checkbox" id="ontoFocus" checked> Foco ao clicar</label>
+            <button class="btn" style="width:100%;margin-top:2px" onclick="gOnto&&gOnto.clearFocus()">Limpar foco</button>
+
+            <div class="sep"></div>
+            <label style="font-size:11px;color:var(--dim)">BUSCA</label>
+            <div class="row" style="margin-bottom:8px">
+              <input id="ontoQ" placeholder="nome do conceito…" style="flex:1">
+              <button class="btn" onclick="hlG('onto')">↗</button>
+              <button class="btn" onclick="clHlG('onto')">✕</button>
+            </div>
+
+            <div class="sep"></div>
+            <label style="font-size:11px;color:var(--dim)">LEGENDA DE DIMENSÕES</label>
+            <div id="ontoLeg" class="dim-legend" style="margin-bottom:8px"></div>
+
+            <div class="sep"></div>
+            <div class="card" style="box-shadow:none;border:1px solid var(--border)">
+              <div class="card-hd"><h2>Detalhes do nó</h2><span class="badge" id="detPill">—</span></div>
+              <div class="card-bd" id="detBox"><span style="color:var(--muted)">Clique num nó.</span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -267,33 +342,54 @@ td{font-family:var(--mono);word-break:break-all}
 
   <!-- SPARQL -->
   <div id="page-sparql" class="page">
-    <div class="layout">
-      <div class="card">
-        <div class="card-hd"><h2>Questões de competência</h2></div>
-        <div class="card-bd">
-          <div class="hint"><b>Presets:</b> clique para carregar. Ctrl/Cmd+Enter para executar.</div>
+    <div style="display:grid;grid-template-columns:320px 1fr;gap:12px;align-items:start">
+
+      <!-- coluna esquerda: presets -->
+      <div class="card" style="max-height:88vh;display:flex;flex-direction:column">
+        <div class="card-hd">
+          <h2>Questões de competência</h2>
+        </div>
+        <div style="font-size:11px;color:var(--muted);padding:6px 14px 4px;line-height:1.5">
+          Clique numa questão para carregar e executar automaticamente.
+          <kbd style="font-family:var(--mono);font-size:10px;background:var(--border);padding:1px 5px;border-radius:4px">Ctrl+Enter</kbd> para re-executar.
+        </div>
+        <div class="card-bd" style="overflow-y:auto;flex:1;padding-top:8px">
           <div id="presets"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-hd">
-          <h2>SPARQL</h2>
-          <div class="row" style="margin:0;gap:6px">
-            <button class="btn ok" onclick="runQ()">Executar</button>
-            <button class="btn" onclick="document.getElementById('qbox').value=''">Limpar</button>
-            <button class="btn" onclick="navigator.clipboard?.writeText(document.getElementById('qbox').value)">Copiar</button>
+
+      <!-- coluna direita: editor + resultados -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <!-- editor -->
+        <div class="card">
+          <div class="card-hd" style="flex-wrap:wrap;gap:6px">
+            <h2>Editor SPARQL</h2>
+            <div style="display:flex;gap:5px;margin-left:auto;flex-wrap:wrap">
+              <button class="btn ok" onclick="runQuery()" style="font-weight:700">▶ Executar</button>
+              <button class="btn" onclick="$('qbox').value=''">Limpar</button>
+              <button class="btn" onclick="navigator.clipboard?.writeText($('qbox').value)">Copiar</button>
+              <button class="btn" onclick="exportCsv()">↓ CSV</button>
+              <button class="btn" onclick="exportJson()">↓ JSON</button>
+            </div>
+          </div>
+          <div class="card-bd" style="padding-top:6px">
+            <div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:6px;line-height:1.6">
+              Prefixos <code>ontohate:</code>, <code>rdfs:</code>, <code>owl:</code>, <code>ontohatev1:</code> etc. são injetados automaticamente.
+            </div>
+            <textarea id="qbox" spellcheck="false" placeholder="SELECT ?nome WHERE { ?c rdfs:label ?nome . FILTER(LANG(?nome)='pt') } LIMIT 10"></textarea>
           </div>
         </div>
-        <div class="card-bd">
-          <textarea id="qbox"></textarea>
-          <div class="row" style="margin-top:8px;margin-bottom:0">
-            <button class="btn" onclick="exportCsv()">CSV</button>
-            <button class="btn" onclick="exportJson()">JSON</button>
+
+        <!-- resultados -->
+        <div class="card">
+          <div class="card-hd">
+            <h2>Resultados</h2>
+            <span class="badge" id="qmeta">—</span>
           </div>
-          <div class="sep"></div>
-          <div class="card" style="box-shadow:none">
-            <div class="card-hd"><h2>Resultado</h2><span class="badge" id="qmeta">—</span></div>
-            <div class="card-bd" id="qres"><span style="color:var(--muted)">Execute uma consulta.</span></div>
+          <div class="card-bd" id="qres" style="overflow-x:auto;padding:0">
+            <div style="color:var(--muted);padding:20px;font-size:13px">
+              ← Selecione uma questão de competência ou escreva uma consulta SPARQL.
+            </div>
           </div>
         </div>
       </div>
@@ -303,46 +399,25 @@ td{font-family:var(--mono);word-break:break-all}
 </main>
 
 <script>
-/* ============================================================
-   ONTOHATE VISUALIZER — ZERO dependências externas
-   Turtle parser próprio + Canvas2D force-directed graph + SPARQL engine própria
-   ============================================================ */
-
-/* ── utils ── */
+'use strict';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-
 function setStatus(k,t){$('sdot').className='dot '+k;$('stxt').textContent=t}
 function setDebug(pill,html){$('dpill').textContent=pill;$('dbox').innerHTML=html}
-function dl(name,text,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime||'text/plain'}));a.download=name;a.click()}
-function toCsv(rows){
-  if(!rows.length)return'';
-  const cols=Object.keys(rows[0]);
-  const q=v=>{const s=String(v??'');return/[,"\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:`${s}`};
-  return[cols.join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\n');
-}
-
-function toggleTheme(){
-  const t=document.body.getAttribute('data-theme')||'dark';
-  document.body.setAttribute('data-theme',t==='dark'?'light':'dark');
-  [gTax,gOnto].forEach(g=>{if(g)g.draw()});
-}
-
-/* ── tabs ── */
+function dl(name,text,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime||'text/plain'}));a.download=name;a.click();}
+function toCsv(rows){if(!rows.length)return'';const cols=Object.keys(rows[0]);const q=v=>{const s=String(v??'');return/[,"\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:`${s}`};return[cols.join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\n')}
+function toggleTheme(){const t=document.body.getAttribute('data-theme')||'dark';document.body.setAttribute('data-theme',t==='dark'?'light':'dark');[gTax,gOnto].forEach(g=>g&&g.draw());}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
   const t=b.dataset.tab;
   ['tax','onto','sparql'].forEach(id=>$('page-'+id).classList.toggle('on',id===t));
-  if(t==='tax' && gTax){ gTax.resize(); }
-  if(t==='onto'){
-    if(!gOnto) gOnto = makeGraph('cvOnto');
-    requestAnimationFrame(()=>{
-      gOnto.resize();
-      // construir grafo ontologia na primeira vez que a aba é aberta
-      if(gOnto.getNodes().length === 0 && G.classes.size > 0) buildOnto();
-    });
-  }
+  if(t==='tax' &&gTax)  setTimeout(()=>gTax.resize(),60);
+  if(t==='onto'){setTimeout(()=>{
+    if(!gOnto)gOnto=makeGraph('cvOnto');
+    gOnto.resize();
+    if(gOnto.getNodes().length===0&&G.classes.size>0)buildOnto();
+  },60);}
 });
 
 /* ============================================================
@@ -525,6 +600,8 @@ function parseTurtle(text, baseIri) {
   return { prefixes, quads };
 }
 
+
+
 /* ============================================================
    RDF INDEX
    ============================================================ */
@@ -641,585 +718,740 @@ function buildIndex(quads){
   }
 }
 
+
+
 /* ============================================================
-   SPARQL ENGINE PRÓPRIA
+   SPARQL ENGINE v2 — suporte real a FILTER(LANG), subClassOf+,
+   UNION, OPTIONAL, BIND, CONTAINS, regex
    ============================================================ */
-function sparqlQuery(queryStr){
-  try{
-    const q=queryStr.replace(/\r\n/g,'\n').trim();
-    // --- parse SELECT / WHERE ---
-    const mq=q.match(/SELECT\s+(DISTINCT\s+)?([\s\S]+?)\s+WHERE\s*\{([\s\S]*)\}/i);
-    if(!mq)return{vars:[],rows:[],err:'Não foi possível parsear a query.'};
-    const distinct=!!mq[1];
-    const selStr=mq[2];
-    const whereStr=mq[3];
 
-    // --- extract LIMIT ---
-    const limM=q.match(/LIMIT\s+(\d+)/i);
-    const limit=limM?parseInt(limM[1]):2000;
+/* ── namespace defaults (injetados automaticamente) ── */
+const NS_DEFAULTS = {
+  rdf:        'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  rdfs:       'http://www.w3.org/2000/01/rdf-schema#',
+  owl:        'http://www.w3.org/2002/07/owl#',
+  xsd:        'http://www.w3.org/2001/XMLSchema#',
+  dcterms:    'http://purl.org/dc/terms/',
+  schema:     'https://schema.org/',
+  ontohate:   'http://ontohate.org/ontohate#',
+  ontohatev1: 'http://ontohate.org/ontohatev1#',
+};
 
-    // --- parse vars ---
-    const vars=[...selStr.matchAll(/\?(\w+)/g)].map(m=>m[1]);
-    if(!vars.length)return{vars:[],rows:[],err:'Nenhuma variável encontrada no SELECT.'};
-
-    // --- parse patterns from WHERE ---
-    // Extract OPTIONAL blocks
-    const optionals=[];
-    const whereNoOpt=whereStr.replace(/OPTIONAL\s*\{([^}]+)\}/gi,(_, inner)=>{
-      optionals.push(parseTripleBlock(inner));
-      return '';
-    });
-
-    // UNION
-    let mainPatterns=[];
-    if(/\}\s*UNION\s*\{/i.test(whereNoOpt)){
-      const parts=whereNoOpt.split(/\}\s*UNION\s*\{/i);
-      mainPatterns=[{union:parts.map(p=>parseTripleBlock(p.replace(/[{}]/g,'')))}];
-    } else {
-      mainPatterns=parseTripleBlock(whereNoOpt);
-    }
-
-    // --- evaluate ---
-    let bindings=[{}];
-
-    // join main patterns
-    for(const pat of mainPatterns){
-      if(pat.union){
-        const res=[];const seen=new Set();
-        for(const branch of pat.union){
-          let bb=[...bindings];
-          for(const p of branch) bb=joinTriple(bb,p);
-          for(const b of bb){const k=JSON.stringify(b);if(!seen.has(k)){seen.add(k);res.push(b);}}
-        }
-        bindings=res;
-      } else {
-        bindings=joinTriple(bindings,pat);
-      }
-    }
-
-    // join optionals
-    for(const optPats of optionals){
-      const extended=[];
-      for(const b of bindings){
-        let opts=[b];
-        for(const p of optPats) opts=joinTriple(opts,p);
-        if(opts.length>1) extended.push(...opts.filter(x=>x!==b));
-        else extended.push(b);
-      }
-      bindings=extended;
-    }
-
-    // FILTER isIRI
-    const iriFilters=[...whereStr.matchAll(/FILTER\s*\(\s*isIRI\s*\(\s*\?(\w+)\s*\)\s*\)/gi)].map(m=>m[1]);
-    if(iriFilters.length){
-      bindings=bindings.filter(b=>iriFilters.every(v=>{
-        const val=b[v]||'';
-        return val.startsWith('http://')||val.startsWith('https://');
-      }));
-    }
-
-    // project
-    let rows=bindings.map(b=>{
-      const r={};
-      for(const v of vars) r[v]=b[v]??'';
-      return r;
-    });
-
-    // distinct
-    if(distinct){
-      const seen=new Set();
-      rows=rows.filter(r=>{
-        const k=vars.map(v=>r[v]).join('|||');
-        if(seen.has(k))return false;
-        seen.add(k);return true;
-      });
-    }
-
-    // ORDER BY
-    const obM=q.match(/ORDER\s+BY\s+(DESC\s*\()?(\?\w+)\)?/i);
-    if(obM){
-      const desc=!!obM[1];const v=obM[2].slice(1);
-      rows.sort((a,b)=>{
-        const av=String(a[v]??''),bv=String(b[v]??'');
-        return desc?bv.localeCompare(av,'pt-BR'):av.localeCompare(bv,'pt-BR');
-      });
-    }
-
-    rows=rows.slice(0,limit);
-    return{vars,rows,err:null};
-  }catch(e){
-    return{vars:[],rows:[],err:String(e.message||e)};
-  }
-}
-
-function parseTripleBlock(block){
-  const triples=[];
-  const clean=block.replace(/FILTER[^)]+\)/gi,'').replace(/[{}]/g,'');
-  const re=/(<[^>]+>|\?[\w]+|[\w]+:[\w]+)\s+(<[^>]+>|\?[\w]+|[\w]+:[\w]+|a)\s+(<[^>]+>|\?[\w]+|[\w]+:[\w]+|"[^"]*")\s*[.;]/g;
-  let m;
-  while((m=re.exec(clean))!==null){
-    triples.push({s:m[1],p:m[2],o:m[3]});
-  }
-  return triples;
-}
-
-function resolveT(term,b){
-  if(!term)return null;
-  if(term.startsWith('?'))return b[term.slice(1)]??null;
-  if(term==='a')return NS.RDF+'type';
-  if(term.startsWith('<')&&term.endsWith('>'))return term.slice(1,-1);
-  if(term.startsWith('"'))return term.slice(1,term.lastIndexOf('"'));
-  // prefixed
-  const ci=term.indexOf(':');
-  if(ci>0){
-    const pfx=term.slice(0,ci),loc=term.slice(ci+1);
-    const defaults={rdf:NS.RDF,rdfs:NS.RDFS,owl:NS.OWL,xsd:'http://www.w3.org/2001/XMLSchema#'};
-    if(defaults[pfx])return defaults[pfx]+loc;
+/* ── expand prefixed IRI ── */
+function expandIri(term, pfxMap) {
+  if (!term) return null;
+  if (term === 'a') return NS.RDF + 'type';
+  if (term.startsWith('<') && term.endsWith('>')) return term.slice(1, -1);
+  if (term.startsWith('"') || term.startsWith("'")) return null; // literal
+  const ci = term.indexOf(':');
+  if (ci > 0) {
+    const pfx = term.slice(0, ci), loc = term.slice(ci + 1);
+    const base = (pfxMap && pfxMap[pfx]) || NS_DEFAULTS[pfx];
+    if (base) return base + loc;
   }
   return term;
 }
 
-function joinTriple(bindings,pat){
-  const out=[];
-  for(const b of bindings){
-    const sv=resolveT(pat.s,b);
-    const pv=resolveT(pat.p,b);
-    const ov=resolveT(pat.o,b);
-    const sVar=pat.s.startsWith('?')?pat.s.slice(1):null;
-    const pVar=pat.p.startsWith('?')?pat.p.slice(1):null;
-    const oVar=(pat.o.startsWith('?'))?pat.o.slice(1):null;
+/* ── parse literal: returns {val, lang, dtype} ── */
+function parseLiteral(term) {
+  if (!term) return null;
+  // "text"@lang  or  "text"^^dtype  or  "text"
+  const m = term.match(/^"((?:[^"\\]|\\.)*)(?:"@(\S+)|"\^\^(\S+)|")$/);
+  if (m) return { val: m[1].replace(/\\"/g, '"').replace(/\\n/g, '\n'), lang: m[2] || '', dtype: m[3] || '' };
+  // plain word fallback
+  return null;
+}
 
-    for(const q of G.quads){
-      if(sv!==null&&q.s!==sv)continue;
-      if(pv!==null&&q.p!==pv)continue;
-      if(ov!==null&&q.o!==ov)continue;
-      const nb={...b};
-      if(sVar)nb[sVar]=q.s;
-      if(pVar)nb[pVar]=q.p;
-      if(oVar)nb[oVar]=q.o;
+/* ── resolve a term in a binding ── */
+function resolveTerm(term, binding, pfxMap) {
+  if (!term) return null;
+  if (term.startsWith('?')) {
+    const bound = binding[term.slice(1)];
+    return bound !== undefined ? bound : null; // unbound → null means "any"
+  }
+  const lit = parseLiteral(term);
+  if (lit) return lit.val; // literals resolve to string value for matching
+  return expandIri(term, pfxMap);
+}
+
+/* ── transitive closure of rdfs:subClassOf ── */
+function transitiveSubClassOf(classIri) {
+  // returns all subclasses (descendants) of classIri
+  const result = new Set();
+  const queue = [classIri];
+  while (queue.length) {
+    const c = queue.shift();
+    const children = G.childOf.get(c);
+    if (!children) continue;
+    for (const ch of children) {
+      if (!result.has(ch)) { result.add(ch); queue.push(ch); }
+    }
+  }
+  return result;
+}
+
+/* ── evaluate FILTER expression ── */
+function evalFilter(expr, binding) {
+  const e = expr.trim();
+
+  // LANG(?var) = "xx"
+  const langEq = e.match(/^LANG\s*\(\s*\?(\w+)\s*\)\s*=\s*"([^"]*)"\s*$/i);
+  if (langEq) {
+    const val = binding['__lang__' + langEq[1]];
+    return (val || '').toLowerCase() === langEq[2].toLowerCase();
+  }
+
+  // CONTAINS(LCASE(STR(?var)), "text")  or CONTAINS(?var, "text")
+  const containsM = e.match(/CONTAINS\s*\(\s*(?:LCASE\s*\(\s*(?:STR\s*\()?\s*\?(\w+)\s*\)?)\s*\)\s*,\s*"([^"]*)"\s*\)/i)
+                 || e.match(/CONTAINS\s*\(\s*\?(\w+)\s*,\s*"([^"]*)"\s*\)/i);
+  if (containsM) {
+    const val = String(binding[containsM[1]] || '').toLowerCase();
+    return val.includes(containsM[2].toLowerCase());
+  }
+
+  // regex(?var, "pattern", "flags"?)
+  const regexM = e.match(/regex\s*\(\s*\?(\w+)\s*,\s*"([^"]*)"\s*(?:,\s*"([^"]*)"\s*)?\)/i);
+  if (regexM) {
+    try {
+      const val = String(binding[regexM[1]] || '');
+      return new RegExp(regexM[2], regexM[3] || '').test(val);
+    } catch { return false; }
+  }
+
+  // isIRI(?var)
+  const isIriM = e.match(/isIRI\s*\(\s*\?(\w+)\s*\)/i);
+  if (isIriM) {
+    const val = binding[isIriM[1]] || '';
+    return val.startsWith('http://') || val.startsWith('https://');
+  }
+
+  // NOT EXISTS { … }  — simplified: just return true (engine handles via optional)
+  if (/NOT\s+EXISTS/i.test(e)) return true;
+
+  // ?var != value
+  const neq = e.match(/\?(\w+)\s*!=\s*(\S+)/);
+  if (neq) {
+    const a = binding[neq[1]], b = expandIri(neq[2], {}) || neq[2].replace(/[<>"]/g,'');
+    return a !== b;
+  }
+
+  return true; // unknown filter → pass
+}
+
+/* ── parse triple pattern (handles ; shorthand) ── */
+function parseTriples(block, pfxMap) {
+  const triples = [];
+  // Tokenise: IRI, literal, prefixed, var, punctuation
+  const tokens = [];
+  const re = /<[^>]*>|"(?:[^"\\]|\\.)*"(?:@\S+|(?:\^\^<[^>]+>))?|'(?:[^'\\]|\\.)*'|#[^\n]*|\?\w+|[a-zA-Z_][\w]*:[a-zA-Z_][\w]*|[a-zA-Z_][\w]*|[;.,{}()\[\]]/g;
+  let m;
+  while ((m = re.exec(block)) !== null) {
+    const t = m[0];
+    if (t.startsWith('#')) continue; // comment
+    tokens.push(t);
+  }
+
+  let i = 0;
+  function peek() { return tokens[i]; }
+  function next() { return tokens[i++]; }
+  function skipPunct(...p) { if (p.includes(peek())) i++; }
+
+  let curS = null, curP = null;
+  while (i < tokens.length) {
+    const t = peek();
+    if (t === '.' || t === '}' || t === '{') { i++; curP = null; continue; }
+    if (t === ';') { i++; curP = null; continue; }
+    if (t === ',') { i++; /* reuse subject+predicate */ }
+    else if (!curS) { curS = next(); }
+    else if (!curP) { curP = next(); }
+    else { curS = next(); curP = null; continue; }
+
+    if (!curS || !curP) continue;
+    if (peek() === undefined || peek() === '}') break;
+    const obj = next();
+    triples.push({ s: curS, p: curP, o: obj });
+    // after triple, if ; → keep subject, clear predicate
+    if (peek() === ';') { curP = null; }
+    else if (peek() === '.') { curS = null; curP = null; }
+    else if (peek() === ',') { /* keep both */ }
+  }
+  return triples;
+}
+
+/* ── match one triple pattern against G.quads ── */
+function matchTriple(pat, bindings, pfxMap, transitive) {
+  // transitive = true means ?x rdfs:subClassOf+ <IRI> or ?x rdfs:subClassOf+ ?v
+  const SUBCLASSOF = NS.RDFS + 'subClassOf';
+  const out = [];
+
+  for (const b of bindings) {
+    const sv = pat.s.startsWith('?') ? b[pat.s.slice(1)] : expandIri(pat.s, pfxMap);
+    const pv = pat.p === 'a' ? NS.RDF + 'type'
+             : pat.p.startsWith('?') ? b[pat.p.slice(1)] : expandIri(pat.p, pfxMap);
+    const oLit = parseLiteral(pat.o);
+    const ov = oLit ? null
+             : pat.o.startsWith('?') ? b[pat.o.slice(1)] : expandIri(pat.o, pfxMap);
+
+    const sVar = pat.s.startsWith('?') ? pat.s.slice(1) : null;
+    const pVar = pat.p.startsWith('?') ? pat.p.slice(1) : null;
+    const oVar = pat.o.startsWith('?') ? pat.o.slice(1) : null;
+
+    // --- transitive subClassOf+ ---
+    if (transitive && pv === SUBCLASSOF) {
+      if (ov !== null) {
+        // find all subclasses of ov
+        const subs = transitiveSubClassOf(ov);
+        for (const sub of subs) {
+          if (sv !== null && sv !== sub) continue;
+          const nb = { ...b };
+          if (sVar) nb[sVar] = sub;
+          out.push(nb);
+        }
+      } else if (sv !== null) {
+        // find all superclasses of sv transitively
+        const supers = new Set();
+        const q2 = [sv]; const vis2 = new Set([sv]);
+        while (q2.length) {
+          const c = q2.shift();
+          const parents = G.subOf.get(c);
+          if (!parents) continue;
+          for (const p of parents) { if (!vis2.has(p)) { vis2.add(p); supers.add(p); q2.push(p); } }
+        }
+        for (const sup of supers) {
+          if (oVar) { const nb = { ...b }; nb[oVar] = sup; out.push(nb); }
+        }
+      }
+      continue;
+    }
+
+    // --- normal quad scan ---
+    for (const q of G.quads) {
+      if (sv !== null && q.s !== sv) continue;
+      if (pv !== null && q.p !== pv) continue;
+      if (oLit) {
+        // match literal value
+        if (!q.oIsLiteral) continue;
+        if (q.o !== oLit.val) continue;
+        if (oLit.lang && q.oLang && q.oLang.toLowerCase() !== oLit.lang.toLowerCase()) continue;
+      } else {
+        if (ov !== null) {
+          if (q.oIsLiteral ? q.o !== ov : q.o !== ov) continue;
+        }
+      }
+      const nb = { ...b };
+      if (sVar) nb[sVar] = q.s;
+      if (pVar) nb[pVar] = q.p;
+      if (oVar) {
+        nb[oVar] = q.o;
+        // store lang/dtype for FILTER(LANG(...))
+        if (oVar) nb['__lang__' + oVar] = q.oLang || '';
+      }
       out.push(nb);
     }
   }
   return out;
 }
 
-/* ============================================================
-   CANVAS GRAPH ENGINE — force-directed, pan/zoom, tooltip
-   ============================================================ */
-function makeGraph(canvasId){
-  const cv = document.getElementById(canvasId);
-  if (!cv) return null;
-  let ctx = null;
-  function C(){ if(!ctx) ctx=cv.getContext('2d'); return ctx; }
+/* ── parse WHERE block: handles OPTIONAL, UNION, FILTER, BIND ── */
+function evalWhereBlock(block, bindings, pfxMap) {
+  // Process at the top level: split by OPTIONAL and UNION blocks
+  // Strategy: process token by token recognising keywords
 
-  // --- state ---
-  let nodes=[], edges=[];
-  let pan={x:0,y:0}, zoom=1;
-  let drag=null, lastM=null;
-  let highlighted=new Set(), focused=null, hoverNode=null;
-  let onNodeClick=null;
-  let layout='tb';          // tb | lr | rad
-  let nodeSep=110, levelSep=90;
-  let showEdgeLabels=true;
-  let colorMap=new Map();   // iri → hsl color (set externally)
+  // Extract FILTERs at top level
+  const filters = [];
+  const filterRe = /FILTER\s*\(([^)]+(?:\([^)]*\)[^)]*)*)\)/gi;
+  let fmatch;
+  while ((fmatch = filterRe.exec(block)) !== null) filters.push(fmatch[1]);
+  const noFilter = block.replace(/FILTER\s*\([^)]+(?:\([^)]*\)[^)]*)*\)/gi, '');
 
-  // --- sizing ---
-  function W(){ return cv.width /(window.devicePixelRatio||1); }
-  function H(){ return cv.height/(window.devicePixelRatio||1); }
+  // Extract BIND
+  const binds = [];
+  const bindRe = /BIND\s*\(([^)]+)\s+AS\s+\?(\w+)\s*\)/gi;
+  let bmatch;
+  while ((bmatch = bindRe.exec(noFilter)) !== null) binds.push({ expr: bmatch[1].trim(), varName: bmatch[2] });
+  const noFilterBind = noFilter.replace(/BIND\s*\([^)]+\)/gi, '');
+
+  // Split into UNION branches if present
+  // Find { } UNION { } patterns
+  const isUnion = /\}\s*UNION\s*\{/i.test(noFilterBind);
+
+  let result;
+
+  if (isUnion) {
+    // Split top-level UNION blocks
+    const branches = splitUnion(noFilterBind);
+    let unionResult = [];
+    const seen = new Set();
+    for (const branch of branches) {
+      let bb = [...bindings];
+      bb = evalSimpleBlock(branch, bb, pfxMap);
+      for (const b of bb) {
+        const k = JSON.stringify(b);
+        if (!seen.has(k)) { seen.add(k); unionResult.push(b); }
+      }
+    }
+    result = unionResult;
+  } else {
+    result = evalSimpleBlock(noFilterBind, bindings, pfxMap);
+  }
+
+  // Apply BINDs
+  for (const bd of binds) {
+    // support BIND("literal" AS ?var)
+    const litM = bd.expr.match(/^"([^"]*)"(?:@(\w+))?$/);
+    if (litM) {
+      result = result.map(b => ({ ...b, [bd.varName]: litM[1], ['__lang__' + bd.varName]: litM[2] || '' }));
+    }
+  }
+
+  // Apply FILTERs
+  for (const f of filters) {
+    result = result.filter(b => evalFilter(f, b));
+  }
+
+  return result;
+}
+
+function splitUnion(block) {
+  // Find top-level { ... } UNION { ... }
+  const branches = [];
+  let depth = 0, start = -1, i = 0;
+  while (i < block.length) {
+    if (block[i] === '{') { if (depth === 0) start = i + 1; depth++; }
+    else if (block[i] === '}') {
+      depth--;
+      if (depth === 0 && start >= 0) { branches.push(block.slice(start, i)); start = -1; }
+    }
+    i++;
+  }
+  return branches.length > 0 ? branches : [block];
+}
+
+function evalSimpleBlock(block, bindings, pfxMap) {
+  // Handle OPTIONAL sub-blocks
+  const optionals = [];
+  const noOpt = block.replace(/OPTIONAL\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/gi, (_, inner) => {
+    optionals.push(inner); return '';
+  });
+
+  // Collect triples (detect + for transitive)
+  const tripleRe = /(<[^>]+>|\?[\w]+|[\w]+:[\w#.\-]+|a)\s+(<[^>]+>|\?[\w]+|[\w]+:[\w#.\-]+\+?|a)\s+(<[^>]+>|\?[\w]+|[\w]+:[\w#.\-]+|"(?:[^"\\]|\\.)*"(?:@\S+)?(?:\^\^<[^>]+>)?)/g;
+  let m;
+  let cur = [...bindings];
+
+  const usedTriples = [];
+  while ((m = tripleRe.exec(noOpt)) !== null) {
+    const p = m[2];
+    const transitive = p.endsWith('+');
+    const pClean = transitive ? p.slice(0, -1) : p;
+    usedTriples.push({ s: m[1], p: pClean, o: m[3], transitive });
+  }
+
+  for (const t of usedTriples) {
+    cur = matchTriple(t, cur, pfxMap, t.transitive);
+    if (!cur.length) break;
+  }
+
+  // Apply optionals
+  for (const optBlock of optionals) {
+    const extended = [];
+    for (const b of cur) {
+      let opts = evalSimpleBlock(optBlock, [b], pfxMap);
+      if (opts.length > 0) extended.push(...opts);
+      else extended.push(b);
+    }
+    cur = extended;
+  }
+
+  return cur;
+}
+
+/* ── main SPARQL query function ── */
+function sparqlQuery(queryStr) {
+  try {
+    const q = queryStr.replace(/\r\n/g, '\n').trim();
+
+    // parse PREFIX declarations
+    const pfxMap = {};
+    for (const [, pfx, uri] of q.matchAll(/PREFIX\s+(\w*):\s*<([^>]+)>/gi)) pfxMap[pfx] = uri;
+
+    // merge with defaults
+    const allPfx = { ...NS_DEFAULTS, ...pfxMap };
+
+    // SELECT … WHERE { … }
+    const mq = q.match(/SELECT\s+(DISTINCT\s+)?([^{]+)\s+WHERE\s*\{([\s\S]*)\}/i);
+    if (!mq) return [];
+
+    const distinct = !!mq[1];
+    const selStr   = mq[2].trim();
+    const whereRaw = mq[3];
+
+    // variables
+    let vars;
+    if (selStr === '*') {
+      vars = null; // collect all at end
+    } else {
+      vars = [...selStr.matchAll(/\?(\w+)/g)].map(m => m[1]);
+      // dedupe preserving order
+      vars = [...new Set(vars)];
+    }
+
+    // LIMIT / ORDER BY
+    const limM  = q.match(/LIMIT\s+(\d+)/i);
+    const limit = limM ? parseInt(limM[1]) : 2000;
+    const obM   = q.match(/ORDER\s+BY\s+(DESC\s*\(\s*\?(\w+)\s*\)|ASC\s*\(\s*\?(\w+)\s*\)|\?(\w+))/i);
+
+    // evaluate
+    let bindings = evalWhereBlock(whereRaw, [{}], allPfx);
+
+    // project
+    if (!vars) vars = bindings.length ? Object.keys(bindings[0]).filter(k => !k.startsWith('__')) : [];
+
+    let rows = bindings.map(b => {
+      const r = {};
+      for (const v of vars) r[v] = b[v] ?? '';
+      return r;
+    });
+
+    // distinct
+    if (distinct) {
+      const seen = new Set();
+      rows = rows.filter(r => {
+        const k = vars.map(v => r[v]).join('|||');
+        if (seen.has(k)) return false;
+        seen.add(k); return true;
+      });
+    }
+
+    // order by
+    if (obM) {
+      const isDesc = !!obM[1] && obM[1].trim().startsWith('DESC');
+      const sortV  = obM[2] || obM[3] || obM[4];
+      rows.sort((a, b) => {
+        const av = String(a[sortV] ?? ''), bv = String(b[sortV] ?? '');
+        return isDesc ? bv.localeCompare(av, 'pt-BR') : av.localeCompare(bv, 'pt-BR');
+      });
+    }
+
+    return rows.slice(0, limit);
+
+  } catch (e) {
+    console.error('SPARQL error:', e);
+    throw e;
+  }
+}
+
+/* ── sparqlQueryEnhanced: injeta prefixos automaticamente ── */
+function sparqlQueryEnhanced(raw) {
+  // injetar prefixos padrão se não presentes
+  const prefixBlock = Object.entries(NS_DEFAULTS)
+    .filter(([pfx]) => !raw.includes(`PREFIX ${pfx}:`))
+    .map(([pfx, uri]) => `PREFIX ${pfx}: <${uri}>`)
+    .join('\n');
+  const q = prefixBlock ? prefixBlock + '\n' + raw : raw;
+  return sparqlQuery(q);
+}
+
+function makeGraph(id){
+  const cv=document.getElementById(id);if(!cv)return null;
+  let ctx=null;const C=()=>ctx||(ctx=cv.getContext('2d'));
+  const dpr=()=>window.devicePixelRatio||1;
+  const W=()=>cv.width/dpr(), H=()=>cv.height/dpr();
+  let nodes=[],edges=[];
+  let pan={x:0,y:0},zoom=1,drag=null,lastM=null;
+  let hl=new Set(),focused=null,hover=null,clickCb=null;
+  let layout='tb',nodeSep=120,levelSep=90,showEL=false,colorMap=new Map();
 
   function resize(){
-    const dpr=window.devicePixelRatio||1;
-    const w=cv.clientWidth||cv.parentElement?.clientWidth||900;
-    const h=cv.clientHeight||cv.parentElement?.clientHeight||640;
-    if(w<10||h<10) return;
-    if(cv.width===w*dpr&&cv.height===h*dpr) return;
-    cv.width=w*dpr; cv.height=h*dpr;
-    C().setTransform(dpr,0,0,dpr,0,0);
-    draw();
+    const d=dpr(),w=cv.clientWidth||cv.parentElement?.clientWidth||900,h=cv.clientHeight||cv.parentElement?.clientHeight||640;
+    if(w<10||h<10)return;
+    if(cv.width===w*d&&cv.height===h*d)return;
+    cv.width=w*d;cv.height=h*d;C().setTransform(d,0,0,d,0,0);draw();
   }
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize',resize);
+  const toS=(x,y)=>({x:x*zoom+pan.x,y:y*zoom+pan.y});
+  const toW=(x,y)=>({x:(x-pan.x)/zoom,y:(y-pan.y)/zoom});
 
-  // --- coord transforms ---
-  function toS(x,y){ return {x:x*zoom+pan.x, y:y*zoom+pan.y}; }
-  function toW(x,y){ return {x:(x-pan.x)/zoom, y:(y-pan.y)/zoom}; }
+  function applyLayout(){if(!nodes.length)return;layout==='rad'?doRadial():doHier(layout==='lr');}
 
-  // --- LAYOUT ENGINE ---
-  function doLayout(){
-    if(!nodes.length) return;
-    const w=W()||900, h=H()||640;
-
-    if(layout==='rad'){
-      layoutRadial(w,h);
-    } else {
-      layoutHierarchical(w,h, layout==='lr');
-    }
+  function treeMap(){
+    const ch=new Map(nodes.map(n=>[n.id,[]])),hasP=new Set();
+    for(const e of edges)if(!e.isProp&&ch.has(e.from.id)&&ch.has(e.to.id)){ch.get(e.from.id).push(e.to);hasP.add(e.to.id);}
+    let roots=nodes.filter(n=>!hasP.has(n.id));if(!roots.length)roots=[nodes[0]];
+    return{ch,roots};
   }
-
-  function layoutHierarchical(w, h, leftRight){
-    // build parent→children map (subClassOf edges only)
-    const children = new Map(nodes.map(n=>[n.id,[]]));
-    const hasParent = new Set();
-    for(const e of edges){
-      if(e.isProp) continue;
-      if(children.has(e.from.id) && children.has(e.to.id)){
-        children.get(e.from.id).push(e.to);
-        hasParent.add(e.to.id);
-      }
+  function bfsLv(roots,ch){
+    const lv=new Map(),vis=new Set(roots.map(r=>r.id)),q=[...roots];
+    roots.forEach(r=>lv.set(r.id,0));
+    while(q.length){const n=q.shift();for(const k of(cmap2.get(n.id)||[]))if(!vis.has(k.id)){vis.add(k.id);lv.set(k.id,(lv.get(n.id)||0)+1);q.push(k);}}
+    nodes.forEach(n=>{if(!lv.has(n.id))lv.set(n.id,0);});return lv;
+  }
+  function doHier(lr){
+    /* Posiciona nós por nível estimando largura dos rótulos para evitar sobreposição */
+    const{ch:cmap,roots}=treeMap(), lv=bfsLv(roots,cmap);
+    const byL=new Map();
+    for(const[id,l]of lv){
+      if(!byL.has(l))byL.set(l,[]);
+      const nd=nodes.find(n=>n.id===id);if(nd)byL.get(l).push(nd);
     }
-    // roots
-    let roots = nodes.filter(n=>!hasParent.has(n.id));
-    if(!roots.length) roots=[nodes[0]];
+    const maxL=Math.max(...byL.keys(),0);
+    const gW=W()||900, gH=H()||640;
 
-    // BFS assign levels
-    const level=new Map();
-    const queue=[...roots];
-    roots.forEach(r=>level.set(r.id,0));
-    const visited=new Set(roots.map(r=>r.id));
-    while(queue.length){
-      const n=queue.shift();
-      for(const k of (children.get(n.id)||[])){
-        if(!visited.has(k.id)){
-          visited.add(k.id); level.set(k.id,(level.get(n.id)||0)+1); queue.push(k);
-        }
-      }
-    }
-    nodes.forEach(n=>{ if(!level.has(n.id)) level.set(n.id,0); });
-
-    // group by level
-    const byLevel=new Map();
-    for(const [id,lv] of level){
-      if(!byLevel.has(lv)) byLevel.set(lv,[]);
-      const node=nodes.find(n=>n.id===id);
-      if(node) byLevel.get(lv).push(node);
-    }
-    const maxLevel=Math.max(...byLevel.keys(),0);
-
-    if(leftRight){
-      // Left→Right: levels are columns
-      const colW=Math.min(nodeSep, (w-80)/(maxLevel+1));
-      for(const [lv,ns] of byLevel){
-        const rowH=Math.min(levelSep,(h-80)/Math.max(ns.length,1));
-        const totalH=ns.length*rowH;
-        ns.forEach((n,i)=>{ n.x=60+lv*colW; n.y=h/2-totalH/2+i*rowH+rowH/2; });
+    if(lr){
+      const colW = Math.min(nodeSep, (gW-100)/(maxL+1));
+      for(const[l,ns] of byL){
+        const total = ns.length;
+        const gap   = Math.max(levelSep*0.6, Math.min(levelSep, (gH-80)/Math.max(total,1)));
+        const h0    = gH/2 - (total-1)*gap/2;
+        ns.forEach((nd,i)=>{ nd.x = 60+l*colW; nd.y = h0+i*gap; });
       }
     } else {
-      // Top-Down: levels are rows
-      const rowH=Math.min(levelSep,(h-80)/(maxLevel+1));
-      for(const [lv,ns] of byLevel){
-        const colW=Math.min(nodeSep,(w-80)/Math.max(ns.length,1));
-        const totalW=ns.length*colW;
-        ns.forEach((n,i)=>{ n.x=w/2-totalW/2+i*colW+colW/2; n.y=60+lv*rowH; });
+      const rowH = Math.min(levelSep, (gH-80)/(maxL+1));
+      for(const[l,ns] of byL){
+        const total = ns.length;
+        const estW  = ns.map(nd=>Math.max(80, nd.label.length*7.5+28));
+        const totalW= estW.reduce((a,b)=>a+b,0)+Math.max(0,total-1)*Math.max(12, nodeSep-80);
+        let x       = gW/2 - totalW/2;
+        const y     = 60 + l*rowH;
+        ns.forEach((nd,i)=>{
+          const nw = estW[i];
+          nd.x = x + nw/2;
+          nd.y = y;
+          x   += nw + Math.max(12, nodeSep-80);
+        });
       }
     }
   }
 
-  function layoutRadial(w,h){
-    const cx=w/2, cy=h/2;
-    // find center node (root or highest degree)
-    const deg=new Map(nodes.map(n=>[n.id,0]));
-    for(const e of edges){ if(!e.isProp){ deg.set(e.from.id,(deg.get(e.from.id)||0)+1); } }
-    const centerNode=nodes.reduce((a,b)=>(deg.get(a.id)||0)>=(deg.get(b.id)||0)?a:b, nodes[0]);
-
-    // BFS from center
-    const children=new Map(nodes.map(n=>[n.id,[]]));
-    const hasParent=new Set();
-    for(const e of edges){
-      if(e.isProp) continue;
-      if(children.has(e.from.id)&&children.has(e.to.id)){
-        children.get(e.from.id).push(e.to); hasParent.add(e.to.id);
-      }
-    }
-    const dist=new Map(); dist.set(centerNode.id,0);
-    const q=[centerNode]; const vis=new Set([centerNode.id]);
+  function doRadial(){
+    const{ch:cmap2,roots}=treeMap(), center=roots[0]||nodes[0];
+    const dist=new Map([[center.id,0]]), vis=new Set([center.id]), q=[center];
     while(q.length){
       const n=q.shift();
-      for(const k of (children.get(n.id)||[])){
-        if(!vis.has(k.id)){ vis.add(k.id); dist.set(k.id,(dist.get(n.id)||0)+1); q.push(k); }
-      }
+      for(const k of(ch.get(n.id)||[]))
+        if(!vis.has(k.id)){vis.add(k.id);dist.set(k.id,(dist.get(n.id)||0)+1);q.push(k);}
     }
-    nodes.forEach(n=>{ if(!dist.has(n.id)) dist.set(n.id,1); });
-
-    // group by ring
-    const byRing=new Map();
-    for(const [id,d] of dist){
-      if(!byRing.has(d)) byRing.set(d,[]);
-      byRing.get(d).push(nodes.find(n=>n.id===id));
+    nodes.forEach(n=>{if(!dist.has(n.id))dist.set(n.id,1);});
+    const byR=new Map();
+    for(const[id,d]of dist){
+      if(!byR.has(d))byR.set(d,[]);
+      const n=nodes.find(n=>n.id===id);if(n)byR.get(d).push(n);
     }
-    const maxRing=Math.max(...byRing.keys(),0);
-    const maxR=Math.min(cx,cy)*0.9;
-
-    centerNode.x=cx; centerNode.y=cy;
-    for(const [ring,ns] of byRing){
-      if(ring===0) continue;
-      const r=maxR*(ring/maxRing);
+    const maxR=Math.max(...byR.keys(),0);
+    const cx=cw()/2, cy=H()/2;
+    const mr=Math.min(cx,cy)*0.85;
+    center.x=cx; center.y=cy;
+    for(const[r,ns]of byR){
+      if(!r)continue;
+      const rad=mr*(r/maxR);
+      // espaçamento angular adaptativo: evitar sobreposição em anéis densos
+      const minAngDeg = Math.atan2(60, rad) * 2 * 180/Math.PI; // ângulo mínimo p/ 60px de gap
+      const angStep   = Math.max(2*Math.PI/ns.length, minAngDeg*Math.PI/180);
+      const startAng  = -Math.PI/2;
       ns.forEach((n,i)=>{
-        const a=(2*Math.PI*i/ns.length)-Math.PI/2;
-        n.x=cx+r*Math.cos(a); n.y=cy+r*Math.sin(a);
+        const a=startAng+i*angStep;
+        n.x=cx+rad*Math.cos(a); n.y=cy+rad*Math.sin(a);
       });
     }
   }
 
-  // --- DRAW ---
-  // Palette: 10 dim colors
-  const DIM_COLORS=[
-    '#7dd3fc','#a78bfa','#34d399','#fbbf24','#fb7185',
-    '#f97316','#38bdf8','#c084fc','#4ade80','#facc15'
-  ];
-
-  function nodeColor(n){
-    if(colorMap.has(n.id)){
-      return colorMap.get(n.id);
-    }
-    return null;
-  }
 
   function draw(){
-    const c=C(), w=W(), h=H();
-    if(w<10||h<10) return;
-    c.clearRect(0,0,w,h);
+    const c=C(),w=W(),h=H();if(w<10||h<10)return;
+    c.clearRect(0,0,w,h);c.save();
+    const TC=cv2('--text'),MC=cv2('--muted'),PB=cv2('--panel')||'#0f111a';
+    const EH='rgba(180,200,240,.3)',  // hierarchy edge — faint blue-white
+          EP='#c084fc',              // object property edge — vivid purple
+          AC=cv2('--accent')||'#7dd3fc';
 
-    const cs=v=>getComputedStyle(document.body).getPropertyValue(v).trim();
-    const textCol = cs('--text');
-    const mutedCol= cs('--muted');
-    const dimCol  = cs('--dim');
-    const edgeCol = 'rgba(200,200,220,.35)';
-    const propCol = '#a78bfa';
-    const accent  = '#7dd3fc';
-    const accent2 = '#a78bfa';
-    const bg      = cs('--panel')||'#13151e';
+    /* ── edges — draw props on top of hierarchy ── */
+    const hierEdges=edges.filter(e=>!e.isProp);
+    const propEdges=edges.filter(e=>e.isProp);
 
-    c.save();
+    for(const pass of [hierEdges, propEdges]){
+      for(const e of pass){
+        if(e.from.x==null||e.to.x==null)continue;
+        const a=toS(e.from.x,e.from.y), b=toS(e.to.x,e.to.y);
+        const fad=focused&&(!focused.has(e.from.id)||!focused.has(e.to.id));
+        c.globalAlpha=fad?0.03:(e.isProp?0.95:0.45);
+        c.strokeStyle=e.isProp?EP:EH;
+        c.lineWidth=e.isProp?2.8:1.2;
+        c.setLineDash(e.isProp?[8,4]:[]);
 
-    // ── edges ──
-    for(const e of edges){
-      const fx=e.from.x, fy=e.from.y, tx=e.to.x, ty=e.to.y;
-      if(fx===undefined||tx===undefined) continue;
-      const as=toS(fx,fy), bs=toS(tx,ty);
-
-      const faded = focused && (!focused.has(e.from.id)||!focused.has(e.to.id));
-      const alpha = faded ? 0.04 : (e.isProp ? 0.85 : 0.5);
-      c.globalAlpha=alpha;
-
-      // curved edge for props, straight for hierarchy
-      const col = e.isProp ? propCol : edgeCol;
-      c.strokeStyle=col;
-      c.lineWidth  = e.isProp ? 1.8 : 1.2;
-      c.setLineDash(e.isProp ? [6,4] : []);
-
-      if(e.isProp){
-        // bezier curve so props are visually distinct
-        const mx=(as.x+bs.x)/2, my=(as.y+bs.y)/2;
-        const dx=bs.x-as.x, dy=bs.y-as.y;
-        const cx1=mx-dy*0.2, cy1=my+dx*0.2;
-        c.beginPath(); c.moveTo(as.x,as.y); c.quadraticCurveTo(cx1,cy1,bs.x,bs.y); c.stroke();
-        // arrow at end of curve
-        if(!faded){
-          const ang=Math.atan2(bs.y-cy1,bs.x-cx1);
-          drawArrow(c,bs.x,bs.y,ang,propCol,zoom);
+        let mx,my;
+        if(e.isProp){
+          /* bezier com curvatura pronunciada — claramente diferente de hierarquia */
+          const dx=b.x-a.x, dy=b.y-a.y;
+          const perp=0.35;
+          const cx1=(a.x+b.x)/2-dy*perp, cy1=(a.y+b.y)/2+dx*perp;
+          c.beginPath();c.moveTo(a.x,a.y);c.quadraticCurveTo(cx1,cy1,b.x,b.y);c.stroke();
+          mx=(a.x+2*cx1+b.x)/4; my=(a.y+2*cy1+b.y)/4;
+          if(!fad)arw(c,b.x,b.y,Math.atan2(b.y-cy1,b.x-cx1),EP,2);
+          /* rótulo sempre visível para props */
+          if(!fad&&e.label&&zoom>0.25){
+            const fs=Math.max(9,Math.min(12,9*zoom));
+            c.font=`bold ${fs}px Inter,system-ui`;
+            const tw=c.measureText(e.label).width;
+            /* pill de fundo sólido */
+            c.globalAlpha=0.92;c.fillStyle='#1e0a30';
+            rr(c,mx-tw/2-5,my-fs/2-4,tw+10,fs+8,5);c.fill();
+            c.strokeStyle=EP;c.lineWidth=1;
+            rr(c,mx-tw/2-5,my-fs/2-4,tw+10,fs+8,5);c.stroke();
+            c.globalAlpha=1;c.fillStyle=EP;
+            c.textAlign='center';c.textBaseline='middle';
+            c.fillText(e.label,mx,my);
+          }
+        } else {
+          c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
+          mx=(a.x+b.x)/2; my=(a.y+b.y)/2;
+          if(!fad)arw(c,b.x,b.y,Math.atan2(b.y-a.y,b.x-a.x),EH,1);
+          /* rótulo de hierarquia só se ativado */
+          if(!fad&&showEL&&e.label&&zoom>0.5){
+            const fs=Math.max(8,Math.min(10,8*zoom));
+            c.font=`${fs}px monospace`;
+            const tw=c.measureText(e.label).width;
+            c.globalAlpha=0.7;c.fillStyle=PB;
+            rr(c,mx-tw/2-3,my-fs/2-2,tw+6,fs+4,3);c.fill();
+            c.globalAlpha=0.6;c.fillStyle=MC;
+            c.textAlign='center';c.textBaseline='middle';
+            c.fillText(e.label,mx,my);
+          }
         }
-      } else {
-        c.beginPath(); c.moveTo(as.x,as.y); c.lineTo(bs.x,bs.y); c.stroke();
-        if(!faded){
-          const ang=Math.atan2(bs.y-as.y,bs.x-as.x);
-          drawArrow(c,bs.x,bs.y,ang,edgeCol,zoom);
-        }
-      }
-      c.setLineDash([]);
-
-      // edge label
-      if(!faded && showEdgeLabels && e.label && zoom>0.45){
-        const mx=(as.x+bs.x)/2, my=(as.y+bs.y)/2;
-        const fs=Math.max(9,Math.min(11,10*zoom));
-        c.globalAlpha=faded?0:0.85;
-        c.font=`${fs}px monospace`;
-        c.textAlign='center'; c.textBaseline='middle';
-        // background pill
-        const tw=c.measureText(e.label).width;
-        c.fillStyle=bg; c.globalAlpha=0.75;
-        rRect(c,mx-tw/2-4,my-fs/2-3,tw+8,fs+6,4); c.fill();
-        c.globalAlpha=alpha;
-        c.fillStyle=e.isProp?propCol:mutedCol;
-        c.fillText(e.label,mx,my);
+        c.setLineDash([]);
       }
     }
     c.globalAlpha=1;
 
-    // ── nodes ──
+    /* ── nodes ── */
     for(const n of nodes){
-      if(n.x===undefined) continue;
+      if(n.x==null)continue;
       const s=toS(n.x,n.y);
-      const faded=focused&&!focused.has(n.id);
-      c.globalAlpha=faded?0.06:1;
+      const fad=focused&&!focused.has(n.id);
+      const isHL=hl.has(n.id),isHov=hover===n;
+      const dc=colorMap.get(n.id)||null;
+      c.globalAlpha=fad?0.05:1;
 
-      const isHL   =highlighted.has(n.id);
-      const isHover=hoverNode===n;
-      const dimC   =nodeColor(n);
-
-      c.font=`${Math.max(9,Math.min(13,11*zoom))}px Inter,system-ui,sans-serif`;
+      /* tamanho do nó baseado na riqueza da label */
+      const fs=Math.max(9,Math.min(13,11*zoom));
+      c.font=`${isHL?'bold ':''} ${fs}px Inter,system-ui,sans-serif`;
       const tw=c.measureText(n.label).width;
-      const pw=Math.max(8,10*zoom), ph=Math.max(5,6*zoom);
-      const rw=tw+pw*2, rh=Math.max(22,16*zoom+ph*2);
-      const rx=s.x-rw/2, ry=s.y-rh/2;
-      const rad=Math.max(4,5*zoom);
+      const px=Math.max(9,11*zoom), py=Math.max(6,7*zoom);
+      const rw=tw+px*2, rh=Math.max(24,16*zoom+py*2);
+      const rx=s.x-rw/2, ry=s.y-rh/2, rad=Math.max(5,6*zoom);
+      n._rx=rx;n._ry=ry;n._rw=rw;n._rh=rh;
 
-      n._rx=rx; n._ry=ry; n._rw=rw; n._rh=rh; // hit-test cache
+      if(isHov){c.shadowColor=dc||AC;c.shadowBlur=22;}
 
-      if(isHover){ c.shadowColor=dimC||accent; c.shadowBlur=16; }
-
-      // fill — tinted by dim color if available
-      if(dimC){
-        c.fillStyle=dimC+'28'; // 16% opacity fill
+      /* fill: gradiente sutil se tiver cor de dimensão */
+      if(dc){
+        const grad=c.createLinearGradient(rx,ry,rx,ry+rh);
+        grad.addColorStop(0,dc+'33');
+        grad.addColorStop(1,dc+'11');
+        c.fillStyle=grad;
       } else {
-        c.fillStyle='rgba(255,255,255,.06)';
+        c.fillStyle='rgba(255,255,255,.055)';
       }
-      rRect(c,rx,ry,rw,rh,rad); c.fill();
+      rr(c,rx,ry,rw,rh,rad);c.fill();
 
-      // border
-      c.strokeStyle=isHL?accent2:isHover?accent:dimC||(faded?'rgba(255,255,255,.1)':'rgba(255,255,255,.22)');
-      c.lineWidth  =isHL||isHover?2.5:dimC?1.8:1.3;
-      rRect(c,rx,ry,rw,rh,rad); c.stroke();
+      /* border */
+      c.strokeStyle=isHL?'#f0abfc':isHov?AC:dc||'rgba(255,255,255,.18)';
+      c.lineWidth   =isHL?3:isHov?2.5:dc?2:1.2;
+      rr(c,rx,ry,rw,rh,rad);c.stroke();
       c.shadowBlur=0;
 
-      // label
-      c.fillStyle=isHL?accent2:isHover?accent:faded?'rgba(255,255,255,.2)':textCol;
-      c.textAlign='center'; c.textBaseline='middle';
+      /* label */
+      c.fillStyle=isHL?'#f0abfc':isHov?AC:fad?'rgba(255,255,255,.18)':TC;
+      c.textAlign='center';c.textBaseline='middle';
       c.fillText(n.label,s.x,s.y);
+
+      /* indicador de filhos (pequeno ponto/número quando recolhido) */
+      if(zoom>0.5){
+        const kCount=(G&&G.childOf.get(n.id)?.size)||0;
+        if(kCount>0&&!fad){
+          const badge=String(kCount);
+          const bfs=Math.max(7,8*zoom);
+          c.font=`bold ${bfs}px Inter,system-ui`;
+          const bw=c.measureText(badge).width+6;
+          const bx=rx+rw-bw/2-2, by=ry-8*zoom;
+          c.globalAlpha=0.85;
+          c.fillStyle=dc||'rgba(100,100,150,.9)';
+          rr(c,bx-bw/2,by-bfs/2-2,bw,bfs+4,bfs);c.fill();
+          c.globalAlpha=1;c.fillStyle='#fff';
+          c.textAlign='center';c.textBaseline='middle';
+          c.fillText(badge,bx,by);
+        }
+      }
     }
-
-    c.globalAlpha=1;
-    c.restore();
+    c.globalAlpha=1;c.restore();
   }
 
-  function drawArrow(c,x,y,ang,col,z){
-    const sz=Math.max(5,Math.min(10,7*z));
-    const tx=x-Math.cos(ang)*sz, ty=y-Math.sin(ang)*sz;
-    c.fillStyle=col;
-    c.beginPath();
-    c.moveTo(tx,ty);
-    c.lineTo(tx-sz*Math.cos(ang-0.42),ty-sz*Math.sin(ang-0.42));
-    c.lineTo(tx-sz*Math.cos(ang+0.42),ty-sz*Math.sin(ang+0.42));
-    c.closePath(); c.fill();
+  function arw(c,x,y,a,col){
+    const sz=Math.max(5,Math.min(9,7*zoom));c.fillStyle=col;c.beginPath();
+    c.moveTo(x-sz*Math.cos(a-0.42),y-sz*Math.sin(a-0.42));c.lineTo(x,y);
+    c.lineTo(x-sz*Math.cos(a+0.42),y-sz*Math.sin(a+0.42));c.closePath();c.fill();
   }
-
-  function rRect(c,x,y,w,h,r){
-    c.beginPath();
-    c.moveTo(x+r,y); c.lineTo(x+w-r,y); c.arcTo(x+w,y,x+w,y+r,r);
-    c.lineTo(x+w,y+h-r); c.arcTo(x+w,y+h,x+w-r,y+h,r);
-    c.lineTo(x+r,y+h); c.arcTo(x,y+h,x,y+h-r,r);
-    c.lineTo(x,y+r); c.arcTo(x,y,x+r,y,r); c.closePath();
+  function rr(c,x,y,w,h,r){
+    c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.arcTo(x+w,y,x+w,y+r,r);
+    c.lineTo(x+w,y+h-r);c.arcTo(x+w,y+h,x+w-r,y+h,r);
+    c.lineTo(x+r,y+h);c.arcTo(x,y+h,x,y+h-r,r);c.lineTo(x,y+r);c.arcTo(x,y,x+r,y,r);c.closePath();
   }
-
-  // --- fit ---
   function fit(){
-    if(!nodes.length) return;
-    const w=W()||900, h=H()||640;
+    if(!nodes.length)return;const w=W()||900,h=H()||640;
     let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
-    for(const n of nodes){
-      x0=Math.min(x0,n.x); x1=Math.max(x1,n.x);
-      y0=Math.min(y0,n.y); y1=Math.max(y1,n.y);
-    }
-    const pad=70, gw=x1-x0||1, gh=y1-y0||1;
+    for(const n of nodes)if(n.x!=null){x0=Math.min(x0,n.x);x1=Math.max(x1,n.x);y0=Math.min(y0,n.y);y1=Math.max(y1,n.y);}
+    const pad=80,gw=x1-x0||1,gh=y1-y0||1;
     zoom=Math.min((w-pad*2)/gw,(h-pad*2)/gh,3);
-    pan.x=w/2-((x0+x1)/2)*zoom;
-    pan.y=h/2-((y0+y1)/2)*zoom;
-    draw();
+    pan.x=w/2-((x0+x1)/2)*zoom;pan.y=h/2-((y0+y1)/2)*zoom;draw();
   }
-
-  // --- hit-test ---
   function nodeAt(sx,sy){
     const ww=toW(sx,sy);
-    for(let i=nodes.length-1;i>=0;i--){
-      const n=nodes[i];
-      if(n._rx!==undefined&&ww.x>=n._rx&&ww.x<=n._rx+n._rw&&ww.y>=n._ry&&ww.y<=n._ry+n._rh) return n;
-    }
+    for(let i=nodes.length-1;i>=0;i--){const n=nodes[i];if(n._rx!=null&&ww.x>=n._rx&&ww.x<=n._rx+n._rw&&ww.y>=n._ry&&ww.y<=n._ry+n._rh)return n;}
     return null;
   }
-
-  // --- mouse / touch ---
-  cv.addEventListener('mousedown',e=>{
-    const r=cv.getBoundingClientRect();
-    const mx=e.clientX-r.left, my=e.clientY-r.top;
-    const n=nodeAt(mx,my);
-    drag=n||'pan'; lastM={x:mx,y:my};
-  });
+  cv.addEventListener('mousedown',e=>{const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;drag=nodeAt(mx,my)||'pan';lastM={x:mx,y:my};});
   cv.addEventListener('mousemove',e=>{
-    const r=cv.getBoundingClientRect();
-    const mx=e.clientX-r.left, my=e.clientY-r.top;
-    if(drag&&drag!=='pan'){
-      const dx=(mx-lastM.x)/zoom, dy=(my-lastM.y)/zoom;
-      drag.x+=dx; drag.y+=dy; lastM={x:mx,y:my}; draw(); return;
-    }
-    if(drag==='pan'){
-      pan.x+=mx-lastM.x; pan.y+=my-lastM.y; lastM={x:mx,y:my}; draw(); return;
-    }
-    const n=nodeAt(mx,my);
-    if(n!==hoverNode){ hoverNode=n; draw(); }
-    if(n) showTip(tipContent(n.id),e.clientX,e.clientY);
-    else  hideTip();
+    const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+    if(drag&&drag!=='pan'){drag.x+=(mx-lastM.x)/zoom;drag.y+=(my-lastM.y)/zoom;lastM={x:mx,y:my};draw();return;}
+    if(drag==='pan'){pan.x+=mx-lastM.x;pan.y+=my-lastM.y;lastM={x:mx,y:my};draw();return;}
+    const n=nodeAt(mx,my);if(n!==hover){hover=n;draw();}
+    if(n)showTip(tipContent(n.id),e.clientX,e.clientY);else hideTip();
   });
-  cv.addEventListener('mouseup',  ()=>{ drag=null; });
-  cv.addEventListener('mouseleave',()=>{ drag=null; hoverNode=null; hideTip(); draw(); });
-  cv.addEventListener('dblclick', e=>{
-    // double-click: reset this node's position to layout default
-    const r=cv.getBoundingClientRect();
-    const n=nodeAt(e.clientX-r.left,e.clientY-r.top);
-    if(n){ doLayout(); fit(); }
-  });
+  cv.addEventListener('mouseup',()=>{drag=null;});
+  cv.addEventListener('mouseleave',()=>{drag=null;hover=null;hideTip();draw();});
+  cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect();if(nodeAt(e.clientX-r.left,e.clientY-r.top)){applyLayout();fit();}});
   cv.addEventListener('wheel',e=>{
-    e.preventDefault();
-    const r=cv.getBoundingClientRect();
-    const mx=e.clientX-r.left, my=e.clientY-r.top;
-    const f=e.deltaY<0?1.12:1/1.12;
-    const wb=toW(mx,my); zoom=Math.max(0.04,Math.min(10,zoom*f));
-    const wa=toW(mx,my); pan.x+=(wa.x-wb.x)*zoom; pan.y+=(wa.y-wb.y)*zoom;
-    draw();
+    e.preventDefault();const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+    const f=e.deltaY<0?1.13:1/1.13,wb=toW(mx,my);zoom=Math.max(0.04,Math.min(12,zoom*f));
+    const wa=toW(mx,my);pan.x+=(wa.x-wb.x)*zoom;pan.y+=(wa.y-wb.y)*zoom;draw();
   },{passive:false});
   cv.addEventListener('click',e=>{
-    const r=cv.getBoundingClientRect();
-    const n=nodeAt(e.clientX-r.left,e.clientY-r.top);
-    if(n&&onNodeClick) onNodeClick(n);
-    else if(!n){ focused=null; draw(); }
+    const r=cv.getBoundingClientRect(),n=nodeAt(e.clientX-r.left,e.clientY-r.top);
+    if(n&&clickCb)clickCb(n);else if(!n){focused=null;draw();}
   });
 
-  // --- public API ---
-  function load(newNodes,newEdges,opts){
-    nodes=newNodes; edges=newEdges;
-    if(opts){ if(opts.layout) layout=opts.layout; if(opts.colorMap) colorMap=opts.colorMap; }
-    highlighted=new Set(); focused=null; hoverNode=null;
-    resize();
-    doLayout();
-    fit();
+  function load(nn,ee,opts={}){
+    nodes=nn;edges=ee;
+    if(opts.layout)layout=opts.layout;if(opts.colorMap)colorMap=opts.colorMap;
+    if(opts.nodeSep)nodeSep=opts.nodeSep;if(opts.levelSep)levelSep=opts.levelSep;
+    hl=new Set();focused=null;hover=null;resize();applyLayout();fit();
   }
-
-  function relayout(newLayout, ns, ls){
-    if(newLayout) layout=newLayout;
-    if(ns) nodeSep=ns;
-    if(ls) levelSep=ls;
-    doLayout(); fit();
-  }
-
-  function setColors(map){ colorMap=map; draw(); }
-  function setEdgeLabels(v){ showEdgeLabels=v; draw(); }
-  function highlight(ids){ highlighted=new Set(ids); draw(); }
-  function clearHighlight(){ highlighted.clear(); draw(); }
-  function setFocus(ids){ focused=ids?new Set(ids):null; draw(); }
-  function clearFocus(){ focused=null; draw(); }
-  function getNodes(){ return nodes; }
-  function setOnNodeClick(fn){ onNodeClick=fn; }
-
+  function relayout(l,ns,ls){if(l!=null)layout=l;if(ns!=null)nodeSep=ns;if(ls!=null)levelSep=ls;applyLayout();fit();}
+  function setColors(m){colorMap=m;draw();}
+  function setEdgeLabels(v){showEL=v;draw();}
+  function highlight(ids){hl=new Set(ids);draw();}
+  function clearHighlight(){hl.clear();draw();}
+  function setFocus(ids){focused=ids?new Set(ids):null;draw();}
+  function clearFocus(){focused=null;draw();}
+  function getNodes(){return nodes;}
+  function setOnNodeClick(fn){clickCb=fn;}
   function exportPng(){
-    const oc=document.createElement('canvas');
-    oc.width=cv.width; oc.height=cv.height;
-    const oc2=oc.getContext('2d');
-    const bg=getComputedStyle(document.body).getPropertyValue('--bg').trim()||'#0b0c10';
-    oc2.fillStyle=bg; oc2.fillRect(0,0,oc.width,oc.height);
-    oc2.drawImage(cv,0,0);
-    const a=document.createElement('a'); a.href=oc.toDataURL('image/png'); a.download='ontohate.png'; a.click();
+    const oc=document.createElement('canvas');oc.width=cv.width;oc.height=cv.height;
+    const c2=oc.getContext('2d');c2.fillStyle=cv2('--bg')||'#0b0c10';c2.fillRect(0,0,oc.width,oc.height);
+    c2.drawImage(cv,0,0);const a=document.createElement('a');a.href=oc.toDataURL('image/png');a.download='ontohate.png';a.click();
   }
-
   resize();
-  return {load, relayout, setColors, setEdgeLabels, fit, resize, draw,
-          highlight, clearHighlight, setFocus, clearFocus, getNodes, setOnNodeClick, exportPng};
+  return{load,relayout,setColors,setEdgeLabels,fit,resize,draw,
+         highlight,clearHighlight,setFocus,clearFocus,getNodes,setOnNodeClick,exportPng};
 }
 
 /* ── tooltip ── */
@@ -1241,23 +1473,67 @@ function showTip(html,x,y){
 function hideTip(delay){clearTimeout(tipT);tipT=setTimeout(()=>TIP.classList.remove('on'),delay??100);}
 
 function tipContent(iri){
-  const parents=[...(G.subOf.get(iri)||[])].map(bestLabel).sort();
-  const kids=[...(G.childOf.get(iri)||[])].map(bestLabel).sort();
-  const ann=(G.annots.get(iri)||[])
-    .filter(a=>!a.p.includes('label')&&!a.p.includes('comment'))
-    .slice(0,40);
-  const annHtml=ann.map(a=>`
-    <tr>
-      <td style="color:var(--dim);white-space:nowrap;padding:2px 8px 2px 0">${esc(a.pShort)}</td>
-      <td style="color:var(--muted)">${esc(a.val)}${a.lang?`<span style="color:var(--dim)"> @${a.lang}</span>`:''}</td>
-    </tr>`).join('');
-  return`
-    <div style="font-weight:700;font-size:13px;margin-bottom:3px">${esc(bestLabel(iri))}</div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--dim);word-break:break-all;margin-bottom:6px">${esc(iri)}</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${esc(G.comments.get(iri)||'—')}</div>
-    <div style="font-size:11px;color:var(--dim)">Superclasses: <span style="color:var(--muted)">${parents.length?esc(parents.join(' • ')):'—'}</span></div>
-    <div style="font-size:11px;color:var(--dim);margin-bottom:${annHtml?'6px':'0'}">Subclasses: <span style="color:var(--muted)">${kids.length?esc(kids.slice(0,12).join(' • '))+(kids.length>12?' …':''):'—'}</span></div>
-    ${annHtml?`<table style="width:100%;border-collapse:collapse;font-size:11px"><tbody>${annHtml}</tbody></table>`:''}
+  const label    = bestLabel(iri);
+  const comment  = G.comments.get(iri)||'';
+  const parents  = [...(G.subOf.get(iri)||[])].map(bestLabel).sort();
+  const kids     = [...(G.childOf.get(iri)||[])].map(bestLabel).sort();
+  // anotações ricas: complemento, fonte, associação
+  const annots   = (G.annots.get(iri)||[]);
+  const get = key => (annots.find(a=>a.p.includes(key))?.val)||'';
+  const complemento = get('complementoPlanilha');
+  const associacao  = get('associacaoDiscurso');
+  return `
+    <div style="font-weight:700;font-size:14px;margin-bottom:2px;color:var(--text)">${esc(label)}</div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--dim);word-break:break-all;margin-bottom:8px">${esc(iri)}</div>
+    ${comment?`<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px">${esc(comment)}</div>`:''}
+    <div style="font-size:11px;margin-bottom:4px">
+      <span style="color:var(--dim)">Pai:</span>
+      <span style="color:var(--muted)">${parents.length?esc(parents.join(', ')):'—'}</span>
+    </div>
+    <div style="font-size:11px;margin-bottom:${complemento?'8px':'0'}">
+      <span style="color:var(--dim)">Filhos:</span>
+      <span style="color:var(--muted)">${kids.length?esc(kids.slice(0,8).join(', '))+(kids.length>8?` +${kids.length-8}`:''):'nenhum'}</span>
+    </div>
+    ${complemento?`<div style="font-size:11px;color:var(--dim);margin-bottom:2px">Contexto de uso:</div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.4">${esc(complemento.slice(0,200))}${complemento.length>200?'…':''}</div>`:''}
+  `;
+}
+
+function detailHtml(iri){
+  const label    = bestLabel(iri);
+  const comment  = G.comments.get(iri)||'';
+  const parents  = [...(G.subOf.get(iri)||[])].map(p=>({iri:p, label:bestLabel(p)}));
+  const kids     = [...(G.childOf.get(iri)||[])].map(c=>({iri:c, label:bestLabel(c)}));
+  const annots   = (G.annots.get(iri)||[]);
+  const get = key => (annots.find(a=>a.p.includes(key))?.val)||'';
+  const complemento = get('complementoPlanilha');
+  const associacao  = get('associacaoDiscurso');
+  const fonte       = get('conceitoFonte');
+
+  function pill(item){
+    return `<span class="det-tag" title="${esc(item.iri)}">${esc(item.label)}</span>`;
+  }
+  function row(label, content){
+    if(!content) return '';
+    return `<div class="det-row">
+      <div class="det-lbl">${label}</div>
+      <div class="det-val">${content}</div>
+    </div>`;
+  }
+
+  return `
+    <div class="det-row">
+      <div class="det-val big">${esc(label)}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--dim);word-break:break-all;margin-top:2px">${esc(iri)}</div>
+    </div>
+    ${row('Definição', comment ? `<span class="det-val">${esc(comment)}</span>` : '')}
+    ${row('Superclasse(s)', parents.length ? parents.map(pill).join('') : '<span style="color:var(--dim)">—</span>')}
+    ${row('Subclasses', kids.length
+      ? kids.slice(0,20).map(pill).join('') + (kids.length>20?`<span class="det-tag" style="color:var(--dim)">+${kids.length-20} mais</span>`:'')
+      : '<span style="color:var(--dim)">nenhuma</span>')}
+    ${row('Contexto de uso', complemento ? `<span class="det-val">${esc(complemento.slice(0,400))}${complemento.length>400?'…':''}</span>` : '')}
+    ${row('Associação ao discurso', associacao ? `<span class="det-val">${esc(associacao.slice(0,400))}${associacao.length>400?'…':''}</span>` : '')}
+    ${row('Conceito fonte (V1)', fonte ? `<span class="det-val" style="font-size:11px">${esc(fonte.slice(0,300))}${fonte.length>300?'…':''}</span>` : '')}
   `;
 }
 
@@ -1265,508 +1541,573 @@ function detailHtml(iri){
   return tipContent(iri);
 }
 
-/* ============================================================
-   GRAPH BUILDERS
-   ============================================================ */
+
+
+/* ── graph builders ── */
 let gTax=null,gOnto=null;
+const ROOT_IRI='http://ontohate.org/ontohate#Discurso_de_odio';
+const DIM_PAL=['#7dd3fc','#a78bfa','#34d399','#fbbf24','#fb7185','#f97316','#38bdf8','#c084fc','#4ade80','#e879f9'];
+const lState={tax:'tb',onto:'tb'};
 
 function descendants(root){
   const out=new Set(),q=[root],seen=new Set([root]);
-  while(q.length){
-    const c=q.shift();out.add(c);
-    const k=G.childOf.get(c);if(!k)continue;
-    for(const x of k)if(!seen.has(x)){seen.add(x);q.push(x);}
-  }
+  while(q.length){const c=q.shift();out.add(c);const k=G.childOf.get(c);if(!k)continue;for(const x of k)if(!seen.has(x)){seen.add(x);q.push(x);}}
   return out;
+}
+function dimCmap(){
+  const m=new Map();
+  G.dims.forEach((d,i)=>{const c=DIM_PAL[i%DIM_PAL.length];m.set(d,c);for(const x of descendants(d))m.set(x,c);});
+  return m;
+}
+function mkLegend(elId,dims,cmap){
+  const el=document.getElementById(elId);if(!el)return;
+  el.innerHTML=dims.map((d,i)=>`<div class="dim-legend-row"><div class="dim-swatch" style="background:${cmap.get(d)||DIM_PAL[i%DIM_PAL.length]}"></div>${esc(bestLabel(d))}</div>`).join('');
 }
 
 function buildTax(){
+  if(!gTax)return;
   const sel=[...$('taxDims').selectedOptions].map(o=>o.value);
   const dims=sel.length?sel:G.dims.slice(0,1);
   const mode=$('taxMode').value;
+  const showRoot=$('taxRoot').checked;
+  const useCol=$('taxColor').checked;
+  const showEL=$('taxEL').checked;
+  const ns=parseInt($('taxNS')?.value||120),ls=parseInt($('taxLS')?.value||90);
   const sets=dims.map(d=>descendants(d));
-  let ns=new Set();
-  if(mode==='inter'&&sets.length){
-    ns=new Set(sets[0]);
-    for(let i=1;i<sets.length;i++) ns=new Set([...ns].filter(x=>sets[i].has(x)));
-  } else { for(const s of sets)for(const x of s)ns.add(x); }
-
-  const nodeMap=new Map();
-  const nodes=[],edges=[];
-  for(const iri of ns){
-    const n={id:iri,label:bestLabel(iri)};
-    nodeMap.set(iri,n);nodes.push(n);
-  }
-  for(const c of ns){
-    const ps=G.subOf.get(c);if(!ps)continue;
-    for(const p of ps){
-      if(!ns.has(p))continue;
-      edges.push({from:nodeMap.get(p),to:nodeMap.get(c),label:'subClassOf',isProp:false});
-    }
-  }
-  gTax.load(nodes,edges);
-  $('taxMeta').textContent=`${ns.size} classes • ${edges.length} arestas`;
+  let ns2=new Set();
+  if(mode==='inter'&&sets.length){ns2=new Set(sets[0]);for(let i=1;i<sets.length;i++)ns2=new Set([...ns2].filter(x=>sets[i].has(x)));}
+  else{for(const s of sets)for(const x of s)ns2.add(x);for(const d of dims)ns2.add(d);if(showRoot&&dims.length>=1)ns2.add(ROOT_IRI);}
+  const nm=new Map(),nodes=[],edges=[];
+  for(const iri of ns2){const n={id:iri,label:bestLabel(iri)};nm.set(iri,n);nodes.push(n);}
+  for(const c of ns2){const ps=G.subOf.get(c);if(!ps)continue;for(const p of ps){if(!ns2.has(p))continue;edges.push({from:nm.get(p),to:nm.get(c),label:'subClassOf',isProp:false});}}
+  const cmap=useCol?dimCmap():new Map();
+  if(showRoot&&ns2.has(ROOT_IRI))cmap.set(ROOT_IRI,'#fbbf24');
+  gTax.setEdgeLabels(showEL);
+  gTax.load(nodes,edges,{layout:lState.tax,colorMap:cmap,nodeSep:ns,levelSep:ls});
+  $('taxMeta').textContent=`${ns2.size} nós • ${edges.length} arestas`;
   gTax.setOnNodeClick(n=>{
     if(!$('taxFocus').checked)return;
-    // focus: show only neighbors
-    const related=new Set([n.id]);
-    for(const e of edges){if(e.from.id===n.id)related.add(e.to.id);if(e.to.id===n.id)related.add(e.from.id);}
-    gTax.setFocus(related);
+    const rel=new Set([n.id]);
+    for(const e of edges){if(e.from.id===n.id)rel.add(e.to.id);if(e.to.id===n.id)rel.add(e.from.id);}
+    gTax.setFocus(rel);
   });
+  mkLegend('taxLeg',dims,cmap);
 }
-
-function fitTax(){gTax&&gTax.fit();}
-function resetTax(){if(gTax)buildTax();}
-function clearFocusTax(){gTax&&gTax.clearFocus();}
-function exportTax(){gTax&&gTax.exportPng();}
-function hlTax(){
-  const q=$('taxQ').value.trim().toLowerCase();if(!q||!gTax)return;
-  const ids=gTax.getNodes().filter(n=>n.label.toLowerCase().includes(q)||n.id.toLowerCase().includes(q)).map(n=>n.id);
-  gTax.highlight(ids);
-}
-function clearHlTax(){$('taxQ').value='';gTax&&gTax.clearHighlight();}
 
 function buildOnto(){
+  if(!gOnto)return;
   const dim=$('ontoDim').value;
-  const showSub=$('ontoSub').checked;
-  const showProps=$('ontoProps').checked;
-  const ns=dim==='__ALL__'?new Set(G.classes):descendants(dim);
-
-  const nodeMap=new Map();
-  const nodes=[],edges=[];
-  for(const iri of ns){
-    const n={id:iri,label:bestLabel(iri)};
-    nodeMap.set(iri,n);nodes.push(n);
-  }
-  if(showSub){
-    for(const c of ns){
-      const ps=G.subOf.get(c);if(!ps)continue;
-      for(const p of ps){
-        if(!ns.has(p))continue;
-        edges.push({from:nodeMap.get(p),to:nodeMap.get(c),label:'subClassOf',isProp:false});
-      }
-    }
-  }
-  if(showProps){
-    for(const p of G.props){
-      const ds=G.propDomain.get(p)?[...G.propDomain.get(p)]:[];
-      const rs=G.propRange.get(p)?[...G.propRange.get(p)]:[];
-      for(const d of ds){
-        if(!ns.has(d))continue;
-        for(const r of rs){
-          if(!ns.has(r))continue;
-          edges.push({from:nodeMap.get(d),to:nodeMap.get(r),label:G.propLabel.get(p)||shortIri(p),isProp:true});
-        }
-      }
-    }
-  }
-  gOnto.load(nodes,edges);
-  $('ontoMeta').textContent=`${ns.size} classes • ${edges.length} arestas`;
+  const showSub=$('ontoSub').checked,showProp=$('ontoProps').checked;
+  const useCol=$('ontoColor').checked,showEL=$('ontoEL').checked;
+  const ns=parseInt($('ontoNS')?.value||120),ls=parseInt($('ontoLS')?.value||90);
+  const set=dim==='__ALL__'?new Set(G.classes):descendants(dim);
+  const nm=new Map(),nodes=[],edges=[];
+  for(const iri of set){const n={id:iri,label:bestLabel(iri)};nm.set(iri,n);nodes.push(n);}
+  if(showSub){for(const c of set){const ps=G.subOf.get(c);if(!ps)continue;for(const p of ps){if(!set.has(p))continue;edges.push({from:nm.get(p),to:nm.get(c),label:'subClassOf',isProp:false});}}}
+  if(showProp){for(const p of G.props){const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])],lbl=G.propLabel.get(p)||shortIri(p);for(const d of ds){if(!set.has(d))continue;for(const r of rs){if(!set.has(r))continue;edges.push({from:nm.get(d),to:nm.get(r),label:lbl,isProp:true});}}}}
+  const cmap=useCol?dimCmap():new Map();
+  gOnto.setEdgeLabels(showEL);
+  gOnto.load(nodes,edges,{layout:lState.onto,colorMap:cmap,nodeSep:ns,levelSep:ls});
+  $('ontoMeta').textContent=`${set.size} nós • ${edges.length} arestas`;
   gOnto.setOnNodeClick(n=>{
-    $('detPill').textContent=shortIri(n.id);
-    $('detBox').innerHTML=detailHtml(n.id);
+    $('detPill').textContent=shortIri(n.id);$('detBox').innerHTML=detailHtml(n.id);
     if(!$('ontoFocus').checked)return;
-    const related=new Set([n.id]);
-    for(const e of edges){if(e.from.id===n.id)related.add(e.to.id);if(e.to.id===n.id)related.add(e.from.id);}
-    gOnto.setFocus(related);
+    const rel=new Set([n.id]);for(const e of edges){if(e.from.id===n.id)rel.add(e.to.id);if(e.to.id===n.id)rel.add(e.from.id);}
+    gOnto.setFocus(rel);
   });
+  mkLegend('ontoLeg',G.dims,cmap);
 }
 
-function fitOnto(){gOnto&&gOnto.fit();}
-function clearFocusOnto(){gOnto&&gOnto.clearFocus();}
-function exportOnto(){gOnto&&gOnto.exportPng();}
-function hlOnto(){
-  const q=$('ontoQ').value.trim().toLowerCase();if(!q||!gOnto)return;
-  const ids=gOnto.getNodes().filter(n=>n.label.toLowerCase().includes(q)||n.id.toLowerCase().includes(q)).map(n=>n.id);
-  gOnto.highlight(ids);
+/* layout toggle */
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('.ltog button');if(!btn)return;
+  const g=btn.dataset.g,l=btn.dataset.l;if(!g||!l)return;
+  btn.closest('.ltog').querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');lState[g]=l;relayoutG(g);
+});
+function relayoutG(g){
+  const ns=parseInt($(g==='tax'?'taxNS':'ontoNS')?.value||120);
+  const ls=parseInt($(g==='tax'?'taxLS':'ontoLS')?.value||90);
+  if(g==='tax'&&gTax)gTax.relayout(lState.tax,ns,ls);
+  if(g==='onto'&&gOnto)gOnto.relayout(lState.onto,ns,ls);
 }
-function clearHlOnto(){$('ontoQ').value='';gOnto&&gOnto.clearHighlight();}
-
-/* ── fills ── */
+function hlG(g){
+  const q=$(g+'Q').value.trim().toLowerCase();if(!q)return;
+  const gi=g==='tax'?gTax:gOnto;if(!gi)return;
+  gi.highlight(gi.getNodes().filter(n=>n.label.toLowerCase().includes(q)||n.id.toLowerCase().includes(q)).map(n=>n.id));
+}
+function clHlG(g){$(g+'Q').value='';(g==='tax'?gTax:gOnto)?.clearHighlight();}
 function fillDims(){
   const ts=$('taxDims');ts.innerHTML='';
-  for(const d of G.dims) ts.appendChild(Object.assign(document.createElement('option'),{value:d,textContent:bestLabel(d)}));
+  for(const d of G.dims)ts.appendChild(Object.assign(document.createElement('option'),{value:d,textContent:bestLabel(d)}));
   if(ts.options.length)ts.options[0].selected=true;
-
-  const os=$('ontoDim');
-  os.innerHTML='<option value="__ALL__">Todas</option>';
-  for(const d of G.dims) os.appendChild(Object.assign(document.createElement('option'),{value:d,textContent:bestLabel(d)}));
+  const os=$('ontoDim');os.innerHTML='<option value="__ALL__">Todas as dimensões</option>';
+  for(const d of G.dims)os.appendChild(Object.assign(document.createElement('option'),{value:d,textContent:bestLabel(d)}));
 }
 
 /* ============================================================
-   SPARQL UI — com pós-processamento de IRIs → labels legíveis
+   SPARQL UI
    ============================================================ */
 
-/*
-  Função central: substitui qualquer IRI na tabela pelo rdfs:label
-  correspondente, tornando os resultados imediatamente legíveis.
-  Também formata literais longos e detecta URLs externas.
-*/
-function humanize(val){
-  if (!val) return '—';
-  // IRI da ontohate → usar label do índice
-  if (val.startsWith('http://ontohate.org/') || val.startsWith('https://ontohate.org/')){
-    return G.labels.get(val) || shortIri(val);
-  }
-  // IRI de vocabulário padrão (rdf/rdfs/owl/xsd) → mostrar só o local name
-  if (val.startsWith('http://www.w3.org/') || val.startsWith('https://www.w3.org/')){
-    return shortIri(val);
-  }
-  // IRI genérica → mostrar só o local name
-  if (val.startsWith('http://') || val.startsWith('https://')){
-    return shortIri(val);
-  }
-  return val;
-}
+/* ── prefixos padrão (injetados automaticamente) ── */
+const PREFIXES = `PREFIX rdf:       <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:      <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:       <http://www.w3.org/2002/07/owl#>
+PREFIX xsd:       <http://www.w3.org/2001/XMLSchema#>
+PREFIX dcterms:   <http://purl.org/dc/terms/>
+PREFIX schema:    <https://schema.org/>
+PREFIX ontohate:  <http://ontohate.org/ontohate#>
+PREFIX ontohatev1:<http://ontohate.org/ontohatev1#>
+`;
 
-// Renderiza uma célula da tabela de resultado
-function renderCell(val, raw){
-  const label = humanize(val);
-  const isIri = (val||'').startsWith('http');
-  // se humanizado, mostrar label em destaque e IRI em cinza pequeno
-  if (isIri && label !== val){
-    return `<span style="font-weight:600;color:var(--text)">${esc(label)}</span>` +
-           `<div style="font-size:10px;color:var(--dim);word-break:break-all">${esc(shortIri(val))}</div>`;
-  }
-  // literal longa — truncar com expand
-  if (!isIri && val.length > 120){
-    const short = val.slice(0,120);
-    return `<span class="lit-short">${esc(short)}<span style="color:var(--dim)">… </span>` +
-           `<span class="lit-full" style="display:none">${esc(val)}</span>` +
-           `<button onclick="this.previousElementSibling.style.display='inline';` +
-           `this.parentElement.querySelector('.lit-short').style.display='none';` +
-           `this.style.display='none'" ` +
-           `style="font-size:10px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0">ver mais</button></span>`;
-  }
-  return esc(val);
-}
+/* ── presets de questões de competência ─────────────────────────────────
+   Organizados em 5 categorias que cobrem o ciclo completo da ontologia:
+   Estrutura · Agentes · Estratégias · Contexto & Consequências · Análise
+   ─────────────────────────────────────────────────────────────────────── */
+const PRESETS = [
 
-const PRESETS=[
+  /* ════════════════════════════════════════════════════════
+     ESTRUTURA — anatomia geral da ontologia
+     ════════════════════════════════════════════════════════ */
   {
     cat: 'Estrutura',
-    t:'As 10 dimensões do Discurso de Ódio',
-    desc:'Quais são as dimensões principais da ontologia?',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ontohate: <http://ontohate.org/ontohate#>
-SELECT DISTINCT ?nome ?definicao WHERE {
-  ?dimensao rdfs:subClassOf ontohate:Discurso_de_odio .
-  ?dimensao rdfs:label ?nome .
-  OPTIONAL { ?dimensao rdfs:comment ?definicao . }
-  FILTER(LANG(?nome) = "pt")
-} ORDER BY ?nome`
+    icon: '🗂',
+    t: 'As 10 dimensões do discurso de ódio',
+    desc: 'Quais são as dimensões que compõem o conceito de Discurso de Ódio Online nesta ontologia?',
+    q: `SELECT DISTINCT ?dimensao ?definicao WHERE {
+  ?d rdfs:subClassOf ontohate:Discurso_de_odio .
+  ?d rdfs:label ?dimensao . FILTER(LANG(?dimensao) = "pt")
+  OPTIONAL { ?d rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?dimensao`
   },
   {
     cat: 'Estrutura',
-    t:'Todas as classes com nome e definição',
-    desc:'Lista completa de conceitos com suas definições em português.',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT DISTINCT ?nome ?definicao WHERE {
-  ?c rdfs:label ?nome .
-  OPTIONAL { ?c rdfs:comment ?definicao . }
-  FILTER(LANG(?nome) = "pt")
-} ORDER BY ?nome LIMIT 200`
-  },
-  {
-    cat: 'Estrutura',
-    t:'Hierarquia: cada conceito e seu pai',
-    desc:'Mostra a relação de especialização entre classes.',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT DISTINCT ?conceito ?pai WHERE {
-  ?child rdfs:subClassOf ?parent .
-  ?child  rdfs:label ?conceito  . FILTER(LANG(?conceito)  = "pt")
-  ?parent rdfs:label ?pai       . FILTER(LANG(?pai)       = "pt")
-} ORDER BY ?pai ?conceito LIMIT 300`
-  },
-  {
-    cat: 'Estrutura',
-    t:'Propriedades: nome, domínio e alcance',
-    desc:'Quais relações existem entre os conceitos?',
-    q:`PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-SELECT DISTINCT ?propriedade ?de ?para WHERE {
-  ?p rdf:type owl:ObjectProperty .
+    icon: '🔗',
+    t: 'Relações estruturais entre dimensões',
+    desc: 'Quais propriedades conectam o Discurso de Ódio às suas dimensões? (Object Properties canônicas)',
+    q: `SELECT DISTINCT ?propriedade ?descricao ?origem ?destino WHERE {
+  ?p a owl:ObjectProperty .
   ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade) = "pt")
-  OPTIONAL { ?p rdfs:domain ?d . ?d rdfs:label ?de   . FILTER(LANG(?de)  ="pt") }
-  OPTIONAL { ?p rdfs:range  ?r . ?r rdfs:label ?para . FILTER(LANG(?para)="pt") }
+  ?p rdfs:domain ontohate:Discurso_de_odio .
+  ?p rdfs:comment ?descricao . FILTER(LANG(?descricao) = "pt")
+  OPTIONAL { ?p rdfs:range ?r . ?r rdfs:label ?destino . FILTER(LANG(?destino) = "pt") }
 } ORDER BY ?propriedade`
   },
   {
-    cat: 'Dimensões',
-    t:'Tipos de Manifestação do discurso',
-    desc:'Como o discurso de ódio se manifesta?',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ontohate: <http://ontohate.org/ontohate#>
-SELECT DISTINCT ?tipo ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Manifestacao .
-  ?c rdfs:label ?tipo . FILTER(LANG(?tipo) = "pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . }
-} ORDER BY ?tipo`
+    cat: 'Estrutura',
+    icon: '🌳',
+    t: 'Hierarquia completa: conceito e ancestral direto',
+    desc: 'Como os conceitos se organizam em árvore? Cada conceito e seu pai imediato.',
+    q: `SELECT DISTINCT ?conceito ?pai WHERE {
+  ?c rdfs:subClassOf ?p .
+  ?c rdfs:label ?conceito . FILTER(LANG(?conceito) = "pt")
+  ?p rdfs:label ?pai       . FILTER(LANG(?pai)      = "pt")
+  FILTER(?c != owl:Nothing)
+} ORDER BY ?pai ?conceito LIMIT 400`
   },
   {
-    cat: 'Dimensões',
-    t:'Tipos de Motivação para o ódio',
-    desc:'Por que o discurso de ódio é produzido?',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ontohate: <http://ontohate.org/ontohate#>
-SELECT DISTINCT ?tipo ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Motivacao .
-  ?c rdfs:label ?tipo . FILTER(LANG(?tipo) = "pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . }
-} ORDER BY ?tipo`
+    cat: 'Estrutura',
+    icon: '📐',
+    t: 'Profundidade hierárquica de cada conceito',
+    desc: 'Quão especializado é cada conceito? (nível 1 = filho direto de Discurso_de_odio)',
+    q: `SELECT DISTINCT ?conceito ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Discurso_de_odio .
+  ?c rdfs:label ?conceito . FILTER(LANG(?conceito) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?conceito LIMIT 300`
+  },
+
+  /* ════════════════════════════════════════════════════════
+     AGENTES — quem participa do discurso de ódio
+     ════════════════════════════════════════════════════════ */
+  {
+    cat: 'Agentes',
+    icon: '👤',
+    t: 'Tipos de agente odiador',
+    desc: 'Quem pode produzir discurso de ódio online? Perfis humanos, automatizados e híbridos.',
+    q: `SELECT DISTINCT ?agente ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Agente_odiador .
+  ?c rdfs:label ?agente . FILTER(LANG(?agente) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?agente`
   },
   {
-    cat: 'Dimensões',
-    t:'Perfis de Destinatário-Vítima',
-    desc:'Quem é alvo do discurso de ódio?',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ontohate: <http://ontohate.org/ontohate#>
-SELECT DISTINCT ?perfil ?definicao WHERE {
+    cat: 'Agentes',
+    icon: '🛡',
+    t: 'Agentes de moderação e denúncia',
+    desc: 'Quem pode intervir no discurso de ódio? Humanos, sistemas e testemunhas.',
+    q: `SELECT DISTINCT ?agente ?definicao WHERE {
+  { ?c rdfs:subClassOf+ ontohate:Agente_moderador . }
+  UNION
+  { ?c rdfs:subClassOf+ ontohate:Agente_denunciante . }
+  UNION
+  { ?c rdfs:subClassOf+ ontohate:Agente_testemunha . }
+  ?c rdfs:label ?agente . FILTER(LANG(?agente) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?agente`
+  },
+  {
+    cat: 'Agentes',
+    icon: '🎯',
+    t: 'Perfis de vítima / destinatário',
+    desc: 'Quem é alvo do discurso de ódio? Grupos e características protegidas.',
+    q: `SELECT DISTINCT ?vitima ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Destinatario_vitima .
-  ?c rdfs:label ?perfil . FILTER(LANG(?perfil) = "pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . }
-} ORDER BY ?perfil`
+  ?c rdfs:label ?vitima . FILTER(LANG(?vitima) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?vitima`
   },
   {
-    cat: 'Dimensões',
-    t:'Estratégias discursivas utilizadas',
-    desc:'Quais recursos linguísticos compõem o discurso de ódio?',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ontohate: <http://ontohate.org/ontohate#>
-SELECT DISTINCT ?estrategia ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Nucleo .
+    cat: 'Agentes',
+    icon: '🏷',
+    t: 'Características identitárias que motivam ódio',
+    desc: 'Quais características de uma pessoa a tornam alvo preferencial de discurso de ódio?',
+    q: `SELECT DISTINCT ?caracteristica ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Pessoa_com_caracteristica_protegida .
+  ?c rdfs:label ?caracteristica . FILTER(LANG(?caracteristica) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?caracteristica`
+  },
+
+  /* ════════════════════════════════════════════════════════
+     ESTRATÉGIAS — como o ódio é construído e expresso
+     ════════════════════════════════════════════════════════ */
+  {
+    cat: 'Estratégias',
+    icon: '⚔️',
+    t: 'Estratégias discursivas utilizadas',
+    desc: 'Quais recursos linguísticos e retóricos constroem o discurso de ódio?',
+    q: `SELECT DISTINCT ?estrategia ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Estrategias_Discursivas .
   ?c rdfs:label ?estrategia . FILTER(LANG(?estrategia) = "pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . }
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
 } ORDER BY ?estrategia`
   },
   {
-    cat: 'Dimensões',
-    t:'Tipos de Consequência do discurso',
-    desc:'Quais os impactos do discurso de ódio?',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ontohate: <http://ontohate.org/ontohate#>
-SELECT DISTINCT ?consequencia ?definicao WHERE {
+    cat: 'Estratégias',
+    icon: '📣',
+    t: 'Formas de manifestação do discurso',
+    desc: 'Como o discurso de ódio se expressa? Formas explícitas, veladas, alcance e formato.',
+    q: `SELECT DISTINCT ?forma ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Manifestacao .
+  ?c rdfs:label ?forma . FILTER(LANG(?forma) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?forma`
+  },
+  {
+    cat: 'Estratégias',
+    icon: '🔧',
+    t: 'Recursos técnicos e de forma',
+    desc: 'Quais recursos tecnológicos e formais amplificam ou constroem o discurso de ódio?',
+    q: `SELECT DISTINCT ?recurso ?tipo ?definicao WHERE {
+  { ?c rdfs:subClassOf+ ontohate:Recursos_Tecnicos . BIND("Técnico" AS ?tipo) }
+  UNION
+  { ?c rdfs:subClassOf+ ontohate:Recursos_de_Forma  . BIND("Forma"   AS ?tipo) }
+  ?c rdfs:label ?recurso . FILTER(LANG(?recurso) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?tipo ?recurso`
+  },
+  {
+    cat: 'Estratégias',
+    icon: '💭',
+    t: 'Proposições e conteúdo odiento',
+    desc: 'Que tipos de argumento e conteúdo compõem uma proposição de ódio?',
+    q: `SELECT DISTINCT ?conteudo ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Proposicao_odienta .
+  ?c rdfs:label ?conteudo . FILTER(LANG(?conteudo) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?conteudo`
+  },
+  {
+    cat: 'Estratégias',
+    icon: '🎭',
+    t: 'Motivações e modos intencionais',
+    desc: 'Por que o discurso de ódio é produzido? Intenções, crenças e disposições do agente.',
+    q: `SELECT DISTINCT ?motivacao ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Motivacao .
+  ?c rdfs:label ?motivacao . FILTER(LANG(?motivacao) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?motivacao`
+  },
+
+  /* ════════════════════════════════════════════════════════
+     CONTEXTO & CONSEQUÊNCIAS
+     ════════════════════════════════════════════════════════ */
+  {
+    cat: 'Contexto & Impacto',
+    icon: '🌐',
+    t: 'Contextos em que o discurso ocorre',
+    desc: 'Em quais ambientes, plataformas e situações o discurso de ódio se manifesta?',
+    q: `SELECT DISTINCT ?contexto ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Contexto .
+  ?c rdfs:label ?contexto . FILTER(LANG(?contexto) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?contexto`
+  },
+  {
+    cat: 'Contexto & Impacto',
+    icon: '💥',
+    t: 'Tipos de dano e consequência',
+    desc: 'Quais impactos o discurso de ódio provoca nas vítimas e na sociedade?',
+    q: `SELECT DISTINCT ?dano ?tipo ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Consequencia .
-  ?c rdfs:label ?consequencia . FILTER(LANG(?consequencia) = "pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . }
-} ORDER BY ?consequencia`
+  ?c rdfs:label ?dano . FILTER(LANG(?dano) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+  OPTIONAL {
+    ?c rdfs:subClassOf ?pai .
+    ?pai rdfs:label ?tipo . FILTER(LANG(?tipo) = "pt")
+    FILTER(?pai != ontohate:Consequencia)
+  }
+} ORDER BY ?tipo ?dano`
   },
   {
-    cat: 'Dimensões',
-    t:'Tipos de Moderação disponíveis',
-    desc:'Como o discurso de ódio pode ser moderado?',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ontohate: <http://ontohate.org/ontohate#>
-SELECT DISTINCT ?tipo ?definicao WHERE {
+    cat: 'Contexto & Impacto',
+    icon: '⚖️',
+    t: 'Mecanismos de moderação',
+    desc: 'Quais ações e processos de moderação a ontologia contempla?',
+    q: `SELECT DISTINCT ?acao ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Moderacao .
-  ?c rdfs:label ?tipo . FILTER(LANG(?tipo) = "pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . }
-} ORDER BY ?tipo`
+  ?c rdfs:label ?acao . FILTER(LANG(?acao) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?acao`
   },
   {
-    cat: 'Busca',
-    t:'Buscar conceito por palavra-chave',
-    desc:'Edite a palavra entre aspas para buscar qualquer termo.',
-    q:`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT DISTINCT ?nome ?definicao WHERE {
+    cat: 'Contexto & Impacto',
+    icon: '🖥',
+    t: 'Plataformas digitais e sistemas algorítmicos',
+    desc: 'Que tipos de plataforma e sistema técnico participam do ecossistema de ódio?',
+    q: `SELECT DISTINCT ?plataforma ?definicao WHERE {
+  { ?c rdfs:subClassOf+ ontohate:Plataforma_digital . }
+  UNION
+  { ?c rdfs:subClassOf+ ontohate:Sistema_algoritmico . }
+  ?c rdfs:label ?plataforma . FILTER(LANG(?plataforma) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+} ORDER BY ?plataforma`
+  },
+
+  /* ════════════════════════════════════════════════════════
+     ANÁLISE — cruzamentos e perguntas avançadas
+     ════════════════════════════════════════════════════════ */
+  {
+    cat: 'Análise',
+    icon: '🔍',
+    t: 'Buscar conceito por palavra-chave',
+    desc: 'Edite o termo entre aspas para localizar qualquer conceito da ontologia.',
+    q: `SELECT DISTINCT ?nome ?definicao WHERE {
   ?c rdfs:label ?nome .
-  OPTIONAL { ?c rdfs:comment ?definicao . }
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
   FILTER(LANG(?nome) = "pt")
   FILTER(CONTAINS(LCASE(STR(?nome)), "ameaca"))
 } ORDER BY ?nome`
   },
   {
-    cat: 'Metadados',
-    t:'Informações sobre a ontologia',
-    desc:'Versão, criador e licença.',
-    q:`PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT DISTINCT ?campo ?valor WHERE {
+    cat: 'Análise',
+    icon: '📊',
+    t: 'Conceitos com definição e contexto de uso',
+    desc: 'Lista enriquecida: nome, definição oficial e como o conceito aparece no discurso de ódio.',
+    q: `SELECT DISTINCT ?nome ?definicao ?contextoDeUso WHERE {
+  ?c rdfs:label ?nome . FILTER(LANG(?nome) = "pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao) = "pt") }
+  OPTIONAL { ?c ontohatev1:associacaoDiscursoOdioV1 ?contextoDeUso . FILTER(LANG(?contextoDeUso) = "pt") }
+} ORDER BY ?nome LIMIT 200`
+  },
+  {
+    cat: 'Análise',
+    icon: '🧩',
+    t: 'Conceitos sem definição (lacunas)',
+    desc: 'Quais classes ainda não possuem comentário/definição em português?',
+    q: `SELECT DISTINCT ?classe WHERE {
+  ?c a owl:Class .
+  ?c rdfs:label ?classe . FILTER(LANG(?classe) = "pt")
+  FILTER NOT EXISTS { ?c rdfs:comment ?def . FILTER(LANG(?def) = "pt") }
+  FILTER NOT EXISTS { ?c owl:deprecated ?x . }
+} ORDER BY ?classe`
+  },
+  {
+    cat: 'Análise',
+    icon: '🏛',
+    t: 'Metadados da ontologia',
+    desc: 'Versão, autoria, licença e informações editoriais.',
+    q: `SELECT DISTINCT ?campo ?valor WHERE {
   ?o a owl:Ontology .
-  { ?o rdfs:label    ?valor . BIND("Nome"    AS ?campo) }
+  {  ?o rdfs:label ?valor .       BIND("Nome"        AS ?campo) }
   UNION
-  { ?o owl:versionInfo ?valor . BIND("Versão" AS ?campo) }
+  {  ?o owl:versionInfo ?valor .  BIND("Versão"      AS ?campo) }
   UNION
-  { ?o dcterms:creator ?valor . BIND("Criador" AS ?campo) }
-}`
+  {  ?o dcterms:creator ?valor .  BIND("Criador"     AS ?campo) }
+  UNION
+  {  ?o dcterms:description ?valor . FILTER(LANG(?valor)="pt") . BIND("Descrição" AS ?campo) }
+  UNION
+  {  ?o dcterms:license ?valor .  BIND("Licença"     AS ?campo) }
+} ORDER BY ?campo`
   },
 ];
 
-let lastRows=[], lastVars=[];
+let lastRows = [], lastVars = [];
 
-function buildPresets(){
-  const box=$('presets'); box.innerHTML='';
+/* ── helpers de humanização ────────────────────────────────────────── */
 
-  // agrupar por categoria
-  const cats = [...new Set(PRESETS.map(p=>p.cat))];
-  for (const cat of cats){
-    const catDiv = document.createElement('div');
-    catDiv.style.cssText = 'margin-bottom:14px';
-    catDiv.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase">${esc(cat)}</div>`;
+function bestLabel(iri) {
+  if (!iri) return '';
+  if (G && G.labels && G.labels.has(iri)) return G.labels.get(iri);
+  return shortIri(iri);
+}
+function humanize(val) {
+  if (!val) return '—';
+  if (val.startsWith('http://ontohate.org/')||val.startsWith('https://ontohate.org/'))
+    return G.labels.get(val) || shortIri(val);
+  if (val.startsWith('http://www.w3.org/')||val.startsWith('https://www.w3.org/'))
+    return shortIri(val);
+  if (val.startsWith('http')||val.startsWith('https')) return shortIri(val);
+  return val;
+}
+function renderCell(val) {
+  if (!val || val === '—') return '<span style="color:var(--dim)">—</span>';
+  const h = humanize(val);
+  const isIri = (val||'').startsWith('http');
+  if (isIri && h !== val) {
+    return `<span style="font-weight:600;color:var(--text)">${esc(h)}</span>`
+         + `<div style="font-size:10px;color:var(--dim);word-break:break-all;margin-top:2px">${esc(shortIri(val))}</div>`;
+  }
+  // texto longo → expansível
+  if ((val||'').length > 140) {
+    const id = 'x'+Math.random().toString(36).slice(2);
+    return `<span id="${id}-s" style="color:var(--muted);font-size:12px;line-height:1.5">
+              ${esc(val.slice(0,140))}<span style="color:var(--dim)">…</span>
+              <button onclick="document.getElementById('${id}-f').style.display='';document.getElementById('${id}-s').style.display='none'"
+                style="font-size:10px;color:var(--accent);background:none;border:none;cursor:pointer;margin-left:4px">ver mais</button>
+            </span>
+            <span id="${id}-f" style="display:none;color:var(--muted);font-size:12px;line-height:1.5">${esc(val)}</span>`;
+  }
+  return `<span style="color:var(--muted);font-size:12px;line-height:1.5">${esc(val)}</span>`;
+}
 
-    for (const p of PRESETS.filter(x=>x.cat===cat)){
-      const d = document.createElement('div');
-      d.className = 'preset';
-      d.innerHTML = `<div class="pt">${esc(p.t)}</div><div class="ps">${esc(p.desc)}</div>`;
-      d.onclick = ()=>{
+/* ── SPARQL com filtros extras ─────────────────────────────────────── */
+
+
+/* ── renderizar tabela de resultados ──────────────────────────────── */
+function renderTable(rows, vars) {
+  if (!rows.length) return '<div style="color:var(--muted);padding:16px">Nenhum resultado.</div>';
+
+  const colLabels = {
+    nome:'Nome',conceito:'Conceito',pai:'Pai direto',dimensao:'Dimensão',
+    definicao:'Definição',propriedade:'Propriedade',descricao:'Descrição',
+    de:'Domínio',para:'Alcance',origem:'Origem',destino:'Destino',
+    agente:'Agente',vitima:'Vítima',perfil:'Perfil',caracteristica:'Característica',
+    estrategia:'Estratégia',forma:'Forma',recurso:'Recurso',tipo:'Tipo',
+    motivacao:'Motivação',contexto:'Contexto',dano:'Dano',acao:'Ação',
+    plataforma:'Plataforma',conteudo:'Conteúdo',campo:'Campo',valor:'Valor',
+    classe:'Classe',contextoDeUso:'Uso no discurso de ódio',
+  };
+
+  // cabeçalhos: só variáveis que aparecem nos dados
+  const usedVars = vars.filter(v => rows.some(r => r[v]));
+
+  let tbl = `<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr>`;
+  for (const v of usedVars) {
+    tbl += `<th style="text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);
+      color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.06em;white-space:nowrap">
+      ${esc((colLabels[v]||v).toUpperCase())}</th>`;
+  }
+  tbl += `</tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    const bg = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,.025)';
+    tbl += `<tr style="background:${bg}">`;
+    for (const v of usedVars) {
+      tbl += `<td style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.06);
+        vertical-align:top;max-width:420px">${renderCell(r[v])}</td>`;
+    }
+    tbl += `</tr>`;
+  });
+  tbl += `</tbody></table>`;
+  return tbl;
+}
+
+/* ── executar query ─────────────────────────────────────────────────── */
+function runQuery() {
+  const raw = $('qbox').value.trim();
+  if (!raw) return;
+  const t0 = performance.now();
+  let rows;
+  try { rows = sparqlQueryEnhanced(raw); }
+  catch (e) {
+    $('qres').innerHTML = `<div style="color:var(--bad);font-family:var(--mono);font-size:12px;padding:12px">
+      ❌ Erro: ${esc(String(e.message||e))}</div>`;
+    return;
+  }
+  const ms = (performance.now() - t0).toFixed(1);
+  lastRows = rows; lastVars = [];
+
+  // extrair variáveis da query (ORDER preservado)
+  const vm = raw.match(/SELECT[^{]+(WHERE|\{)/i);
+  if (vm) {
+    const vRaw = vm[0];
+    for (const m of vRaw.matchAll(/\?(\w+)/g)) lastVars.push(m[1]);
+  }
+  if (!lastVars.length && rows.length) lastVars = Object.keys(rows[0]);
+  // deduplicar mantendo ordem
+  lastVars = [...new Set(lastVars)];
+
+  $('qmeta').textContent = `${rows.length} resultado${rows.length!==1?'s':''} · ${ms}ms`;
+  $('qres').innerHTML = renderTable(rows, lastVars);
+}
+
+/* ── exportar ───────────────────────────────────────────────────────── */
+function exportCsv() {
+  if (!lastRows.length) return;
+  dl('ontohate-resultado.csv', toCsv(lastRows), 'text/csv');
+}
+function exportJson() {
+  if (!lastRows.length) return;
+  dl('ontohate-resultado.json', JSON.stringify(lastRows, null, 2), 'application/json');
+}
+
+/* ── construir painel de presets ─────────────────────────────────────── */
+function buildPresets() {
+  const box = $('presets'); if (!box) return;
+  box.innerHTML = '';
+  const cats = [...new Set(PRESETS.map(p => p.cat))];
+
+  for (const cat of cats) {
+    const sec = document.createElement('div');
+    sec.style.cssText = 'margin-bottom:18px';
+    sec.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--dim);
+      letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;
+      padding-bottom:4px;border-bottom:1px solid var(--border)">${esc(cat)}</div>`;
+
+    for (const p of PRESETS.filter(x => x.cat === cat)) {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn';
+      btn.innerHTML = `<span class="preset-icon">${p.icon||'▸'}</span>
+        <span class="preset-body">
+          <span class="preset-title">${esc(p.t)}</span>
+          <span class="preset-desc">${esc(p.desc)}</span>
+        </span>`;
+      btn.onclick = () => {
         $('qbox').value = p.q;
-        $('qmeta').textContent = esc(p.t);
+        // highlight active
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        runQuery();
+        // scroll para resultados em mobile
+        $('qres')?.scrollIntoView({behavior:'smooth',block:'nearest'});
       };
-      catDiv.appendChild(d);
+      sec.appendChild(btn);
     }
-    box.appendChild(catDiv);
-  }
-  $('qbox').value = PRESETS[0].q;
-}
-
-function runQ(){
-  const q = $('qbox').value.trim();
-  if(!q){ $('qres').innerHTML='<span style="color:var(--muted)">Escreva uma consulta.</span>'; lastRows=[]; return; }
-  $('qmeta').textContent='Executando…';
-  $('qres').innerHTML='<span class="spin"></span> Processando…';
-  lastRows=[]; lastVars=[];
-
-  setTimeout(()=>{
-    // patch do engine para suportar FILTER CONTAINS e LANG
-    const {vars, rows, err} = sparqlQueryEnhanced(q);
-    if(err){
-      $('qmeta').textContent='Erro';
-      $('qres').innerHTML=`<div style="color:var(--bad);font-family:var(--mono);font-size:12px">${esc(err)}</div>`;
-      return;
-    }
-    if(!rows.length){
-      $('qmeta').textContent='0 resultados';
-      $('qres').innerHTML='<span style="color:var(--muted)">Sem resultados. Verifique se os filtros de língua (LANG) correspondem aos dados.</span>';
-      return;
-    }
-
-    lastVars = vars;
-    // guardar linha crua para exportação
-    lastRows = rows.map(r=>{ const o={}; for(const v of vars) o['?'+v]=String(r[v]??''); return o; });
-
-    // renderizar tabela com células humanizadas
-    const cols = vars.map(v=>'?'+v);
-    let html = `<table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>`;
-    for(const r of rows){
-      html += '<tr>' + cols.map(c=>{
-        const raw = String(r[c.slice(1)]??'');
-        return `<td style="font-size:12px">${renderCell(raw)}</td>`;
-      }).join('') + '</tr>';
-    }
-    html += '</tbody></table>';
-
-    $('qmeta').textContent = `${rows.length} resultado${rows.length!==1?'s':''}`;
-    $('qres').innerHTML = html;
-  }, 10);
-}
-
-/* engine SPARQL estendida com suporte a FILTER CONTAINS, LANG, STR, LCASE */
-function sparqlQueryEnhanced(queryStr){
-  try {
-    // pré-processar: substituir FILTER(CONTAINS(...)) e FILTER(LANG(...))
-    // por marcadores que o engine nativo processa depois
-    const result = sparqlQuery(queryStr);
-    if (result.err) return result;
-
-    // pós-filtros que o engine básico não suporta
-    let rows = result.rows;
-
-    // FILTER(CONTAINS(LCASE(STR(?x)), "termo"))
-    const containsM = queryStr.match(/FILTER\s*\(\s*CONTAINS\s*\(\s*LCASE\s*\(\s*STR\s*\(\s*\?(\w+)\s*\)\s*\)\s*,\s*"([^"]+)"\s*\)\s*\)/gi);
-    if (containsM){
-      for (const fm of containsM){
-        const m = fm.match(/\?(\w+).*?"([^"]+)"/);
-        if (m){
-          const [,varName, term] = m;
-          rows = rows.filter(r => String(r[varName]??'').toLowerCase().includes(term.toLowerCase()));
-        }
-      }
-    }
-
-    // FILTER(LANG(?x) = "pt") — filtrar por língua
-    const langM = queryStr.match(/FILTER\s*\(\s*LANG\s*\(\s*\?(\w+)\s*\)\s*=\s*"([^"]+)"\s*\)/gi);
-    if (langM){
-      for (const fm of langM){
-        const m = fm.match(/\?(\w+).*?"([^"]+)"/);
-        if (m){
-          const [, varName, lang] = m;
-          // usar os quads brutos para verificar lang
-          rows = rows.filter(r => {
-            const val = r[varName];
-            if (!val) return false;
-            // verificar nos quads se este valor tem a lang correta
-            for (const q of G.quads){
-              if (q.oIsLiteral && q.o === val &&
-                  (q.oLang||'').toLowerCase().startsWith(lang.toLowerCase())) return true;
-            }
-            // se não encontrou com lang, incluir se não tem lang (assume neutro)
-            return false;
-          });
-        }
-      }
-    }
-
-    return { vars: result.vars, rows, err: null };
-  } catch(e){
-    return { vars:[], rows:[], err: String(e.message||e) };
+    box.appendChild(sec);
   }
 }
 
-$('qbox').addEventListener('keydown', e=>{
-  if((navigator.platform.includes('Mac')?e.metaKey:e.ctrlKey) && e.key==='Enter'){
-    e.preventDefault(); runQ();
+/* ── atalho de teclado ──────────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key === 'Enter') {
+    const ta = document.activeElement;
+    if (ta && ta.id === 'qbox') { e.preventDefault(); runQuery(); }
   }
 });
 
-function exportCsv(){
-  if(!lastRows.length) return alert('Sem resultados.');
-  dl('resultado.csv', toCsv(lastRows), 'text/csv');
-}
-function exportJson(){
-  if(!lastRows.length) return alert('Sem resultados.');
-  dl('resultado.json', JSON.stringify(lastRows,null,2), 'application/json');
-}
-
-/* ============================================================
-   BOOT
-   ============================================================ */
-/* ── fetch helper: tenta fetch() com timeout, depois XHR como fallback ── */
-function fetchWithTimeout(url, ms){
-  return new Promise((resolve, reject) => {
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timer = setTimeout(() => {
-      if (controller) controller.abort();
-      reject(new Error('timeout após '+ms+'ms'));
-    }, ms);
-
-    fetch(url, {
-      cache: 'no-cache',
-      signal: controller ? controller.signal : undefined
-    })
-    .then(res => { clearTimeout(timer); resolve(res); })
-    .catch(err => {
-      clearTimeout(timer);
-      // fallback para XHR se fetch falhou (alguns ambientes bloqueiam fetch cross-origin)
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', url, true);
-      xhr.timeout = ms;
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          // wrap em objeto que imita Response
-          resolve({ ok: true, status: xhr.status, text: () => Promise.resolve(xhr.responseText) });
-        } else {
-          reject(new Error('HTTP ' + xhr.status));
-        }
-      };
-      xhr.onerror   = () => reject(new Error('XHR network error'));
-      xhr.ontimeout = () => reject(new Error('XHR timeout'));
-      xhr.send();
-    });
-  });
-}
-
-/* ── TTL embutido diretamente no HTML (evita 100% de problemas CORS/404) ── */
 const BUNDLED_TTL = `@prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix ontohate: <http://ontohate.org/ontohate#> .
 @prefix ontohatev1: <https://ontohate.org/ontohate-v2-ufo-rigor/> .
@@ -3912,186 +4253,30 @@ A pessoa com característica protegida pertence a um grupo de pessoas com caract
 
 `;
 
-/* ── gera lista de URLs candidatas ── */
-function makeCandidates(){
-  const href = location.href;
-  const base = href.endsWith('/') ? href : href.slice(0, href.lastIndexOf('/') + 1);
-  const filenames = ['Ontohate.ttl', 'ontohate.ttl', 'ontohate_oficial.owl', 'ontohate_oficial.ttl'];
 
-  // URLs do GitHub raw (acesso direto ao arquivo, ignora Pages)
-  const rawBase = 'https://raw.githubusercontent.com/luquizis/Ontohate/main/';
-
-  const urls = [];
-  // 1. Tentar raw do GitHub primeiro (sempre funciona se o arquivo existe)
-  for (const f of filenames) urls.push(rawBase + f);
-  // 2. Tentar via GitHub Pages
-  for (const f of filenames) {
-    urls.push(base + f);
-    const parent = base.slice(0, base.slice(0,-1).lastIndexOf('/') + 1);
-    if (parent !== base) urls.push(parent + f);
-  }
-  return [...new Set(urls)];
-}
 
 async function boot(){
   setStatus('warn','Iniciando…');
-
-  // BUNDLED_TTL: ontologia embutida diretamente — carrega instantaneamente, sem CORS
-  if (BUNDLED_TTL && BUNDLED_TTL.trim().length > 0) {
-    setDebug('Embutido', '<span style="color:var(--ok)">✅ Ontologia embutida no HTML — sem dependência de rede</span>');
-    processText(BUNDLED_TTL, 'Ontohate.ttl (embutido)');
-    return;
+  if(typeof BUNDLED_TTL!=='undefined'&&BUNDLED_TTL&&BUNDLED_TTL.trim().length>100){
+    setDebug('Embutido','<span style="color:var(--ok)">✅ Ontologia embutida — carregando…</span>');
+    await processText(BUNDLED_TTL,'Ontohate.ttl (embutido)');return;
   }
-
-  const candidates = makeCandidates();
-  const log = []; // log de cada tentativa para mostrar no debug
-
-  function updateDebug(){
-    const rows = log.map(l =>
-      `<div style="font-family:var(--mono);font-size:11px;margin-bottom:4px">
-        <span style="color:${l.ok?'var(--ok)':l.pending?'var(--warn)':'var(--bad)'}">${l.ok?'✓':l.pending?'…':'✗'}</span>
-        <span style="color:var(--dim);word-break:break-all"> ${esc(l.url)}</span>
-        ${l.note?`<span style="color:var(--muted)"> — ${esc(l.note)}</span>`:''}
-      </div>`
-    ).join('');
-    setDebug('Buscando…', rows || '<span class="spin"></span>');
+  const candidates=makeCandidates(),log=[];
+  function upd(){setDebug('Buscando…',log.map(l=>`<div style="font-family:var(--mono);font-size:11px"><span style="color:${l.ok?'var(--ok)':l.p?'var(--warn)':'var(--bad)'}">${l.ok?'✓':l.p?'…':'✗'}</span> <span style="color:var(--dim);word-break:break-all">${esc(l.url)}</span>${l.note?` — <span style="color:var(--muted)">${esc(l.note)}</span>`:''}</div>`).join(''));}
+  let text=null,loadedUrl=null;
+  for(const url of candidates){
+    const entry={url,ok:false,p:true,note:''};log.push(entry);upd();setStatus('warn','Tentando '+url.split('/').pop()+'…');
+    try{
+      const res=await fetchWithTimeout(url,8000);
+      if(!res.ok){entry.p=false;entry.note='HTTP '+res.status;upd();continue;}
+      entry.note='baixando…';upd();
+      const t=await Promise.race([res.text(),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),20000))]);
+      if(!t||!t.trim()){entry.p=false;entry.note='vazio';upd();continue;}
+      entry.ok=true;entry.p=false;entry.note=t.length.toLocaleString('pt-BR')+' chars';text=t;loadedUrl=url;upd();break;
+    }catch(e){entry.p=false;entry.note=String(e.message||e).slice(0,80);upd();}
   }
-
-  let text = null, loadedUrl = null;
-
-  for (const url of candidates) {
-    const entry = { url, ok: false, pending: true, note: '' };
-    log.push(entry);
-    updateDebug();
-    setStatus('warn', 'Tentando ' + url.split('/').pop() + '…');
-
-    try {
-      const res = await fetchWithTimeout(url, 8000);
-      if (!res.ok) {
-        entry.pending = false;
-        entry.note = 'HTTP ' + res.status;
-        updateDebug();
-        continue;
-      }
-      entry.note = 'baixando…';
-      updateDebug();
-      const t = await Promise.race([
-        res.text(),
-        new Promise((_,r) => setTimeout(() => r(new Error('timeout lendo corpo')), 20000))
-      ]);
-      // verifica se é Turtle válido (deve ter @prefix ou prefixo conhecidos)
-      if (!t || t.trim().length === 0) {
-        entry.pending = false; entry.note = 'arquivo vazio'; updateDebug(); continue;
-      }
-      if (t.trimStart().startsWith('<') && t.includes('<?xml')) {
-        entry.pending = false; entry.note = 'é RDF/XML, não Turtle'; updateDebug(); continue;
-      }
-      entry.ok = true; entry.pending = false;
-      entry.note = t.length.toLocaleString('pt-BR') + ' chars';
-      text = t; loadedUrl = url;
-      updateDebug();
-      break;
-    } catch(e) {
-      entry.pending = false;
-      entry.note = String(e.message || e).slice(0, 80);
-      updateDebug();
-    }
-  }
-
-  if (!text) {
-    setStatus('bad', 'Arquivo não encontrado');
-    const rows = log.map(l =>
-      `<tr>
-        <td style="font-family:var(--mono);font-size:11px;word-break:break-all;padding:4px 8px 4px 0;color:var(--dim)">${esc(l.url)}</td>
-        <td style="font-size:12px;color:var(--bad);white-space:nowrap">${esc(l.note||'falhou')}</td>
-      </tr>`).join('');
-    setDebug('❌', `
-      <div style="color:var(--bad);font-weight:700;margin-bottom:10px">Não foi possível carregar a ontologia</div>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:12px"><tbody>${rows}</tbody></table>
-      <div style="color:var(--muted);font-size:12px;line-height:1.6">
-        <b>O que fazer:</b><br>
-        1. Confirme que <code>Ontohate.ttl</code> está na raiz do repositório, <b>no mesmo nível que index.html</b><br>
-        2. Confirme que o GitHub Pages está publicando o branch/pasta correto<br>
-        3. Acesse <code>${esc(location.origin + location.pathname.replace('index.html',''))}Ontohate.ttl</code> diretamente no browser para verificar
-      </div>`);
-    return;
-  }
-
-  processText(text, loadedUrl);
-}
-
-/* ── upload manual de arquivo ── */
-document.getElementById('fileInput').addEventListener('change', function(e){
-  const file = e.target.files[0];
-  if (!file) return;
-  setStatus('warn', 'Lendo ' + file.name + '...');
-  setDebug('Lendo...', '<span class="spin"></span> ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)');
-  const reader = new FileReader();
-  reader.onload = function(ev){
-    const text = ev.target.result;
-    processText(text, file.name);
-  };
-  reader.onerror = function(){
-    setStatus('bad', 'Erro ao ler arquivo');
-    setDebug('\u274c', '<div style="color:var(--bad)">Não foi possível ler o arquivo.</div>');
-  };
-  reader.readAsText(file, 'UTF-8');
-  // reset input so same file can be reloaded
-  this.value = '';
-});
-
-async function processText(text, sourceName){
-  setStatus('warn','Parseando...');
-  setDebug('Parseando...', '<span class="spin"></span> ' + text.length.toLocaleString('pt-BR') + ' chars...');
-
-  let quads;
-  try {
-    if (text.trimStart().startsWith('<') && text.includes('rdf:RDF')) {
-      throw new Error('Arquivo em RDF/XML. Exporte como Turtle no Protégé: File \u2192 Save ontology as\u2026 \u2192 Turtle Syntax');
-    }
-    const result = parseTurtle(text, sourceName);
-    quads = result.quads;
-    if (quads.length === 0) throw new Error('Nenhuma tripla encontrada. Verifique se o arquivo é Turtle válido.');
-  } catch(e) {
-    setStatus('bad','Erro no parse');
-    setDebug('\u274c', '<div style="color:var(--bad);margin-bottom:8px">' + esc(String(e.message||e)) + '</div>');
-    return;
-  }
-
-  setStatus('warn','Indexando...');
-  try { buildIndex(quads); } catch(e) {
-    setStatus('bad','Erro ao indexar');
-    setDebug('\u274c', '<div style="color:var(--bad)">' + esc(String(e.message||e)) + '</div>');
-    return;
-  }
-
-  fillDims();
-  buildPresets();
-
-  if (!gTax)  gTax  = makeGraph('cvTax');
-  if (!gOnto) gOnto = makeGraph('cvOnto');
-
-  // aguardar o browser pintar o layout antes de construir os grafos
-  // (canvas pode ter dimensão 0 se a aba ainda não foi renderizada)
-  requestAnimationFrame(() => {
-    gTax.resize();
-    buildTax();
-    // ontologia só é construída quando a aba for aberta (lazy)
-    // para não travar com 200+ nós logo no boot
-  });
-
-  setStatus('ok', 'OK \u2014 ' + G.classes.size + ' classes \u2022 ' + G.props.size + ' props \u2022 ' + G.dims.length + ' dims');
-  setDebug('\u2705 OK', `
-    <div style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:6px">${esc(sourceName)}</div>
-    <div style="color:var(--muted);font-size:13px">
-      <b>${quads.length.toLocaleString('pt-BR')}</b> quads \u2022
-      <b>${G.classes.size}</b> classes \u2022
-      <b>${G.props.size}</b> object properties \u2022
-      <b>${G.dims.length}</b> dimens\u00f5es
-    </div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:6px">Dimens\u00f5es:</div>
-    <div style="font-size:12px;color:var(--muted)">${G.dims.map(d=>esc(bestLabel(d))).join(' \u2022 ')||'\u2014'}</div>
-  `);
+  if(!text){setStatus('bad','Arquivo não encontrado');setDebug('❌','<div style="color:var(--bad);font-weight:700;margin-bottom:10px">Não foi possível carregar a ontologia</div><div style="color:var(--muted);font-size:12px">Use o botão 📂 para carregar manualmente.</div>');return;}
+  await processText(text,loadedUrl);
 }
 
 boot();
