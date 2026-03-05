@@ -135,6 +135,7 @@ canvas.gv:active{cursor:grabbing}
   </div>
   <div class="hdr-btns">
     <span class="badge"><span class="dot warn" id="sdot"></span><span id="stxt">Carregando…</span></span>
+    <span class="badge">build <b style="font-weight:700" id="buildId"></b></span>
     <button class="btn" onclick="toggleTheme()">Tema</button>
     <button class="btn" onclick="boot()">Reload</button>
   </div>
@@ -403,11 +404,13 @@ canvas.gv:active{cursor:grabbing}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const cv2=name=>getComputedStyle(document.body).getPropertyValue(name).trim();
+const BUILD_ID='2026.03.05-r2';
 function setStatus(k,t){$('sdot').className='dot '+k;$('stxt').textContent=t}
 function setDebug(pill,html){$('dpill').textContent=pill;$('dbox').innerHTML=html}
 function dl(name,text,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime||'text/plain'}));a.download=name;a.click();}
 function toCsv(rows){if(!rows.length)return'';const cols=Object.keys(rows[0]);const q=v=>{const s=String(v??'');return/[,"\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:`${s}`};return[cols.join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\n')}
 function toggleTheme(){const t=document.body.getAttribute('data-theme')||'dark';document.body.setAttribute('data-theme',t==='dark'?'light':'dark');[gTax,gOnto].forEach(g=>g&&g.draw());}
+$('buildId')&&($('buildId').textContent=BUILD_ID);
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
@@ -1175,7 +1178,29 @@ function makeGraph(id){
   const toS=(x,y)=>({x:x*zoom+pan.x,y:y*zoom+pan.y});
   const toW=(x,y)=>({x:(x-pan.x)/zoom,y:(y-pan.y)/zoom});
 
-  function applyLayout(){if(!nodes.length)return;layout==='rad'?doRadial():doHier(layout==='lr');}
+  function applyLayout(){if(!nodes.length)return;layout==='rad'?doRadial():doHier(layout==='lr');resolveOverlaps();}
+
+  function resolveOverlaps(iter=2){
+    if(nodes.length<2)return;
+    for(let t=0;t<iter;t++) {
+      for(let i=0;i<nodes.length;i++){
+        const a=nodes[i]; if(a.x==null) continue;
+        for(let j=i+1;j<nodes.length;j++){
+          const b=nodes[j]; if(b.x==null) continue;
+          const dx=b.x-a.x, dy=b.y-a.y;
+          const minX=(Math.max(70,(String(a.label||'').length+String(b.label||'').length)*1.1));
+          const minY=34;
+          if(Math.abs(dx)<minX && Math.abs(dy)<minY){
+            const pushX=(minX-Math.abs(dx))/2+2;
+            const pushY=(minY-Math.abs(dy))/2+1;
+            const sx=dx>=0?1:-1, sy=dy>=0?1:-1;
+            a.x-=sx*pushX; b.x+=sx*pushX;
+            a.y-=sy*pushY; b.y+=sy*pushY;
+          }
+        }
+      }
+    }
+  }
 
   function treeMap(){
     const ch=new Map(nodes.map(n=>[n.id,[]])),hasP=new Set();
@@ -2032,7 +2057,10 @@ function renderTable(rows, vars) {
 /* ── executar query ─────────────────────────────────────────────────── */
 function runQuery() {
   const raw = $('qbox').value.trim();
-  if (!raw) return;
+  if (!raw){
+    if(PRESETS && PRESETS.length){$('qbox').value=PRESETS[0].q;}
+    else return;
+  }
   const t0 = performance.now();
   let rows;
   try { rows = sparqlQueryEnhanced(raw); }
@@ -4387,13 +4415,15 @@ function makeCandidates(){
   const ttlFile='Ontohate_relacional_cruzamentos.ttl';
   const q=new URLSearchParams(location.search);
   const fromQuery=q.get('ttl');
+  const bust=q.get('v')||BUILD_ID;
   const baseDir=location.pathname.replace(/[^/]*$/, '');
+  const withBust=(u)=>{try{const x=new URL(u,location.href);x.searchParams.set('v',bust);return x.href;}catch{return u;}};
   const list=[];
-  if(fromQuery) list.push(fromQuery);
-  list.push(`./${ttlFile}`);
-  list.push(new URL(`./${ttlFile}`, location.href).href);
-  list.push(`${location.origin}${baseDir}${ttlFile}`);
-  list.push(ttlFile);
+  if(fromQuery) list.push(withBust(fromQuery));
+  list.push(withBust(`./${ttlFile}`));
+  list.push(withBust(new URL(`./${ttlFile}`, location.href).href));
+  list.push(withBust(`${location.origin}${baseDir}${ttlFile}`));
+  list.push(withBust(ttlFile));
   return [...new Set(list.filter(Boolean))];
 }
 
