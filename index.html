@@ -287,8 +287,15 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   b.classList.add('on');
   const t=b.dataset.tab;
   ['tax','onto','sparql'].forEach(id=>$('page-'+id).classList.toggle('on',id===t));
-  if(t==='tax'  && gTax)  gTax.resize();
-  if(t==='onto' && gOnto) gOnto.resize();
+  if(t==='tax' && gTax){ gTax.resize(); }
+  if(t==='onto'){
+    if(!gOnto) gOnto = makeGraph('cvOnto');
+    requestAnimationFrame(()=>{
+      gOnto.resize();
+      // construir grafo ontologia na primeira vez que a aba é aberta
+      if(gOnto.getNodes().length === 0 && G.classes.size > 0) buildOnto();
+    });
+  }
 });
 
 /* ============================================================
@@ -753,320 +760,311 @@ function joinTriple(bindings,pat){
    CANVAS GRAPH ENGINE — force-directed, pan/zoom, tooltip
    ============================================================ */
 function makeGraph(canvasId){
-  const cv=document.getElementById(canvasId);
-  if(!cv)return null;
-  const ctx=cv.getContext('2d');
+  const cv = document.getElementById(canvasId);
+  if (!cv) return null;
 
-  let nodes=[],edges=[];
-  let pan={x:0,y:0},zoom=1;
-  let dragging=null,lastMouse=null;
-  let highlighted=new Set(),focused=null;
-  let hoverNode=null;
-  let animReq=null;
-  let simRunning=false;
+  let nodes = [], edges = [];
+  let pan = {x:0, y:0}, zoom = 1;
+  let drag = null, lastM = null;
+  let highlighted = new Set(), focused = null, hoverNode = null;
+  let onNodeClick = null;
+  let ctx = null;
 
-  // colors from CSS vars
-  function cssVar(v){return getComputedStyle(document.body).getPropertyValue(v).trim();}
+  /* ── init ctx robustamente ── */
+  function getCtx(){
+    if (!ctx) ctx = cv.getContext('2d');
+    return ctx;
+  }
+
+  /* ── dimensões seguras ── */
+  function cvW(){ return cv.width  / (window.devicePixelRatio||1); }
+  function cvH(){ return cv.height / (window.devicePixelRatio||1); }
 
   function resize(){
-    const r=cv.getBoundingClientRect();
-    cv.width=r.width*devicePixelRatio;
-    cv.height=r.height*devicePixelRatio;
-    ctx.scale(devicePixelRatio,devicePixelRatio);
+    const dpr = window.devicePixelRatio || 1;
+    // usar clientWidth/clientHeight — funciona mesmo com display:none
+    const w = cv.clientWidth  || cv.parentElement?.clientWidth  || 900;
+    const h = cv.clientHeight || cv.parentElement?.clientHeight || 660;
+    if (w < 10 || h < 10) return;
+    if (cv.width === w*dpr && cv.height === h*dpr) return;
+    cv.width  = w * dpr;
+    cv.height = h * dpr;
+    getCtx().setTransform(dpr, 0, 0, dpr, 0, 0);
     draw();
   }
-  window.addEventListener('resize',()=>resize());
+  window.addEventListener('resize', resize);
 
-  function worldToScreen(x,y){return{x:x*zoom+pan.x,y:y*zoom+pan.y};}
-  function screenToWorld(x,y){return{x:(x-pan.x)/zoom,y:(y-pan.y)/zoom};}
+  /* ── coordenadas ── */
+  function toScreen(x,y){ return {x: x*zoom+pan.x, y: y*zoom+pan.y}; }
+  function toWorld(x,y) { return {x: (x-pan.x)/zoom, y: (y-pan.y)/zoom}; }
+
+  /* ── layout hierárquico determinístico ── */
+  function doLayout(){
+    if (!nodes.length) return;
+    const W = cvW() || 900, H = cvH() || 660;
+
+    // Achar raízes (sem incoming edges de subClassOf)
+    const hasParent = new Set(edges.filter(e=>!e.isProp).map(e=>e.to.id));
+    const roots = nodes.filter(n => !hasParent.has(n.id));
+
+    if (roots.length === 0) {
+      // sem hierarquia: layout circular
+      const cx=W/2, cy=H/2, r=Math.min(W,H)*0.4;
+      nodes.forEach((n,i)=>{
+        const a = (2*Math.PI*i)/nodes.length;
+        n.x = cx + r*Math.cos(a);
+        n.y = cy + r*Math.sin(a);
+      });
+      return;
+    }
+
+    // BFS por nível a partir das raízes
+    const level = new Map();
+    const queue = [...roots];
+    roots.forEach(r => level.set(r.id, 0));
+    const nodeById = new Map(nodes.map(n=>[n.id,n]));
+    const childEdges = new Map(); // parent.id → [child]
+    for (const e of edges){
+      if (e.isProp) continue;
+      if (!childEdges.has(e.from.id)) childEdges.set(e.from.id,[]);
+      childEdges.get(e.from.id).push(e.to);
+    }
+
+    const visited = new Set(roots.map(r=>r.id));
+    while (queue.length){
+      const n = queue.shift();
+      const kids = childEdges.get(n.id)||[];
+      for (const k of kids){
+        if (!visited.has(k.id)){
+          visited.add(k.id);
+          level.set(k.id, (level.get(n.id)||0)+1);
+          queue.push(k);
+        }
+      }
+    }
+    // nós sem nível (ilhas isoladas)
+    nodes.forEach(n=>{ if(!level.has(n.id)) level.set(n.id,0); });
+
+    // agrupar por nível
+    const byLevel = new Map();
+    for (const [id,lv] of level){
+      if (!byLevel.has(lv)) byLevel.set(lv,[]);
+      byLevel.get(lv).push(nodeById.get(id));
+    }
+    const maxLevel = Math.max(...byLevel.keys());
+    const YGAP = Math.min(100, (H-80)/(maxLevel+1));
+    const XGAP = 120;
+
+    for (const [lv, ns] of byLevel){
+      const totalW = ns.length * XGAP;
+      const startX = W/2 - totalW/2 + XGAP/2;
+      ns.forEach((n,i)=>{ n.x = startX + i*XGAP; n.y = 60 + lv*YGAP; });
+    }
+  }
+
+  /* ── draw ── */
+  function draw(){
+    const c = getCtx();
+    const W = cvW(), H = cvH();
+    if (W < 10 || H < 10) return;
+    c.clearRect(0, 0, W, H);
+
+    const cs = s => getComputedStyle(document.body).getPropertyValue(s).trim();
+    const textCol   = cs('--text');
+    const mutedCol  = cs('--muted');
+    const edgeCol   = cs('--border') || 'rgba(255,255,255,.2)';
+    const accent    = cs('--accent')  || '#7dd3fc';
+    const accent2   = cs('--accent2') || '#a78bfa';
+    const nodeFill  = 'rgba(255,255,255,.07)';
+    const nodeBorder= 'rgba(255,255,255,.2)';
+
+    c.save();
+
+    // arestas
+    for (const e of edges){
+      const as = toScreen(e.from.x||0, e.from.y||0);
+      const bs = toScreen(e.to.x||0,   e.to.y||0);
+      const faded = focused && (!focused.has(e.from.id)||!focused.has(e.to.id));
+      c.globalAlpha = faded ? 0.06 : (e.isProp ? 0.75 : 0.55);
+      c.strokeStyle = e.isProp ? accent2 : edgeCol;
+      c.lineWidth   = e.isProp ? 1.8 : 1.2;
+      c.setLineDash(e.isProp ? [5,4] : []);
+      c.beginPath(); c.moveTo(as.x, as.y); c.lineTo(bs.x, bs.y); c.stroke();
+      c.setLineDash([]);
+
+      // seta
+      if (!faded){
+        const ang = Math.atan2(bs.y-as.y, bs.x-as.x);
+        const sz = 7*Math.max(0.4,Math.min(zoom,1.5));
+        const tx = bs.x - Math.cos(ang)*sz, ty = bs.y - Math.sin(ang)*sz;
+        c.fillStyle = e.isProp ? accent2 : edgeCol;
+        c.beginPath();
+        c.moveTo(tx, ty);
+        c.lineTo(tx - sz*Math.cos(ang-0.45), ty - sz*Math.sin(ang-0.45));
+        c.lineTo(tx - sz*Math.cos(ang+0.45), ty - sz*Math.sin(ang+0.45));
+        c.closePath(); c.fill();
+      }
+
+      // label da aresta (só props e zoom razoável)
+      if (!faded && e.isProp && e.label && zoom > 0.5){
+        const mx=(as.x+bs.x)/2, my=(as.y+bs.y)/2;
+        c.globalAlpha = 0.7;
+        c.fillStyle = mutedCol;
+        c.font = `${Math.max(9, 10*zoom)}px monospace`;
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(e.label, mx, my);
+      }
+    }
+
+    // nós
+    for (const n of nodes){
+      if (n.x === undefined) continue;
+      const s = toScreen(n.x, n.y);
+      const faded = focused && !focused.has(n.id);
+      c.globalAlpha = faded ? 0.07 : 1;
+
+      const isHL    = highlighted.has(n.id);
+      const isHover = hoverNode === n;
+
+      c.font = `${Math.max(9, 11*zoom)}px Inter,system-ui,sans-serif`;
+      const tw = c.measureText(n.label).width;
+      const pw = Math.max(8, 10*zoom), ph = Math.max(5, 7*zoom);
+      const rw = tw + pw*2, rh = Math.max(24, 18*zoom + ph*2);
+      const rx = s.x - rw/2, ry = s.y - rh/2;
+      const rad = Math.max(4, 6*zoom);
+
+      // shadow on hover
+      if (isHover){ c.shadowColor='rgba(125,211,252,.5)'; c.shadowBlur=18; }
+
+      // fill
+      c.fillStyle = nodeFill;
+      rRect(c, rx, ry, rw, rh, rad); c.fill();
+
+      // border
+      c.strokeStyle = isHL ? accent2 : isHover ? accent : nodeBorder;
+      c.lineWidth   = isHL||isHover ? 2.5 : 1.4;
+      rRect(c, rx, ry, rw, rh, rad); c.stroke();
+      c.shadowBlur = 0;
+
+      // label
+      c.fillStyle = isHL ? accent2 : isHover ? accent : textCol;
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(n.label, s.x, s.y);
+
+      // salvar bounding box para hitTest
+      n._rx=rx; n._ry=ry; n._rw=rw; n._rh=rh;
+    }
+
+    c.globalAlpha = 1;
+    c.restore();
+  }
+
+  function rRect(c, x, y, w, h, r){
+    c.beginPath();
+    c.moveTo(x+r,y); c.lineTo(x+w-r,y); c.arcTo(x+w,y,x+w,y+r,r);
+    c.lineTo(x+w,y+h-r); c.arcTo(x+w,y+h,x+w-r,y+h,r);
+    c.lineTo(x+r,y+h); c.arcTo(x,y+h,x,y+h-r,r);
+    c.lineTo(x,y+r); c.arcTo(x,y,x+r,y,r); c.closePath();
+  }
+
+  function fit(){
+    if (!nodes.length) return;
+    const W=cvW()||900, H=cvH()||660;
+    let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
+    for (const n of nodes){
+      x0=Math.min(x0,n.x); x1=Math.max(x1,n.x);
+      y0=Math.min(y0,n.y); y1=Math.max(y1,n.y);
+    }
+    const pad=60, gw=x1-x0||1, gh=y1-y0||1;
+    zoom = Math.min((W-pad*2)/gw, (H-pad*2)/gh, 2.5);
+    pan.x = W/2 - ((x0+x1)/2)*zoom;
+    pan.y = H/2 - ((y0+y1)/2)*zoom;
+    draw();
+  }
 
   function nodeAt(sx,sy){
-    const w=screenToWorld(sx,sy);
-    for(let i=nodes.length-1;i>=0;i--){
+    const w = toWorld(sx,sy);
+    for (let i=nodes.length-1; i>=0; i--){
       const n=nodes[i];
-      const dx=n.x-w.x,dy=n.y-w.y;
-      if(Math.sqrt(dx*dx+dy*dy)<=n.r+4)return n;
+      if (n._rx!==undefined &&
+          w.x>=n._rx && w.x<=n._rx+n._rw &&
+          w.y>=n._ry && w.y<=n._ry+n._rh) return n;
     }
     return null;
   }
 
-  function draw(){
-    const W=cv.width/devicePixelRatio,H=cv.height/devicePixelRatio;
-    ctx.save();ctx.scale(1,1);
-    ctx.clearRect(0,0,cv.width,cv.height);
-    ctx.restore();
-
-    const text=cssVar('--text');
-    const muted=cssVar('--muted');
-    const dim=cssVar('--dim');
-    const edgeCol=cssVar('--edge')||'rgba(255,255,255,.22)';
-    const nodeFill=cssVar('--nodeFill')||'rgba(255,255,255,.07)';
-    const nodeBorder=cssVar('--nodeBorder')||'rgba(255,255,255,.18)';
-    const accent=cssVar('--accent');
-    const accent2=cssVar('--accent2');
-
-    ctx.save();
-
-    // edges
-    for(const e of edges){
-      const a=e.from,b=e.to;
-      const as=worldToScreen(a.x,a.y),bs=worldToScreen(b.x,b.y);
-      const isFaded=focused&&!focused.has(a.id)&&!focused.has(b.id);
-      ctx.globalAlpha=isFaded?0.08:0.7;
-      ctx.strokeStyle=e.isProp?accent2:edgeCol;
-      ctx.lineWidth=e.isProp?1.5:1.2;
-      ctx.setLineDash(e.isProp?[4,3]:[]);
-      ctx.beginPath();ctx.moveTo(as.x,as.y);ctx.lineTo(bs.x,bs.y);ctx.stroke();
-      ctx.setLineDash([]);
-      // arrow
-      if(!isFaded){
-        const ang=Math.atan2(bs.y-as.y,bs.x-as.x);
-        const ax=bs.x-Math.cos(ang)*8*zoom,ay=bs.y-Math.sin(ang)*8*zoom;
-        ctx.fillStyle=e.isProp?accent2:edgeCol;
-        ctx.beginPath();
-        ctx.moveTo(ax,ay);
-        ctx.lineTo(ax-8*zoom*Math.cos(ang-0.4),ay-8*zoom*Math.sin(ang-0.4));
-        ctx.lineTo(ax-8*zoom*Math.cos(ang+0.4),ay-8*zoom*Math.sin(ang+0.4));
-        ctx.closePath();ctx.fill();
-      }
-      // label
-      if(!isFaded&&e.label&&zoom>0.55){
-        const mx=(as.x+bs.x)/2,my=(as.y+bs.y)/2;
-        ctx.globalAlpha=0.7;ctx.fillStyle=muted;
-        ctx.font=`${Math.max(9,10*zoom)}px DM Mono,monospace`;
-        ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText(e.label,mx,my);
-      }
-    }
-
-    // nodes
-    for(const n of nodes){
-      const s=worldToScreen(n.x,n.y);
-      const isFaded=focused&&!focused.has(n.id);
-      ctx.globalAlpha=isFaded?0.08:1;
-
-      const isHL=highlighted.has(n.id);
-      const isHover=hoverNode===n;
-
-      // measure label
-      ctx.font=`${Math.max(9,11*zoom)}px Inter,system-ui`;
-      const tw=ctx.measureText(n.label).width;
-      const pw=10*zoom,ph=8*zoom;
-      const rw=tw+pw*2,rh=18*zoom+ph*2;
-      const rx=s.x-rw/2,ry=s.y-rh/2;
-      const rad=6*zoom;
-
-      // shadow on hover
-      if(isHover){ctx.shadowColor='rgba(125,211,252,.4)';ctx.shadowBlur=16;}
-
-      // fill
-      ctx.fillStyle=nodeFill;
-      roundRect(ctx,rx,ry,rw,rh,rad);ctx.fill();
-
-      // border
-      ctx.strokeStyle=isHL?accent2:isHover?accent:nodeBorder;
-      ctx.lineWidth=isHL||isHover?2.5:1.5;
-      roundRect(ctx,rx,ry,rw,rh,rad);ctx.stroke();
-      ctx.shadowBlur=0;
-
-      // label
-      ctx.fillStyle=isHL?accent2:isHover?accent:text;
-      ctx.font=`${Math.max(9,11*zoom)}px Inter,system-ui`;
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText(n.label,s.x,s.y);
-    }
-
-    ctx.globalAlpha=1;
-    ctx.restore();
-  }
-
-  function roundRect(ctx,x,y,w,h,r){
-    ctx.beginPath();
-    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
-    ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
-    ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
-    ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
-    ctx.closePath();
-  }
-
-  // force simulation
-  function simulate(){
-    if(!simRunning)return;
-    const k=Math.sqrt((cv.width/devicePixelRatio)*(cv.height/devicePixelRatio)/Math.max(nodes.length,1))*1.2;
-    const dt=0.6;
-
-    // repulsion
-    for(let i=0;i<nodes.length;i++){
-      nodes[i].vx=nodes[i].vx||0;nodes[i].vy=nodes[i].vy||0;
-      for(let j=i+1;j<nodes.length;j++){
-        const dx=nodes[j].x-nodes[i].x,dy=nodes[j].y-nodes[i].y;
-        const d=Math.sqrt(dx*dx+dy*dy)||0.01;
-        const f=k*k/d;
-        const fx=f*dx/d,fy=f*dy/d;
-        nodes[i].vx-=fx;nodes[i].vy-=fy;
-        nodes[j].vx+=fx;nodes[j].vy+=fy;
-      }
-    }
-    // attraction
-    for(const e of edges){
-      const dx=e.to.x-e.from.x,dy=e.to.y-e.from.y;
-      const d=Math.sqrt(dx*dx+dy*dy)||0.01;
-      const f=d*d/k;
-      const fx=f*dx/d,fy=f*dy/d;
-      e.from.vx+=fx;e.from.vy+=fy;
-      e.to.vx-=fx;e.to.vy-=fy;
-    }
-    // apply + dampen
-    for(const n of nodes){
-      n.x+=(n.vx||0)*dt;n.y+=(n.vy||0)*dt;
-      n.vx=(n.vx||0)*0.85;n.vy=(n.vy||0)*0.85;
-    }
-
-    draw();
-    animReq=requestAnimationFrame(simulate);
-  }
-
-  function startSim(ticks){
-    if(animReq)cancelAnimationFrame(animReq);
-    simRunning=true;
-    let t=0;
-    const MAX=ticks||200;
-    function step(){
-      if(t++<MAX&&simRunning){
-        // mini steps without RAF for first half
-        if(t<MAX/2){for(let i=0;i<3;i++)tick();}
-        else simRunning=false;
-      }
-      if(simRunning) animReq=requestAnimationFrame(step);
-      else{draw();fitAll();}
-    }
-    function tick(){
-      if(!nodes.length)return;
-      const k=Math.sqrt(800*800/Math.max(nodes.length,1))*1.2;
-      for(let i=0;i<nodes.length;i++){
-        nodes[i].vx=0;nodes[i].vy=0;
-        for(let j=0;j<nodes.length;j++){
-          if(i===j)continue;
-          const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y;
-          const d=Math.sqrt(dx*dx+dy*dy)||0.01;
-          const f=k*k/d;
-          nodes[i].vx+=f*dx/d;nodes[i].vy+=f*dy/d;
-        }
-      }
-      for(const e of edges){
-        const dx=e.to.x-e.from.x,dy=e.to.y-e.from.y;
-        const d=Math.sqrt(dx*dx+dy*dy)||0.01;
-        const f=d*d/k;
-        e.from.vx+=f*dx/d;e.from.vy+=f*dy/d;
-        e.to.vx-=f*dx/d;e.to.vy-=f*dy/d;
-      }
-      for(const n of nodes){
-        n.x+=n.vx*0.5;n.y+=n.vy*0.5;
-      }
-    }
-    step();
-  }
-
-  function fitAll(){
-    if(!nodes.length)return;
-    const W=cv.width/devicePixelRatio,H=cv.height/devicePixelRatio;
-    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-    for(const n of nodes){
-      minX=Math.min(minX,n.x);maxX=Math.max(maxX,n.x);
-      minY=Math.min(minY,n.y);maxY=Math.max(maxY,n.y);
-    }
-    const pad=60;
-    const gw=maxX-minX||1,gh=maxY-minY||1;
-    zoom=Math.min((W-pad*2)/gw,(H-pad*2)/gh,2);
-    pan.x=W/2-((minX+maxX)/2)*zoom;
-    pan.y=H/2-((minY+maxY)/2)*zoom;
-    draw();
-  }
-
-  // mouse events
-  cv.addEventListener('mousedown',e=>{
+  /* ── eventos ── */
+  cv.addEventListener('mousedown', e=>{
     const r=cv.getBoundingClientRect();
-    const mx=e.clientX-r.left,my=e.clientY-r.top;
+    const mx=e.clientX-r.left, my=e.clientY-r.top;
     const n=nodeAt(mx,my);
-    if(n){dragging=n;lastMouse={x:mx,y:my};}
-    else{dragging='pan';lastMouse={x:mx,y:my};}
+    drag = n||'pan';
+    lastM = {x:mx, y:my};
   });
-  cv.addEventListener('mousemove',e=>{
+  cv.addEventListener('mousemove', e=>{
     const r=cv.getBoundingClientRect();
-    const mx=e.clientX-r.left,my=e.clientY-r.top;
-    if(dragging&&dragging!=='pan'){
-      const dx=(mx-lastMouse.x)/zoom,dy=(my-lastMouse.y)/zoom;
-      dragging.x+=dx;dragging.y+=dy;lastMouse={x:mx,y:my};draw();return;
+    const mx=e.clientX-r.left, my=e.clientY-r.top;
+    if (drag && drag!=='pan'){
+      const dx=(mx-lastM.x)/zoom, dy=(my-lastM.y)/zoom;
+      drag.x+=dx; drag.y+=dy; lastM={x:mx,y:my}; draw(); return;
     }
-    if(dragging==='pan'){
-      pan.x+=mx-lastMouse.x;pan.y+=my-lastMouse.y;lastMouse={x:mx,y:my};draw();return;
+    if (drag==='pan'){
+      pan.x+=mx-lastM.x; pan.y+=my-lastM.y; lastM={x:mx,y:my}; draw(); return;
     }
     const n=nodeAt(mx,my);
-    if(n!==hoverNode){hoverNode=n;draw();}
-    if(n){
-      showTip(tipContent(n.id),e.clientX,e.clientY);
-    } else {
-      hideTip();
-    }
+    if (n!==hoverNode){ hoverNode=n; draw(); }
+    if (n) showTip(tipContent(n.id), e.clientX, e.clientY);
+    else   hideTip();
   });
-  cv.addEventListener('mouseup',()=>{dragging=null;});
-  cv.addEventListener('mouseleave',()=>{dragging=null;hoverNode=null;hideTip();draw();});
-  cv.addEventListener('wheel',e=>{
+  cv.addEventListener('mouseup',  ()=>{ drag=null; });
+  cv.addEventListener('mouseleave',()=>{ drag=null; hoverNode=null; hideTip(); draw(); });
+  cv.addEventListener('wheel', e=>{
     e.preventDefault();
     const r=cv.getBoundingClientRect();
-    const mx=e.clientX-r.left,my=e.clientY-r.top;
-    const factor=e.deltaY<0?1.12:1/1.12;
-    const wBefore=screenToWorld(mx,my);
-    zoom=Math.max(0.05,Math.min(8,zoom*factor));
-    const wAfter=screenToWorld(mx,my);
-    pan.x+=(wAfter.x-wBefore.x)*zoom;
-    pan.y+=(wAfter.y-wBefore.y)*zoom;
+    const mx=e.clientX-r.left, my=e.clientY-r.top;
+    const f=e.deltaY<0?1.12:1/1.12;
+    const wb=toWorld(mx,my);
+    zoom=Math.max(0.05,Math.min(8,zoom*f));
+    const wa=toWorld(mx,my);
+    pan.x+=(wa.x-wb.x)*zoom; pan.y+=(wa.y-wb.y)*zoom;
     draw();
   },{passive:false});
-  cv.addEventListener('click',e=>{
+  cv.addEventListener('click', e=>{
     const r=cv.getBoundingClientRect();
-    const n=nodeAt(e.clientX-r.left,e.clientY-r.top);
-    if(n&&onNodeClick) onNodeClick(n);
-    else if(!n){focused=null;draw();}
+    const n=nodeAt(e.clientX-r.left, e.clientY-r.top);
+    if (n && onNodeClick) onNodeClick(n);
+    else if (!n){ focused=null; draw(); }
   });
 
-  let onNodeClick=null;
-
-  function load(newNodes,newEdges){
-    if(animReq)cancelAnimationFrame(animReq);simRunning=false;
-    nodes=newNodes;edges=newEdges;
-    highlighted=new Set();focused=null;hoverNode=null;
-    const W=cv.width/devicePixelRatio||800,H=cv.height/devicePixelRatio||600;
-    for(const n of nodes){
-      n.x=W/2+(Math.random()-.5)*W*0.6;
-      n.y=H/2+(Math.random()-.5)*H*0.6;
-      n.vx=0;n.vy=0;n.r=20;
-    }
-    startSim(150);
+  /* ── API pública ── */
+  function load(newNodes, newEdges){
+    nodes=newNodes; edges=newEdges;
+    highlighted=new Set(); focused=null; hoverNode=null;
+    resize();          // garantir dimensões antes do layout
+    doLayout();        // layout determinístico — instantâneo
+    fit();             // ajustar pan/zoom
   }
 
-  function highlight(ids){highlighted=new Set(ids);draw();}
-  function clearHighlight(){highlighted.clear();draw();}
-  function setFocus(ids){focused=ids?new Set(ids):null;draw();}
-  function clearFocus(){focused=null;draw();}
-  function fit(){fitAll();}
+  function highlight(ids){ highlighted=new Set(ids); draw(); }
+  function clearHighlight(){ highlighted.clear(); draw(); }
+  function setFocus(ids){ focused=ids?new Set(ids):null; draw(); }
+  function clearFocus(){ focused=null; draw(); }
+  function getNodes(){ return nodes; }
+  function setOnNodeClick(fn){ onNodeClick=fn; }
 
   function exportPng(){
-    // draw on offscreen with white bg
     const oc=document.createElement('canvas');
-    oc.width=cv.width;oc.height=cv.height;
+    oc.width=cv.width; oc.height=cv.height;
     const oc2=oc.getContext('2d');
-    oc2.fillStyle=getComputedStyle(document.body).getPropertyValue('--bg').trim();
+    oc2.fillStyle=getComputedStyle(document.body).getPropertyValue('--bg').trim()||'#0b0c10';
     oc2.fillRect(0,0,oc.width,oc.height);
     oc2.drawImage(cv,0,0);
-    const a=document.createElement('a');a.href=oc.toDataURL('image/png');a.download='ontohate.png';a.click();
+    const a=document.createElement('a');
+    a.href=oc.toDataURL('image/png'); a.download='ontohate.png'; a.click();
   }
 
   resize();
-  return{load,highlight,clearHighlight,setFocus,clearFocus,fit,resize,exportPng,
-    getNodes:()=>nodes,
-    setOnNodeClick:(fn)=>{onNodeClick=fn;}
-  };
+  return {load, highlight, clearHighlight, setFocus, clearFocus, fit, resize, draw, exportPng, getNodes, setOnNodeClick};
 }
 
 /* ── tooltip ── */
@@ -3671,8 +3669,14 @@ async function processText(text, sourceName){
   if (!gTax)  gTax  = makeGraph('cvTax');
   if (!gOnto) gOnto = makeGraph('cvOnto');
 
-  buildTax();
-  buildOnto();
+  // aguardar o browser pintar o layout antes de construir os grafos
+  // (canvas pode ter dimensão 0 se a aba ainda não foi renderizada)
+  requestAnimationFrame(() => {
+    gTax.resize();
+    buildTax();
+    // ontologia só é construída quando a aba for aberta (lazy)
+    // para não travar com 200+ nós logo no boot
+  });
 
   setStatus('ok', 'OK \u2014 ' + G.classes.size + ' classes \u2022 ' + G.props.size + ' props \u2022 ' + G.dims.length + ' dims');
   setDebug('\u2705 OK', `
