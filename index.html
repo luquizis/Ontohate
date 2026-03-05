@@ -402,6 +402,7 @@ canvas.gv:active{cursor:grabbing}
 'use strict';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const cv2=name=>getComputedStyle(document.body).getPropertyValue(name).trim();
 function setStatus(k,t){$('sdot').className='dot '+k;$('stxt').textContent=t}
 function setDebug(pill,html){$('dpill').textContent=pill;$('dbox').innerHTML=html}
 function dl(name,text,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime||'text/plain'}));a.download=name;a.click();}
