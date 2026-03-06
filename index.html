@@ -393,169 +393,6 @@ canvas.gv:active{cursor:grabbing;}
 .alert.warn{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.25);color:var(--warn);}
 .alert.info{background:rgba(90,110,255,.08);border:1px solid rgba(90,110,255,.2);color:var(--acc2);}
 .sep{height:1px;background:var(--bord2);margin:8px 0;}
-
-/* ══ MOBILE NAV ══ */
-.mob-nav{
-  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
-  background:rgba(6,8,16,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-top:1px solid var(--bord);
-  display:none;align-items:stretch;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);
-  height:60px;
-}
-.mob-btn{
-  flex:1;border:none;background:transparent;color:var(--txt3);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;cursor:pointer;font-size:9px;font-family:var(--sans);font-weight:600;
-  letter-spacing:.03em;padding:6px 2px;border-radius:8px;transition:.15s;
-}
-.mob-btn span{font-size:18px;line-height:1;}
-.mob-btn .lbl{font-size:9px;color:var(--txt3);}
-.mob-btn.on{color:var(--acc);}
-.mob-btn.on .lbl{color:var(--acc);}
-.mob-btn:active{background:rgba(90,110,255,.1);}
-
-/* ══ MOBILE SIDEBAR OVERLAY ══ */
-.sb-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
-  backdrop-filter:blur(4px);z-index:150;
-}
-.sb-overlay.on{display:block;}
-
-/* ══ SIDEBAR MOBILE SLIDE ══ */
-@media(max-width:768px){
-  .nav{display:none;}
-  .hdr-right .pill{display:none;}
-  .logo-ver{display:none;}
-  #hdr{height:48px;}
-  .mob-nav{display:flex!important;}
-  body{padding-bottom:60px;}
-  #body{height:calc(100% - 48px - 60px);}
-  .sb{
-    position:fixed!important;left:0;top:48px;bottom:60px;z-index:160;
-    transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
-    box-shadow:4px 0 24px rgba(0,0,0,.4);
-  }
-  .sb.mob-open{transform:translateX(0);}
-  #np{
-    position:fixed!important;right:0;top:48px;bottom:60px;z-index:160;
-    transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
-    box-shadow:-4px 0 24px rgba(0,0,0,.4);width:min(var(--np),92vw)!important;
-  }
-  #np.mob-open{transform:translateX(0);width:min(var(--np),92vw)!important;}
-  #np.closed{width:0!important;}
-  .cv-toolbar{flex-wrap:wrap;gap:4px;padding:5px 8px;}
-  .cv-toolbar .btn{font-size:9px;padding:3px 6px;}
-  #pg-home{padding:24px 12px 80px;}
-  .hero-title{font-size:clamp(36px,10vw,64px);}
-  .hero-desc{font-size:14px;}
-  .hero-cards{grid-template-columns:1fr 1fr;gap:8px;}
-  .hcard{padding:14px 12px;}
-  .hcard-icon{font-size:20px;margin-bottom:8px;}
-  .about-box{padding:20px;}
-  .stat-row{gap:16px;justify-content:center;}
-  #pg-sparql{flex-direction:column;}
-  .sq-left{width:100%;height:200px;flex:none;border-right:none;border-bottom:1px solid var(--bord);}
-  .sq-ta{min-height:80px;max-height:120px;}
-  .sb-body{padding:8px;}
-}
-
-/* ══ EXPLORER ══ */
-#pg-explorer{flex-direction:column;overflow:hidden;position:relative;}
-.expl-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
-.expl-bread{
-  flex:none;padding:8px 14px;border-bottom:1px solid var(--bord);
-  background:var(--bg1);display:flex;align-items:center;gap:4px;
-  overflow-x:auto;white-space:nowrap;
-}
-.bread-item{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:11px;font-weight:600;color:var(--txt2);cursor:pointer;
-  padding:3px 8px;border-radius:5px;transition:.12s;
-  border:1px solid transparent;
-}
-.bread-item:hover{color:var(--txt);background:rgba(90,110,255,.08);}
-.bread-item.bread-current{color:var(--txt);border-color:var(--bord);}
-.bread-sep{color:var(--txt3);font-size:10px;}
-.expl-canvas-wrap{flex:1;position:relative;overflow:hidden;}
-.expl-hint{
-  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
-  background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:var(--txt3);
-  font-size:11px;padding:6px 14px;border-radius:20px;border:1px solid var(--bord);
-  pointer-events:none;white-space:nowrap;transition:opacity .3s;z-index:10;
-}
-.expl-hint.off{opacity:0;}
-
-/* Node info bottom panel (mobile-friendly) */
-.expl-info{
-  position:absolute;bottom:0;left:0;right:0;
-  background:var(--card);border-top:1px solid var(--bord);
-  border-radius:16px 16px 0 0;
-  max-height:50%;overflow-y:auto;z-index:20;
-  animation:slideUp .2s ease;
-}
-.expl-info-hd{
-  padding:12px 16px;border-bottom:1px solid var(--bord);
-  display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
-  position:sticky;top:0;background:var(--card);z-index:2;
-}
-.expl-info-title{font-family:var(--head);font-size:16px;font-weight:800;color:var(--txt);line-height:1.2;}
-.expl-info-iri{font-family:var(--mono);font-size:9px;color:var(--txt3);word-break:break-all;margin-top:3px;}
-.expl-info-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
-.expl-info-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
-@keyframes slideUp{from{transform:translateY(100%);}to{transform:none;}}
-
-/* ══ EDIT MODAL ══ */
-.modal-bg{
-  position:fixed;inset:0;z-index:500;
-  background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
-  display:flex;align-items:center;justify-content:center;padding:16px;
-}
-.modal-box{
-  background:var(--card);border:1px solid var(--bord);border-radius:16px;
-  width:100%;max-width:560px;max-height:90vh;overflow:hidden;
-  display:flex;flex-direction:column;box-shadow:0 24px 72px rgba(0,0,0,.7);
-  animation:fadeUp .18s ease;
-}
-.modal-hd{
-  padding:16px 20px;border-bottom:1px solid var(--bord);
-  display:flex;align-items:center;justify-content:space-between;flex:none;
-}
-.modal-title{font-family:var(--head);font-size:15px;font-weight:800;color:var(--txt);}
-.modal-body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;}
-.modal-foot{padding:12px 20px;border-top:1px solid var(--bord);display:flex;gap:8px;flex-wrap:wrap;flex:none;}
-.modal-sect{display:flex;flex-direction:column;gap:8px;}
-.modal-sect-title{font-size:9px;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--txt3);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
-.modal-sect-title::after{content:'';flex:1;height:1px;background:var(--bord2);}
-.modal-row{display:flex;align-items:center;gap:10px;}
-.modal-row label{font-size:11px;color:var(--txt2);min-width:110px;flex-shrink:0;}
-.modal-row .inp{flex:1;}
-.modal-row input[type=range]{flex:1;accent-color:var(--acc);}
-.modal-row .rv{font-family:var(--mono);font-size:10px;color:var(--acc);min-width:32px;text-align:right;}
-.modal-row input[type=color]{width:36px;height:28px;border:1px solid var(--bord);border-radius:5px;cursor:pointer;background:transparent;padding:2px;}
-.color-strip{display:flex;gap:5px;flex-wrap:wrap;}
-.cs{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:.1s;flex-shrink:0;}
-.cs:hover,.cs.on{border-color:rgba(255,255,255,.7);transform:scale(1.1);}
-.modal-ta{
-  width:100%;border:1px solid var(--bord);background:var(--panel);color:var(--txt);
-  padding:8px 10px;border-radius:7px;font-family:var(--sans);font-size:12px;
-  line-height:1.6;outline:none;resize:vertical;min-height:60px;transition:.15s;
-}
-.modal-ta:focus{border-color:var(--acc);}
-
-/* Mobile toolbar button */
-.mob-tool-btn{
-  position:fixed;z-index:140;
-  width:44px;height:44px;border-radius:50%;
-  background:var(--acc);color:#fff;border:none;cursor:pointer;
-  display:none;align-items:center;justify-content:center;font-size:20px;
-  box-shadow:0 4px 16px rgba(90,110,255,.5);transition:.2s;
-}
-@media(max-width:768px){
-  .mob-tool-btn{display:flex;}
-  .mob-tool-btn:active{transform:scale(.93);}
-}
-#mobSbBtn{bottom:72px;left:12px;}
-#mobNpBtn{bottom:72px;right:12px;}
 </style>
 </head>
 <body data-theme="dark">
@@ -572,14 +409,13 @@ canvas.gv:active{cursor:grabbing;}
   </div>
   <nav class="nav">
     <button class="nav-btn on" data-tab="home"><span class="ni">🏛</span>Início</button>
-    <button class="nav-btn" data-tab="explorer"><span class="ni">🔭</span>Explorer</button>
     <button class="nav-btn" data-tab="tax"><span class="ni">🌳</span>Taxonomia</button>
     <button class="nav-btn" data-tab="onto"><span class="ni">🔗</span>Ontologia</button>
     <button class="nav-btn" data-tab="sparql"><span class="ni">⚡</span>SPARQL</button>
   </nav>
   <div class="hdr-right">
     <div class="pill"><span class="dot warn" id="sdot"></span><span id="stxt">Carregando…</span></div>
-    <label class="hbtn" style="cursor:pointer;display:none">📂<input type="file" id="fileIn" accept=".ttl,.owl,.n3" style="display:none"></label>
+    <label class="hbtn" style="cursor:pointer">📂 Abrir .ttl<input type="file" id="fileIn" accept=".ttl,.owl,.n3" style="display:none"></label>
     <button class="hbtn" onclick="toggleTheme()">◐ Tema</button>
   </div>
 </div>
@@ -594,11 +430,10 @@ canvas.gv:active{cursor:grabbing;}
     <div class="hero-subtitle">Versão 2.0 · Luiz Rogério Lopes Silva</div>
     <p class="hero-desc">Uma ontologia computacional para representar, analisar e explorar o ecossistema do discurso de ódio online — seus agentes, estratégias, contextos, vítimas e consequências.</p>
     <div class="hero-cards">
-      <div class="hcard" onclick="gotoTab('explorer')"><span class="hcard-icon">🔭</span><div class="hcard-title">Explorer</div><div class="hcard-desc">Explore as dimensões interativamente — clique para expandir subclasses passo a passo.</div></div>
-      <div class="hcard" onclick="gotoTab('tax')"><span class="hcard-icon">🌳</span><div class="hcard-title">Taxonomia</div><div class="hcard-desc">Hierarquia completa com filtros de dimensões, cruzamentos e layouts configuráveis.</div></div>
+      <div class="hcard" onclick="gotoTab('tax')"><span class="hcard-icon">🌳</span><div class="hcard-title">Taxonomia</div><div class="hcard-desc">Hierarquia de classes com seleção de dimensões, cruzamentos e layouts configuráveis.</div></div>
       <div class="hcard" onclick="gotoTab('onto')"><span class="hcard-icon">🔗</span><div class="hcard-title">Ontologia</div><div class="hcard-desc">Visualize Object Properties e relações cruzadas entre as dimensões da ontologia.</div></div>
       <div class="hcard" onclick="gotoTab('sparql')"><span class="hcard-icon">⚡</span><div class="hcard-title">SPARQL</div><div class="hcard-desc">18 questões de competência prontas. Editor com execução imediata e exportação CSV/JSON.</div></div>
-      <div class="hcard" onclick="gotoTab('sparql')"><span class="hcard-icon">⚡</span><div class="hcard-title">Consultas SPARQL</div><div class="hcard-desc">Execute 18 questões de competência ou escreva suas próprias consultas sobre a ontologia.</div></div>
+      <div class="hcard" onclick="document.getElementById('fileIn').click()"><span class="hcard-icon">📂</span><div class="hcard-title">Carregar Arquivo</div><div class="hcard-desc">Importe seu próprio .ttl, .owl ou .rdf para explorar interativamente.</div></div>
     </div>
     <div class="about-box">
       <h2>Sobre o Projeto</h2>
@@ -838,65 +673,7 @@ canvas.gv:active{cursor:grabbing;}
   </div>
 </div>
 
-
-<!-- EXPLORER PAGE -->
-<div id="pg-explorer" class="page">
-  <div class="expl-wrap">
-    <div class="expl-bread" id="explBread">
-      <span class="bread-item bread-current" onclick="explGoRoot()">🏛 Raiz</span>
-    </div>
-    <div class="expl-canvas-wrap">
-      <div class="expl-hint" id="explHint">Clique em uma dimensão para expandir suas subclasses</div>
-      <canvas id="cvExpl" class="gv"></canvas>
-    </div>
-    <div class="expl-info" id="explInfo" style="display:none">
-      <div class="expl-info-hd">
-        <div>
-          <div class="expl-info-title" id="explInfoTitle">—</div>
-          <div class="expl-info-iri" id="explInfoIri"></div>
-        </div>
-        <button class="btn sm" onclick="$id('explInfo').style.display='none'">✕</button>
-      </div>
-      <div class="expl-info-body" id="explInfoBody"></div>
-    </div>
-  </div>
-</div>
-
-
 </div><!-- #body -->
-
-<!-- MOBILE BOTTOM NAV -->
-<nav class="mob-nav" id="mobNav">
-  <button class="mob-btn on" data-tab="home"><span>🏛</span><span class="lbl">Início</span></button>
-  <button class="mob-btn" data-tab="explorer"><span>🔭</span><span class="lbl">Explorer</span></button>
-  <button class="mob-btn" data-tab="tax"><span>🌳</span><span class="lbl">Taxonomia</span></button>
-  <button class="mob-btn" data-tab="onto"><span>🔗</span><span class="lbl">Ontologia</span></button>
-  <button class="mob-btn" data-tab="sparql"><span>⚡</span><span class="lbl">SPARQL</span></button>
-</nav>
-
-<!-- MOBILE FAB BUTTONS -->
-<button class="mob-tool-btn" id="mobSbBtn" onclick="toggleMobSb()" title="Filtros">☰</button>
-<button class="mob-tool-btn" id="mobNpBtn" onclick="toggleMobNp()" title="Detalhes" style="display:none">ℹ</button>
-
-<!-- SIDEBAR OVERLAY -->
-<div class="sb-overlay" id="sbOverlay" onclick="closeMobSb()"></div>
-
-<!-- EDIT MODAL -->
-<div id="editModal" class="modal-bg" style="display:none" onclick="if(event.target===this)closeEditModal()">
-  <div class="modal-box">
-    <div class="modal-hd">
-      <div class="modal-title" id="editModalTitle">✏️ Editar Elemento</div>
-      <button class="btn sm" onclick="closeEditModal()">✕</button>
-    </div>
-    <div class="modal-body" id="editModalBody"></div>
-    <div class="modal-foot">
-      <button class="btn prim" onclick="applyEdit()">✓ Aplicar</button>
-      <button class="btn" onclick="resetEdit()">↺ Resetar</button>
-      <button class="btn" onclick="closeEditModal()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
 
 <div id="sbar">
   <span class="dot warn" id="dbDot"></span>
@@ -918,38 +695,14 @@ function setStatus(k,t){$id('sdot').className='dot '+k;$id('stxt').textContent=t
 function setDbg(k,t){$id('dbDot').className='dot '+k;$id('dbTxt').textContent=t;}
 
 /* ══ TABS ══ */
-const PAGES=['home','explorer','tax','onto','sparql'];
+const PAGES=['home','tax','onto','sparql'];
 function gotoTab(t){
-  document.querySelectorAll('.nav-btn,.mob-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   PAGES.forEach(id=>{const el=$id('pg-'+id);if(el)el.classList.toggle('on',id===t);});
-  if(t==='explorer'){setTimeout(()=>initExplorer(),60);}
   if(t==='tax'){setTimeout(()=>{if(!gTax)gTax=makeGraph('cvTax');gTax.resize();if(!gTax.getNodes().length&&G.classes.size>0)buildTax();},40);}
   if(t==='onto'){setTimeout(()=>{if(!gOnto)gOnto=makeGraph('cvOnto');gOnto.resize();if(!gOnto.getNodes().length&&G.classes.size>0)buildOnto();},40);}
-  // Mobile: show/hide FABs
-  const hasSb=(t==='tax'||t==='onto');
-  $id('mobSbBtn').style.display=hasSb?'':'none';
-  if(t==='home'||t==='explorer'||t==='sparql'){$id('mobSbBtn').style.display='none';}
-  $id('mobNpBtn').style.display=t==='onto'?'':'none';
-  closeMobSb();
 }
-document.querySelectorAll('.nav-btn,.mob-btn').forEach(b=>b.onclick=()=>gotoTab(b.dataset.tab));
-
-/* ══ MOBILE SIDEBAR HELPERS ══ */
-function toggleMobSb(){
-  const sbs=document.querySelectorAll('.sb');
-  const open=sbs[0]?.classList.contains('mob-open');
-  sbs.forEach(s=>s.classList.toggle('mob-open',!open));
-  $id('sbOverlay').classList.toggle('on',!open);
-}
-function closeMobSb(){
-  document.querySelectorAll('.sb').forEach(s=>s.classList.remove('mob-open'));
-  $id('sbOverlay')?.classList.remove('on');
-}
-function toggleMobNp(){
-  const np=$id('np');
-  np.classList.toggle('mob-open');
-  np.classList.remove('closed');
-}
+document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>gotoTab(b.dataset.tab));
 
 /* ══════════════════════════════════════════════════════
    TURTLE PARSER — full, streaming
@@ -962,7 +715,7 @@ function parseTurtle(txt){
     const ci=t.indexOf(':');
     if(ci>0){
       const p=t.slice(0,ci),l=t.slice(ci+1);
-      const b=pfx[p]||{rdf:'http://www.w3.org/1999/02/22-rdf-syntax-ns#',rdfs:'http://www.w3.org/2000/01/rdf-schema#',owl:'http://www.w3.org/2002/07/owl#',xsd:'http://www.w3.org/2001/XMLSchema#',dcterms:'http://purl.org/dc/terms/',schema:'https://schema.org/',ontohate:'http://ontohate.org/ontohate#',ontohatev1:'http://ontohate.org/ontohatev1#','':'http://ontohate.org/ontohate#'}[p];
+      const b=pfx[p]||{rdf:'http://www.w3.org/1999/02/22-rdf-syntax-ns#',rdfs:'http://www.w3.org/2000/01/rdf-schema#',owl:'http://www.w3.org/2002/07/owl#',xsd:'http://www.w3.org/2001/XMLSchema#',dcterms:'http://purl.org/dc/terms/',schema:'https://schema.org/',ontohate:'http://ontohate.org/ontohate#',ontohatev1:'http://ontohate.org/ontohatev1#'}[p];
       if(b)return b+l;
     }
     return t;
@@ -1045,130 +798,6 @@ function parseTurtle(txt){
 }
 
 /* ══════════════════════════════════════════════════════
-   RDF/XML PARSER — handles .owl files in RDF/XML format
-══════════════════════════════════════════════════════ */
-function parseRdfXml(txt) {
-  const quads = [];
-  let doc;
-  try {
-    doc = new DOMParser().parseFromString(txt, 'application/xml');
-  } catch(e) {
-    try { doc = new DOMParser().parseFromString(txt, 'text/xml'); } catch(e2) { return {quads}; }
-  }
-  if (!doc || doc.querySelector('parsererror')) return {quads};
-
-  const NS_RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-  const NS_RDFS = 'http://www.w3.org/2000/01/rdf-schema#';
-  const NS_OWL = 'http://www.w3.org/2002/07/owl#';
-
-  function absUri(base, local) {
-    if (!local) return null;
-    if (local.startsWith('http://') || local.startsWith('https://')) return local;
-    if (base && !local.includes(':')) return base + local;
-    return local;
-  }
-
-  function getAttrNS(el, ns, local) {
-    return el.getAttributeNS(ns, local) || el.getAttribute(local) || el.getAttribute(ns + local);
-  }
-
-  function addQ(s, p, o, isLit=false, lang='', dt='') {
-    if (s && p && (o || o === '')) quads.push({s, p, o, isLit, oLang:lang, oDt:dt});
-  }
-
-  function resolveAbout(el, baseUri) {
-    const about = el.getAttributeNS(NS_RDF,'about') || el.getAttribute('rdf:about');
-    if (about) return absUri(baseUri, about);
-    const id = el.getAttributeNS(NS_RDF,'ID') || el.getAttribute('rdf:ID');
-    if (id) return (baseUri||'') + '#' + id;
-    const ni = el.getAttributeNS(NS_RDF,'nodeID') || el.getAttribute('rdf:nodeID');
-    if (ni) return '_:' + ni;
-    return '_:b' + Math.random().toString(36).slice(2);
-  }
-
-  function processNode(el, baseUri) {
-    const tagNS = el.namespaceURI || '';
-    const tagLocal = el.localName;
-    const fullTag = tagNS + tagLocal;
-    const subj = resolveAbout(el, baseUri);
-
-    // rdf:type from element tag (if not rdf:Description)
-    if (!(tagNS === NS_RDF && tagLocal === 'Description')) {
-      addQ(subj, NS_RDF + 'type', fullTag);
-    }
-
-    // Process child property elements
-    for (const child of el.children) {
-      const pNS = child.namespaceURI || '';
-      const pLocal = child.localName;
-      const pred = pNS + pLocal;
-
-      // rdf:type shorthand
-      const res = child.getAttributeNS(NS_RDF,'resource') || child.getAttribute('rdf:resource');
-      if (res) {
-        addQ(subj, pred, absUri(baseUri, res));
-        continue;
-      }
-
-      // Literal
-      const lang = child.getAttributeNS('http://www.w3.org/XML/1998/namespace','lang') ||
-                   child.getAttribute('xml:lang') || '';
-      const dt = child.getAttributeNS(NS_RDF,'datatype') || child.getAttribute('rdf:datatype') || '';
-
-      // Nested nodes
-      if (child.children.length > 0) {
-        for (const grandchild of child.children) {
-          const objUri = resolveAbout(grandchild, baseUri);
-          addQ(subj, pred, objUri);
-          processNode(grandchild, baseUri);
-        }
-      } else {
-        const val = child.textContent || '';
-        if (dt || lang || val) {
-          addQ(subj, pred, val, true, lang, dt);
-        }
-      }
-
-      // parseType=Collection / List
-      const parseType = child.getAttributeNS(NS_RDF,'parseType') || child.getAttribute('rdf:parseType');
-      if (parseType === 'Resource') {
-        const bn = '_:b' + Math.random().toString(36).slice(2);
-        addQ(subj, pred, bn);
-      }
-    }
-    return subj;
-  }
-
-  // Find base URI from xml:base or owl:Ontology
-  let baseUri = '';
-  const ontEl = doc.getElementsByTagNameNS(NS_OWL,'Ontology')[0];
-  if (ontEl) {
-    baseUri = ontEl.getAttributeNS(NS_RDF,'about') || ontEl.getAttribute('rdf:about') || '';
-    if (baseUri && !baseUri.endsWith('#') && !baseUri.endsWith('/')) baseUri += '#';
-  }
-
-  // Process all top-level elements in rdf:RDF
-  const root = doc.getElementsByTagNameNS(NS_RDF, 'RDF')[0] || doc.documentElement;
-  for (const child of root.children) {
-    processNode(child, baseUri);
-  }
-
-  return {quads};
-}
-
-function detectAndParse(txt) {
-  const trimmed = txt.trim();
-  // RDF/XML starts with XML declaration or rdf:RDF tag
-  if (trimmed.startsWith('<?xml') || trimmed.startsWith('<rdf:RDF') || trimmed.startsWith('<RDF') ||
-      trimmed.includes('<owl:Ontology') || trimmed.includes('<rdf:RDF')) {
-    return parseRdfXml(txt);
-  }
-  // Default: Turtle / N3
-  return parseTurtle(txt);
-}
-
-
-/* ══════════════════════════════════════════════════════
    RDF INDEX — with fast lookup maps
 ══════════════════════════════════════════════════════ */
 const NS={
@@ -1179,8 +808,6 @@ const NS={
 const ROOTS_IRI=[
   'http://ontohate.org/ontohate#Discurso_de_odio',
   'http://ontohate.org/ontohate#Discurso_de_Odio',
-  'http://www.semanticweb.org/lrs/ontologies/2024/ontohate#Discurso_de_odio',
-  'http://www.semanticweb.org/lrs/ontologies/2024/ontohate#Discurso_de_Odio',
 ];
 
 const G={
@@ -1236,18 +863,8 @@ function buildIndex(quads){
     G.annots.get(q.s).push({p:q.p,pS:shortIri(q.p),val:q.o,lang:q.oLang||'',dt:q.oDt||''});
   }
 
-  // Find root — try known IRIs first, then heuristic
+  // Find root
   for(const r of ROOTS_IRI){if(G.classes.has(r)){G.rootIri=r;break;}}
-  if(!G.rootIri){
-    // Heuristic: class with most children that has no parent within classes
-    let best=null,bestN=0;
-    for(const c of G.classes){
-      const ps=G.subOf.get(c);
-      const hasParent=ps&&[...ps].some(p=>G.classes.has(p));
-      if(!hasParent){const n=G.childOf.get(c)?.size||0;if(n>bestN){bestN=n;best=c;}}
-    }
-    if(best){G.rootIri=best;console.log('[OntoHate] Auto-detected root:',best,'with',bestN,'children');}
-  }
 
   // Dims = direct children of root, or top-level classes
   if(G.rootIri){
@@ -1570,7 +1187,7 @@ function makeGraph(cvId){
   let nodes=[],edges=[];
   let pan={x:0,y:0},zoom=1;
   let drag=null,lastM=null;
-  let hl=new Set(),focused=null,hovNode=null,clickCb=null,dblCb=null;
+  let hl=new Set(),focused=null,hovNode=null,clickCb=null;
   let layout='tb',nodeSep=260,levelSep=180;
   let showEL=false,cmap=new Map();
 
@@ -1687,7 +1304,7 @@ function makeGraph(cvId){
     const dark=document.body.getAttribute('data-theme')!=='light';
     const TC=dark?'rgba(220,226,248,.96)':'rgba(20,25,55,.96)';
     const BG=dark?'#060810':'#f2f3fc';
-    const eHier=edgeHierColor||(dark?'rgba(140,160,255,.42)':'rgba(60,80,200,.38)');
+    const eHier=dark?'rgba(140,160,255,.42)':'rgba(60,80,200,.38)';
     const eProp='#b06eff';
     const eCross='#00d5c0';
 
@@ -1865,8 +1482,7 @@ function makeGraph(cvId){
   cv.addEventListener('mouseleave',()=>{drag=null;hovNode=null;hideTip();sched();cv.style.cursor='grab';});
   cv.addEventListener('dblclick',e=>{
     const r=cv.getBoundingClientRect();
-    const n=nodeAt(e.clientX-r.left,e.clientY-r.top);
-    if(n&&dblCb){dblCb(n);}else if(n){applyLayout();fit();}
+    if(nodeAt(e.clientX-r.left,e.clientY-r.top)){applyLayout();fit();}
   });
   cv.addEventListener('wheel',e=>{
     e.preventDefault();
@@ -1912,7 +1528,6 @@ function makeGraph(cvId){
   function clearFocus(){focused=null;sched();}
   function getNodes(){return nodes;}
   function onNodeClick(fn){clickCb=fn;}
-  function onNodeDblClick(fn){dblCb=fn;}
   function zoomIn(){zoom=Math.min(XZOOM,zoom*1.2);sched();}
   function zoomOut(){zoom=Math.max(MZOOM,zoom/1.2);sched();}
   function exportPng(scale=2){
@@ -1936,11 +1551,9 @@ function makeGraph(cvId){
   const proxy=new Proxy(g,{
     set(t,p,v){t[p]=v;sched();return true;},
     get(t,p){
-      let edgeHierColor=null;
       const fns={load,relayout,highlight,clearHighlight,setFocus,clearFocus,
-                  getNodes,onNodeClick,onNodeDblClick,fit,resize,draw:sched,zoomIn,zoomOut,exportPng,
-                  setColors:(m)=>{cmap=m;sched();},setEdgeLabels:(v)=>{showEL=v;sched();},
-                  setEdgeHierColor:(c)=>{edgeHierColor=c;sched();}};
+                  getNodes,onNodeClick,fit,resize,draw:sched,zoomIn,zoomOut,exportPng,
+                  setColors:(m)=>{cmap=m;sched();},setEdgeLabels:(v)=>{showEL=v;sched();}};
       return p in fns?fns[p]:t[p];
     }
   });
@@ -1965,7 +1578,7 @@ function showTip(html,x,y){
 function hideTip(d){clearTimeout(tipTimer);tipTimer=setTimeout(()=>TIP.classList.remove('on'),d??80);}
 
 function tipHtml(iri){
-  const lbl=bestLbl2(iri);
+  const lbl=bestLbl(iri);
   const cmt=G.comments.get(iri)||'';
   const parents=[...(G.subOf.get(iri)||[])].map(p=>bestLbl(p));
   const kids=[...(G.childOf.get(iri)||[])];
@@ -2005,7 +1618,7 @@ const PRESET_COLORS=['#5a6eff','#b06eff','#00d5c0','#f5c842','#ff5f8f','#36e8a0'
 const customCols=new Map();
 
 function detailHtml(iri){
-  const lbl=bestLbl2(iri),cmt=G.comments.get(iri)||'';
+  const lbl=bestLbl(iri),cmt=G.comments.get(iri)||'';
   const parents=[...(G.subOf.get(iri)||[])].map(p=>({iri:p,lbl:bestLbl(p)}));
   const kids=[...(G.childOf.get(iri)||[])].map(c=>({iri:c,lbl:bestLbl(c)}));
   const outRels=[],inRels=[];
@@ -2044,9 +1657,6 @@ function detailHtml(iri){
       <div class="btn-row" style="margin-top:6px">
         <button class="btn sm full" onclick="setNodeCol('${esc(iri)}',null)">↺ Resetar cor</button>
       </div>
-    </div>
-    <div class="btn-row" style="margin-top:10px">
-      <button class="btn sm prim full" onclick="openEditModal('${esc(iri)}','node')">✏️ Editar nome, cor e estilo</button>
     </div>
     <div style="font-size:8px;font-family:var(--mono);color:var(--txt3);margin-top:8px;word-break:break-all;opacity:.6">${esc(iri)}</div>`;
 }
@@ -2135,11 +1745,7 @@ function selAllDims(all){
 /* ══════════════════════════════════════════════════════
    BUILD GRAPH — TAXONOMY
 ══════════════════════════════════════════════════════ */
-function refreshLabels(){
-  for(const c of G.classes) G.labels.set(c, customLabels.has(c)?customLabels.get(c):bestLbl(c));
-}
 function buildTax(){
-  refreshLabels();
   if(!gTax)return;
   const dims=selDims.size?[...selDims]:(G.dims.length?[G.dims[0]]:[]);
   const showRoot=$id('tRoot').checked;
@@ -2179,7 +1785,6 @@ function buildTax(){
   gTax.setEdgeLabels(showEL);
   gTax.load(nodes,edges,{layout:lState.tax,cmap:cm,nodeSep:ns,levelSep:ls});
   $id('tMeta').textContent=`${ns2.size} nós · ${edges.length} arestas`;
-  gTax.onNodeDblClick(n=>openEditModal(n.id,'node'));
   gTax.onNodeClick(n=>{
     if(!$id('tFocus').checked)return;
     const rel=new Set([n.id]);
@@ -2193,7 +1798,6 @@ function buildTax(){
    BUILD GRAPH — ONTOLOGIA
 ══════════════════════════════════════════════════════ */
 function buildOnto(){
-  refreshLabels();
   if(!gOnto)return;
   const dimVal=$id('oDim').value;
   const showSub=$id('oSub').checked;
@@ -2229,11 +1833,9 @@ function buildOnto(){
   gOnto.setEdgeLabels(showEL);
   gOnto.load(nodes,edges,{layout:lState.onto,cmap:cm,nodeSep:ns,levelSep:ls});
   $id('oMeta').textContent=`${set.size} nós · ${edges.length} arestas`;
-  gOnto.onNodeDblClick(n=>openEditModal(n.id,'node'));
   gOnto.onNodeClick(n=>{
     $id('npBox').innerHTML=detailHtml(n.id);
     $id('np').classList.remove('closed');
-    $id('np').classList.add('mob-open');
     if($id('oFocus').checked){
       const rel=new Set([n.id]);
       for(const e of edges){if(e.f?.id===n.id)rel.add(e.t.id);if(e.t?.id===n.id)rel.add(e.f.id);}
@@ -2504,339 +2106,6 @@ document.addEventListener('keydown',e=>{
 /* ══════════════════════════════════════════════════════
    GRAPH INSTANCES
 ══════════════════════════════════════════════════════ */
-
-/* ══════════════════════════════════════════════════════
-   EXPLORER — interactive drill-down graph
-══════════════════════════════════════════════════════ */
-let gExpl = null;
-let explStack = []; // stack of {iri, label} for breadcrumb
-let explExpanded = new Set(); // which nodes are expanded
-
-function initExplorer(){
-  if(!gExpl) gExpl = makeGraph('cvExpl');
-  gExpl.resize();
-  if(!G.classes.size){
-    setDbg('warn','Ontologia ainda não carregada no Explorer.');
-    return;
-  }
-  explGoRoot();
-}
-
-function explGoRoot(){
-  explStack = [];
-  explExpanded.clear();
-  if(!gExpl) gExpl = makeGraph('cvExpl');
-  renderExplorer(null);
-  updateBread();
-}
-
-function renderExplorer(parentIri){
-  if(!gExpl) return;
-  const hint = $id('explHint');
-
-  // Determine which nodes to show
-  let nodeIris;
-  if(!parentIri){
-    // Root: show dims + root node
-    nodeIris = [...G.dims];
-    if(G.rootIri) nodeIris = [G.rootIri, ...nodeIris];
-    hint && (hint.textContent = 'Clique em uma dimensão para expandir · Duplo clique para editar');
-    hint && hint.classList.remove('off');
-    setTimeout(()=>hint&&hint.classList.add('off'), 3000);
-  } else {
-    // Show parent + its direct children + expanded subtrees
-    nodeIris = [parentIri];
-    function addExpanded(iri){
-      const kids = [...(G.childOf.get(iri)||[])];
-      kids.forEach(k=>{nodeIris.push(k); if(explExpanded.has(k)) addExpanded(k);});
-    }
-    addExpanded(parentIri);
-    // also add ancestors up to root for context
-    let cur = parentIri;
-    const anc = [];
-    while(cur){
-      const ps = [...(G.subOf.get(cur)||[])];
-      const p = ps.find(x=>G.classes.has(x));
-      if(!p||anc.includes(p)) break;
-      anc.push(p); cur=p;
-    }
-    anc.forEach(a=>nodeIris.unshift(a));
-    hint && hint.classList.add('off');
-  }
-
-  const nm = new Map();
-  const nodes = [];
-  const uniq = [...new Set(nodeIris)];
-  for(const iri of uniq){
-    const hasKids = (G.childOf.get(iri)?.size||0) > 0;
-    const expanded = explExpanded.has(iri);
-    const kidCount = G.childOf.get(iri)?.size || 0;
-    const n = {
-      id: iri,
-      label: (hasKids && !expanded ? '▸ ' : '') + bestLbl(iri) + (kidCount > 0 ? ` (${kidCount})` : ''),
-      _iri: iri,
-      hasKids,
-      expanded,
-      isDim: G.dims.includes(iri),
-      isRoot: iri === G.rootIri,
-    };
-    nm.set(iri, n); nodes.push(n);
-  }
-
-  // Build edges (only subClassOf within visible set)
-  const edges = [];
-  for(const n of nodes){
-    const ps = [...(G.subOf.get(n.id)||[])];
-    for(const p of ps){
-      if(nm.has(p)) edges.push({f:nm.get(p), t:n, isP:false, isX:false});
-    }
-  }
-
-  const cm = dimCmap();
-  gExpl.setEdgeLabels(false);
-  const explLayout = parentIri ? 'tb' : 'rad';
-  gExpl.load(nodes, edges, {layout:explLayout, cmap:cm, nodeSep:parentIri?200:240, levelSep:parentIri?160:200});
-  gExpl.onNodeClick(n=>{
-    explNodeClick(n, nodes, nm);
-  });
-  gExpl.onNodeDblClick(n=>{
-    openEditModal(n.id, 'node');
-  });
-}
-
-function explNodeClick(n, nodes, nm){
-  const iri = n.id;
-  const hasKids = (G.childOf.get(iri)?.size||0) > 0;
-
-  // Show info panel
-  showExplInfo(iri);
-
-  if(!hasKids) return;
-
-  // Toggle expanded
-  if(explExpanded.has(iri)){
-    // collapse: remove this and all descendants from expanded
-    function collapseAll(i){ explExpanded.delete(i); for(const k of (G.childOf.get(i)||[])) collapseAll(k); }
-    collapseAll(iri);
-  } else {
-    explExpanded.add(iri);
-  }
-
-  // If this is a dim or root, re-render in context
-  if(n.isRoot){
-    explStack = [];
-    renderExplorer(null);
-  } else {
-    // Find the right parent context
-    const parentIri = explStack.length ? explStack[explStack.length-1].iri : null;
-    renderExplorer(parentIri);
-  }
-  updateBread();
-}
-
-function explDrillDown(iri){
-  explStack.push({iri, label: bestLbl(iri)});
-  explExpanded.clear();
-  explExpanded.add(iri);
-  renderExplorer(iri);
-  updateBread();
-}
-
-function explGoLevel(idx){
-  explStack = explStack.slice(0, idx);
-  explExpanded.clear();
-  const parentIri = explStack.length ? explStack[explStack.length-1].iri : null;
-  if(parentIri) explExpanded.add(parentIri);
-  renderExplorer(parentIri);
-  updateBread();
-}
-
-function updateBread(){
-  const box = $id('explBread');
-  if(!box) return;
-  let html = '<span class="bread-item" onclick="explGoRoot()">🏛 Raiz</span>';
-  explStack.forEach((s,i)=>{
-    html += '<span class="bread-sep">›</span>';
-    const isCur = i===explStack.length-1;
-    html += `<span class="bread-item${isCur?' bread-current':''}" onclick="explGoLevel(${i+1})">${esc(s.label)}</span>`;
-  });
-  if(!explStack.length) html = '<span class="bread-item bread-current">🏛 Raiz</span>';
-  box.innerHTML = html;
-}
-
-function showExplInfo(iri){
-  const el = $id('explInfo');
-  $id('explInfoTitle').textContent = bestLbl(iri);
-  $id('explInfoIri').textContent = iri;
-  const cmt = G.comments.get(iri)||'';
-  const kids = [...(G.childOf.get(iri)||[])];
-  const hasKids = kids.length > 0;
-  let html = '';
-  if(cmt) html += `<div style="font-size:12px;color:var(--txt2);line-height:1.75;padding:9px 11px;background:rgba(90,110,255,.06);border-radius:8px;">${esc(cmt)}</div>`;
-  if(hasKids){
-    html += `<div style="font-size:10px;font-family:var(--mono);color:var(--txt3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Subclasses (${kids.length})</div>`;
-    html += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
-    kids.slice(0,20).forEach(k=>{
-      html += `<span onclick="explDrillDown('${esc(k)}')" style="font-size:10px;padding:3px 9px;border-radius:14px;cursor:pointer;background:rgba(90,110,255,.1);border:1px solid rgba(90,110,255,.22);color:var(--acc2);">${esc(bestLbl(k))}</span>`;
-    });
-    if(kids.length>20) html += `<span style="font-size:10px;color:var(--txt3)">+${kids.length-20} mais</span>`;
-    html += '</div>';
-  }
-  // Object props
-  const outP=[];
-  for(const p of G.props){
-    const ds=[...(G.propDomain.get(p)||[])];
-    if(ds.includes(iri)){const rs=[...(G.propRange.get(p)||[])];outP.push({lbl:G.propLabel.get(p)||shortIri(p),rs});}
-  }
-  if(outP.length){
-    html += `<div style="font-size:10px;font-family:var(--mono);color:var(--txt3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;margin-top:4px;">Object Properties</div>`;
-    outP.slice(0,5).forEach(r=>{
-      html += `<div style="font-size:11px;color:var(--acc2);padding:4px 8px;border-radius:6px;background:rgba(176,110,255,.07);border:1px solid rgba(176,110,255,.18);margin-bottom:3px;">→ ${esc(r.lbl)} · ${esc(r.rs.map(bestLbl).join(', '))}</div>`;
-    });
-  }
-  html += `<div class="expl-info-actions">
-    ${hasKids?`<button class="btn prim sm" onclick="explDrillDown('${esc(iri)}')">↓ Entrar</button>`:''}
-    <button class="btn sm" onclick="openEditModal('${esc(iri)}','node')">✏️ Editar</button>
-    ${explStack.length?`<button class="btn sm" onclick="explGoLevel(${explStack.length-1})">↑ Voltar</button>`:''}
-  </div>`;
-  $id('explInfoBody').innerHTML = html;
-  el.style.display = 'block';
-}
-
-/* ══════════════════════════════════════════════════════
-   EDIT MODAL — node name, color, style + global graph style
-══════════════════════════════════════════════════════ */
-let _editTarget = null; // {type:'node'|'graph', iri, graph}
-
-const PRESET_EDIT_COLORS = ['#5a6eff','#b06eff','#00d5c0','#f5c842','#ff5f8f','#36e8a0','#f97316','#e879f9','#60a5fa','#4ade80','#f43f5e','#fbbf24'];
-
-function openEditModal(iri, type='node'){
-  _editTarget = {type, iri};
-  const lbl = bestLbl(iri);
-  $id('editModalTitle').textContent = `✏️ ${lbl}`;
-
-  const curCol = customCols.get(iri)||null;
-  const curLbl = customLabels.get(iri)||'';
-  const cmt = G.comments.get(iri)||'';
-
-  $id('editModalBody').innerHTML = `
-    <div class="modal-sect">
-      <div class="modal-sect-title">Identificação</div>
-      <div class="modal-row"><label>Nome exibido</label><input class="inp" id="em-lbl" value="${esc(curLbl||lbl)}" placeholder="${esc(lbl)}"></div>
-      <div class="modal-row"><label>IRI (readonly)</label><input class="inp" id="em-iri" value="${esc(iri)}" readonly style="opacity:.5;font-family:var(--mono);font-size:10px"></div>
-    </div>
-    <div class="modal-sect">
-      <div class="modal-sect-title">Cor do nó</div>
-      <div class="modal-row">
-        <label>Cor personalizada</label>
-        <input type="color" id="em-col" value="${curCol||'#5a6eff'}">
-        <span style="font-size:9px;color:var(--txt3)">↑ picker</span>
-      </div>
-      <div class="modal-row"><label>Paleta rápida</label></div>
-      <div class="color-strip" style="padding-left:110px">${PRESET_EDIT_COLORS.map(c=>`<div class="cs${curCol===c?' on':''}" style="background:${c}" onclick="$id('em-col').value='${c}';document.querySelectorAll('.cs').forEach(x=>x.classList.remove('on'));this.classList.add('on')"></div>`).join('')}</div>
-      <div class="modal-row">
-        <label>Resetar cor</label>
-        <button class="btn sm" onclick="$id('em-col').value='#5a6eff';document.querySelectorAll('.cs').forEach(x=>x.classList.remove('on'))">↺ Resetar</button>
-      </div>
-    </div>
-    <div class="modal-sect">
-      <div class="modal-sect-title">Descrição / Comentário</div>
-      <textarea class="modal-ta" id="em-cmt" rows="3" placeholder="Definição da classe…">${esc(cmt)}</textarea>
-      <div style="font-size:9px;color:var(--txt3)">Edição local — não altera o arquivo .ttl original</div>
-    </div>
-    <div class="modal-sect">
-      <div class="modal-sect-title">Estilo global do grafo</div>
-      <div class="modal-row"><label>Tamanho da fonte</label>
-        <input type="range" id="em-fs" min="8" max="20" value="${_getGS('fontSize',13)}" oninput="this.nextElementSibling.textContent=this.value+'px'">
-        <span class="rv">${_getGS('fontSize',13)}px</span>
-      </div>
-      <div class="modal-row"><label>Borda arredond.</label>
-        <input type="range" id="em-nr" min="0" max="24" value="${_getGS('nodeR',10)}" oninput="this.nextElementSibling.textContent=this.value">
-        <span class="rv">${_getGS('nodeR',10)}</span>
-      </div>
-      <div class="modal-row"><label>Opacidade nós</label>
-        <input type="range" id="em-op" min="5" max="100" value="${Math.round(_getGS('nodeOp',.72)*100)}" oninput="this.nextElementSibling.textContent=this.value+'%'">
-        <span class="rv">${Math.round(_getGS('nodeOp',.72)*100)}%</span>
-      </div>
-      <div class="modal-row"><label>Largura arestas</label>
-        <input type="range" id="em-ew" min="1" max="8" step=".5" value="${_getGS('edgeW',1.5)}" oninput="this.nextElementSibling.textContent=this.value">
-        <span class="rv">${_getGS('edgeW',1.5)}</span>
-      </div>
-      <div class="modal-row"><label>Padding nós</label>
-        <input type="range" id="em-np" min="4" max="30" value="${_getGS('nodePad',14)}" oninput="this.nextElementSibling.textContent=this.value">
-        <span class="rv">${_getGS('nodePad',14)}</span>
-      </div>
-    </div>
-    <div class="modal-sect">
-      <div class="modal-sect-title">Cor das arestas de hierarquia</div>
-      <div class="modal-row"><label>Cor das arestas</label>
-        <input type="color" id="em-ec" value="${customEdgeColor||'#8090cc'}">
-      </div>
-    </div>
-  `;
-  $id('editModal').style.display='flex';
-}
-
-function _getGS(k,def){ return [gTax,gOnto,gExpl].find(g=>g)?.[k]??def; }
-
-function applyEdit(){
-  if(!_editTarget) return;
-  const iri = _editTarget.iri;
-  // Label
-  const newLbl = $id('em-lbl')?.value?.trim();
-  if(newLbl && newLbl !== bestLbl(iri)) customLabels.set(iri, newLbl);
-  else customLabels.delete(iri);
-  // Color
-  const newCol = $id('em-col')?.value;
-  if(newCol && newCol!=='#5a6eff') customCols.set(iri, newCol);
-  else customCols.delete(iri);
-  // Comment
-  const newCmt = $id('em-cmt')?.value?.trim();
-  if(newCmt !== undefined) G.comments.set(iri, newCmt);
-  // Global styles
-  const fs = +($id('em-fs')?.value||13);
-  const nr = +($id('em-nr')?.value||10);
-  const op = +($id('em-op')?.value||72)/100;
-  const ew = +($id('em-ew')?.value||1.5);
-  const np2 = +($id('em-np')?.value||14);
-  customEdgeColor = $id('em-ec')?.value||null;
-  [gTax,gOnto,gExpl].forEach(g=>{
-    if(!g) return;
-    g.fontSize=fs; g.nodeR=nr; g.nodeOp=op; g.edgeW=ew; g.nodePad=np2;
-    if(customEdgeColor) g.setEdgeHierColor(customEdgeColor);
-    g.draw();
-  });
-  // Rebuild labels map
-  G.labels.set(iri, bestLbl2(iri));
-  rebuildCmap();
-  // Redraw
-  [gTax,gOnto,gExpl].forEach(g=>g&&g.draw());
-  if($id('pg-explorer').classList.contains('on')) renderExplorer(explStack.length?explStack[explStack.length-1].iri:null);
-  closeEditModal();
-}
-
-function resetEdit(){
-  if(!_editTarget) return;
-  customLabels.delete(_editTarget.iri);
-  customCols.delete(_editTarget.iri);
-  G.labels.set(_editTarget.iri, bestLbl(_editTarget.iri));
-  closeEditModal();
-  applyEdit();
-}
-
-function closeEditModal(){ $id('editModal').style.display='none'; _editTarget=null; }
-
-// Custom labels map
-const customLabels = new Map();
-let customEdgeColor = null;
-
-// Override bestLbl to use customLabels
-function bestLbl2(iri){
-  if(customLabels.has(iri)) return customLabels.get(iri);
-  return bestLbl(iri);
-}
-
-
 let gTax=null,gOnto=null;
 
 /* ══════════════════════════════════════════════════════
@@ -2897,16 +2166,13 @@ async function processText(txt,src){
   setStatus('warn','Processando…');setDbg('warn','Interpretando '+name+'…');
   await new Promise(r=>requestAnimationFrame(r));
   try{
-    const{quads}=detectAndParse(txt);
+    const{quads}=parseTurtle(txt);
     buildIndex(quads);
     if(!gTax){gTax=makeGraph('cvTax');}
     if(!gOnto){gOnto=makeGraph('cvOnto');}
     fillControls();buildPresets();
     if(!$id('sqta').value.trim()&&PRESETS.length){$id('sqta').value=PRESETS[0].q;runQ();}
 
-    console.log('[OntoHate] Loaded:', name, '| quads:', G.quads.length, '| classes:', G.classes.size, '| dims:', G.dims.length, '| props:', G.props.size);
-    console.log('[OntoHate] Root IRI:', G.rootIri);
-    console.log('[OntoHate] Sample dims:', G.dims.slice(0,5).map(d=>G.labels.get(d)));
     setStatus('ok','Ontologia carregada');
     setDbg('ok',`${name} · ${G.quads.length.toLocaleString('pt-BR')} triplas · ${G.classes.size} classes · ${G.dims.length} dimensões`);
     $id('ws-c').textContent=G.classes.size;
@@ -2930,54 +2196,17 @@ async function fetchT(url,ms=10000){
   try{return await fetch(url,{cache:'no-store',signal:ctrl.signal});}finally{clearTimeout(t);}
 }
 
-/* ── URLs do GitHub (raw) para os arquivos TTL/OWL ── */
-const GITHUB_URLS = [
-  'https://raw.githubusercontent.com/luquizis/Ontohate/main/Ontohate.ttl',
-  'https://raw.githubusercontent.com/luquizis/Ontohate/main/ontohate_oficial.owl',
-  'https://raw.githubusercontent.com/luquizis/Ontohate/main/Ontohate_V.owl',
-];
-
 async function boot(){
-  setStatus('warn','Carregando ontologia…');
-  setDbg('warn','Buscando dados do GitHub…');
-
-  let txt=null, url=null;
-
-  // Try GitHub raw URLs first
-  for(const u of GITHUB_URLS){
-    try{
-      setDbg('warn', 'Tentando: '+u.split('/').pop()+'…');
-      const r = await fetchT(u, 15000);
-      if(!r.ok) continue;
-      const t = await r.text();
-      if(t && t.trim().length > 100){ txt=t; url=u; break; }
-    }catch(e){ console.warn('fetch failed:', u, e?.message); }
+  setStatus('warn','Iniciando…');setDbg('warn','Buscando ontologia…');
+  const fn='Ontohate_relacional_cruzamentos.ttl';
+  const base=location.pathname.replace(/[^/]*$/,'');
+  const urls=[`./${fn}`,new URL('./'+fn,location.href).href,`${location.origin}${base}${fn}`];
+  let txt=null,url=null;
+  for(const u of urls){
+    try{const r=await fetchT(u);if(!r.ok)continue;const t=await r.text();if(t?.trim()){txt=t;url=u;break;}}catch{}
   }
-
-  // Fallback: local paths (if hosted alongside a .ttl)
-  if(!txt){
-    const localNames = ['Ontohate.ttl','ontohate_oficial.owl','Ontohate_V.owl'];
-    const base = location.pathname.replace(/[^/]*$/,'');
-    for(const fn of localNames){
-      for(const u of [`./${fn}`, `${location.origin}${base}${fn}`]){
-        try{
-          const r = await fetchT(u, 8000);
-          if(!r.ok) continue;
-          const t = await r.text();
-          if(t && t.trim().length > 100){ txt=t; url=u; break; }
-        }catch{}
-      }
-      if(txt) break;
-    }
-  }
-
-  if(!txt){
-    setDbg('warn','GitHub inacessível — usando dados de demonstração embutidos.');
-    setStatus('warn','Modo demo');
-    txt = BUNDLED; url = 'ontohate-demo';
-  }
-
-  await processText(txt, url);
+  if(!txt){setDbg('warn','Usando versão embutida (arquivo .ttl não encontrado no servidor).');txt=BUNDLED;url='ontohate-bundled';}
+  await processText(txt,url);
 }
 
 boot();
