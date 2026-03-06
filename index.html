@@ -579,7 +579,7 @@ canvas.gv:active{cursor:grabbing;}
   </nav>
   <div class="hdr-right">
     <div class="pill"><span class="dot warn" id="sdot"></span><span id="stxt">Carregando…</span></div>
-    <label class="hbtn" style="cursor:pointer">📂 Abrir .ttl<input type="file" id="fileIn" accept=".ttl,.owl,.n3" style="display:none"></label>
+    <label class="hbtn" style="cursor:pointer;display:none">📂<input type="file" id="fileIn" accept=".ttl,.owl,.n3" style="display:none"></label>
     <button class="hbtn" onclick="toggleTheme()">◐ Tema</button>
   </div>
 </div>
@@ -598,7 +598,7 @@ canvas.gv:active{cursor:grabbing;}
       <div class="hcard" onclick="gotoTab('tax')"><span class="hcard-icon">🌳</span><div class="hcard-title">Taxonomia</div><div class="hcard-desc">Hierarquia completa com filtros de dimensões, cruzamentos e layouts configuráveis.</div></div>
       <div class="hcard" onclick="gotoTab('onto')"><span class="hcard-icon">🔗</span><div class="hcard-title">Ontologia</div><div class="hcard-desc">Visualize Object Properties e relações cruzadas entre as dimensões da ontologia.</div></div>
       <div class="hcard" onclick="gotoTab('sparql')"><span class="hcard-icon">⚡</span><div class="hcard-title">SPARQL</div><div class="hcard-desc">18 questões de competência prontas. Editor com execução imediata e exportação CSV/JSON.</div></div>
-      <div class="hcard" onclick="document.getElementById('fileIn').click()"><span class="hcard-icon">📂</span><div class="hcard-title">Carregar Arquivo</div><div class="hcard-desc">Importe seu próprio .ttl, .owl ou .rdf para explorar interativamente.</div></div>
+      <div class="hcard" onclick="gotoTab('sparql')"><span class="hcard-icon">⚡</span><div class="hcard-title">Consultas SPARQL</div><div class="hcard-desc">Execute 18 questões de competência ou escreva suas próprias consultas sobre a ontologia.</div></div>
     </div>
     <div class="about-box">
       <h2>Sobre o Projeto</h2>
@@ -922,7 +922,7 @@ const PAGES=['home','explorer','tax','onto','sparql'];
 function gotoTab(t){
   document.querySelectorAll('.nav-btn,.mob-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   PAGES.forEach(id=>{const el=$id('pg-'+id);if(el)el.classList.toggle('on',id===t);});
-  if(t==='explorer'){setTimeout(()=>initExplorer(),40);}
+  if(t==='explorer'){setTimeout(()=>initExplorer(),60);}
   if(t==='tax'){setTimeout(()=>{if(!gTax)gTax=makeGraph('cvTax');gTax.resize();if(!gTax.getNodes().length&&G.classes.size>0)buildTax();},40);}
   if(t==='onto'){setTimeout(()=>{if(!gOnto)gOnto=makeGraph('cvOnto');gOnto.resize();if(!gOnto.getNodes().length&&G.classes.size>0)buildOnto();},40);}
   // Mobile: show/hide FABs
@@ -962,7 +962,7 @@ function parseTurtle(txt){
     const ci=t.indexOf(':');
     if(ci>0){
       const p=t.slice(0,ci),l=t.slice(ci+1);
-      const b=pfx[p]||{rdf:'http://www.w3.org/1999/02/22-rdf-syntax-ns#',rdfs:'http://www.w3.org/2000/01/rdf-schema#',owl:'http://www.w3.org/2002/07/owl#',xsd:'http://www.w3.org/2001/XMLSchema#',dcterms:'http://purl.org/dc/terms/',schema:'https://schema.org/',ontohate:'http://ontohate.org/ontohate#',ontohatev1:'http://ontohate.org/ontohatev1#'}[p];
+      const b=pfx[p]||{rdf:'http://www.w3.org/1999/02/22-rdf-syntax-ns#',rdfs:'http://www.w3.org/2000/01/rdf-schema#',owl:'http://www.w3.org/2002/07/owl#',xsd:'http://www.w3.org/2001/XMLSchema#',dcterms:'http://purl.org/dc/terms/',schema:'https://schema.org/',ontohate:'http://ontohate.org/ontohate#',ontohatev1:'http://ontohate.org/ontohatev1#','':'http://ontohate.org/ontohate#'}[p];
       if(b)return b+l;
     }
     return t;
@@ -1045,6 +1045,130 @@ function parseTurtle(txt){
 }
 
 /* ══════════════════════════════════════════════════════
+   RDF/XML PARSER — handles .owl files in RDF/XML format
+══════════════════════════════════════════════════════ */
+function parseRdfXml(txt) {
+  const quads = [];
+  let doc;
+  try {
+    doc = new DOMParser().parseFromString(txt, 'application/xml');
+  } catch(e) {
+    try { doc = new DOMParser().parseFromString(txt, 'text/xml'); } catch(e2) { return {quads}; }
+  }
+  if (!doc || doc.querySelector('parsererror')) return {quads};
+
+  const NS_RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+  const NS_RDFS = 'http://www.w3.org/2000/01/rdf-schema#';
+  const NS_OWL = 'http://www.w3.org/2002/07/owl#';
+
+  function absUri(base, local) {
+    if (!local) return null;
+    if (local.startsWith('http://') || local.startsWith('https://')) return local;
+    if (base && !local.includes(':')) return base + local;
+    return local;
+  }
+
+  function getAttrNS(el, ns, local) {
+    return el.getAttributeNS(ns, local) || el.getAttribute(local) || el.getAttribute(ns + local);
+  }
+
+  function addQ(s, p, o, isLit=false, lang='', dt='') {
+    if (s && p && (o || o === '')) quads.push({s, p, o, isLit, oLang:lang, oDt:dt});
+  }
+
+  function resolveAbout(el, baseUri) {
+    const about = el.getAttributeNS(NS_RDF,'about') || el.getAttribute('rdf:about');
+    if (about) return absUri(baseUri, about);
+    const id = el.getAttributeNS(NS_RDF,'ID') || el.getAttribute('rdf:ID');
+    if (id) return (baseUri||'') + '#' + id;
+    const ni = el.getAttributeNS(NS_RDF,'nodeID') || el.getAttribute('rdf:nodeID');
+    if (ni) return '_:' + ni;
+    return '_:b' + Math.random().toString(36).slice(2);
+  }
+
+  function processNode(el, baseUri) {
+    const tagNS = el.namespaceURI || '';
+    const tagLocal = el.localName;
+    const fullTag = tagNS + tagLocal;
+    const subj = resolveAbout(el, baseUri);
+
+    // rdf:type from element tag (if not rdf:Description)
+    if (!(tagNS === NS_RDF && tagLocal === 'Description')) {
+      addQ(subj, NS_RDF + 'type', fullTag);
+    }
+
+    // Process child property elements
+    for (const child of el.children) {
+      const pNS = child.namespaceURI || '';
+      const pLocal = child.localName;
+      const pred = pNS + pLocal;
+
+      // rdf:type shorthand
+      const res = child.getAttributeNS(NS_RDF,'resource') || child.getAttribute('rdf:resource');
+      if (res) {
+        addQ(subj, pred, absUri(baseUri, res));
+        continue;
+      }
+
+      // Literal
+      const lang = child.getAttributeNS('http://www.w3.org/XML/1998/namespace','lang') ||
+                   child.getAttribute('xml:lang') || '';
+      const dt = child.getAttributeNS(NS_RDF,'datatype') || child.getAttribute('rdf:datatype') || '';
+
+      // Nested nodes
+      if (child.children.length > 0) {
+        for (const grandchild of child.children) {
+          const objUri = resolveAbout(grandchild, baseUri);
+          addQ(subj, pred, objUri);
+          processNode(grandchild, baseUri);
+        }
+      } else {
+        const val = child.textContent || '';
+        if (dt || lang || val) {
+          addQ(subj, pred, val, true, lang, dt);
+        }
+      }
+
+      // parseType=Collection / List
+      const parseType = child.getAttributeNS(NS_RDF,'parseType') || child.getAttribute('rdf:parseType');
+      if (parseType === 'Resource') {
+        const bn = '_:b' + Math.random().toString(36).slice(2);
+        addQ(subj, pred, bn);
+      }
+    }
+    return subj;
+  }
+
+  // Find base URI from xml:base or owl:Ontology
+  let baseUri = '';
+  const ontEl = doc.getElementsByTagNameNS(NS_OWL,'Ontology')[0];
+  if (ontEl) {
+    baseUri = ontEl.getAttributeNS(NS_RDF,'about') || ontEl.getAttribute('rdf:about') || '';
+    if (baseUri && !baseUri.endsWith('#') && !baseUri.endsWith('/')) baseUri += '#';
+  }
+
+  // Process all top-level elements in rdf:RDF
+  const root = doc.getElementsByTagNameNS(NS_RDF, 'RDF')[0] || doc.documentElement;
+  for (const child of root.children) {
+    processNode(child, baseUri);
+  }
+
+  return {quads};
+}
+
+function detectAndParse(txt) {
+  const trimmed = txt.trim();
+  // RDF/XML starts with XML declaration or rdf:RDF tag
+  if (trimmed.startsWith('<?xml') || trimmed.startsWith('<rdf:RDF') || trimmed.startsWith('<RDF') ||
+      trimmed.includes('<owl:Ontology') || trimmed.includes('<rdf:RDF')) {
+    return parseRdfXml(txt);
+  }
+  // Default: Turtle / N3
+  return parseTurtle(txt);
+}
+
+
+/* ══════════════════════════════════════════════════════
    RDF INDEX — with fast lookup maps
 ══════════════════════════════════════════════════════ */
 const NS={
@@ -1055,6 +1179,8 @@ const NS={
 const ROOTS_IRI=[
   'http://ontohate.org/ontohate#Discurso_de_odio',
   'http://ontohate.org/ontohate#Discurso_de_Odio',
+  'http://www.semanticweb.org/lrs/ontologies/2024/ontohate#Discurso_de_odio',
+  'http://www.semanticweb.org/lrs/ontologies/2024/ontohate#Discurso_de_Odio',
 ];
 
 const G={
@@ -1110,8 +1236,18 @@ function buildIndex(quads){
     G.annots.get(q.s).push({p:q.p,pS:shortIri(q.p),val:q.o,lang:q.oLang||'',dt:q.oDt||''});
   }
 
-  // Find root
+  // Find root — try known IRIs first, then heuristic
   for(const r of ROOTS_IRI){if(G.classes.has(r)){G.rootIri=r;break;}}
+  if(!G.rootIri){
+    // Heuristic: class with most children that has no parent within classes
+    let best=null,bestN=0;
+    for(const c of G.classes){
+      const ps=G.subOf.get(c);
+      const hasParent=ps&&[...ps].some(p=>G.classes.has(p));
+      if(!hasParent){const n=G.childOf.get(c)?.size||0;if(n>bestN){bestN=n;best=c;}}
+    }
+    if(best){G.rootIri=best;console.log('[OntoHate] Auto-detected root:',best,'with',bestN,'children');}
+  }
 
   // Dims = direct children of root, or top-level classes
   if(G.rootIri){
@@ -2379,14 +2515,17 @@ let explExpanded = new Set(); // which nodes are expanded
 function initExplorer(){
   if(!gExpl) gExpl = makeGraph('cvExpl');
   gExpl.resize();
-  if(!G.classes.size) return;
-  // Always show root view on first load
-  if(!explStack.length) explGoRoot();
+  if(!G.classes.size){
+    setDbg('warn','Ontologia ainda não carregada no Explorer.');
+    return;
+  }
+  explGoRoot();
 }
 
 function explGoRoot(){
   explStack = [];
   explExpanded.clear();
+  if(!gExpl) gExpl = makeGraph('cvExpl');
   renderExplorer(null);
   updateBread();
 }
@@ -2431,9 +2570,11 @@ function renderExplorer(parentIri){
   for(const iri of uniq){
     const hasKids = (G.childOf.get(iri)?.size||0) > 0;
     const expanded = explExpanded.has(iri);
+    const kidCount = G.childOf.get(iri)?.size || 0;
     const n = {
       id: iri,
-      label: bestLbl(iri),
+      label: (hasKids && !expanded ? '▸ ' : '') + bestLbl(iri) + (kidCount > 0 ? ` (${kidCount})` : ''),
+      _iri: iri,
       hasKids,
       expanded,
       isDim: G.dims.includes(iri),
@@ -2756,13 +2897,16 @@ async function processText(txt,src){
   setStatus('warn','Processando…');setDbg('warn','Interpretando '+name+'…');
   await new Promise(r=>requestAnimationFrame(r));
   try{
-    const{quads}=parseTurtle(txt);
+    const{quads}=detectAndParse(txt);
     buildIndex(quads);
     if(!gTax){gTax=makeGraph('cvTax');}
     if(!gOnto){gOnto=makeGraph('cvOnto');}
     fillControls();buildPresets();
     if(!$id('sqta').value.trim()&&PRESETS.length){$id('sqta').value=PRESETS[0].q;runQ();}
 
+    console.log('[OntoHate] Loaded:', name, '| quads:', G.quads.length, '| classes:', G.classes.size, '| dims:', G.dims.length, '| props:', G.props.size);
+    console.log('[OntoHate] Root IRI:', G.rootIri);
+    console.log('[OntoHate] Sample dims:', G.dims.slice(0,5).map(d=>G.labels.get(d)));
     setStatus('ok','Ontologia carregada');
     setDbg('ok',`${name} · ${G.quads.length.toLocaleString('pt-BR')} triplas · ${G.classes.size} classes · ${G.dims.length} dimensões`);
     $id('ws-c').textContent=G.classes.size;
@@ -2786,17 +2930,54 @@ async function fetchT(url,ms=10000){
   try{return await fetch(url,{cache:'no-store',signal:ctrl.signal});}finally{clearTimeout(t);}
 }
 
+/* ── URLs do GitHub (raw) para os arquivos TTL/OWL ── */
+const GITHUB_URLS = [
+  'https://raw.githubusercontent.com/luquizis/Ontohate/main/Ontohate.ttl',
+  'https://raw.githubusercontent.com/luquizis/Ontohate/main/ontohate_oficial.owl',
+  'https://raw.githubusercontent.com/luquizis/Ontohate/main/Ontohate_V.owl',
+];
+
 async function boot(){
-  setStatus('warn','Iniciando…');setDbg('warn','Buscando ontologia…');
-  const fn='Ontohate_relacional_cruzamentos.ttl';
-  const base=location.pathname.replace(/[^/]*$/,'');
-  const urls=[`./${fn}`,new URL('./'+fn,location.href).href,`${location.origin}${base}${fn}`];
-  let txt=null,url=null;
-  for(const u of urls){
-    try{const r=await fetchT(u);if(!r.ok)continue;const t=await r.text();if(t?.trim()){txt=t;url=u;break;}}catch{}
+  setStatus('warn','Carregando ontologia…');
+  setDbg('warn','Buscando dados do GitHub…');
+
+  let txt=null, url=null;
+
+  // Try GitHub raw URLs first
+  for(const u of GITHUB_URLS){
+    try{
+      setDbg('warn', 'Tentando: '+u.split('/').pop()+'…');
+      const r = await fetchT(u, 15000);
+      if(!r.ok) continue;
+      const t = await r.text();
+      if(t && t.trim().length > 100){ txt=t; url=u; break; }
+    }catch(e){ console.warn('fetch failed:', u, e?.message); }
   }
-  if(!txt){setDbg('warn','Usando versão embutida (arquivo .ttl não encontrado no servidor).');txt=BUNDLED;url='ontohate-bundled';}
-  await processText(txt,url);
+
+  // Fallback: local paths (if hosted alongside a .ttl)
+  if(!txt){
+    const localNames = ['Ontohate.ttl','ontohate_oficial.owl','Ontohate_V.owl'];
+    const base = location.pathname.replace(/[^/]*$/,'');
+    for(const fn of localNames){
+      for(const u of [`./${fn}`, `${location.origin}${base}${fn}`]){
+        try{
+          const r = await fetchT(u, 8000);
+          if(!r.ok) continue;
+          const t = await r.text();
+          if(t && t.trim().length > 100){ txt=t; url=u; break; }
+        }catch{}
+      }
+      if(txt) break;
+    }
+  }
+
+  if(!txt){
+    setDbg('warn','GitHub inacessível — usando dados de demonstração embutidos.');
+    setStatus('warn','Modo demo');
+    txt = BUNDLED; url = 'ontohate-demo';
+  }
+
+  await processText(txt, url);
 }
 
 boot();
