@@ -371,16 +371,17 @@ canvas.gv:active{cursor:grabbing;}
 #tip{
   position:fixed;z-index:9999;pointer-events:none;
   background:var(--card);border:1px solid var(--bord);border-radius:12px;
-  padding:12px 14px;max-width:360px;font-size:12px;line-height:1.5;
+  padding:13px 15px;max-width:420px;font-size:12px;line-height:1.5;
   box-shadow:0 16px 48px rgba(0,0,0,.65);
   opacity:0;transform:translateY(5px);transition:opacity .1s,transform .1s;
 }
 #tip.on{opacity:1;transform:none;}
 .tip-n{font-family:var(--head);font-weight:800;font-size:14px;margin-bottom:3px;color:var(--txt);}
 .tip-i{font-family:var(--mono);font-size:9px;color:var(--txt3);word-break:break-all;margin-bottom:7px;}
-.tip-c{font-size:11px;color:var(--txt2);line-height:1.65;margin-bottom:7px;}
-.tip-m{font-size:10px;color:var(--txt3);}
+.tip-c{font-size:11px;color:var(--txt2);line-height:1.65;margin-bottom:8px;padding:7px 9px;background:rgba(90,110,255,.06);border-radius:6px;}
+.tip-m{font-size:11px;color:var(--txt3);display:flex;flex-direction:column;gap:3px;}
 .tip-m b{color:var(--txt2);}
+.tip-m div{padding:1px 0;}
 
 /* Status bar */
 #sbar{flex:none;border-top:1px solid var(--bord);background:var(--bg1);padding:5px 14px;display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10px;color:var(--txt3);}
@@ -898,8 +899,13 @@ function expIri(t,pfxMap){
   if(t==='a')return NS.RDF+'type';
   if(t.startsWith('<')&&t.endsWith('>'))return t.slice(1,-1);
   if(t.startsWith('"')||t.startsWith("'"))return null;
+  // prefixed name: everything after colon is the local name (no restriction on chars)
   const ci=t.indexOf(':');
-  if(ci>0){const p=t.slice(0,ci),l=t.slice(ci+1);const b=(pfxMap&&pfxMap[p])||NSDEF[p];if(b)return b+l;}
+  if(ci>0){
+    const p=t.slice(0,ci),l=t.slice(ci+1);
+    const b=(pfxMap&&pfxMap[p])||NSDEF[p];
+    if(b)return b+l;
+  }
   return t;
 }
 function parseLit(t){
@@ -915,48 +921,54 @@ function transSubClsOf(iri){
 }
 function evalFilter(expr,b){
   const e=expr.trim();
-  // LANG()
-  const lm=e.match(/^LANG\s*\(\s*\?(\w+)\s*\)\s*=\s*"([^"]*)"\s*$/i);
+  // LANG(?x) = "pt"  or  LANG(?x)="pt"
+  const lm=e.match(/^LANG\s*\(\s*\?(\w+)\s*\)\s*=+\s*["']([^"']*)["']\s*$/i);
   if(lm){return(b['__lg__'+lm[1]]||'').toLowerCase()===lm[2].toLowerCase();}
-  // LANGMATCHES
-  const lmm=e.match(/LANGMATCHES\s*\(\s*LANG\s*\(\s*\?(\w+)\s*\)\s*,\s*"([^"]*)"\s*\)/i);
+  // LANGMATCHES(LANG(?x),"pt")
+  const lmm=e.match(/LANGMATCHES\s*\(\s*LANG\s*\(\s*\?(\w+)\s*\)\s*,\s*["']([^"']*)["']\s*\)/i);
   if(lmm){const l=(b['__lg__'+lmm[1]]||'').toLowerCase(),p=lmm[2].toLowerCase();return p==='*'?l!=='':l===p||l.startsWith(p+'-');}
-  // CONTAINS
-  const cm=e.match(/CONTAINS\s*\(\s*(?:LCASE\s*\(\s*(?:STR\s*\()?\s*\?(\w+)\s*\)?)\s*\)\s*,\s*"([^"]*)"\s*\)/i)||e.match(/CONTAINS\s*\(\s*\?(\w+)\s*,\s*"([^"]*)"\s*\)/i);
+  // STR(?x) contains / CONTAINS
+  const cm=e.match(/CONTAINS\s*\(\s*(?:LCASE\s*\(\s*(?:STR\s*\()?\s*\?(\w+)\s*\)?)\s*\)\s*,\s*["']([^"']*)["']\s*\)/i)||e.match(/CONTAINS\s*\(\s*\?(\w+)\s*,\s*["']([^"']*)["']\s*\)/i);
   if(cm){return String(b[cm[1]]||'').toLowerCase().includes(cm[2].toLowerCase());}
+  // STRSTARTS
+  const ssm=e.match(/STRSTARTS\s*\(\s*\?(\w+)\s*,\s*["']([^"']*)["']\s*\)/i);
+  if(ssm){return String(b[ssm[1]]||'').startsWith(ssm[2]);}
   // regex
-  const rm=e.match(/regex\s*\(\s*\?(\w+)\s*,\s*"([^"]*)"\s*(?:,\s*"([^"]*)"\s*)?\)/i);
-  if(rm){try{return new RegExp(rm[2],rm[3]||'').test(String(b[rm[1]]||''));}catch{return false;}}
+  const rm=e.match(/regex\s*\(\s*(?:STR\s*\()?\s*\?(\w+)\s*\)?\s*,\s*["']([^"']*)["']\s*(?:,\s*["']([^"']*)["']\s*)?\)/i);
+  if(rm){try{return new RegExp(rm[2],rm[3]||'i').test(String(b[rm[1]]||''));}catch{return false;}}
   // isIRI
   const iim=e.match(/isIRI\s*\(\s*\?(\w+)\s*\)/i);
   if(iim){const v=b[iim[1]]||'';return v.startsWith('http://')||v.startsWith('https://');}
-  // NOT EXISTS — correct implementation
+  // NOT EXISTS — correct implementation using index
   const nem=e.match(/NOT\s+EXISTS\s*\{([\s\S]+?)\}/i);
   if(nem){
     const inner=nem[1].trim();
-    const tm=inner.match(/(\S+)\s+(\S+)\s+(\S+)/);
+    // match a simple triple pattern
+    const TERM='(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+)';
+    const tm=inner.match(new RegExp(`(${TERM})\\s+(${TERM})\\s+(${TERM})`));
     if(tm){
-      const sv=tm[1].startsWith('?')?b[tm[1].slice(1)]:expIri(tm[1],{});
-      const pv=expIri(tm[2],NSDEF);
-      const ov=tm[3].startsWith('?')?b[tm[3].slice(1)]:expIri(tm[3],NSDEF);
-      if(!sv)return true;
-      const k=sv+'|'+pv;
-      const vals=G.bySP.get(k);
-      if(!vals||vals.length===0)return true;
-      if(ov)return!vals.some(q=>q.o===ov);
+      const sv2=tm[1].startsWith('?')?b[tm[1].slice(1)]:expIri(tm[1],NSDEF);
+      const pv2=expIri(tm[2],NSDEF);
+      const ov2=tm[3].startsWith('?')?b[tm[3].slice(1)]:expIri(tm[3],NSDEF);
+      if(!sv2)return true;
+      const k=sv2+'|'+pv2;
+      const cands=G.bySP.get(k);
+      if(!cands||cands.length===0)return true;
+      if(ov2)return!cands.some(q=>q.o===ov2);
       return false;
     }
     return true;
   }
-  // FILTER(?x != ?y) or != literal
-  const neq=e.match(/\?(\w+)\s*!=\s*(\S+)/);
-  if(neq){const a=b[neq[1]],bv=expIri(neq[2],{})||neq[2].replace(/[<>"]/g,'');return a!==bv;}
-  // FILTER(?x = literal)
-  const eq=e.match(/\?(\w+)\s*=\s*"([^"]*)"/);
+  // != operator
+  const neq=e.match(/\?(\w+)\s*!=\s*([^\s)]+)/);
+  if(neq){const a=b[neq[1]],bv=expIri(neq[2],NSDEF)||neq[2].replace(/[<>"']/g,'');return a!==bv;}
+  // = operator with literal
+  const eq=e.match(/\?(\w+)\s*=+\s*["']([^"']*)["']/);
   if(eq){return b[eq[1]]===eq[2];}
   // BOUND
   const bm=e.match(/BOUND\s*\(\s*\?(\w+)\s*\)/i);
   if(bm){return b[bm[1]]!==undefined&&b[bm[1]]!=='';}
+  // Default: pass (unknown filter)
   return true;
 }
 
@@ -983,18 +995,20 @@ function matchTriple(pat,binds,pfxMap,transitive){
       continue;
     }
 
-    // Use indexed lookup
+    // Use indexed lookup when subject AND predicate are bound
     if(sv!==null&&pv!==null){
       const k=sv+'|'+pv;const cands=G.bySP.get(k);if(!cands)continue;
       for(const q of cands){
         if(oLit){if(!q.isLit||q.o!==oLit.val)continue;if(oLit.lang&&q.oLang&&q.oLang.toLowerCase()!==oLit.lang.toLowerCase())continue;}
         else if(ov!==null&&q.o!==ov)continue;
         const nb={...b};
+        if(sVar)nb[sVar]=q.s;
+        if(pVar)nb[pVar]=q.p;
         if(oVar){nb[oVar]=q.o;nb['__lg__'+oVar]=q.oLang||'';}
         out.push(nb);
       }
     } else {
-      const cands=pv!==null?(G.byP.get(pv)||[]):G.quads;
+      const cands=pv!==null?(G.byP.get(pv)||[]):(sv!==null?(G.byS.get(sv)||[]):G.quads);
       for(const q of cands){
         if(sv!==null&&q.s!==sv)continue;
         if(pv!==null&&q.p!==pv)continue;
@@ -1021,23 +1035,51 @@ function splitUnion(blk){
 }
 
 function evalWhere(blk,binds,pfxMap){
-  // Extract FILTERs
+  // Robust FILTER extraction that handles nested parens including NOT EXISTS{...}
   const filters=[];
-  const fRe=/FILTER\s*\(([^)(]+(?:\([^)(]*(?:\([^)(]*\)[^)(]*)*\)[^)(]*)*)\)/gi;
-  let fm;while((fm=fRe.exec(blk))!==null)filters.push(fm[1]);
-  const noF=blk.replace(/FILTER\s*\([^)(]+(?:\([^)(]*(?:\([^)(]*\)[^)(]*)*\)[^)(]*)*\)/gi,'');
+  function extractFilters(src){
+    let out='',i=0;
+    while(i<src.length){
+      const fm=/\bFILTER\s*\(/i.exec(src.slice(i));
+      if(!fm){out+=src.slice(i);break;}
+      out+=src.slice(i,i+fm.index);
+      i+=fm.index+fm[0].length;
+      // collect everything up to matching close paren, tracking nested {} for NOT EXISTS
+      let depth=1,content='';
+      while(i<src.length&&depth>0){
+        if(src[i]==='(')depth++;
+        else if(src[i]===')'){depth--;if(depth===0){i++;break;}}
+        content+=src[i++];
+      }
+      filters.push(content);
+    }
+    return out;
+  }
+  const noF=extractFilters(blk);
 
-  // BIND
+  // BIND extraction
   const bindsArr=[];
   const bRe=/BIND\s*\(([^)]+)\s+AS\s+\?(\w+)\s*\)/gi;
   let bm;while((bm=bRe.exec(noF))!==null)bindsArr.push({expr:bm[1].trim(),v:bm[2]});
   const noFB=noF.replace(/BIND\s*\([^)]+\)/gi,'');
 
-  const isUnion=/\}\s*UNION\s*\{/i.test(noFB);
+  // Detect UNION at top level (not inside nested {})
+  function hasTopLevelUnion(src){
+    let d=0;
+    for(let i=0;i<src.length-6;i++){
+      if(src[i]==='{')d++;else if(src[i]==='}')d--;
+      if(d===0&&/^UNION\b/i.test(src.slice(i+1).trimStart()))return true;
+    }
+    return false;
+  }
+
   let result;
-  if(isUnion){
+  if(hasTopLevelUnion(noFB)){
     const brs=splitUnion(noFB);const seen=new Set();result=[];
-    for(const br of brs){let bb=evalSimple(br,[...binds],pfxMap);for(const b of bb){const k=JSON.stringify(b);if(!seen.has(k)){seen.add(k);result.push(b);}}}
+    for(const br of brs){
+      let bb=evalSimple(br,[...binds],pfxMap);
+      for(const b of bb){const k=JSON.stringify(b);if(!seen.has(k)){seen.add(k);result.push(b);}}
+    }
   } else {
     result=evalSimple(noFB,binds,pfxMap);
   }
@@ -1046,7 +1088,6 @@ function evalWhere(blk,binds,pfxMap){
   for(const bd of bindsArr){
     const litM=bd.expr.match(/^"([^"]*)"(?:@(\w+))?$/);
     if(litM)result=result.map(b=>({...b,[bd.v]:litM[1],['__lg__'+bd.v]:litM[2]||''}));
-    // REPLACE(STR(?x),".*[#/]","")
     const repM=bd.expr.match(/REPLACE\s*\(\s*STR\s*\(\s*\?(\w+)\s*\)\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"\s*\)/i);
     if(repM)result=result.map(b=>({...b,[bd.v]:String(b[repM[1]]||'').replace(new RegExp(repM[2]),repM[3])}));
   }
@@ -1057,17 +1098,37 @@ function evalWhere(blk,binds,pfxMap){
 }
 
 function evalSimple(blk,binds,pfxMap){
-  // Extract OPTIONALs
+  // Extract OPTIONALs (balanced braces)
   const opts=[];
-  const noOpt=blk.replace(/OPTIONAL\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/gi,(_,inner)=>{opts.push(inner);return'';});
+  function extractOptionals(src){
+    let out='',i=0;
+    while(i<src.length){
+      const m=/OPTIONAL\s*\{/i.exec(src.slice(i));
+      if(!m){out+=src.slice(i);break;}
+      out+=src.slice(i,i+m.index);
+      i+=m.index+m[0].length;
+      let depth=1,start=i;
+      while(i<src.length&&depth>0){if(src[i]==='{')depth++;else if(src[i]==='}')depth--;i++;}
+      opts.push(src.slice(start,i-1));
+    }
+    return out;
+  }
+  const noOpt=extractOptionals(blk);
 
-  // Extract triples — improved regex covering more patterns
-  const tRe=/(<[^>]+>|\?[\w]+|[\w]+:[\w#.\-_/]+|a)\s+(<[^>]+>|\?[\w]+|[\w]+:[\w#.\-_/]+\+?|a)\s+(<[^>]+>|\?[\w]+|[\w]+:[\w#.\-_/]+|"(?:[^"\\]|\\.)*"(?:@[\w-]+)?(?:\^\^(?:<[^>]+>|[\w]+:[\w]+))?)/g;
+  // Token patterns for triple parts:
+  // subject/object: IRI, prefixed-name (allows underscores/dots/any local chars), variable, literal
+  // predicate: same + optional '+' suffix for property paths
+  const TERM_S = '(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+|a(?=\\s))';
+  const TERM_P = '(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}+]+\\+?|a(?=\\s))';
+  const TERM_O = '(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+|"(?:[^"\\\\]|\\\\.)*"(?:@[\\w-]+)?(?:\\^\\^(?:<[^>]+>|[\\w]+:[\\w]+))?)';
+  const tRe=new RegExp(`(${TERM_S})\\s+(${TERM_P})\\s+(${TERM_O})`,'g');
+
   let m;let cur=[...binds];
   while((m=tRe.exec(noOpt))!==null){
-    const ptrans=m[2].endsWith('+');
-    const pclean=ptrans?m[2].slice(0,-1):m[2];
-    cur=matchTriple({s:m[1],p:pclean,o:m[3]},cur,pfxMap,ptrans);
+    const raw_p=m[2];
+    const ptrans=raw_p.endsWith('+');
+    const pclean=ptrans?raw_p.slice(0,-1):raw_p;
+    cur=matchTriple({s:m[1].trim(),p:pclean.trim(),o:m[3].trim()},cur,pfxMap,ptrans);
     if(!cur.length)break;
   }
 
@@ -1517,10 +1578,37 @@ function showTip(html,x,y){
 function hideTip(d){clearTimeout(tipTimer);tipTimer=setTimeout(()=>TIP.classList.remove('on'),d??80);}
 
 function tipHtml(iri){
-  const lbl=bestLbl(iri),cmt=G.comments.get(iri)||'';
-  const parents=[...(G.subOf.get(iri)||[])].map(bestLbl);
-  const kids=[...(G.childOf.get(iri)||[])].map(bestLbl);
-  return`<div class="tip-n">${esc(lbl)}</div><div class="tip-i">${esc(iri)}</div>${cmt?`<div class="tip-c">${esc(cmt.slice(0,200))}${cmt.length>200?'…':''}</div>`:''}<div class="tip-m"><b>Pai:</b> ${parents.length?esc(parents.slice(0,3).join(', '))+'…':'—'} · <b>Filhos:</b> ${kids.length}</div>`;
+  const lbl=bestLbl(iri);
+  const cmt=G.comments.get(iri)||'';
+  const parents=[...(G.subOf.get(iri)||[])].map(p=>bestLbl(p));
+  const kids=[...(G.childOf.get(iri)||[])];
+  const annots=G.annots.get(iri)||[];
+
+  // Object properties involving this node
+  const outProps=[],inProps=[];
+  for(const p of G.props){
+    const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];
+    const pl=G.propLabel.get(p)||shortIri(p);
+    if(ds.includes(iri))rs.forEach(r=>outProps.push(pl+' → '+bestLbl(r)));
+    if(rs.includes(iri))ds.forEach(d=>inProps.push(bestLbl(d)+' → '+pl));
+  }
+
+  // Extra annotations (complemento, associacao, etc.)
+  const extras=annots.filter(a=>
+    !a.p.includes('label')&&!a.p.includes('comment')&&
+    !a.p.includes('subClassOf')&&!a.p.includes('type')
+  ).slice(0,6);
+
+  return`<div class="tip-n">${esc(lbl)}</div>
+<div class="tip-i">${esc(iri)}</div>
+${cmt?`<div class="tip-c">${esc(cmt.slice(0,240))}${cmt.length>240?'…':''}</div>`:''}
+<div class="tip-m">
+  <div><b>Superclasse(s):</b> ${parents.length?esc(parents.slice(0,3).join(', '))+(parents.length>3?` +${parents.length-3}`:''):'—'}</div>
+  <div><b>Subclasses:</b> ${kids.length} ${kids.length>0?'('+kids.slice(0,3).map(k=>bestLbl(k)).join(', ')+(kids.length>3?'…':'')+')'  :''}</div>
+  ${outProps.length?`<div style="margin-top:4px"><b>Object Properties:</b> ${esc(outProps.slice(0,3).join(' · '))}${outProps.length>3?` +${outProps.length-3}`:''}</div>`:''}
+  ${inProps.length?`<div><b>Recebe de:</b> ${esc(inProps.slice(0,2).join(' · '))}${inProps.length>2?` +${inProps.length-2}`:''}</div>`:''}
+  ${extras.length?extras.map(a=>`<div style="margin-top:3px"><b>${esc(a.pS)}:</b> ${esc(String(a.val).slice(0,120))}${String(a.val).length>120?'…':''}</div>`).join(''):''}
+</div>`;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1955,23 +2043,30 @@ function runQ(){
   if(!raw)return;
   if(!G.quads.length){$id('qres').innerHTML=`<div style="color:var(--warn);padding:16px">⚠️ Ontologia não carregada.</div>`;return;}
   const t0=performance.now();
-  let rows;
+  let rows,usedRelax=false;
   try{rows=sparqlEnhanced(raw);}
   catch(e){$id('qres').innerHTML=`<div style="color:var(--bad);font-family:var(--mono);font-size:11px;padding:14px">❌ Erro: ${esc(String(e?.message||e))}</div>`;return;}
 
-  // Relaxed mode: remove FILTER(LANG) if no results
+  // Relaxed mode: progressively remove language filters if no results
   if((!rows||!rows.length)&&$id('qRelax').checked){
-    const relaxed=raw.replace(/FILTER\s*\(\s*LANG\s*\([^)]*\)\s*=\s*"[^"]*"\s*\)\s*\.?/gi,'').replace(/FILTER\s*\(\s*LANGMATCHES[^)]*\)\s*\.?/gi,'');
-    if(relaxed!==raw){try{rows=sparqlEnhanced(relaxed);}catch(_){}}
+    // Step 1: remove FILTER(LANG(?x)="pt") and FILTER(LANG(?x)="pt-br") etc
+    const r1=raw.replace(/FILTER\s*\(\s*LANG\s*\([^)]*\)\s*=+\s*["'][^"']*["']\s*\)/gi,'')
+                .replace(/FILTER\s*\(\s*LANGMATCHES[^)]*\)/gi,'');
+    if(r1!==raw){try{rows=sparqlEnhanced(r1);if(rows?.length)usedRelax=true;}catch(_){}}
+  }
+  if((!rows||!rows.length)&&$id('qRelax').checked){
+    // Step 2: also remove all remaining FILTERs
+    const r2=raw.replace(/FILTER\s*\([^)]+\)/gi,'');
+    if(r2!==raw){try{rows=sparqlEnhanced(r2);if(rows?.length)usedRelax=true;}catch(_){}}
   }
 
   const ms=(performance.now()-t0).toFixed(1);
   lastRows=rows||[];lastVars=[];
   const vm=raw.match(/SELECT[^{]+(WHERE|\{)/i);
   if(vm)for(const m of vm[0].matchAll(/\?(\w+)/g))lastVars.push(m[1]);
-  if(!lastVars.length&&rows?.length)lastVars=Object.keys(rows[0]);
-  lastVars=[...new Set(lastVars)];
-  $id('qmeta').textContent=`${(rows||[]).length} resultado${rows?.length!==1?'s':''} · ${ms}ms`;
+  if(!lastVars.length&&rows?.length)lastVars=Object.keys(rows[0]).filter(k=>!k.startsWith('__'));
+  lastVars=[...new Set(lastVars)].filter(v=>!v.startsWith('__'));
+  $id('qmeta').textContent=`${(rows||[]).length} resultado${rows?.length!==1?'s':''} · ${ms}ms${usedRelax?' · (modo tolerante)':''}`;
   $id('qres').innerHTML=renderTable(rows||[],lastVars);
 }
 
