@@ -8,33 +8,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════
-   DESIGN TOKENS  — dark-first, neo-brutalist
+   DESIGN TOKENS
 ═══════════════════════════════════════════ */
 :root{
-  --bg:    #060810;
-  --bg1:   #0b0e1a;
-  --bg2:   #0f1220;
-  --panel: #131728;
-  --card:  #181c2e;
-  --bord:  rgba(90,110,255,.18);
-  --bord2: rgba(90,110,255,.09);
-  --txt:   #dde2f8;
-  --txt2:  #8892c8;
-  --txt3:  #4a5280;
-  --acc:   #5a6eff;
-  --acc2:  #b06eff;
-  --teal:  #00d5c0;
-  --gold:  #f5c842;
-  --pink:  #ff5f8f;
-  --ok:    #36e8a0;
-  --warn:  #f5c842;
-  --bad:   #ff5f8f;
-  --sans:  'Outfit', system-ui, sans-serif;
-  --mono:  'IBM Plex Mono', monospace;
-  --head:  'Syne', sans-serif;
-  --sb:    280px;
-  --hdr:   52px;
-  --np:    300px;
+  --bg:#060810;--bg1:#0b0e1a;--bg2:#0f1220;
+  --panel:#131728;--card:#181c2e;
+  --bord:rgba(90,110,255,.18);--bord2:rgba(90,110,255,.09);
+  --txt:#dde2f8;--txt2:#8892c8;--txt3:#4a5280;
+  --acc:#5a6eff;--acc2:#b06eff;
+  --teal:#00d5c0;--gold:#f5c842;--pink:#ff5f8f;
+  --ok:#36e8a0;--warn:#f5c842;--bad:#ff5f8f;
+  --sans:'Outfit',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --head:'Syne',sans-serif;
+  --sb:288px;--hdr:54px;--np:310px;
 }
 [data-theme=light]{
   --bg:#f2f3fc;--bg1:#eceef8;--bg2:#e6e8f4;
@@ -45,37 +32,38 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
 html,body{height:100%;overflow:hidden;}
 body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13px;display:flex;flex-direction:column;}
-::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--bord);border-radius:2px;}
+::-webkit-scrollbar-thumb{background:rgba(90,110,255,.25);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(90,110,255,.45);}
 
 /* ══ HEADER ══ */
 #hdr{
   flex:none;height:var(--hdr);
-  background:rgba(6,8,16,.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  background:rgba(6,8,16,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
   border-bottom:1px solid var(--bord);
-  display:flex;align-items:center;gap:0;z-index:100;position:relative;
+  display:flex;align-items:center;z-index:100;position:relative;
 }
 .logo{display:flex;align-items:center;gap:10px;padding:0 18px;cursor:pointer;text-decoration:none;border-right:1px solid var(--bord2);height:100%;}
 .logo-mark{
-  width:30px;height:30px;border-radius:7px;flex-shrink:0;
+  width:32px;height:32px;border-radius:8px;flex-shrink:0;
   background:linear-gradient(135deg,var(--acc),var(--acc2));
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--head);font-weight:800;font-size:15px;color:#fff;
-  box-shadow:0 0 20px rgba(90,110,255,.5);
+  font-family:var(--head);font-weight:800;font-size:16px;color:#fff;
+  box-shadow:0 0 24px rgba(90,110,255,.55);
 }
 .logo-name{font-family:var(--head);font-weight:800;font-size:17px;letter-spacing:-.01em;}
 .logo-ver{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.05em;}
 .nav{display:flex;height:100%;margin-left:4px;}
 .nav-btn{
   border:none;background:transparent;color:var(--txt2);
-  height:100%;padding:0 14px;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600;
-  display:flex;align-items:center;gap:6px;letter-spacing:.02em;
-  position:relative;transition:.15s;border-bottom:2px solid transparent;
+  height:100%;padding:0 16px;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600;
+  display:flex;align-items:center;gap:7px;letter-spacing:.02em;
+  position:relative;transition:.15s;border-bottom:2px solid transparent;white-space:nowrap;
 }
 .nav-btn:hover{color:var(--txt);background:rgba(90,110,255,.06);}
-.nav-btn.on{color:var(--acc);border-bottom-color:var(--acc);background:rgba(90,110,255,.06);}
-.nav-btn .ni{font-size:13px;}
+.nav-btn.on{color:var(--acc);border-bottom-color:var(--acc);background:rgba(90,110,255,.07);}
+.nav-btn .ni{font-size:14px;}
 .hdr-right{display:flex;align-items:center;gap:6px;margin-left:auto;padding:0 14px;}
 .pill{
   display:flex;align-items:center;gap:6px;
@@ -89,7 +77,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
 .dot.warn{background:var(--warn);box-shadow:0 0 8px var(--warn);}
 .hbtn{
   border:1px solid var(--bord);background:var(--panel);color:var(--txt2);
-  padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;
+  padding:5px 11px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;
   font-family:var(--sans);transition:.15s;white-space:nowrap;
   display:flex;align-items:center;gap:5px;
 }
@@ -102,13 +90,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
 
 /* ══ WELCOME ══ */
 #pg-home{flex-direction:column;overflow-y:auto;align-items:center;padding:60px 20px 80px;}
-.hero{max-width:800px;width:100%;text-align:center;animation:fadeUp .5s both;}
+.hero{max-width:820px;width:100%;text-align:center;animation:fadeUp .5s both;}
 .hero-badge{
   display:inline-flex;align-items:center;gap:8px;
-  padding:5px 14px;border-radius:20px;margin-bottom:28px;
+  padding:5px 16px;border-radius:20px;margin-bottom:28px;
   border:1px solid rgba(90,110,255,.35);background:rgba(90,110,255,.08);
-  font-size:10px;font-family:var(--mono);color:var(--acc2);letter-spacing:.08em;
-  text-transform:uppercase;
+  font-size:10px;font-family:var(--mono);color:var(--acc2);letter-spacing:.08em;text-transform:uppercase;
 }
 .hero-title{
   font-family:var(--head);font-size:clamp(48px,7vw,82px);font-weight:800;
@@ -119,8 +106,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
 .hero-subtitle{font-size:13px;font-family:var(--mono);color:var(--txt3);letter-spacing:.06em;margin-bottom:24px;text-transform:uppercase;}
-.hero-desc{font-size:16px;color:var(--txt2);line-height:1.75;max-width:620px;margin:0 auto 48px;}
-.hero-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;max-width:880px;width:100%;margin-bottom:52px;animation:fadeUp .5s .08s both;}
+.hero-desc{font-size:16px;color:var(--txt2);line-height:1.75;max-width:640px;margin:0 auto 48px;}
+.hero-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;max-width:880px;width:100%;margin-bottom:52px;animation:fadeUp .5s .08s both;}
 .hcard{
   border:1px solid var(--bord);border-radius:14px;background:var(--panel);
   padding:22px 18px;text-align:left;cursor:pointer;transition:.2s;
@@ -133,11 +120,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
 }
 .hcard:hover{border-color:rgba(90,110,255,.4);transform:translateY(-3px);box-shadow:0 16px 48px rgba(0,0,0,.35);}
 .hcard:hover::before{transform:scaleX(1);}
-.hcard-icon{font-size:26px;margin-bottom:12px;display:block;}
+.hcard-icon{font-size:28px;margin-bottom:12px;display:block;}
 .hcard-title{font-family:var(--head);font-weight:700;font-size:14px;margin-bottom:6px;color:var(--txt);}
-.hcard-desc{font-size:12px;color:var(--txt2);line-height:1.6;}
+.hcard-desc{font-size:12px;color:var(--txt2);line-height:1.65;}
 .about-box{
-  max-width:800px;width:100%;border:1px solid var(--bord);border-radius:16px;
+  max-width:820px;width:100%;border:1px solid var(--bord);border-radius:16px;
   background:var(--panel);padding:36px;animation:fadeUp .5s .16s both;
 }
 .about-box h2{font-family:var(--head);font-size:24px;font-weight:800;margin-bottom:20px;color:var(--txt);}
@@ -162,6 +149,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
 .sb-hd{
   padding:12px 14px;border-bottom:1px solid var(--bord);
   display:flex;align-items:center;justify-content:space-between;flex:none;
+  background:rgba(0,0,0,.15);
 }
 .sb-hd-title{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);}
 .sb-body{flex:1;overflow-y:auto;padding:12px;}
@@ -191,11 +179,64 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
 .cross-btn{
   border:1px solid var(--bord);background:transparent;color:var(--txt2);
   padding:7px 5px;border-radius:7px;cursor:pointer;font-size:10px;font-weight:600;
-  font-family:var(--sans);transition:.12s;text-align:center;letter-spacing:.01em;
+  font-family:var(--sans);transition:.12s;text-align:center;
 }
 .cross-btn:hover{background:rgba(90,110,255,.08);color:var(--txt);}
 .cross-btn.on{background:rgba(90,110,255,.18);border-color:rgba(90,110,255,.5);color:var(--acc);}
 .cross-desc{font-size:10px;color:var(--txt3);line-height:1.6;padding:6px 8px;background:rgba(0,0,0,.15);border-radius:6px;margin-bottom:6px;}
+
+/* Cross relations panel — improved visibility */
+.xrel-panel{
+  background:rgba(0,213,192,.05);
+  border:1px solid rgba(0,213,192,.2);
+  border-radius:10px;
+  padding:8px;
+  margin-bottom:4px;
+}
+.xrel-panel-hd{
+  font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--teal);margin-bottom:6px;display:flex;align-items:center;gap:6px;
+}
+.xrel{
+  display:flex;align-items:flex-start;gap:6px;padding:6px 7px;border-radius:7px;
+  background:rgba(0,213,192,.07);border:1px solid rgba(0,213,192,.15);
+  font-size:10px;color:var(--teal);margin-bottom:3px;cursor:pointer;
+  transition:.12s;
+}
+.xrel:hover{background:rgba(0,213,192,.15);border-color:rgba(0,213,192,.35);}
+.xrel.active{background:rgba(0,213,192,.2);border-color:rgba(0,213,192,.5);}
+.xrel-body{flex:1;min-width:0;}
+.xrel-lbl{font-weight:600;font-size:10px;color:var(--teal);display:block;margin-bottom:2px;}
+.xrel-path{font-size:9px;color:rgba(0,213,192,.65);word-break:break-word;}
+.xrel-cnt{font-family:var(--mono);font-size:9px;padding:1px 5px;background:rgba(0,213,192,.15);border-radius:3px;flex-shrink:0;margin-top:1px;}
+
+/* ── Node click relations overlay ── */
+.rel-overlay{
+  position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  background:rgba(10,13,26,.96);backdrop-filter:blur(20px);
+  border:1px solid var(--bord);border-radius:14px;
+  padding:14px 16px;min-width:340px;max-width:520px;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);z-index:50;
+  animation:fadeUp .2s both;
+}
+.rel-overlay-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.rel-overlay-title{font-family:var(--head);font-size:14px;font-weight:800;color:var(--txt);}
+.rel-overlay-close{border:none;background:none;color:var(--txt3);cursor:pointer;font-size:16px;padding:0 4px;line-height:1;}
+.rel-overlay-close:hover{color:var(--txt);}
+.rel-section{margin-bottom:10px;}
+.rel-section-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--txt3);margin-bottom:5px;}
+.rel-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 9px;border-radius:20px;margin:2px;cursor:pointer;
+  font-size:10px;font-weight:600;transition:.12s;
+}
+.rel-chip.hier{background:rgba(90,110,255,.12);border:1px solid rgba(90,110,255,.25);color:#8faaff;}
+.rel-chip.hier:hover{background:rgba(90,110,255,.25);}
+.rel-chip.prop{background:rgba(176,110,255,.12);border:1px solid rgba(176,110,255,.25);color:#c49dff;}
+.rel-chip.prop:hover{background:rgba(176,110,255,.25);}
+.rel-chip.cross{background:rgba(0,213,192,.1);border:1px solid rgba(0,213,192,.25);color:#00d5c0;}
+.rel-chip.cross:hover{background:rgba(0,213,192,.22);}
+.rel-chip-arrow{opacity:.6;}
 
 /* Layout picker */
 .layout-row{display:flex;gap:3px;margin-bottom:8px;}
@@ -209,9 +250,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
 
 /* Sliders */
 .sl-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
-.sl-row label{font-size:10px;color:var(--txt2);min-width:72px;}
+.sl-row label{font-size:10px;color:var(--txt2);min-width:80px;}
 .sl-row input[type=range]{flex:1;accent-color:var(--acc);height:3px;cursor:pointer;}
-.sl-val{font-family:var(--mono);font-size:9px;color:var(--acc);min-width:26px;text-align:right;}
+.sl-val{font-family:var(--mono);font-size:9px;color:var(--acc);min-width:28px;text-align:right;}
 
 /* Toggle */
 .tog{display:flex;align-items:center;gap:7px;padding:4px 0;cursor:pointer;}
@@ -231,7 +272,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
 /* Input */
 .inp{
   width:100%;border:1px solid var(--bord);background:var(--panel);color:var(--txt);
-  padding:6px 9px;border-radius:7px;font-family:var(--sans);font-size:11px;
+  padding:7px 10px;border-radius:7px;font-family:var(--sans);font-size:11px;
   outline:none;transition:.15s;
 }
 .inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(90,110,255,.12);}
@@ -240,7 +281,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
 /* Buttons */
 .btn{
   border:1px solid var(--bord);background:var(--panel);color:var(--txt2);
-  padding:6px 11px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;
+  padding:7px 12px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;
   font-family:var(--sans);transition:.15s;white-space:nowrap;
   display:inline-flex;align-items:center;gap:5px;
 }
@@ -249,18 +290,20 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
 .btn.prim:hover{box-shadow:0 6px 24px rgba(90,110,255,.45);transform:translateY(-1px);}
 .btn.ok{border-color:rgba(54,232,160,.3);color:var(--ok);}
 .btn.ok:hover{background:rgba(54,232,160,.08);}
-.btn.sm{padding:4px 8px;font-size:10px;}
+.btn.teal{border-color:rgba(0,213,192,.3);color:var(--teal);}
+.btn.teal:hover{background:rgba(0,213,192,.08);}
+.btn.sm{padding:4px 9px;font-size:10px;}
 .btn.full{width:100%;justify-content:center;}
 .btn-row{display:flex;gap:4px;flex-wrap:wrap;}
 
 /* Canvas area */
 .cv-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
 .cv-toolbar{
-  padding:7px 11px;border-bottom:1px solid var(--bord);
+  padding:7px 12px;border-bottom:1px solid var(--bord);
   display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:none;
   background:var(--bg1);
 }
-.cv-meta{font-family:var(--mono);font-size:10px;color:var(--txt3);padding:3px 7px;border:1px solid var(--bord2);border-radius:4px;}
+.cv-meta{font-family:var(--mono);font-size:10px;color:var(--txt3);padding:3px 8px;border:1px solid var(--bord2);border-radius:4px;}
 .cv-inner{flex:1;position:relative;overflow:hidden;}
 canvas.gv{display:block;width:100%;height:100%;cursor:grab;touch-action:none;}
 canvas.gv:active{cursor:grabbing;}
@@ -272,7 +315,7 @@ canvas.gv:active{cursor:grabbing;}
 }
 #np.closed{width:0;}
 #np-inner{width:var(--np);display:flex;flex-direction:column;height:100%;overflow:hidden;}
-.np-hd{padding:11px 13px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between;flex:none;}
+.np-hd{padding:11px 13px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between;flex:none;background:rgba(0,0,0,.15);}
 .np-hd h3{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);}
 .np-body{flex:1;overflow-y:auto;padding:13px;}
 
@@ -299,8 +342,15 @@ canvas.gv:active{cursor:grabbing;}
 .rel-lbl{font-weight:600;flex:1;}
 .rel-nm{font-size:10px;color:var(--txt3);}
 
-/* Style editor in node panel */
-.style-sec{margin-top:10px;}
+/* Cross-rel row in node detail */
+.xrel-row{
+  display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:7px;
+  background:rgba(0,213,192,.07);border:1px solid rgba(0,213,192,.18);
+  font-size:11px;color:var(--teal);margin-bottom:4px;cursor:pointer;transition:.12s;
+}
+.xrel-row:hover{background:rgba(0,213,192,.14);}
+
+/* Style editor */
 .color-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .color-row label{font-size:11px;color:var(--txt2);flex:1;}
 .color-row input[type=color]{width:32px;height:24px;border:1px solid var(--bord);border-radius:5px;cursor:pointer;background:transparent;padding:1px;}
@@ -312,17 +362,16 @@ canvas.gv:active{cursor:grabbing;}
 .ne-sl input[type=range]{flex:1;accent-color:var(--acc);}
 .ne-sl span{font-family:var(--mono);font-size:9px;color:var(--txt3);min-width:28px;text-align:right;}
 
-/* Rel badge in sidebar */
-.xrel{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:7px;background:rgba(0,213,192,.07);border:1px solid rgba(0,213,192,.18);font-size:10px;color:var(--teal);margin-bottom:3px;}
-.xrel .xa{font-family:var(--mono);}
-
 /* SPARQL */
 #pg-sparql{flex-direction:row;overflow:hidden;}
-.sq-left{width:300px;flex:none;border-right:1px solid var(--bord);background:var(--bg1);display:flex;flex-direction:column;overflow:hidden;}
-.sq-left-hd{padding:12px 14px;border-bottom:1px solid var(--bord);flex:none;}
-.sq-left-hd h2{font-family:var(--head);font-size:12px;font-weight:700;color:var(--txt);margin-bottom:3px;}
+.sq-left{width:310px;flex:none;border-right:1px solid var(--bord);background:var(--bg1);display:flex;flex-direction:column;overflow:hidden;}
+.sq-left-hd{padding:12px 14px;border-bottom:1px solid var(--bord);flex:none;background:rgba(0,0,0,.15);}
+.sq-left-hd h2{font-family:var(--head);font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px;}
 .sq-left-hd p{font-size:10px;color:var(--txt3);}
-.preset-scroll{flex:1;overflow-y:auto;padding:10px;}
+
+/* Preset search */
+.preset-search{padding:8px 10px;border-bottom:1px solid var(--bord2);flex:none;}
+.preset-scroll{flex:1;overflow-y:auto;padding:8px;}
 .pcat{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--txt3);margin:12px 0 6px;display:flex;align-items:center;gap:6px;}
 .pcat::after{content:'';flex:1;height:1px;background:var(--bord2);}
 .pbtn{
@@ -334,8 +383,9 @@ canvas.gv:active{cursor:grabbing;}
 .pbtn.on{background:rgba(90,110,255,.12);border-color:rgba(90,110,255,.3);}
 .p-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
 .p-body{flex:1;min-width:0;}
-.p-title{font-size:12px;font-weight:600;color:var(--txt);display:block;margin-bottom:2px;}
-.p-desc{font-size:10px;color:var(--txt3);line-height:1.45;display:block;}
+.p-title{font-size:11px;font-weight:600;color:var(--txt);display:block;margin-bottom:2px;}
+.p-desc{font-size:9px;color:var(--txt3);line-height:1.45;display:block;}
+.pbtn.hidden{display:none;}
 
 .sq-right{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .sq-editor{flex:none;border-bottom:1px solid var(--bord);background:var(--bg1);}
@@ -344,7 +394,8 @@ canvas.gv:active{cursor:grabbing;}
 .sq-ta{
   display:block;width:100%;border:none;background:transparent;color:var(--txt);
   padding:11px 13px;font-family:var(--mono);font-size:11px;line-height:1.65;
-  min-height:150px;max-height:250px;resize:vertical;outline:none;
+  min-height:160px;max-height:260px;resize:vertical;outline:none;
+  tab-size:2;
 }
 .sq-ta::placeholder{color:var(--txt3);}
 .sq-results{flex:1;overflow-y:auto;background:var(--bg);}
@@ -354,14 +405,14 @@ canvas.gv:active{cursor:grabbing;}
   background:var(--bg1);position:sticky;top:0;z-index:5;
 }
 .sq-res-hd h2{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);}
-.res-badge{font-family:var(--mono);font-size:10px;color:var(--acc);margin-left:auto;padding:2px 7px;border-radius:4px;background:rgba(90,110,255,.1);border:1px solid rgba(90,110,255,.2);}
+.res-badge{font-family:var(--mono);font-size:10px;color:var(--acc);margin-left:auto;padding:2px 8px;border-radius:4px;background:rgba(90,110,255,.1);border:1px solid rgba(90,110,255,.2);}
 .res-table{width:100%;border-collapse:collapse;font-size:11px;}
 .res-table th{
-  padding:7px 11px;border-bottom:2px solid var(--bord);text-align:left;
+  padding:7px 12px;border-bottom:2px solid var(--bord);text-align:left;
   font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--txt3);background:var(--bg1);position:sticky;top:0;z-index:2;white-space:nowrap;
 }
-.res-table td{padding:8px 11px;border-bottom:1px solid rgba(90,110,255,.05);vertical-align:top;max-width:360px;}
+.res-table td{padding:8px 12px;border-bottom:1px solid rgba(90,110,255,.05);vertical-align:top;max-width:380px;}
 .res-table tr:hover td{background:rgba(90,110,255,.04);}
 .cn{font-weight:600;color:var(--txt);font-size:11px;}
 .ci{font-family:var(--mono);font-size:9px;color:var(--txt3);margin-top:2px;word-break:break-all;}
@@ -371,7 +422,7 @@ canvas.gv:active{cursor:grabbing;}
 #tip{
   position:fixed;z-index:9999;pointer-events:none;
   background:var(--card);border:1px solid var(--bord);border-radius:12px;
-  padding:13px 15px;max-width:420px;font-size:12px;line-height:1.5;
+  padding:13px 15px;max-width:440px;font-size:12px;line-height:1.5;
   box-shadow:0 16px 48px rgba(0,0,0,.65);
   opacity:0;transform:translateY(5px);transition:opacity .1s,transform .1s;
 }
@@ -382,9 +433,14 @@ canvas.gv:active{cursor:grabbing;}
 .tip-m{font-size:11px;color:var(--txt3);display:flex;flex-direction:column;gap:3px;}
 .tip-m b{color:var(--txt2);}
 .tip-m div{padding:1px 0;}
+.tip-xr{margin-top:6px;padding-top:6px;border-top:1px solid var(--bord2);}
+.tip-xr-lbl{font-size:9px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:4px;}
+.tip-xr-item{font-size:10px;color:rgba(0,213,192,.8);padding:2px 0;}
 
 /* Status bar */
 #sbar{flex:none;border-top:1px solid var(--bord);background:var(--bg1);padding:5px 14px;display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10px;color:var(--txt3);}
+
+/* Edge legend */
 .edge-legend{display:flex;flex-direction:column;gap:5px;}
 .el-row{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--txt2);}
 
@@ -393,6 +449,32 @@ canvas.gv:active{cursor:grabbing;}
 .alert.warn{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.25);color:var(--warn);}
 .alert.info{background:rgba(90,110,255,.08);border:1px solid rgba(90,110,255,.2);color:var(--acc2);}
 .sep{height:1px;background:var(--bord2);margin:8px 0;}
+
+/* Empty state */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;color:var(--txt3);text-align:center;padding:40px;
+}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.5;}
+.empty-title{font-family:var(--head);font-size:16px;font-weight:700;color:var(--txt2);margin-bottom:6px;}
+.empty-desc{font-size:12px;line-height:1.6;}
+
+/* Collapsible section */
+.collapsible-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;padding:5px 0;user-select:none;
+}
+.collapsible-hd .arrow{font-size:10px;color:var(--txt3);transition:.2s;}
+.collapsible-hd.open .arrow{transform:rotate(90deg);}
+.collapsible-body{display:none;}
+.collapsible-body.open{display:block;}
+
+/* SPARQL query number badge */
+.q-num{
+  font-family:var(--mono);font-size:8px;padding:1px 5px;
+  background:rgba(90,110,255,.12);border-radius:3px;color:var(--txt3);
+  margin-left:auto;flex-shrink:0;
+}
 </style>
 </head>
 <body data-theme="dark">
@@ -404,14 +486,14 @@ canvas.gv:active{cursor:grabbing;}
     <div class="logo-mark">O</div>
     <div>
       <div class="logo-name">OntoHate</div>
-      <div class="logo-ver">v2.0 · 2026</div>
+      <div class="logo-ver">v3.0 · 2026</div>
     </div>
   </div>
   <nav class="nav">
     <button class="nav-btn on" data-tab="home"><span class="ni">🏛</span>Início</button>
     <button class="nav-btn" data-tab="tax"><span class="ni">🌳</span>Taxonomia</button>
     <button class="nav-btn" data-tab="onto"><span class="ni">🔗</span>Ontologia</button>
-    <button class="nav-btn" data-tab="sparql"><span class="ni">⚡</span>SPARQL</button>
+    <button class="nav-btn" data-tab="sparql"><span class="ni">⚡</span>SPARQL <span style="font-family:var(--mono);font-size:9px;background:rgba(90,110,255,.2);padding:1px 5px;border-radius:3px;margin-left:2px">30+</span></button>
   </nav>
   <div class="hdr-right">
     <div class="pill"><span class="dot warn" id="sdot"></span><span id="stxt">Carregando…</span></div>
@@ -427,19 +509,19 @@ canvas.gv:active{cursor:grabbing;}
   <div class="hero">
     <div class="hero-badge">✦ Ontologia Formal · Discurso de Ódio Online</div>
     <h1 class="hero-title"><span>OntoHate</span></h1>
-    <div class="hero-subtitle">Versão 2.0 · Luiz Rogério Lopes Silva</div>
+    <div class="hero-subtitle">Versão 3.0 · Luiz Rogério Lopes Silva</div>
     <p class="hero-desc">Uma ontologia computacional para representar, analisar e explorar o ecossistema do discurso de ódio online — seus agentes, estratégias, contextos, vítimas e consequências.</p>
     <div class="hero-cards">
-      <div class="hcard" onclick="gotoTab('tax')"><span class="hcard-icon">🌳</span><div class="hcard-title">Taxonomia</div><div class="hcard-desc">Hierarquia de classes com seleção de dimensões, cruzamentos e layouts configuráveis.</div></div>
-      <div class="hcard" onclick="gotoTab('onto')"><span class="hcard-icon">🔗</span><div class="hcard-title">Ontologia</div><div class="hcard-desc">Visualize Object Properties e relações cruzadas entre as dimensões da ontologia.</div></div>
-      <div class="hcard" onclick="gotoTab('sparql')"><span class="hcard-icon">⚡</span><div class="hcard-title">SPARQL</div><div class="hcard-desc">18 questões de competência prontas. Editor com execução imediata e exportação CSV/JSON.</div></div>
+      <div class="hcard" onclick="gotoTab('tax')"><span class="hcard-icon">🌳</span><div class="hcard-title">Taxonomia</div><div class="hcard-desc">Hierarquia de classes com seleção de dimensões, cruzamentos configuráveis e relações visíveis ao clicar.</div></div>
+      <div class="hcard" onclick="gotoTab('onto')"><span class="hcard-icon">🔗</span><div class="hcard-title">Ontologia</div><div class="hcard-desc">Visualize Object Properties, relações cruzadas entre dimensões — detalhadas ao clicar em qualquer nó.</div></div>
+      <div class="hcard" onclick="gotoTab('sparql')"><span class="hcard-icon">⚡</span><div class="hcard-title">SPARQL</div><div class="hcard-desc">30+ questões de competência reais, agrupadas por tema. Editor completo com exportação CSV/JSON.</div></div>
       <div class="hcard" onclick="document.getElementById('fileIn').click()"><span class="hcard-icon">📂</span><div class="hcard-title">Carregar Arquivo</div><div class="hcard-desc">Importe seu próprio .ttl, .owl ou .rdf para explorar interativamente.</div></div>
     </div>
     <div class="about-box">
       <h2>Sobre o Projeto</h2>
       <p>A <strong>OntoHate</strong> é uma ontologia computacional desenvolvida para representar formalmente o fenômeno do <em>Discurso de Ódio Online</em>. O projeto é resultado da tese de doutorado de <strong>Luiz Rogério Lopes Silva</strong>, que sistematizou dimensões, conceitos e relações a partir de revisão bibliográfica aprofundada, análise de corpora digitais e modelagem ontológica rigorosa.</p>
       <p>A ontologia organiza o fenômeno em <strong>dimensões principais</strong>: Núcleo (agentes), Natureza, Proposição Odienta, Manifestação, Estratégias Discursivas, Recursos, Motivação, Contexto, Consequência e Moderação — interligadas por relações formais que descrevem como o ódio é produzido, amplificado, percebido e mitigado em ambientes digitais.</p>
-      <p>Este visualizador permite explorar a taxonomia de classes, as relações semânticas entre dimensões, as Object Properties e executar consultas SPARQL sobre os dados da ontologia. Licença: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>.</p>
+      <p>Este visualizador permite explorar a taxonomia de classes, as relações semânticas entre dimensões (visíveis ao clicar em qualquer nó), as Object Properties e executar 30+ consultas SPARQL reais sobre os dados da ontologia. Licença: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>.</p>
       <div class="stat-row">
         <div class="stat"><div class="stat-n" id="ws-c">—</div><div class="stat-l">Classes</div></div>
         <div class="stat"><div class="stat-n" id="ws-d">—</div><div class="stat-l">Dimensões</div></div>
@@ -473,10 +555,16 @@ canvas.gv:active{cursor:grabbing;}
           </div>
           <div class="cross-desc" id="cmDesc">Exibe a união de todas as dimensões selecionadas.</div>
         </div>
+
+        <!-- Improved cross-rel section with click-to-highlight -->
         <div class="sec">
           <div class="sec-hd">Relações entre dimensões</div>
-          <div id="taxXRelList"><span style="font-size:10px;color:var(--txt3)">Carregando…</span></div>
+          <div class="xrel-panel">
+            <div class="xrel-panel-hd">⛓ Clique para destacar no grafo</div>
+            <div id="taxXRelList"><span style="font-size:10px;color:var(--txt3)">Carregando…</span></div>
+          </div>
         </div>
+
         <div class="sec">
           <div class="sec-hd">Layout</div>
           <div class="layout-row">
@@ -526,15 +614,19 @@ canvas.gv:active{cursor:grabbing;}
   <div class="cv-wrap">
     <div class="cv-toolbar">
       <span class="cv-meta" id="tMeta">—</span>
+      <span class="cv-meta" style="color:var(--teal)">💡 Clique em um nó para ver relações cruzadas</span>
       <div style="margin-left:auto;display:flex;gap:5px">
         <button class="btn sm" onclick="gTax&&gTax.zoomIn()">＋</button>
         <button class="btn sm" onclick="gTax&&gTax.zoomOut()">－</button>
         <button class="btn sm" onclick="gTax&&gTax.fit()">⊡ Fit</button>
         <button class="btn sm ok" onclick="gTax&&gTax.exportPng()">↓ PNG</button>
-        <button class="btn sm" onclick="gTax&&gTax.exportPng(2)">↓ PNG 2×</button>
       </div>
     </div>
-    <div class="cv-inner"><canvas id="cvTax" class="gv"></canvas></div>
+    <div class="cv-inner" id="taxCvInner">
+      <canvas id="cvTax" class="gv"></canvas>
+      <!-- Relation overlay for taxonomy -->
+      <div id="taxRelOverlay" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:50;"></div>
+    </div>
   </div>
 </div>
 
@@ -553,12 +645,18 @@ canvas.gv:active{cursor:grabbing;}
           <div class="sec-hd">Elementos</div>
           <label class="tog"><input type="checkbox" id="oSub" checked onchange="buildOnto()"><span>Hierarquia (subClassOf)</span></label>
           <label class="tog"><input type="checkbox" id="oProps" checked onchange="buildOnto()"><span>Object Properties</span></label>
-          <label class="tog"><input type="checkbox" id="oXR" onchange="buildOnto()"><span>Relações cruzadas entre dimensões</span></label>
+          <label class="tog"><input type="checkbox" id="oXR" checked onchange="buildOnto()"><span>Relações cruzadas entre dimensões</span></label>
         </div>
+
+        <!-- Improved cross-rel section with click-to-highlight -->
         <div class="sec">
-          <div class="sec-hd">Relações entre dimensões detectadas</div>
-          <div id="oXRelList"><span style="font-size:10px;color:var(--txt3)">Carregando…</span></div>
+          <div class="sec-hd">Relações entre dimensões</div>
+          <div class="xrel-panel">
+            <div class="xrel-panel-hd">⛓ Clique para destacar no grafo</div>
+            <div id="oXRelList"><span style="font-size:10px;color:var(--txt3)">Carregando…</span></div>
+          </div>
         </div>
+
         <div class="sec">
           <div class="sec-hd">Layout</div>
           <div class="layout-row">
@@ -611,6 +709,7 @@ canvas.gv:active{cursor:grabbing;}
   <div class="cv-wrap">
     <div class="cv-toolbar">
       <span class="cv-meta" id="oMeta">—</span>
+      <span class="cv-meta" style="color:var(--teal)">💡 Clique em um nó para ver detalhes e relações cruzadas</span>
       <div style="margin-left:auto;display:flex;gap:5px">
         <button class="btn sm" onclick="gOnto&&gOnto.zoomIn()">＋</button>
         <button class="btn sm" onclick="gOnto&&gOnto.zoomOut()">－</button>
@@ -630,8 +729,10 @@ canvas.gv:active{cursor:grabbing;}
         <button class="btn sm" onclick="document.getElementById('np').classList.toggle('closed')">⇥</button>
       </div>
       <div class="np-body" id="npBox">
-        <div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0">
-          Clique em um nó para ver detalhes, relações e opções de estilo.
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">Nenhum nó selecionado</div>
+          <div class="empty-desc">Clique em um nó para ver detalhes, relações entre dimensões e opções de estilo.</div>
         </div>
       </div>
     </div>
@@ -643,7 +744,10 @@ canvas.gv:active{cursor:grabbing;}
   <div class="sq-left">
     <div class="sq-left-hd">
       <h2>Questões de Competência</h2>
-      <p>Clique para carregar e executar. Ctrl+Enter para re-executar.</p>
+      <p>30 perguntas reais respondidas pela ontologia</p>
+    </div>
+    <div class="preset-search">
+      <input class="inp" id="presetQ" placeholder="🔍 filtrar questões…" oninput="filterPresets(this.value)">
     </div>
     <div class="preset-scroll" id="presetList"></div>
   </div>
@@ -656,7 +760,7 @@ canvas.gv:active{cursor:grabbing;}
         <button class="btn sm" onclick="navigator.clipboard?.writeText(document.getElementById('sqta').value)">Copiar</button>
         <button class="btn sm ok" onclick="expCsv()">↓ CSV</button>
         <button class="btn sm ok" onclick="expJson()">↓ JSON</button>
-        <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--txt2);cursor:pointer;margin-left:4px">
+        <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--txt2);cursor:pointer;">
           <input type="checkbox" id="qRelax" checked style="accent-color:var(--acc)"> Tolerante
         </label>
         <button class="btn sm" onclick="runDiag()">🔬 Diagnóstico</button>
@@ -668,7 +772,13 @@ canvas.gv:active{cursor:grabbing;}
         <h2>Resultados</h2>
         <span class="res-badge" id="qmeta">—</span>
       </div>
-      <div id="qres" style="padding:16px;color:var(--txt2);font-size:13px">← Selecione uma questão ou escreva uma consulta SPARQL.</div>
+      <div id="qres" style="padding:20px">
+        <div class="empty-state" style="height:auto;padding:20px 0">
+          <div class="empty-icon">⚡</div>
+          <div class="empty-title">Nenhuma consulta executada</div>
+          <div class="empty-desc">Selecione uma das 30+ questões à esquerda ou escreva sua própria consulta SPARQL.</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -678,7 +788,7 @@ canvas.gv:active{cursor:grabbing;}
 <div id="sbar">
   <span class="dot warn" id="dbDot"></span>
   <span id="dbTxt">Aguardando…</span>
-  <span style="margin-left:auto;font-size:9px">build 2026.03-r4</span>
+  <span style="margin-left:auto;font-size:9px">build 2026.03-r5 · v3.0</span>
 </div>
 
 <script>
@@ -705,7 +815,7 @@ function gotoTab(t){
 document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>gotoTab(b.dataset.tab));
 
 /* ══════════════════════════════════════════════════════
-   TURTLE PARSER — full, streaming
+   TURTLE PARSER
 ══════════════════════════════════════════════════════ */
 function parseTurtle(txt){
   const pfx={},quads=[];
@@ -725,7 +835,6 @@ function parseTurtle(txt){
     while(i<src.length){
       if(/\s/.test(src[i])){i++;continue;}
       if(src[i]==='#'){while(i<src.length&&src[i]!=='\n')i++;continue;}
-      // triple-quoted strings
       if(src.slice(i,i+3)==='"""'||src.slice(i,i+3)==="'''"){
         const q3=src.slice(i,i+3);let j=i+3;
         while(j<src.length&&src.slice(j,j+3)!==q3)j++;
@@ -735,7 +844,6 @@ function parseTurtle(txt){
         else if(src.slice(j,j+2)==='^^'){j+=2;const m=src.slice(j).match(/^(<[^>]+>|[\w]+:[\w]+)/);if(m){dt=exp(m[1]);j+=m[1].length;}}
         yield{type:'lit',val:v,lang,dt};i=j;continue;
       }
-      // single-quoted strings
       if(src[i]==='"'||src[i]==="'"){
         const q=src[i];let j=i+1,v='';
         while(j<src.length&&src[j]!==q){if(src[j]==='\\'){v+=src[j+1];j+=2;}else{v+=src[j++];}}
@@ -798,7 +906,7 @@ function parseTurtle(txt){
 }
 
 /* ══════════════════════════════════════════════════════
-   RDF INDEX — with fast lookup maps
+   RDF INDEX
 ══════════════════════════════════════════════════════ */
 const NS={
   RDF:'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -837,7 +945,6 @@ function buildIndex(quads){
         Rcmt=NS.RDFS+'comment',Rdom=NS.RDFS+'domain',Rrng=NS.RDFS+'range',
         Ocls=NS.OWL+'Class',Oobj=NS.OWL+'ObjectProperty';
 
-  // Build indexes
   for(const q of quads){
     if(!G.byS.has(q.s))G.byS.set(q.s,[]);G.byS.get(q.s).push(q);
     if(!G.byP.has(q.p))G.byP.set(q.p,[]);G.byP.get(q.p).push(q);
@@ -855,7 +962,6 @@ function buildIndex(quads){
   }
   for(const c of G.classes)G.labels.set(c,bestLbl(c));
 
-  // Annots
   const skipP=new Set([Rtype,Rsub]);
   for(const q of quads){
     if(!G.classes.has(q.s)||skipP.has(q.p))continue;
@@ -863,15 +969,11 @@ function buildIndex(quads){
     G.annots.get(q.s).push({p:q.p,pS:shortIri(q.p),val:q.o,lang:q.oLang||'',dt:q.oDt||''});
   }
 
-  // Find root
   for(const r of ROOTS_IRI){if(G.classes.has(r)){G.rootIri=r;break;}}
-
-  // Dims = direct children of root, or top-level classes
   if(G.rootIri){
     const kids=G.childOf.get(G.rootIri);
     if(kids&&kids.size>0){G.dims=[...kids].sort((a,b)=>bestLbl(a).localeCompare(bestLbl(b),'pt-BR'));return;}
   }
-  // fallback: top-level classes (no parent within classes)
   const block=new Set([NS.OWL+'Thing',NS.RDFS+'Resource']);
   const tops=[...G.classes].filter(c=>{
     if(block.has(c))return false;
@@ -882,7 +984,7 @@ function buildIndex(quads){
 }
 
 /* ══════════════════════════════════════════════════════
-   SPARQL ENGINE — complete & correct
+   SPARQL ENGINE
 ══════════════════════════════════════════════════════ */
 const NSDEF={
   rdf:'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -899,7 +1001,6 @@ function expIri(t,pfxMap){
   if(t==='a')return NS.RDF+'type';
   if(t.startsWith('<')&&t.endsWith('>'))return t.slice(1,-1);
   if(t.startsWith('"')||t.startsWith("'"))return null;
-  // prefixed name: everything after colon is the local name (no restriction on chars)
   const ci=t.indexOf(':');
   if(ci>0){
     const p=t.slice(0,ci),l=t.slice(ci+1);
@@ -921,29 +1022,21 @@ function transSubClsOf(iri){
 }
 function evalFilter(expr,b){
   const e=expr.trim();
-  // LANG(?x) = "pt"  or  LANG(?x)="pt"
   const lm=e.match(/^LANG\s*\(\s*\?(\w+)\s*\)\s*=+\s*["']([^"']*)["']\s*$/i);
   if(lm){return(b['__lg__'+lm[1]]||'').toLowerCase()===lm[2].toLowerCase();}
-  // LANGMATCHES(LANG(?x),"pt")
   const lmm=e.match(/LANGMATCHES\s*\(\s*LANG\s*\(\s*\?(\w+)\s*\)\s*,\s*["']([^"']*)["']\s*\)/i);
   if(lmm){const l=(b['__lg__'+lmm[1]]||'').toLowerCase(),p=lmm[2].toLowerCase();return p==='*'?l!=='':l===p||l.startsWith(p+'-');}
-  // STR(?x) contains / CONTAINS
   const cm=e.match(/CONTAINS\s*\(\s*(?:LCASE\s*\(\s*(?:STR\s*\()?\s*\?(\w+)\s*\)?)\s*\)\s*,\s*["']([^"']*)["']\s*\)/i)||e.match(/CONTAINS\s*\(\s*\?(\w+)\s*,\s*["']([^"']*)["']\s*\)/i);
   if(cm){return String(b[cm[1]]||'').toLowerCase().includes(cm[2].toLowerCase());}
-  // STRSTARTS
   const ssm=e.match(/STRSTARTS\s*\(\s*\?(\w+)\s*,\s*["']([^"']*)["']\s*\)/i);
   if(ssm){return String(b[ssm[1]]||'').startsWith(ssm[2]);}
-  // regex
   const rm=e.match(/regex\s*\(\s*(?:STR\s*\()?\s*\?(\w+)\s*\)?\s*,\s*["']([^"']*)["']\s*(?:,\s*["']([^"']*)["']\s*)?\)/i);
   if(rm){try{return new RegExp(rm[2],rm[3]||'i').test(String(b[rm[1]]||''));}catch{return false;}}
-  // isIRI
   const iim=e.match(/isIRI\s*\(\s*\?(\w+)\s*\)/i);
   if(iim){const v=b[iim[1]]||'';return v.startsWith('http://')||v.startsWith('https://');}
-  // NOT EXISTS — correct implementation using index
   const nem=e.match(/NOT\s+EXISTS\s*\{([\s\S]+?)\}/i);
   if(nem){
     const inner=nem[1].trim();
-    // match a simple triple pattern
     const TERM='(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+)';
     const tm=inner.match(new RegExp(`(${TERM})\\s+(${TERM})\\s+(${TERM})`));
     if(tm){
@@ -959,16 +1052,12 @@ function evalFilter(expr,b){
     }
     return true;
   }
-  // != operator
   const neq=e.match(/\?(\w+)\s*!=\s*([^\s)]+)/);
   if(neq){const a=b[neq[1]],bv=expIri(neq[2],NSDEF)||neq[2].replace(/[<>"']/g,'');return a!==bv;}
-  // = operator with literal
   const eq=e.match(/\?(\w+)\s*=+\s*["']([^"']*)["']/);
   if(eq){return b[eq[1]]===eq[2];}
-  // BOUND
   const bm=e.match(/BOUND\s*\(\s*\?(\w+)\s*\)/i);
   if(bm){return b[bm[1]]!==undefined&&b[bm[1]]!=='';}
-  // Default: pass (unknown filter)
   return true;
 }
 
@@ -995,7 +1084,6 @@ function matchTriple(pat,binds,pfxMap,transitive){
       continue;
     }
 
-    // Use indexed lookup when subject AND predicate are bound
     if(sv!==null&&pv!==null){
       const k=sv+'|'+pv;const cands=G.bySP.get(k);if(!cands)continue;
       for(const q of cands){
@@ -1035,7 +1123,6 @@ function splitUnion(blk){
 }
 
 function evalWhere(blk,binds,pfxMap){
-  // Robust FILTER extraction that handles nested parens including NOT EXISTS{...}
   const filters=[];
   function extractFilters(src){
     let out='',i=0;
@@ -1044,7 +1131,6 @@ function evalWhere(blk,binds,pfxMap){
       if(!fm){out+=src.slice(i);break;}
       out+=src.slice(i,i+fm.index);
       i+=fm.index+fm[0].length;
-      // collect everything up to matching close paren, tracking nested {} for NOT EXISTS
       let depth=1,content='';
       while(i<src.length&&depth>0){
         if(src[i]==='(')depth++;
@@ -1056,14 +1142,11 @@ function evalWhere(blk,binds,pfxMap){
     return out;
   }
   const noF=extractFilters(blk);
-
-  // BIND extraction
   const bindsArr=[];
   const bRe=/BIND\s*\(([^)]+)\s+AS\s+\?(\w+)\s*\)/gi;
   let bm;while((bm=bRe.exec(noF))!==null)bindsArr.push({expr:bm[1].trim(),v:bm[2]});
   const noFB=noF.replace(/BIND\s*\([^)]+\)/gi,'');
 
-  // Detect UNION at top level (not inside nested {})
   function hasTopLevelUnion(src){
     let d=0;
     for(let i=0;i<src.length-6;i++){
@@ -1084,7 +1167,6 @@ function evalWhere(blk,binds,pfxMap){
     result=evalSimple(noFB,binds,pfxMap);
   }
 
-  // Apply BINDs
   for(const bd of bindsArr){
     const litM=bd.expr.match(/^"([^"]*)"(?:@(\w+))?$/);
     if(litM)result=result.map(b=>({...b,[bd.v]:litM[1],['__lg__'+bd.v]:litM[2]||''}));
@@ -1092,13 +1174,11 @@ function evalWhere(blk,binds,pfxMap){
     if(repM)result=result.map(b=>({...b,[bd.v]:String(b[repM[1]]||'').replace(new RegExp(repM[2]),repM[3])}));
   }
 
-  // Apply FILTERs
   for(const f of filters)result=result.filter(b=>evalFilter(f,b));
   return result;
 }
 
 function evalSimple(blk,binds,pfxMap){
-  // Extract OPTIONALs (balanced braces)
   const opts=[];
   function extractOptionals(src){
     let out='',i=0;
@@ -1114,13 +1194,9 @@ function evalSimple(blk,binds,pfxMap){
     return out;
   }
   const noOpt=extractOptionals(blk);
-
-  // Token patterns for triple parts:
-  // subject/object: IRI, prefixed-name (allows underscores/dots/any local chars), variable, literal
-  // predicate: same + optional '+' suffix for property paths
-  const TERM_S = '(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+|a(?=\\s))';
-  const TERM_P = '(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}+]+\\+?|a(?=\\s))';
-  const TERM_O = '(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+|"(?:[^"\\\\]|\\\\.)*"(?:@[\\w-]+)?(?:\\^\\^(?:<[^>]+>|[\\w]+:[\\w]+))?)';
+  const TERM_S='(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+|a(?=\\s))';
+  const TERM_P='(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}+]+\\+?|a(?=\\s))';
+  const TERM_O='(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+|"(?:[^"\\\\]|\\\\.)*"(?:@[\\w-]+)?(?:\\^\\^(?:<[^>]+>|[\\w]+:[\\w]+))?)';
   const tRe=new RegExp(`(${TERM_S})\\s+(${TERM_P})\\s+(${TERM_O})`,'g');
 
   let m;let cur=[...binds];
@@ -1132,7 +1208,6 @@ function evalSimple(blk,binds,pfxMap){
     if(!cur.length)break;
   }
 
-  // OPTIONALs
   for(const opt of opts){
     const ext=[];
     for(const b of cur){
@@ -1173,7 +1248,7 @@ function sparqlEnhanced(raw){
 }
 
 /* ══════════════════════════════════════════════════════
-   GRAPH RENDERER — improved click accuracy + styling
+   GRAPH RENDERER
 ══════════════════════════════════════════════════════ */
 const MZOOM=0.06,XZOOM=16;
 
@@ -1190,13 +1265,10 @@ function makeGraph(cvId){
   let hl=new Set(),focused=null,hovNode=null,clickCb=null;
   let layout='tb',nodeSep=260,levelSep=180;
   let showEL=false,cmap=new Map();
-
-  // Publicly settable style params
-  const g={fontSize:13,nodeR:10,nodeOp:0.72,edgeW:1.5,nodePad:14};
+  const g={_fs:13,_nr:10,_op:.72,_ew:1.5,_np:14};
   let dirty=false;
   function sched(){if(dirty)return;dirty=true;requestAnimationFrame(()=>{dirty=false;draw();});}
 
-  // Resize
   function resize(){
     const d=DPR();
     const w=cv.parentElement?.clientWidth||900,h=cv.parentElement?.clientHeight||700;
@@ -1211,7 +1283,6 @@ function makeGraph(cvId){
   const toS=(x,y)=>({x:x*zoom+pan.x,y:y*zoom+pan.y});
   const toW=(x,y)=>({x:(x-pan.x)/zoom,y:(y-pan.y)/zoom});
 
-  // ── LAYOUT ──
   function applyLayout(){
     if(!nodes.length)return;
     if(layout==='rad')doRadial();else doHier(layout==='lr');
@@ -1226,8 +1297,7 @@ function makeGraph(cvId){
           const b=nodes[j];if(b.x==null)continue;
           const dx=b.x-a.x,dy=b.y-a.y;
           const al=lblLen(a.label),bl=lblLen(b.label);
-          const mx=(al+bl)*5+g.nodePad*2+24;
-          const my=g.fontSize*1.6+g.nodePad*2+18;
+          const mx=(al+bl)*5+g._np*2+24,my=g._fs*1.6+g._np*2+18;
           if(Math.abs(dx)<mx&&Math.abs(dy)<my){
             const px=(mx-Math.abs(dx))/2+5,py=(my-Math.abs(dy))/2+3;
             const sx=dx>=0?1:-1,sy=dy>=0?1:-1;
@@ -1267,7 +1337,7 @@ function makeGraph(cvId){
       const rH=Math.max(90,Math.min(levelSep,(gH-100)/(maxL+1)));
       for(const[l,ns2]of byL){
         const n=ns2.length;
-        const estW=ns2.map(nd=>Math.max(110,lblLen(nd.label)*8+g.nodePad*2+20));
+        const estW=ns2.map(nd=>Math.max(110,lblLen(nd.label)*8+g._np*2+20));
         const sp=Math.max(20,nodeSep-100);
         const totW=estW.reduce((a,b)=>a+b,0)+Math.max(0,n-1)*sp;
         let x=gW/2-totW/2;const y=90+l*rH;
@@ -1293,7 +1363,6 @@ function makeGraph(cvId){
     }
   }
 
-  // ── DRAW ──
   function lblLen(t){return Math.min(String(t||'').length,28);}
   function truncLbl(t,max=28){const s=String(t||'');return s.length>max?s.slice(0,max-1)+'…':s;}
 
@@ -1308,24 +1377,22 @@ function makeGraph(cvId){
     const eProp='#b06eff';
     const eCross='#00d5c0';
 
-    // Hierarchy edges
     for(const e of edges.filter(e=>!e.isP&&!e.isX)){
       if(!e.f||!e.t||e.f.x==null||e.t.x==null)continue;
       const a=toS(e.f.x,e.f.y),b=toS(e.t.x,e.t.y);
       const fad=focused&&(!focused.has(e.f.id)||!focused.has(e.t.id));
       c.globalAlpha=fad?.02:.55;
-      c.strokeStyle=eHier;c.lineWidth=g.edgeW*zoom;c.setLineDash([]);
+      c.strokeStyle=eHier;c.lineWidth=g._ew*zoom;c.setLineDash([]);
       c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
       if(!fad)drawArrow(c,b.x,b.y,Math.atan2(b.y-a.y,b.x-a.x),eHier);
       if(!fad&&showEL&&e.lbl&&zoom>0.5)drawEdgeLbl(c,(a.x+b.x)/2,(a.y+b.y)/2,e.lbl,eHier,BG);
     }
-    // Cross edges
     for(const e of edges.filter(e=>e.isX)){
       if(!e.f||!e.t||e.f.x==null||e.t.x==null)continue;
       const a=toS(e.f.x,e.f.y),b=toS(e.t.x,e.t.y);
       const fad=focused&&(!focused.has(e.f.id)||!focused.has(e.t.id));
       c.globalAlpha=fad?.02:.8;
-      c.strokeStyle=eCross;c.lineWidth=g.edgeW*1.3*zoom;c.setLineDash([4,3]);
+      c.strokeStyle=eCross;c.lineWidth=g._ew*1.3*zoom;c.setLineDash([4,3]);
       const dx=b.x-a.x,dy=b.y-a.y;
       const cx1=(a.x+b.x)/2-dy*.3,cy1=(a.y+b.y)/2+dx*.3;
       c.beginPath();c.moveTo(a.x,a.y);c.quadraticCurveTo(cx1,cy1,b.x,b.y);c.stroke();
@@ -1333,13 +1400,12 @@ function makeGraph(cvId){
       if(!fad&&e.lbl&&zoom>0.25){const mx=(a.x+2*cx1+b.x)/4,my=(a.y+2*cy1+b.y)/4;drawPropLbl(c,mx,my,e.lbl,eCross,BG);}
       c.setLineDash([]);
     }
-    // Prop edges
     for(const e of edges.filter(e=>e.isP)){
       if(!e.f||!e.t||e.f.x==null||e.t.x==null)continue;
       const a=toS(e.f.x,e.f.y),b=toS(e.t.x,e.t.y);
       const fad=focused&&(!focused.has(e.f.id)||!focused.has(e.t.id));
       c.globalAlpha=fad?.02:.9;
-      c.strokeStyle=eProp;c.lineWidth=g.edgeW*1.6*zoom;c.setLineDash([7,4]);
+      c.strokeStyle=eProp;c.lineWidth=g._ew*1.6*zoom;c.setLineDash([7,4]);
       const dx=b.x-a.x,dy=b.y-a.y;
       const cx1=(a.x+b.x)/2-dy*.35,cy1=(a.y+b.y)/2+dx*.35;
       c.beginPath();c.moveTo(a.x,a.y);c.quadraticCurveTo(cx1,cy1,b.x,b.y);c.stroke();
@@ -1349,7 +1415,6 @@ function makeGraph(cvId){
     }
     c.globalAlpha=1;
 
-    // Nodes
     for(const n of nodes){
       if(n.x==null)continue;
       const s=toS(n.x,n.y);
@@ -1358,45 +1423,41 @@ function makeGraph(cvId){
       const dc=cmap.get(n.id)||null;
       c.globalAlpha=fad?.05:1;
 
-      const fs=Math.max(g.fontSize*.75,Math.min(g.fontSize*1.05,g.fontSize*Math.min(zoom*.9,1)));
+      const fs=Math.max(g._fs*.75,Math.min(g._fs*1.05,g._fs*Math.min(zoom*.9,1)));
       c.font=`${isHL?'700':'500'} ${fs}px 'Outfit',system-ui`;
       const lbl=truncLbl(n.label,28);
       const tw=c.measureText(lbl).width;
-      const px=g.nodePad,py=Math.max(7,g.nodePad*.6);
-      const rw=tw+px*2,rh=Math.max(30,g.fontSize*1.7+py*2);
+      const px=g._np,py=Math.max(7,g._np*.6);
+      const rw=tw+px*2,rh=Math.max(30,g._fs*1.7+py*2);
       const sx=s.x-rw/2,sy=s.y-rh/2;
-      const r=g.nodeR;
+      const r=g._nr;
 
-      // Cache world-space hit box (with generous margin for easier clicking)
       const margin=6/Math.max(zoom,.1);
       n._wx=n.x-rw/(2*zoom)-margin;n._wy=n.y-rh/(2*zoom)-margin;
       n._ww=rw/zoom+margin*2;n._wh=rh/zoom+margin*2;
 
       if(isHov){c.shadowColor=dc||'#5a6eff';c.shadowBlur=28;}
 
-      // Fill
       if(dc){
         const gr=c.createLinearGradient(sx,sy,sx,sy+rh);
-        gr.addColorStop(0,dc+Math.round(g.nodeOp*255).toString(16).padStart(2,'0'));
+        gr.addColorStop(0,dc+Math.round(g._op*255).toString(16).padStart(2,'0'));
         gr.addColorStop(1,dc+'1a');
         c.fillStyle=gr;
       } else {
-        c.fillStyle=dark?`rgba(255,255,255,${g.nodeOp*.07})`:`rgba(90,110,255,${g.nodeOp*.08})`;
+        const dark2=document.body.getAttribute('data-theme')!=='light';
+        c.fillStyle=dark2?`rgba(255,255,255,${g._op*.07})`:`rgba(90,110,255,${g._op*.08})`;
       }
       roundRect(c,sx,sy,rw,rh,r);c.fill();
 
-      // Border
       c.strokeStyle=isHL?'#f0abfc':isHov?'#5a6eff':dc?dc+'cc':dark?'rgba(90,110,255,.32)':'rgba(90,110,255,.38)';
       c.lineWidth=isHL?2.5:isHov?2.5:dc?1.8:1.2;
       roundRect(c,sx,sy,rw,rh,r);c.stroke();
       c.shadowBlur=0;
 
-      // Label
       c.fillStyle=isHL?'#f0abfc':isHov?'#5a6eff':fad?'rgba(255,255,255,.12)':TC;
       c.textAlign='center';c.textBaseline='middle';
       c.fillText(lbl,s.x,s.y);
 
-      // Child-count badge
       if(zoom>0.3&&!fad){
         const kc=(G.childOf.get(n.id)?.size)||0;
         if(kc>0){
@@ -1414,20 +1475,20 @@ function makeGraph(cvId){
   }
 
   function drawArrow(c,x,y,a,col){
-    const sz=Math.max(5,9);c.fillStyle=col;c.beginPath();
+    const sz=9;c.fillStyle=col;c.beginPath();
     c.moveTo(x-sz*Math.cos(a-.42),y-sz*Math.sin(a-.42));
     c.lineTo(x,y);
     c.lineTo(x-sz*Math.cos(a+.42),y-sz*Math.sin(a+.42));
     c.closePath();c.fill();
   }
   function drawEdgeLbl(c,mx,my,lbl,col,bg){
-    const fs=Math.max(7,9);c.font=`${fs}px 'IBM Plex Mono',monospace`;
+    const fs=9;c.font=`${fs}px 'IBM Plex Mono',monospace`;
     const tw=c.measureText(lbl).width;
     c.globalAlpha=.7;c.fillStyle=bg;roundRect(c,mx-tw/2-4,my-fs/2-3,tw+8,fs+6,3);c.fill();
     c.globalAlpha=.65;c.fillStyle=col;c.textAlign='center';c.textBaseline='middle';c.fillText(lbl,mx,my);
   }
   function drawPropLbl(c,mx,my,lbl,col,bg){
-    const fs=Math.max(9,Math.min(11,10));c.font=`600 ${fs}px 'Outfit',system-ui`;
+    const fs=10;c.font=`600 ${fs}px 'Outfit',system-ui`;
     const tw=c.measureText(lbl).width;
     const bgc=document.body.getAttribute('data-theme')!=='light'?'#0e1220':'#fff';
     c.globalAlpha=.97;c.fillStyle=bgc;roundRect(c,mx-tw/2-6,my-fs/2-5,tw+12,fs+10,5);c.fill();
@@ -1440,7 +1501,6 @@ function makeGraph(cvId){
     c.lineTo(x+r,y+h);c.arcTo(x,y+h,x,y+h-r,r);c.lineTo(x,y+r);c.arcTo(x,y,x+r,y,r);c.closePath();
   }
 
-  // ── HIT TESTING — world space ──
   function nodeAt(sx,sy){
     const wp=toW(sx,sy);
     for(let i=nodes.length-1;i>=0;i--){
@@ -1451,7 +1511,6 @@ function makeGraph(cvId){
     return null;
   }
 
-  // ── FIT ──
   function fit(){
     if(!nodes.length)return;
     const w=W()||1,h=H()||1;
@@ -1463,11 +1522,9 @@ function makeGraph(cvId){
     sched();
   }
 
-  // ── EVENTS ──
   cv.addEventListener('mousedown',e=>{
     const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
     const n=nodeAt(mx,my);drag=n||'pan';lastM={x:mx,y:my};
-    if(n)cv.style.cursor='move';
   });
   cv.addEventListener('mousemove',e=>{
     const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
@@ -1497,7 +1554,6 @@ function makeGraph(cvId){
     if(n&&clickCb)clickCb(n);
     else if(!n){focused=null;sched();}
   });
-  // Touch
   let ltd=null;
   cv.addEventListener('touchstart',e=>{
     if(e.touches.length===1){const t=e.touches[0],r=cv.getBoundingClientRect();drag=nodeAt(t.clientX-r.left,t.clientY-r.top)||'pan';lastM={x:t.clientX-r.left,y:t.clientY-r.top};}
@@ -1511,7 +1567,6 @@ function makeGraph(cvId){
   },{passive:false});
   cv.addEventListener('touchend',()=>{drag=null;ltd=null;});
 
-  // Public API
   function load(nn,ee,opts={}){
     nodes=nn;edges=ee;
     if(opts.layout)layout=opts.layout;
@@ -1538,25 +1593,21 @@ function makeGraph(cvId){
     c2.drawImage(cv,0,0,cv.width/DPR(),cv.height/DPR());
     const a=document.createElement('a');a.href=oc.toDataURL('image/png');a.download='ontohate.png';a.click();
   }
-  // Allow direct property assignment for font etc.
-  Object.defineProperties(g,{
-    fontSize:{get:()=>g._fs||13,set:v=>{g._fs=v;sched();}},
-    nodeR:{get:()=>g._nr||10,set:v=>{g._nr=v;sched();}},
-    nodeOp:{get:()=>g._op!=null?g._op:.72,set:v=>{g._op=v;sched();}},
-    edgeW:{get:()=>g._ew||1.5,set:v=>{g._ew=v;sched();}},
-    nodePad:{get:()=>g._np||14,set:v=>{g._np=v;sched();}},
-  });
 
-  resize();
   const proxy=new Proxy(g,{
     set(t,p,v){t[p]=v;sched();return true;},
     get(t,p){
       const fns={load,relayout,highlight,clearHighlight,setFocus,clearFocus,
                   getNodes,onNodeClick,fit,resize,draw:sched,zoomIn,zoomOut,exportPng,
                   setColors:(m)=>{cmap=m;sched();},setEdgeLabels:(v)=>{showEL=v;sched();}};
-      return p in fns?fns[p]:t[p];
+      if(p in fns)return fns[p];
+      // expose style props
+      const aliases={fontSize:'_fs',nodeR:'_nr',nodeOp:'_op',edgeW:'_ew',nodePad:'_np'};
+      if(p in aliases)return t[aliases[p]];
+      return t[p];
     }
   });
+  resize();
   return proxy;
 }
 
@@ -1582,54 +1633,110 @@ function tipHtml(iri){
   const cmt=G.comments.get(iri)||'';
   const parents=[...(G.subOf.get(iri)||[])].map(p=>bestLbl(p));
   const kids=[...(G.childOf.get(iri)||[])];
-  const annots=G.annots.get(iri)||[];
 
-  // Object properties involving this node
-  const outProps=[],inProps=[];
-  for(const p of G.props){
-    const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];
-    const pl=G.propLabel.get(p)||shortIri(p);
-    if(ds.includes(iri))rs.forEach(r=>outProps.push(pl+' → '+bestLbl(r)));
-    if(rs.includes(iri))ds.forEach(d=>inProps.push(bestLbl(d)+' → '+pl));
-  }
-
-  // Extra annotations (complemento, associacao, etc.)
-  const extras=annots.filter(a=>
-    !a.p.includes('label')&&!a.p.includes('comment')&&
-    !a.p.includes('subClassOf')&&!a.p.includes('type')
-  ).slice(0,6);
-
-  return`<div class="tip-n">${esc(lbl)}</div>
-<div class="tip-i">${esc(iri)}</div>
-${cmt?`<div class="tip-c">${esc(cmt.slice(0,240))}${cmt.length>240?'…':''}</div>`:''}
-<div class="tip-m">
-  <div><b>Superclasse(s):</b> ${parents.length?esc(parents.slice(0,3).join(', '))+(parents.length>3?` +${parents.length-3}`:''):'—'}</div>
-  <div><b>Subclasses:</b> ${kids.length} ${kids.length>0?'('+kids.slice(0,3).map(k=>bestLbl(k)).join(', ')+(kids.length>3?'…':'')+')'  :''}</div>
-  ${outProps.length?`<div style="margin-top:4px"><b>Object Properties:</b> ${esc(outProps.slice(0,3).join(' · '))}${outProps.length>3?` +${outProps.length-3}`:''}</div>`:''}
-  ${inProps.length?`<div><b>Recebe de:</b> ${esc(inProps.slice(0,2).join(' · '))}${inProps.length>2?` +${inProps.length-2}`:''}</div>`:''}
-  ${extras.length?extras.map(a=>`<div style="margin-top:3px"><b>${esc(a.pS)}:</b> ${esc(String(a.val).slice(0,120))}${String(a.val).length>120?'…':''}</div>`).join(''):''}
-</div>`;
-}
-
-/* ══════════════════════════════════════════════════════
-   NODE DETAIL PANEL — single, unified
-══════════════════════════════════════════════════════ */
-const PRESET_COLORS=['#5a6eff','#b06eff','#00d5c0','#f5c842','#ff5f8f','#36e8a0','#f97316','#e879f9','#60a5fa','#4ade80'];
-const customCols=new Map();
-
-function detailHtml(iri){
-  const lbl=bestLbl(iri),cmt=G.comments.get(iri)||'';
-  const parents=[...(G.subOf.get(iri)||[])].map(p=>({iri:p,lbl:bestLbl(p)}));
-  const kids=[...(G.childOf.get(iri)||[])].map(c=>({iri:c,lbl:bestLbl(c)}));
+  // Collect cross-dimension relations for tooltip
   const outRels=[],inRels=[];
   for(const p of G.props){
     const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];
     const pl=G.propLabel.get(p)||shortIri(p);
-    if(ds.includes(iri))rs.forEach(r=>outRels.push({lbl:pl,tgt:bestLbl(r),tIri:r}));
-    if(rs.includes(iri))ds.forEach(d=>inRels.push({lbl:pl,src:bestLbl(d),sIri:d}));
+    if(ds.includes(iri)){const fD=dimOf(iri);rs.forEach(r=>{const tD=dimOf(r);if(fD&&tD&&fD!==tD)outRels.push(pl+' → '+bestLbl(r));});}
+    if(rs.includes(iri)){const tD=dimOf(iri);ds.forEach(d=>{const fD=dimOf(d);if(fD&&tD&&fD!==tD)inRels.push(bestLbl(d)+' → '+pl);});}
   }
+
+  return`<div class="tip-n">${esc(lbl)}</div>
+<div class="tip-i">${esc(iri)}</div>
+${cmt?`<div class="tip-c">${esc(cmt.slice(0,220))}${cmt.length>220?'…':''}</div>`:''}
+<div class="tip-m">
+  <div><b>Superclasse(s):</b> ${parents.length?esc(parents.slice(0,3).join(', '))+(parents.length>3?` +${parents.length-3}`:''):'—'}</div>
+  <div><b>Subclasses:</b> ${kids.length}${kids.length>0?' ('+kids.slice(0,3).map(k=>bestLbl(k)).join(', ')+(kids.length>3?'…':'')+')'  :''}</div>
+</div>
+${(outRels.length||inRels.length)?`<div class="tip-xr"><div class="tip-xr-lbl">⛓ Relações cruzadas entre dimensões</div>${outRels.slice(0,3).map(r=>`<div class="tip-xr-item">→ ${esc(r)}</div>`).join('')}${inRels.slice(0,3).map(r=>`<div class="tip-xr-item">← ${esc(r)}</div>`).join('')}</div>`:''}`;
+}
+
+/* ══════════════════════════════════════════════════════
+   NODE DETAIL PANEL — with cross-dimension relations
+══════════════════════════════════════════════════════ */
+const PRESET_COLORS=['#5a6eff','#b06eff','#00d5c0','#f5c842','#ff5f8f','#36e8a0','#f97316','#e879f9','#60a5fa','#4ade80'];
+const customCols=new Map();
+
+function getNodeRelations(iri){
+  // Gather ALL relations for this node: hierarchy + object properties
+  const parents=[...(G.subOf.get(iri)||[])].map(p=>({iri:p,lbl:bestLbl(p),type:'parent'}));
+  const kids=[...(G.childOf.get(iri)||[])].map(c=>({iri:c,lbl:bestLbl(c),type:'child'}));
+  const outProps=[],inProps=[],outCross=[],inCross=[];
+
+  for(const p of G.props){
+    const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];
+    const pl=G.propLabel.get(p)||shortIri(p);
+    if(ds.includes(iri)){
+      const fD=dimOf(iri);
+      rs.forEach(r=>{
+        const tD=dimOf(r);
+        if(fD&&tD&&fD!==tD){outCross.push({lbl:pl,tgt:bestLbl(r),tIri:r,fDim:bestLbl(fD),tDim:bestLbl(tD)});}
+        else{outProps.push({lbl:pl,tgt:bestLbl(r),tIri:r});}
+      });
+    }
+    if(rs.includes(iri)){
+      const tD=dimOf(iri);
+      ds.forEach(d=>{
+        const fD=dimOf(d);
+        if(fD&&tD&&fD!==tD){inCross.push({lbl:pl,src:bestLbl(d),sIri:d,fDim:bestLbl(fD),tDim:bestLbl(tD)});}
+        else{inProps.push({lbl:pl,src:bestLbl(d),sIri:d});}
+      });
+    }
+  }
+  return{parents,kids,outProps,inProps,outCross,inCross};
+}
+
+function detailHtml(iri){
+  const lbl=bestLbl(iri),cmt=G.comments.get(iri)||'';
+  const{parents,kids,outProps,inProps,outCross,inCross}=getNodeRelations(iri);
   const tagHtml=items=>items.slice(0,12).map(it=>`<span class="tag" onclick="highlightNode('${esc(it.iri||it.tIri||it.sIri)}')">${esc(it.lbl)}</span>`).join('');
   const curCol=customCols.get(iri)||'#5a6eff';
+
+  const hierHtml=`
+    ${parents.length?`<div style="margin-bottom:8px"><div style="font-size:9px;color:var(--txt3);font-family:var(--mono);margin-bottom:4px;letter-spacing:.08em">SUPERCLASSE(S)</div><div class="tags">${tagHtml(parents)}</div></div>`:''}
+    ${kids.length?`<div><div style="font-size:9px;color:var(--txt3);font-family:var(--mono);margin-bottom:4px;letter-spacing:.08em">SUBCLASSES (${kids.length})</div><div class="tags">${tagHtml(kids)}</div></div>`:''}
+  `;
+
+  const propsHtml=outProps.length||inProps.length?`
+    ${outProps.length?`<div class="nd-sec"><div class="nd-sec-t">Relações de saída (Object Properties)</div>
+      ${outProps.slice(0,8).map(r=>`<div class="rel-row" onclick="highlightNode('${esc(r.tIri)}')"><span class="rel-arr">→</span><span class="rel-lbl">${esc(r.lbl)}</span><span class="rel-nm">${esc(r.tgt)}</span></div>`).join('')}
+    </div>`:''}
+    ${inProps.length?`<div class="nd-sec"><div class="nd-sec-t">Relações de entrada (Object Properties)</div>
+      ${inProps.slice(0,8).map(r=>`<div class="rel-row" onclick="highlightNode('${esc(r.sIri)}')"><span class="rel-arr">←</span><span class="rel-lbl">${esc(r.lbl)}</span><span class="rel-nm">${esc(r.src)}</span></div>`).join('')}
+    </div>`:''}
+  `:'';
+
+  // === CROSS-DIMENSION RELATIONS — prominent section ===
+  const crossHtml=outCross.length||inCross.length?`
+    <div class="nd-sec">
+      <div class="nd-sec-t" style="color:var(--teal)">⛓ Relações cruzadas entre dimensões</div>
+      ${outCross.length?`
+        <div style="font-size:9px;color:var(--teal);font-family:var(--mono);margin-bottom:5px;opacity:.7;letter-spacing:.08em">SAÍDA — ${outCross[0].fDim} → outras dimensões</div>
+        ${outCross.slice(0,10).map(r=>`
+          <div class="xrel-row" onclick="highlightNode('${esc(r.tIri)}')">
+            <span style="font-size:14px">→</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:11px">${esc(r.lbl)}</div>
+              <div style="font-size:9px;opacity:.7">${esc(r.tgt)} <span style="opacity:.5">(${esc(r.tDim)})</span></div>
+            </div>
+          </div>`).join('')}
+      `:''}
+      ${inCross.length?`
+        <div style="font-size:9px;color:var(--teal);font-family:var(--mono);margin-bottom:5px;margin-top:8px;opacity:.7;letter-spacing:.08em">ENTRADA — outras dimensões → ${inCross[0]?.tDim||''}</div>
+        ${inCross.slice(0,10).map(r=>`
+          <div class="xrel-row" onclick="highlightNode('${esc(r.sIri)}')">
+            <span style="font-size:14px">←</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:11px">${esc(r.lbl)}</div>
+              <div style="font-size:9px;opacity:.7">${esc(r.src)} <span style="opacity:.5">(${esc(r.fDim)})</span></div>
+            </div>
+          </div>`).join('')}
+      `:''}
+    </div>
+  `:'<div style="font-size:10px;color:var(--txt3);padding:6px 0">Nenhuma relação cruzada detectada para este nó.</div>';
+
   return`
     <div class="nd-sec">
       <div class="nd-title">${esc(lbl)}</div>
@@ -1638,28 +1745,60 @@ function detailHtml(iri){
     ${cmt?`<div class="nd-sec"><div class="nd-sec-t">Definição</div><div class="nd-comment">${esc(cmt)}</div></div>`:''}
     <div class="nd-sec">
       <div class="nd-sec-t">Hierarquia</div>
-      ${parents.length?`<div style="margin-bottom:5px"><div style="font-size:9px;color:var(--txt3);font-family:var(--mono);margin-bottom:4px;letter-spacing:.08em">SUPERCLASSE(S)</div><div class="tags">${tagHtml(parents)}</div></div>`:''}
-      ${kids.length?`<div><div style="font-size:9px;color:var(--txt3);font-family:var(--mono);margin-bottom:4px;letter-spacing:.08em">SUBCLASSES (${kids.length})</div><div class="tags">${tagHtml(kids)}</div></div>`:''}
+      ${hierHtml}
     </div>
-    ${outRels.length?`<div class="nd-sec"><div class="nd-sec-t">Relações de saída</div>${outRels.slice(0,8).map(r=>`<div class="rel-row" onclick="highlightNode('${esc(r.tIri)}')"><span class="rel-arr">→</span><span class="rel-lbl">${esc(r.lbl)}</span><span class="rel-nm">${esc(r.tgt)}</span></div>`).join('')}</div>`:''}
-    ${inRels.length?`<div class="nd-sec"><div class="nd-sec-t">Relações de entrada</div>${inRels.slice(0,8).map(r=>`<div class="rel-row" onclick="highlightNode('${esc(r.sIri)}')"><span class="rel-arr">←</span><span class="rel-lbl">${esc(r.lbl)}</span><span class="rel-nm">${esc(r.src)}</span></div>`).join('')}</div>`:''}
-    <div class="nd-sec style-sec">
+    ${propsHtml}
+    ${crossHtml}
+    <div class="nd-sec">
       <div class="nd-sec-t">Estilo do nó</div>
       <div class="color-row">
         <label>Cor personalizada</label>
         <input type="color" value="${esc(curCol)}" onchange="setNodeCol('${esc(iri)}',this.value)">
       </div>
       <div class="color-presets">${PRESET_COLORS.map(c=>`<div class="cp${curCol===c?' on':''}" style="background:${c}" title="${c}" onclick="setNodeCol('${esc(iri)}','${c}')"></div>`).join('')}</div>
-      <div class="ne-sl"><label>Nível de foco</label>
-        <input type="range" min="0" max="1" step=".05" value="${gOnto?.nodeOp||.72}" oninput="this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-        <span>${Math.round((gOnto?.nodeOp||.72)*100)}%</span>
-      </div>
       <div class="btn-row" style="margin-top:6px">
         <button class="btn sm full" onclick="setNodeCol('${esc(iri)}',null)">↺ Resetar cor</button>
       </div>
     </div>
-    <div style="font-size:8px;font-family:var(--mono);color:var(--txt3);margin-top:8px;word-break:break-all;opacity:.6">${esc(iri)}</div>`;
+  `;
 }
+
+/* Taxonomy click overlay for cross-dimension relations */
+function showTaxRelOverlay(iri){
+  const ovEl=$id('taxRelOverlay');if(!ovEl)return;
+  const{parents,kids,outCross,inCross,outProps,inProps}=getNodeRelations(iri);
+  const lbl=bestLbl(iri);
+
+  const outChips=[
+    ...parents.map(p=>`<span class="rel-chip hier" onclick="highlightNode('${esc(p.iri)}');closeTaxOverlay()"><span class="rel-chip-arrow">↑</span>${esc(p.lbl)}</span>`),
+    ...outProps.slice(0,4).map(r=>`<span class="rel-chip prop" onclick="highlightNode('${esc(r.tIri)}');closeTaxOverlay()"><span class="rel-chip-arrow">→</span>${esc(r.lbl)}: ${esc(r.tgt)}</span>`),
+    ...outCross.slice(0,6).map(r=>`<span class="rel-chip cross" onclick="highlightNode('${esc(r.tIri)}');closeTaxOverlay()"><span class="rel-chip-arrow">⛓</span>${esc(r.lbl)} → ${esc(r.tgt)}</span>`),
+  ];
+  const inChips=[
+    ...kids.slice(0,6).map(c=>`<span class="rel-chip hier" onclick="highlightNode('${esc(c.iri)}');closeTaxOverlay()"><span class="rel-chip-arrow">↓</span>${esc(c.lbl)}</span>`),
+    ...inProps.slice(0,4).map(r=>`<span class="rel-chip prop" onclick="highlightNode('${esc(r.sIri)}');closeTaxOverlay()"><span class="rel-chip-arrow">←</span>${esc(r.lbl)}: ${esc(r.src)}</span>`),
+    ...inCross.slice(0,6).map(r=>`<span class="rel-chip cross" onclick="highlightNode('${esc(r.sIri)}');closeTaxOverlay()"><span class="rel-chip-arrow">⛓</span>${esc(r.src)}: ${esc(r.lbl)}</span>`),
+  ];
+
+  if(!outChips.length&&!inChips.length){ovEl.style.display='none';return;}
+
+  ovEl.style.display='block';
+  ovEl.innerHTML=`
+    <div class="rel-overlay">
+      <div class="rel-overlay-hd">
+        <div class="rel-overlay-title">🔗 ${esc(lbl)}</div>
+        <button class="rel-overlay-close" onclick="closeTaxOverlay()">✕</button>
+      </div>
+      ${outChips.length?`<div class="rel-section"><div class="rel-section-lbl">Saídas · superclasses · object properties</div><div>${outChips.join('')}</div></div>`:''}
+      ${inChips.length?`<div class="rel-section"><div class="rel-section-lbl">Entradas · subclasses · recebe de</div><div>${inChips.join('')}</div></div>`:''}
+      <div style="font-size:9px;color:var(--txt3);margin-top:8px;text-align:right">
+        <span style="color:rgba(140,160,255,.5)">━</span> hier
+        <span style="color:#b06eff;margin-left:8px">━</span> obj. prop.
+        <span style="color:#00d5c0;margin-left:8px">⛓</span> cruzada
+      </div>
+    </div>`;
+}
+function closeTaxOverlay(){const el=$id('taxRelOverlay');if(el)el.style.display='none';}
 
 function highlightNode(iri){
   [gTax,gOnto].forEach(g=>g&&g.highlight([iri]));
@@ -1668,8 +1807,7 @@ function setNodeCol(iri,col){
   if(col===null)customCols.delete(iri);else customCols.set(iri,col);
   rebuildCmap();
   [gTax,gOnto].forEach(g=>g&&g.draw());
-  // Update panel
-  const el=$id('npBox');if(el&&el.innerHTML.includes(iri)){el.innerHTML=detailHtml(iri);}
+  const el=$id('npBox');if(el&&el.innerHTML.includes(iri.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'))){el.innerHTML=detailHtml(iri);}
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1714,12 +1852,53 @@ function findCrossRels(){
   return out;
 }
 
+// Build cross-relation sidebar lists with clickable items that highlight nodes
 function buildXRelLists(){
   const xr=findCrossRels();
+
+  // Group by dim pair
   const grp=new Map();
-  for(const r of xr){const k=bestLbl(r.fDim)+' → '+bestLbl(r.tDim);if(!grp.has(k))grp.set(k,{r,n:0});grp.get(k).n++;}
-  const html=grp.size>0?[...grp.entries()].slice(0,10).map(([k,{n}])=>`<div class="xrel"><span class="xa">⛓</span><span style="flex:1">${esc(k)}</span><span class="xa">${n}×</span></div>`).join(''):`<span style="font-size:10px;color:var(--txt3)">Nenhuma relação cruzada encontrada.</span>`;
-  [$id('taxXRelList'),$id('oXRelList')].forEach(el=>{if(el)el.innerHTML=html;});
+  for(const r of xr){
+    const k=bestLbl(r.fDim)+'||'+bestLbl(r.tDim);
+    if(!grp.has(k))grp.set(k,{fDim:r.fDim,tDim:r.tDim,rels:[]});
+    grp.get(k).rels.push(r);
+  }
+
+  function makeListHtml(grpMap,graphId){
+    if(!grpMap.size)return`<span style="font-size:10px;color:var(--txt3)">Nenhuma relação cruzada encontrada.</span>`;
+    return[...grpMap.entries()].slice(0,12).map(([k,{fDim,tDim,rels}])=>{
+      const title=`${bestLbl(fDim)} → ${bestLbl(tDim)}`;
+      const relItems=rels.slice(0,4).map(r=>`<div class="xrel-path" style="margin-top:3px">• ${esc(r.lbl)}: ${esc(bestLbl(r.f))} → ${esc(bestLbl(r.t))}</div>`).join('');
+      return`<div class="xrel" onclick="highlightXRel('${esc(fDim)}','${esc(tDim)}','${graphId}',this)">
+        <div class="xrel-body">
+          <span class="xrel-lbl">⛓ ${esc(title)}</span>
+          ${relItems}
+        </div>
+        <span class="xrel-cnt">${rels.length}×</span>
+      </div>`;
+    }).join('');
+  }
+
+  const taxEl=$id('taxXRelList');if(taxEl)taxEl.innerHTML=makeListHtml(grp,'tax');
+  const ontoEl=$id('oXRelList');if(ontoEl)ontoEl.innerHTML=makeListHtml(grp,'onto');
+}
+
+function highlightXRel(fDim,tDim,graphId,el){
+  // Toggle active state
+  const isOn=el.classList.contains('active');
+  document.querySelectorAll('#taxXRelList .xrel, #oXRelList .xrel').forEach(e=>e.classList.remove('active'));
+
+  const xr=findCrossRels();
+  const relIris=xr.filter(r=>r.fDim===fDim&&r.tDim===tDim);
+  const ids=new Set();
+  relIris.forEach(r=>{ids.add(r.f);ids.add(r.t);});
+
+  if(isOn){
+    (graphId==='tax'?gTax:gOnto)?.clearHighlight();
+    return;
+  }
+  el.classList.add('active');
+  (graphId==='tax'?gTax:gOnto)?.highlight([...ids]);
 }
 
 /* ══ CROSS MODE ══ */
@@ -1785,11 +1964,14 @@ function buildTax(){
   gTax.setEdgeLabels(showEL);
   gTax.load(nodes,edges,{layout:lState.tax,cmap:cm,nodeSep:ns,levelSep:ls});
   $id('tMeta').textContent=`${ns2.size} nós · ${edges.length} arestas`;
+
+  // Node click: focus + show relation overlay
   gTax.onNodeClick(n=>{
-    if(!$id('tFocus').checked)return;
+    closeTaxOverlay();
     const rel=new Set([n.id]);
     for(const e of edges){if(e.f?.id===n.id)rel.add(e.t.id);if(e.t?.id===n.id)rel.add(e.f.id);}
-    gTax.setFocus(rel);
+    if($id('tFocus').checked)gTax.setFocus(rel);
+    showTaxRelOverlay(n.id);
   });
   mkLegend('tLeg',dims,cm);
 }
@@ -1833,6 +2015,8 @@ function buildOnto(){
   gOnto.setEdgeLabels(showEL);
   gOnto.load(nodes,edges,{layout:lState.onto,cmap:cm,nodeSep:ns,levelSep:ls});
   $id('oMeta').textContent=`${set.size} nós · ${edges.length} arestas`;
+
+  // Node click: show detailed panel with cross-dimension relations
   gOnto.onNodeClick(n=>{
     $id('npBox').innerHTML=detailHtml(n.id);
     $id('np').classList.remove('closed');
@@ -1876,7 +2060,6 @@ function mkLegend(elId,dims,cm){
    FILL CONTROLS
 ══════════════════════════════════════════════════════ */
 function fillControls(){
-  // Tax dim list
   const list=$id('taxDimList');list.innerHTML='';
   G.dims.forEach((d,i)=>{
     const color=DIM_COLORS[i%DIM_COLORS.length],cnt=descOf(d).size;
@@ -1889,7 +2072,6 @@ function fillControls(){
     selDims.add(d);list.appendChild(div);
   });
 
-  // Onto dim select
   const os=$id('oDim');os.innerHTML='<option value="__ALL__">Todas as dimensões (denso)</option>';
   for(const d of G.dims)os.appendChild(Object.assign(document.createElement('option'),{value:d,textContent:bestLbl(d)}));
   if(os.options.length>1)os.selectedIndex=1;
@@ -1898,121 +2080,272 @@ function fillControls(){
 }
 
 /* ══════════════════════════════════════════════════════
-   SPARQL UI
+   SPARQL — 30 QUESTÕES DE COMPETÊNCIA REAIS
 ══════════════════════════════════════════════════════ */
 const PRESETS=[
-  {cat:'Estrutura',icon:'🗂',t:'10 dimensões do discurso de ódio',d:'As dimensões que compõem o fenômeno.',
+  /* ── ESTRUTURA DA ONTOLOGIA ── */
+  {cat:'📐 Estrutura',icon:'🗂',t:'Quais são as dimensões do discurso de ódio?',d:'Lista as 10+ dimensões com definições.',
    q:`SELECT DISTINCT ?dimensao ?definicao WHERE {
   ?dim rdfs:subClassOf ontohate:Discurso_de_odio .
   ?dim rdfs:label ?dimensao . FILTER(LANG(?dimensao)="pt")
   OPTIONAL { ?dim rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
 } ORDER BY ?dimensao`},
-  {cat:'Estrutura',icon:'🌳',t:'Hierarquia completa de classes',d:'Cada conceito e seu pai imediato.',
+
+  {cat:'📐 Estrutura',icon:'🌳',t:'Qual a hierarquia completa de classes?',d:'Cada conceito com seu pai imediato.',
    q:`SELECT DISTINCT ?conceito ?pai WHERE {
   ?c rdfs:subClassOf ?p .
   ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
   ?p rdfs:label ?pai . FILTER(LANG(?pai)="pt")
 } ORDER BY ?pai ?conceito LIMIT 500`},
-  {cat:'Estrutura',icon:'🔗',t:'Object Properties (relações semânticas)',d:'Todas as propriedades e suas relações.',
+
+  {cat:'📐 Estrutura',icon:'📡',t:'Quais Object Properties existem?',d:'Todas as relações semânticas com domínio e alcance.',
    q:`SELECT DISTINCT ?propriedade ?dominio ?alcance WHERE {
   ?p a owl:ObjectProperty .
   ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
   OPTIONAL { ?p rdfs:domain ?d . ?d rdfs:label ?dominio . FILTER(LANG(?dominio)="pt") }
   OPTIONAL { ?p rdfs:range ?r . ?r rdfs:label ?alcance . FILTER(LANG(?alcance)="pt") }
 } ORDER BY ?propriedade`},
-  {cat:'Estrutura',icon:'📐',t:'Todos os descendentes da raiz',d:'Profundidade hierárquica completa.',
+
+  {cat:'📐 Estrutura',icon:'📐',t:'Quantas classes existem por dimensão?',d:'Contagem de subclasses em cada dimensão principal.',
+   q:`SELECT ?dimensao (COUNT(?sub) AS ?total) WHERE {
+  ?dim rdfs:subClassOf ontohate:Discurso_de_odio .
+  ?dim rdfs:label ?dimensao . FILTER(LANG(?dimensao)="pt")
+  ?sub rdfs:subClassOf+ ?dim .
+} GROUP BY ?dim ?dimensao ORDER BY DESC(?total)`},
+
+  {cat:'📐 Estrutura',icon:'🔍',t:'Quais classes têm definição (rdfs:comment)?',d:'Classes documentadas com descrição.',
    q:`SELECT DISTINCT ?conceito ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Discurso_de_odio .
   ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?conceito LIMIT 400`},
-  {cat:'Agentes',icon:'👤',t:'Tipos de agente odiador',d:'Quem produz o discurso de ódio.',
+  ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt")
+} ORDER BY ?conceito LIMIT 200`},
+
+  {cat:'📐 Estrutura',icon:'⚠️',t:'Quais classes NÃO têm definição? (lacunas)',d:'Conceitos que precisam de rdfs:comment.',
+   q:`SELECT DISTINCT ?classe WHERE {
+  ?c a owl:Class .
+  ?c rdfs:label ?classe . FILTER(LANG(?classe)="pt")
+  FILTER NOT EXISTS { ?c rdfs:comment ?def . FILTER(LANG(?def)="pt") }
+  FILTER EXISTS { ?c rdfs:subClassOf+ ontohate:Discurso_de_odio }
+} ORDER BY ?classe`},
+
+  /* ── AGENTES ── */
+  {cat:'👤 Agentes',icon:'👤',t:'Quais são os tipos de agente odiador?',d:'Quem produz o discurso de ódio.',
    q:`SELECT DISTINCT ?agente ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Agente_odiador .
   ?c rdfs:label ?agente . FILTER(LANG(?agente)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
 } ORDER BY ?agente`},
-  {cat:'Agentes',icon:'🛡',t:'Agentes de moderação',d:'Quem intervém e como.',
+
+  {cat:'👤 Agentes',icon:'🛡',t:'Quais são os agentes de moderação?',d:'Quem intervém e como modera.',
    q:`SELECT DISTINCT ?agente ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Agente_moderador .
   ?c rdfs:label ?agente . FILTER(LANG(?agente)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
 } ORDER BY ?agente`},
-  {cat:'Agentes',icon:'🎯',t:'Perfis de vítima',d:'Destinatários do discurso de ódio.',
+
+  {cat:'👤 Agentes',icon:'🎯',t:'Quais são os perfis de vítima?',d:'Destinatários e alvos do discurso de ódio.',
    q:`SELECT DISTINCT ?vitima ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Destinatario_vitima .
   ?c rdfs:label ?vitima . FILTER(LANG(?vitima)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
 } ORDER BY ?vitima`},
-  {cat:'Agentes',icon:'🏷',t:'Características identitárias alvo',d:'O que torna alguém alvo de ódio.',
+
+  {cat:'👤 Agentes',icon:'🏷',t:'Quais características tornam alguém alvo?',d:'Atributos protegidos que motivam o ódio.',
    q:`SELECT DISTINCT ?caracteristica ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Pessoa_com_caracteristica_protegida .
   ?c rdfs:label ?caracteristica . FILTER(LANG(?caracteristica)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
 } ORDER BY ?caracteristica`},
-  {cat:'Estratégias',icon:'⚔️',t:'Estratégias discursivas',d:'Recursos retóricos do ódio.',
+
+  {cat:'👤 Agentes',icon:'🤖',t:'Quais dispositivos automatizados existem?',d:'Bots e sistemas que amplificam ódio.',
+   q:`SELECT DISTINCT ?dispositivo ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Dispositivo_odiador .
+  ?c rdfs:label ?dispositivo . FILTER(LANG(?dispositivo)="pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
+} ORDER BY ?dispositivo`},
+
+  /* ── ESTRATÉGIAS E RECURSOS ── */
+  {cat:'⚔️ Estratégias',icon:'⚔️',t:'Quais são as estratégias discursivas?',d:'Recursos retóricos e linguísticos do ódio.',
    q:`SELECT DISTINCT ?estrategia ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Estrategias_Discursivas .
   ?c rdfs:label ?estrategia . FILTER(LANG(?estrategia)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
 } ORDER BY ?estrategia`},
-  {cat:'Estratégias',icon:'📣',t:'Formas de manifestação',d:'Como o ódio se expressa.',
-   q:`SELECT DISTINCT ?forma ?definicao WHERE {
+
+  {cat:'⚔️ Estratégias',icon:'📣',t:'Quais são as formas de manifestação?',d:'Como o discurso de ódio se expressa.',
+   q:`SELECT DISTINCT ?forma ?tipo ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Manifestacao .
   ?c rdfs:label ?forma . FILTER(LANG(?forma)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?forma`},
-  {cat:'Estratégias',icon:'🔧',t:'Recursos técnicos e de forma',d:'Tecnologias que amplificam o ódio.',
-   q:`SELECT DISTINCT ?recurso ?tipo WHERE {
-  { ?c rdfs:subClassOf+ ontohate:Recursos_Tecnicos . BIND("Técnico" AS ?tipo) }
-  UNION { ?c rdfs:subClassOf+ ontohate:Recursos_de_Forma . BIND("Forma" AS ?tipo) }
+  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?tipo . FILTER(LANG(?tipo)="pt") FILTER(?pai != ontohate:Manifestacao) }
+} ORDER BY ?tipo ?forma`},
+
+  {cat:'⚔️ Estratégias',icon:'🔧',t:'Quais recursos técnicos amplificam o ódio?',d:'Tecnologias e plataformas instrumentalizadas.',
+   q:`SELECT DISTINCT ?recurso ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Recursos_Tecnicos .
   ?c rdfs:label ?recurso . FILTER(LANG(?recurso)="pt")
-} ORDER BY ?tipo ?recurso`},
-  {cat:'Estratégias',icon:'🎭',t:'Motivações e intenções',d:'Por que o ódio é produzido.',
-   q:`SELECT DISTINCT ?motivacao ?definicao WHERE {
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
+} ORDER BY ?recurso`},
+
+  {cat:'⚔️ Estratégias',icon:'🖊',t:'Quais recursos de forma são usados?',d:'Aspectos formais e multimodais do discurso.',
+   q:`SELECT DISTINCT ?recurso ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Recursos_de_Forma .
+  ?c rdfs:label ?recurso . FILTER(LANG(?recurso)="pt")
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
+} ORDER BY ?recurso`},
+
+  {cat:'⚔️ Estratégias',icon:'🧠',t:'Quais são as motivações e intenções?',d:'Por que o discurso de ódio é produzido.',
+   q:`SELECT DISTINCT ?motivacao ?subtipo ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Motivacao .
   ?c rdfs:label ?motivacao . FILTER(LANG(?motivacao)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?motivacao`},
-  {cat:'Contexto & Impacto',icon:'🌐',t:'Contextos do discurso',d:'Ambientes onde o ódio ocorre.',
+  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?subtipo . FILTER(LANG(?subtipo)="pt") FILTER(?pai != ontohate:Motivacao) }
+} ORDER BY ?subtipo ?motivacao`},
+
+  /* ── CONTEXTO E IMPACTO ── */
+  {cat:'🌐 Contexto',icon:'🌐',t:'Em quais contextos o ódio ocorre?',d:'Ambientes sociais, digitais e culturais.',
    q:`SELECT DISTINCT ?contexto ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Contexto .
   ?c rdfs:label ?contexto . FILTER(LANG(?contexto)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
 } ORDER BY ?contexto`},
-  {cat:'Contexto & Impacto',icon:'💥',t:'Danos e consequências',d:'Impactos do ódio.',
+
+  {cat:'🌐 Contexto',icon:'💥',t:'Quais são os danos e consequências?',d:'Impactos psicológicos, sociais e físicos.',
    q:`SELECT DISTINCT ?dano ?tipo ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Consequencia .
   ?c rdfs:label ?dano . FILTER(LANG(?dano)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
   OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?tipo . FILTER(LANG(?tipo)="pt") FILTER(?pai != ontohate:Consequencia) }
 } ORDER BY ?tipo ?dano`},
-  {cat:'Contexto & Impacto',icon:'⚖️',t:'Mecanismos de moderação',d:'Ações de controle do ódio.',
-   q:`SELECT DISTINCT ?acao ?definicao WHERE {
+
+  {cat:'🌐 Contexto',icon:'⚖️',t:'Quais mecanismos de moderação existem?',d:'Ações de detecção, remoção e sanção.',
+   q:`SELECT DISTINCT ?acao ?subtipo ?definicao WHERE {
   ?c rdfs:subClassOf+ ontohate:Moderacao .
   ?c rdfs:label ?acao . FILTER(LANG(?acao)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?acao`},
-  {cat:'Análise',icon:'🔍',t:'Busca por palavra-chave',d:'Edite o termo entre aspas para buscar.',
-   q:`SELECT DISTINCT ?nome ?definicao WHERE {
-  ?c rdfs:label ?nome . FILTER(LANG(?nome)="pt")
+  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?subtipo . FILTER(LANG(?subtipo)="pt") FILTER(?pai != ontohate:Moderacao) }
+} ORDER BY ?subtipo ?acao`},
+
+  {cat:'🌐 Contexto',icon:'🏛',t:'Quais são as plataformas digitais envolvidas?',d:'Sistemas tecnológicos de moderação.',
+   q:`SELECT DISTINCT ?plataforma ?definicao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Plataforma_digital .
+  ?c rdfs:label ?plataforma . FILTER(LANG(?plataforma)="pt")
   OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-  FILTER(CONTAINS(LCASE(STR(?nome)),"ameaca"))
-} ORDER BY ?nome`},
-  {cat:'Análise',icon:'🧩',t:'Classes sem definição (lacunas)',d:'Quais classes faltam rdfs:comment.',
-   q:`SELECT DISTINCT ?classe WHERE {
-  ?c a owl:Class .
-  ?c rdfs:label ?classe . FILTER(LANG(?classe)="pt")
-  FILTER NOT EXISTS { ?c rdfs:comment ?def . FILTER(LANG(?def)="pt") }
-} ORDER BY ?classe`},
-  {cat:'Análise',icon:'🏛',t:'Metadados da ontologia',d:'Versão, autoria, licença.',
+} ORDER BY ?plataforma`},
+
+  /* ── RELAÇÕES CRUZADAS ── */
+  {cat:'⛓ Relações Cruzadas',icon:'⛓',t:'Quais relações cruzam fronteiras de dimensão?',d:'Object Properties entre dimensões distintas.',
+   q:`SELECT DISTINCT ?propriedade ?dimOrigem ?dimDestino ?classOrigem ?classDestino WHERE {
+  ?p a owl:ObjectProperty .
+  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
+  ?p rdfs:domain ?d . ?p rdfs:range ?r .
+  ?d rdfs:subClassOf+ ontohate:Discurso_de_odio .
+  ?r rdfs:subClassOf+ ontohate:Discurso_de_odio .
+  ?d rdfs:label ?classOrigem . FILTER(LANG(?classOrigem)="pt")
+  ?r rdfs:label ?classDestino . FILTER(LANG(?classDestino)="pt")
+  ?dimD rdfs:subClassOf ontohate:Discurso_de_odio . ?d rdfs:subClassOf+ ?dimD . ?dimD rdfs:label ?dimOrigem . FILTER(LANG(?dimOrigem)="pt")
+  ?dimR rdfs:subClassOf ontohate:Discurso_de_odio . ?r rdfs:subClassOf+ ?dimR . ?dimR rdfs:label ?dimDestino . FILTER(LANG(?dimDestino)="pt")
+  FILTER(?dimD != ?dimR)
+} ORDER BY ?dimOrigem ?dimDestino`},
+
+  {cat:'⛓ Relações Cruzadas',icon:'🎭',t:'Como agente e motivação se relacionam?',d:'Relações entre Núcleo e Motivação.',
+   q:`SELECT DISTINCT ?propriedade ?agente ?motivacao WHERE {
+  ?p a owl:ObjectProperty .
+  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
+  ?p rdfs:domain ?d . ?p rdfs:range ?r .
+  ?d rdfs:subClassOf+ ontohate:Nucleo .
+  ?r rdfs:subClassOf+ ontohate:Motivacao .
+  ?d rdfs:label ?agente . FILTER(LANG(?agente)="pt")
+  ?r rdfs:label ?motivacao . FILTER(LANG(?motivacao)="pt")
+} ORDER BY ?propriedade`},
+
+  {cat:'⛓ Relações Cruzadas',icon:'💔',t:'Como o ódio causa dano à vítima?',d:'Caminho de Agente para Consequência.',
+   q:`SELECT DISTINCT ?propriedade ?origem ?destino WHERE {
+  ?p a owl:ObjectProperty .
+  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
+  ?p rdfs:domain ?d . ?p rdfs:range ?r .
+  {?d rdfs:subClassOf+ ontohate:Nucleo . ?r rdfs:subClassOf+ ontohate:Consequencia .}
+  UNION
+  {?d rdfs:subClassOf+ ontohate:Discurso_de_odio . ?r rdfs:subClassOf+ ontohate:Destinatario_vitima .}
+  ?d rdfs:label ?origem . FILTER(LANG(?origem)="pt")
+  ?r rdfs:label ?destino . FILTER(LANG(?destino)="pt")
+} ORDER BY ?propriedade`},
+
+  {cat:'⛓ Relações Cruzadas',icon:'🔨',t:'Como moderação responde ao ódio?',d:'Relações entre Moderação e outras dimensões.',
+   q:`SELECT DISTINCT ?propriedade ?origem ?destino WHERE {
+  ?p a owl:ObjectProperty .
+  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
+  ?p rdfs:domain ?d . ?p rdfs:range ?r .
+  { ?d rdfs:subClassOf+ ontohate:Moderacao . } UNION { ?r rdfs:subClassOf+ ontohate:Moderacao . }
+  ?d rdfs:label ?origem . FILTER(LANG(?origem)="pt")
+  ?r rdfs:label ?destino . FILTER(LANG(?destino)="pt")
+} ORDER BY ?origem`},
+
+  /* ── ANÁLISE SEMÂNTICA ── */
+  {cat:'🔬 Análise',icon:'🔍',t:'Busca por palavra-chave nos rótulos',d:'Edite o termo entre aspas para buscar.',
+   q:`SELECT DISTINCT ?nome ?definicao ?dimensao WHERE {
+  ?c rdfs:label ?nome . FILTER(LANG(?nome)="pt")
+  FILTER(CONTAINS(LCASE(STR(?nome)),"odio"))
+  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
+  OPTIONAL { ?dim rdfs:subClassOf ontohate:Discurso_de_odio . ?c rdfs:subClassOf+ ?dim . ?dim rdfs:label ?dimensao . FILTER(LANG(?dimensao)="pt") }
+} ORDER BY ?nome LIMIT 50`},
+
+  {cat:'🔬 Análise',icon:'🧩',t:'Quais conceitos são folhas (sem subclasses)?',d:'Nós terminais da taxonomia.',
+   q:`SELECT DISTINCT ?conceito ?dimensao WHERE {
+  ?c rdfs:subClassOf+ ontohate:Discurso_de_odio .
+  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
+  FILTER NOT EXISTS { ?filho rdfs:subClassOf ?c . FILTER EXISTS {?filho rdfs:subClassOf+ ontohate:Discurso_de_odio} }
+  OPTIONAL { ?dim rdfs:subClassOf ontohate:Discurso_de_odio . ?c rdfs:subClassOf+ ?dim . ?dim rdfs:label ?dimensao . FILTER(LANG(?dimensao)="pt") }
+} ORDER BY ?dimensao ?conceito`},
+
+  {cat:'🔬 Análise',icon:'🌊',t:'Quais conceitos têm mais subclasses?',d:'Conceitos mais ricos hierarquicamente.',
+   q:`SELECT ?conceito (COUNT(?sub) AS ?qtd) WHERE {
+  ?c rdfs:subClassOf+ ontohate:Discurso_de_odio .
+  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
+  ?sub rdfs:subClassOf ?c .
+} GROUP BY ?c ?conceito HAVING (?qtd > 1) ORDER BY DESC(?qtd) LIMIT 20`},
+
+  {cat:'🔬 Análise',icon:'📊',t:'Quais conceitos participam de mais relações?',d:'Nós com maior conectividade semântica.',
+   q:`SELECT ?conceito (COUNT(?p) AS ?relacoes) WHERE {
+  ?c rdfs:subClassOf+ ontohate:Discurso_de_odio .
+  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
+  ?p a owl:ObjectProperty .
+  { ?p rdfs:domain ?c . } UNION { ?p rdfs:range ?c . }
+} GROUP BY ?c ?conceito ORDER BY DESC(?relacoes) LIMIT 20`},
+
+  {cat:'🔬 Análise',icon:'🔗',t:'Qual a profundidade máxima da hierarquia?',d:'Classes em cada nível da árvore taxonômica.',
+   q:`SELECT ?nivel ?conceito WHERE {
+  {?c rdfs:subClassOf ontohate:Discurso_de_odio . BIND(1 AS ?nivel)}
+  UNION {?c rdfs:subClassOf ?l1 . ?l1 rdfs:subClassOf ontohate:Discurso_de_odio . BIND(2 AS ?nivel)}
+  UNION {?c rdfs:subClassOf ?l2 . ?l2 rdfs:subClassOf ?l1 . ?l1 rdfs:subClassOf ontohate:Discurso_de_odio . BIND(3 AS ?nivel)}
+  UNION {?c rdfs:subClassOf ?l3 . ?l3 rdfs:subClassOf ?l2 . ?l2 rdfs:subClassOf ?l1 . ?l1 rdfs:subClassOf ontohate:Discurso_de_odio . BIND(4 AS ?nivel)}
+  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
+} ORDER BY ?nivel ?conceito`},
+
+  /* ── METADADOS ── */
+  {cat:'🏛 Metadados',icon:'🏛',t:'Quais são os metadados da ontologia?',d:'Versão, autoria, licença e título.',
    q:`SELECT DISTINCT ?campo ?valor WHERE {
   ?o a owl:Ontology .
   { ?o rdfs:label ?valor . BIND("Nome" AS ?campo) }
   UNION { ?o owl:versionInfo ?valor . BIND("Versão" AS ?campo) }
   UNION { ?o dcterms:creator ?valor . BIND("Criador" AS ?campo) }
   UNION { ?o dcterms:license ?valor . BIND("Licença" AS ?campo) }
+  UNION { ?o rdfs:comment ?valor . BIND("Descrição" AS ?campo) }
 } ORDER BY ?campo`},
+
+  {cat:'🏛 Metadados',icon:'📋',t:'Todos os conceitos com IRI e rótulo',d:'Inventário completo da ontologia.',
+   q:`SELECT DISTINCT ?conceito ?iri WHERE {
+  ?c a owl:Class .
+  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
+  BIND(STR(?c) AS ?iri)
+  FILTER EXISTS { ?c rdfs:subClassOf+ ontohate:Discurso_de_odio }
+} ORDER BY ?conceito LIMIT 500`},
+
+  {cat:'🏛 Metadados',icon:'🔬',t:'Diagnóstico: classes OWL diretas',d:'Verificação técnica da ontologia.',
+   q:`SELECT ?cls ?lbl WHERE {
+  ?cls a owl:Class .
+  OPTIONAL { ?cls rdfs:label ?lbl }
+} LIMIT 30`},
 ];
 
 let lastRows=[],lastVars=[];
@@ -2027,35 +2360,36 @@ function renderCell(v){
   if(!v||v==='—')return`<span style="color:var(--txt3)">—</span>`;
   const h=humanize(v);const isIri=(v||'').startsWith('http');
   if(isIri&&h!==v)return`<span class="cn">${esc(h)}</span><div class="ci">${esc(shortIri(v))}</div>`;
-  if((v||'').length>180){const id='x'+Math.random().toString(36).slice(2);return`<span id="${id}-s" class="ct">${esc(v.slice(0,180))}<span style="color:var(--txt3)">… </span><button style="font-size:9px;background:none;border:none;color:var(--acc);cursor:pointer" onclick="$id('${id}-f').style.display='';$id('${id}-s').style.display='none'">ver mais</button></span><span id="${id}-f" style="display:none" class="ct">${esc(v)}</span>`;}
+  if((v||'').length>200){const id='x'+Math.random().toString(36).slice(2);return`<span id="${id}-s" class="ct">${esc(v.slice(0,200))}<button style="font-size:9px;background:none;border:none;color:var(--acc);cursor:pointer;margin-left:4px" onclick="$id('${id}-f').style.display='';$id('${id}-s').style.display='none'">ver mais</button></span><span id="${id}-f" style="display:none" class="ct">${esc(v)}</span>`;}
   return`<span class="ct">${esc(v)}</span>`;
 }
-const COL_LABELS={nome:'Nome',conceito:'Conceito',pai:'Pai',dimensao:'Dimensão',definicao:'Definição',propriedade:'Propriedade',descricao:'Descrição',agente:'Agente',vitima:'Vítima',caracteristica:'Característica',estrategia:'Estratégia',forma:'Forma',recurso:'Recurso',tipo:'Tipo',motivacao:'Motivação',contexto:'Contexto',dano:'Dano',acao:'Ação',campo:'Campo',valor:'Valor',classe:'Classe',dominio:'Domínio',alcance:'Alcance'};
+const COL_LABELS={nome:'Nome',conceito:'Conceito',pai:'Pai',dimensao:'Dimensão',definicao:'Definição',propriedade:'Propriedade',descricao:'Descrição',agente:'Agente',vitima:'Vítima',caracteristica:'Característica',estrategia:'Estratégia',forma:'Forma',recurso:'Recurso',tipo:'Tipo',subtipo:'Subtipo',motivacao:'Motivação',contexto:'Contexto',dano:'Dano',acao:'Ação',campo:'Campo',valor:'Valor',classe:'Classe',dominio:'Domínio',alcance:'Alcance',plataforma:'Plataforma',dispositivo:'Dispositivo',nivel:'Nível',qtd:'Qtd',relacoes:'Relações',iri:'IRI',dimOrigem:'Dim. Origem',dimDestino:'Dim. Destino',classOrigem:'Classe Origem',classDestino:'Classe Destino',origem:'Origem',destino:'Destino',total:'Total'};
 
 function renderTable(rows,vars){
-  if(!rows.length)return`<div style="color:var(--txt2);padding:20px;text-align:center">Nenhum resultado encontrado para esta consulta.</div>`;
+  if(!rows.length)return`<div style="color:var(--txt2);padding:24px;text-align:center;font-size:13px">
+    <div style="font-size:32px;margin-bottom:10px;opacity:.4">○</div>
+    Nenhum resultado. Isso pode indicar que a ontologia carregada<br>não contém os conceitos consultados.
+  </div>`;
   const uv=vars.filter(v=>rows.some(r=>r[v]));
-  return`<table class="res-table"><thead><tr>${uv.map(v=>`<th>${esc((COL_LABELS[v]||v).toUpperCase())}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${uv.map(v=>`<td>${renderCell(r[v])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const total=rows.length;
+  return`<table class="res-table"><thead><tr>${uv.map(v=>`<th>${esc((COL_LABELS[v]||v).toUpperCase())}</th>`).join('')}</tr></thead><tbody>${rows.map((r,i)=>`<tr><td style="color:var(--txt3);font-family:var(--mono);font-size:9px;min-width:28px;padding-right:4px">${i+1}</td>${uv.map(v=>`<td>${renderCell(r[v])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 
 function runQ(){
   let raw=$id('sqta').value.trim();
   if(!raw)return;
-  if(!G.quads.length){$id('qres').innerHTML=`<div style="color:var(--warn);padding:16px">⚠️ Ontologia não carregada.</div>`;return;}
+  if(!G.quads.length){$id('qres').innerHTML=`<div style="color:var(--warn);padding:16px">⚠️ Ontologia não carregada. Aguarde ou importe um arquivo .ttl.</div>`;return;}
   const t0=performance.now();
   let rows,usedRelax=false;
   try{rows=sparqlEnhanced(raw);}
   catch(e){$id('qres').innerHTML=`<div style="color:var(--bad);font-family:var(--mono);font-size:11px;padding:14px">❌ Erro: ${esc(String(e?.message||e))}</div>`;return;}
 
-  // Relaxed mode: progressively remove language filters if no results
   if((!rows||!rows.length)&&$id('qRelax').checked){
-    // Step 1: remove FILTER(LANG(?x)="pt") and FILTER(LANG(?x)="pt-br") etc
     const r1=raw.replace(/FILTER\s*\(\s*LANG\s*\([^)]*\)\s*=+\s*["'][^"']*["']\s*\)/gi,'')
                 .replace(/FILTER\s*\(\s*LANGMATCHES[^)]*\)/gi,'');
     if(r1!==raw){try{rows=sparqlEnhanced(r1);if(rows?.length)usedRelax=true;}catch(_){}}
   }
   if((!rows||!rows.length)&&$id('qRelax').checked){
-    // Step 2: also remove all remaining FILTERs
     const r2=raw.replace(/FILTER\s*\([^)]+\)/gi,'');
     if(r2!==raw){try{rows=sparqlEnhanced(r2);if(rows?.length)usedRelax=true;}catch(_){}}
   }
@@ -2066,7 +2400,7 @@ function runQ(){
   if(vm)for(const m of vm[0].matchAll(/\?(\w+)/g))lastVars.push(m[1]);
   if(!lastVars.length&&rows?.length)lastVars=Object.keys(rows[0]).filter(k=>!k.startsWith('__'));
   lastVars=[...new Set(lastVars)].filter(v=>!v.startsWith('__'));
-  $id('qmeta').textContent=`${(rows||[]).length} resultado${rows?.length!==1?'s':''} · ${ms}ms${usedRelax?' · (modo tolerante)':''}`;
+  $id('qmeta').textContent=`${(rows||[]).length} resultado${rows?.length!==1?'s':''} · ${ms}ms${usedRelax?' · tolerante':''}`;
   $id('qres').innerHTML=renderTable(rows||[],lastVars);
 }
 
@@ -2082,12 +2416,22 @@ function expJson(){if(!lastRows.length)return;dl('ontohate.json',JSON.stringify(
 function buildPresets(){
   const box=$id('presetList');if(!box)return;box.innerHTML='';
   const cats=[...new Set(PRESETS.map(p=>p.cat))];
+  let n=0;
   for(const cat of cats){
     const sec=document.createElement('div');
-    sec.innerHTML=`<div class="pcat">${esc(cat)}</div>`;
-    for(const p of PRESETS.filter(x=>x.cat===cat)){
+    const items=PRESETS.filter(x=>x.cat===cat);
+    sec.innerHTML=`<div class="pcat">${esc(cat)} <span style="font-size:9px;color:var(--txt3)">${items.length}</span></div>`;
+    for(const p of items){
+      n++;
+      const num=n;
       const btn=document.createElement('button');btn.className='pbtn';
-      btn.innerHTML=`<span class="p-icon">${p.icon||'▸'}</span><span class="p-body"><span class="p-title">${esc(p.t)}</span><span class="p-desc">${esc(p.d)}</span></span>`;
+      btn.dataset.title=p.t.toLowerCase();btn.dataset.desc=p.d.toLowerCase();btn.dataset.cat=cat.toLowerCase();
+      btn.innerHTML=`<span class="p-icon">${p.icon||'▸'}</span>
+        <span class="p-body">
+          <span class="p-title">${esc(p.t)}</span>
+          <span class="p-desc">${esc(p.d)}</span>
+        </span>
+        <span class="q-num">${num}</span>`;
       btn.onclick=()=>{
         $id('sqta').value=p.q;
         document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));
@@ -2095,6 +2439,15 @@ function buildPresets(){
       };sec.appendChild(btn);
     }box.appendChild(sec);
   }
+}
+
+function filterPresets(q){
+  const lower=q.trim().toLowerCase();
+  document.querySelectorAll('.pbtn').forEach(btn=>{
+    if(!lower){btn.classList.remove('hidden');return;}
+    const match=btn.dataset.title?.includes(lower)||btn.dataset.desc?.includes(lower)||btn.dataset.cat?.includes(lower);
+    btn.classList.toggle('hidden',!match);
+  });
 }
 
 document.addEventListener('keydown',e=>{
@@ -2111,7 +2464,6 @@ let gTax=null,gOnto=null;
 /* ══════════════════════════════════════════════════════
    BOOT
 ══════════════════════════════════════════════════════ */
-// Minimal bundled TTL as fallback
 const BUNDLED=`@prefix ontohate:<http://ontohate.org/ontohate#>.@prefix owl:<http://www.w3.org/2002/07/owl#>.@prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>.@prefix dcterms:<http://purl.org/dc/terms/>.
 <http://ontohate.org/ontohate> a owl:Ontology;rdfs:label "OntoHate"@pt;dcterms:creator "Luiz Rogério Lopes Silva";owl:versionInfo "v2.0".
 ontohate:Discurso_de_odio a owl:Class;rdfs:label "Discurso de ódio online"@pt;rdfs:comment "Fenômeno comunicativo manifestado em plataformas digitais, caracterizado por ataques a grupos ou indivíduos com base em características protegidas."@pt.
