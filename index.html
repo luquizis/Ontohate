@@ -1074,21 +1074,22 @@ function matchTriple(pat,binds,pfxMap,transitive){
     const oVar=pat.o.startsWith('?')?pat.o.slice(1):null;
 
     if(transitive&&pv===SUBOF){
-      if(ov!==null){
+      if(ov!=null){
         const subs=transSubClsOf(ov);
         for(const sub of subs){
-          if(sv!==null&&sv!==sub)continue;
+          if(sv!=null&&sv!==sub)continue;
           const nb={...b};if(sVar)nb[sVar]=sub;out.push(nb);
         }
       }
       continue;
     }
 
-    if(sv!==null&&pv!==null){
+    // Use != null to catch both null and undefined (unbound variables)
+    if(sv!=null&&pv!=null){
       const k=sv+'|'+pv;const cands=G.bySP.get(k);if(!cands)continue;
       for(const q of cands){
         if(oLit){if(!q.isLit||q.o!==oLit.val)continue;if(oLit.lang&&q.oLang&&q.oLang.toLowerCase()!==oLit.lang.toLowerCase())continue;}
-        else if(ov!==null&&q.o!==ov)continue;
+        else if(ov!=null&&q.o!==ov)continue;
         const nb={...b};
         if(sVar)nb[sVar]=q.s;
         if(pVar)nb[pVar]=q.p;
@@ -1096,12 +1097,12 @@ function matchTriple(pat,binds,pfxMap,transitive){
         out.push(nb);
       }
     } else {
-      const cands=pv!==null?(G.byP.get(pv)||[]):(sv!==null?(G.byS.get(sv)||[]):G.quads);
+      const cands=pv!=null?(G.byP.get(pv)||[]):(sv!=null?(G.byS.get(sv)||[]):G.quads);
       for(const q of cands){
-        if(sv!==null&&q.s!==sv)continue;
-        if(pv!==null&&q.p!==pv)continue;
+        if(sv!=null&&q.s!==sv)continue;
+        if(pv!=null&&q.p!==pv)continue;
         if(oLit){if(!q.isLit||q.o!==oLit.val)continue;if(oLit.lang&&q.oLang&&q.oLang.toLowerCase()!==oLit.lang.toLowerCase())continue;}
-        else if(ov!==null&&q.o!==ov)continue;
+        else if(ov!=null&&q.o!==ov)continue;
         const nb={...b};
         if(sVar)nb[sVar]=q.s;if(pVar)nb[pVar]=q.p;
         if(oVar){nb[oVar]=q.o;nb['__lg__'+oVar]=q.oLang||'';}
@@ -1123,25 +1124,32 @@ function splitUnion(blk){
 }
 
 function evalWhere(blk,binds,pfxMap){
-  const filters=[];
-  function extractFilters(src){
-    let out='',i=0;
+  // Extract top-level FILTERs only (not those inside OPTIONAL/UNION/sub-blocks)
+  function extractFiltersTopLevel(src){
+    const filters=[];let out='',i=0,braceDepth=0;
     while(i<src.length){
-      const fm=/\bFILTER\s*\(/i.exec(src.slice(i));
-      if(!fm){out+=src.slice(i);break;}
-      out+=src.slice(i,i+fm.index);
-      i+=fm.index+fm[0].length;
-      let depth=1,content='';
-      while(i<src.length&&depth>0){
-        if(src[i]==='(')depth++;
-        else if(src[i]===')'){depth--;if(depth===0){i++;break;}}
-        content+=src[i++];
+      if(src[i]==='{'){braceDepth++;out+=src[i++];continue;}
+      if(src[i]==='}'){braceDepth--;out+=src[i++];continue;}
+      // Only extract FILTER at brace depth 0
+      if(braceDepth===0){
+        const rest=src.slice(i);
+        const fm=/^\bFILTER\s*\(/i.exec(rest);
+        if(fm){
+          i+=fm[0].length;
+          let depth=1,content='';
+          while(i<src.length&&depth>0){
+            if(src[i]==='(')depth++;
+            else if(src[i]===')'){depth--;if(depth===0){i++;break;}}
+            content+=src[i++];
+          }
+          filters.push(content);continue;
+        }
       }
-      filters.push(content);
+      out+=src[i++];
     }
-    return out;
+    return{out,filters};
   }
-  const noF=extractFilters(blk);
+  const{out:noF,filters}=extractFiltersTopLevel(blk);
   const bindsArr=[];
   const bRe=/BIND\s*\(([^)]+)\s+AS\s+\?(\w+)\s*\)/gi;
   let bm;while((bm=bRe.exec(noF))!==null)bindsArr.push({expr:bm[1].trim(),v:bm[2]});
@@ -1160,7 +1168,7 @@ function evalWhere(blk,binds,pfxMap){
   if(hasTopLevelUnion(noFB)){
     const brs=splitUnion(noFB);const seen=new Set();result=[];
     for(const br of brs){
-      let bb=evalSimple(br,[...binds],pfxMap);
+      let bb=evalWhere(br,[...binds],pfxMap);
       for(const b of bb){const k=JSON.stringify(b);if(!seen.has(k)){seen.add(k);result.push(b);}}
     }
   } else {
@@ -1211,7 +1219,8 @@ function evalSimple(blk,binds,pfxMap){
   for(const opt of opts){
     const ext=[];
     for(const b of cur){
-      const res=evalSimple(opt,[b],pfxMap);
+      // Use evalWhere so FILTERs inside OPTIONAL are correctly applied
+      const res=evalWhere(opt,[b],pfxMap);
       if(res.length>0)ext.push(...res);else ext.push(b);
     }
     cur=ext;
@@ -1660,28 +1669,43 @@ const PRESET_COLORS=['#5a6eff','#b06eff','#00d5c0','#f5c842','#ff5f8f','#36e8a0'
 const customCols=new Map();
 
 function getNodeRelations(iri){
-  // Gather ALL relations for this node: hierarchy + object properties
-  const parents=[...(G.subOf.get(iri)||[])].map(p=>({iri:p,lbl:bestLbl(p),type:'parent'}));
-  const kids=[...(G.childOf.get(iri)||[])].map(c=>({iri:c,lbl:bestLbl(c),type:'child'}));
+  const parents=[...(G.subOf.get(iri)||[])].map(p=>({iri:p,lbl:bestLbl(p)}));
+  const kids=[...(G.childOf.get(iri)||[])].map(c=>({iri:c,lbl:bestLbl(c)}));
   const outProps=[],inProps=[],outCross=[],inCross=[];
+
+  const myDim=dimOfBroad(iri);
 
   for(const p of G.props){
     const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];
     const pl=G.propLabel.get(p)||shortIri(p);
-    if(ds.includes(iri)){
-      const fD=dimOf(iri);
+    // Check if iri is in domain (directly, or iri's dim is domain, or domain is root)
+    const inDomain=ds.includes(iri)||ds.some(d=>{
+      if(d===iri)return true;
+      if(d===G.rootIri)return true; // root-level props apply to everything
+      return false;
+    });
+    const inRange=rs.includes(iri);
+
+    if(ds.includes(iri)||ds.includes(G.rootIri)){
       rs.forEach(r=>{
-        const tD=dimOf(r);
-        if(fD&&tD&&fD!==tD){outCross.push({lbl:pl,tgt:bestLbl(r),tIri:r,fDim:bestLbl(fD),tDim:bestLbl(tD)});}
-        else{outProps.push({lbl:pl,tgt:bestLbl(r),tIri:r});}
+        const tD=dimOfBroad(r);
+        const fD=ds.includes(iri)?myDim:dimOfBroad(G.rootIri);
+        // It's cross-dim if target is in a DIFFERENT dim than source
+        if(tD&&myDim&&tD!==myDim&&tD!=='__ROOT__'){
+          outCross.push({lbl:pl,tgt:bestLbl(r),tIri:r,fDim:myDim?bestLbl(myDim):'raiz',tDim:bestLbl(tD)});
+        } else if(ds.includes(iri)){
+          outProps.push({lbl:pl,tgt:bestLbl(r),tIri:r});
+        }
       });
     }
-    if(rs.includes(iri)){
-      const tD=dimOf(iri);
+    if(inRange){
       ds.forEach(d=>{
-        const fD=dimOf(d);
-        if(fD&&tD&&fD!==tD){inCross.push({lbl:pl,src:bestLbl(d),sIri:d,fDim:bestLbl(fD),tDim:bestLbl(tD)});}
-        else{inProps.push({lbl:pl,src:bestLbl(d),sIri:d});}
+        const fD=dimOfBroad(d);
+        if(fD&&myDim&&fD!==myDim){
+          inCross.push({lbl:pl,src:bestLbl(d),sIri:d,fDim:fD===G.rootIri||fD==='__ROOT__'?'raiz':bestLbl(fD),tDim:bestLbl(myDim)});
+        } else {
+          inProps.push({lbl:pl,src:bestLbl(d),sIri:d});
+        }
       });
     }
   }
@@ -1842,12 +1866,37 @@ function rebuildCmap(){
   return _baseCmap;
 }
 
+// Returns the dimension that contains iri, or iri itself if it IS a dimension,
+// or a pseudo-dim 'ROOT' if iri is the ontology root.
+function dimOfBroad(iri){
+  if(!iri)return null;
+  if(iri===G.rootIri)return '__ROOT__';
+  for(const d of G.dims){if(d===iri||descOf(d).has(iri))return d;}
+  return null;
+}
+
 function findCrossRels(){
   const out=[];
   for(const p of G.props){
     const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];
     const lbl=G.propLabel.get(p)||shortIri(p);
-    for(const d of ds){const dD=dimOf(d);for(const r of rs){const rD=dimOf(r);if(dD&&rD&&dD!==rD)out.push({f:d,t:r,lbl,fDim:dD,tDim:rD,p});}}
+    for(const d of ds){
+      const dD=dimOfBroad(d);
+      for(const r of rs){
+        const rD=dimOfBroad(r);
+        // Cross if they are in different dimensions (or one is ROOT and other is a dim)
+        if(!dD||!rD)continue;
+        if(dD===rD)continue;
+        // If domain is ROOT, synthesize one entry per dim for the range
+        if(dD==='__ROOT__'){
+          out.push({f:d,t:r,lbl,fDim:G.rootIri,tDim:rD,p,rootDomain:true});
+        } else if(rD==='__ROOT__'){
+          out.push({f:d,t:r,lbl,fDim:dD,tDim:G.rootIri,p,rootRange:true});
+        } else {
+          out.push({f:d,t:r,lbl,fDim:dD,tDim:rD,p});
+        }
+      }
+    }
   }
   return out;
 }
@@ -1856,20 +1905,30 @@ function findCrossRels(){
 function buildXRelLists(){
   const xr=findCrossRels();
 
-  // Group by dim pair
+  // Group by dim pair (use IRI as key)
   const grp=new Map();
   for(const r of xr){
-    const k=bestLbl(r.fDim)+'||'+bestLbl(r.tDim);
-    if(!grp.has(k))grp.set(k,{fDim:r.fDim,tDim:r.tDim,rels:[]});
+    const fLbl=r.fDim===G.rootIri?'Ontologia (raiz)':bestLbl(r.fDim);
+    const tLbl=r.tDim===G.rootIri?'Ontologia (raiz)':bestLbl(r.tDim);
+    const k=r.fDim+'||'+r.tDim;
+    if(!grp.has(k))grp.set(k,{fDim:r.fDim,tDim:r.tDim,fLbl,tLbl,rels:[]});
     grp.get(k).rels.push(r);
   }
 
   function makeListHtml(grpMap,graphId){
-    if(!grpMap.size)return`<span style="font-size:10px;color:var(--txt3)">Nenhuma relação cruzada encontrada.</span>`;
-    return[...grpMap.entries()].slice(0,12).map(([k,{fDim,tDim,rels}])=>{
-      const title=`${bestLbl(fDim)} → ${bestLbl(tDim)}`;
-      const relItems=rels.slice(0,4).map(r=>`<div class="xrel-path" style="margin-top:3px">• ${esc(r.lbl)}: ${esc(bestLbl(r.f))} → ${esc(bestLbl(r.t))}</div>`).join('');
-      return`<div class="xrel" onclick="highlightXRel('${esc(fDim)}','${esc(tDim)}','${graphId}',this)">
+    if(!grpMap.size){
+      // Even if no cross rels via OPs, show the structural connections
+      return`<div style="font-size:10px;color:var(--txt3);padding:4px 0">
+        Carregue um arquivo .ttl com Object Properties para ver relações cruzadas entre dimensões.
+        <br><br>A versão embutida mostra: <b style="color:var(--teal)">provoca_dano</b> (Núcleo→Consequência) e <b style="color:var(--teal)">vitimiza</b> (Núcleo→Destinatário).
+      </div>`;
+    }
+    return[...grpMap.entries()].slice(0,16).map(([k,{fDim,tDim,fLbl,tLbl,rels}])=>{
+      const title=`${fLbl} → ${tLbl}`;
+      const relItems=rels.slice(0,3).map(r=>`<div class="xrel-path" style="margin-top:2px">• ${esc(r.lbl)}: <em>${esc(bestLbl(r.f))}</em> → <em>${esc(bestLbl(r.t))}</em></div>`).join('');
+      // encode IRI safely for onclick
+      const fEnc=encodeURIComponent(fDim),tEnc=encodeURIComponent(tDim);
+      return`<div class="xrel" onclick="highlightXRelByKey('${esc(k)}','${graphId}',this)">
         <div class="xrel-body">
           <span class="xrel-lbl">⛓ ${esc(title)}</span>
           ${relItems}
@@ -1881,25 +1940,26 @@ function buildXRelLists(){
 
   const taxEl=$id('taxXRelList');if(taxEl)taxEl.innerHTML=makeListHtml(grp,'tax');
   const ontoEl=$id('oXRelList');if(ontoEl)ontoEl.innerHTML=makeListHtml(grp,'onto');
+
+  // Store grouped data for click handler
+  window._xrelGrp=grp;
 }
 
-function highlightXRel(fDim,tDim,graphId,el){
-  // Toggle active state
+function highlightXRelByKey(key,graphId,el){
   const isOn=el.classList.contains('active');
   document.querySelectorAll('#taxXRelList .xrel, #oXRelList .xrel').forEach(e=>e.classList.remove('active'));
-
-  const xr=findCrossRels();
-  const relIris=xr.filter(r=>r.fDim===fDim&&r.tDim===tDim);
-  const ids=new Set();
-  relIris.forEach(r=>{ids.add(r.f);ids.add(r.t);});
-
-  if(isOn){
-    (graphId==='tax'?gTax:gOnto)?.clearHighlight();
-    return;
-  }
+  if(isOn){(graphId==='tax'?gTax:gOnto)?.clearHighlight();return;}
   el.classList.add('active');
+  const grpEntry=window._xrelGrp?.get(key);
+  if(!grpEntry)return;
+  const ids=new Set();
+  grpEntry.rels.forEach(r=>{ids.add(r.f);ids.add(r.t);});
+  // Also highlight the dimension root nodes
+  ids.add(grpEntry.fDim);ids.add(grpEntry.tDim);
   (graphId==='tax'?gTax:gOnto)?.highlight([...ids]);
 }
+// Legacy compat
+function highlightXRel(fDim,tDim,graphId,el){highlightXRelByKey(fDim+'||'+tDim,graphId,el);}
 
 /* ══ CROSS MODE ══ */
 const cmDesc={
@@ -2081,271 +2141,298 @@ function fillControls(){
 
 /* ══════════════════════════════════════════════════════
    SPARQL — 30 QUESTÕES DE COMPETÊNCIA REAIS
+   Todas testadas contra a estrutura da ontologia embutida
 ══════════════════════════════════════════════════════ */
 const PRESETS=[
-  /* ── ESTRUTURA DA ONTOLOGIA ── */
-  {cat:'📐 Estrutura',icon:'🗂',t:'Quais são as dimensões do discurso de ódio?',d:'Lista as 10+ dimensões com definições.',
+  /* ── 1. ESTRUTURA ── */
+  {cat:'📐 Estrutura',icon:'🗂',t:'Q1 · Quais são as dimensões da ontologia?',
+   d:'Lista direta das 10 dimensões com definições.',
    q:`SELECT DISTINCT ?dimensao ?definicao WHERE {
   ?dim rdfs:subClassOf ontohate:Discurso_de_odio .
-  ?dim rdfs:label ?dimensao . FILTER(LANG(?dimensao)="pt")
-  OPTIONAL { ?dim rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
+  ?dim rdfs:label ?dimensao .
+  OPTIONAL { ?dim rdfs:comment ?definicao }
 } ORDER BY ?dimensao`},
 
-  {cat:'📐 Estrutura',icon:'🌳',t:'Qual a hierarquia completa de classes?',d:'Cada conceito com seu pai imediato.',
-   q:`SELECT DISTINCT ?conceito ?pai WHERE {
+  {cat:'📐 Estrutura',icon:'🌳',t:'Q2 · Hierarquia completa de classes',
+   d:'Cada classe com sua superclasse imediata.',
+   q:`SELECT DISTINCT ?classe ?superclasse WHERE {
   ?c rdfs:subClassOf ?p .
-  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
-  ?p rdfs:label ?pai . FILTER(LANG(?pai)="pt")
-} ORDER BY ?pai ?conceito LIMIT 500`},
+  ?c rdfs:label ?classe .
+  ?p rdfs:label ?superclasse .
+} ORDER BY ?superclasse ?classe LIMIT 200`},
 
-  {cat:'📐 Estrutura',icon:'📡',t:'Quais Object Properties existem?',d:'Todas as relações semânticas com domínio e alcance.',
-   q:`SELECT DISTINCT ?propriedade ?dominio ?alcance WHERE {
+  {cat:'📐 Estrutura',icon:'📡',t:'Q3 · Object Properties e suas relações',
+   d:'Todas as propriedades com domínio e alcance.',
+   q:`SELECT DISTINCT ?prop ?dominio ?alcance WHERE {
   ?p a owl:ObjectProperty .
-  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
-  OPTIONAL { ?p rdfs:domain ?d . ?d rdfs:label ?dominio . FILTER(LANG(?dominio)="pt") }
-  OPTIONAL { ?p rdfs:range ?r . ?r rdfs:label ?alcance . FILTER(LANG(?alcance)="pt") }
-} ORDER BY ?propriedade`},
+  ?p rdfs:label ?prop .
+  OPTIONAL { ?p rdfs:domain ?d . ?d rdfs:label ?dominio }
+  OPTIONAL { ?p rdfs:range ?r . ?r rdfs:label ?alcance }
+} ORDER BY ?prop`},
 
-  {cat:'📐 Estrutura',icon:'📐',t:'Quantas classes existem por dimensão?',d:'Contagem de subclasses em cada dimensão principal.',
+  {cat:'📐 Estrutura',icon:'🔢',t:'Q4 · Quantas subclasses tem cada dimensão?',
+   d:'Contagem de subclasses em cada dimensão principal.',
    q:`SELECT ?dimensao (COUNT(?sub) AS ?total) WHERE {
   ?dim rdfs:subClassOf ontohate:Discurso_de_odio .
-  ?dim rdfs:label ?dimensao . FILTER(LANG(?dimensao)="pt")
-  ?sub rdfs:subClassOf+ ?dim .
+  ?dim rdfs:label ?dimensao .
+  ?sub rdfs:subClassOf ?dim .
 } GROUP BY ?dim ?dimensao ORDER BY DESC(?total)`},
 
-  {cat:'📐 Estrutura',icon:'🔍',t:'Quais classes têm definição (rdfs:comment)?',d:'Classes documentadas com descrição.',
-   q:`SELECT DISTINCT ?conceito ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Discurso_de_odio .
-  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
-  ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt")
-} ORDER BY ?conceito LIMIT 200`},
-
-  {cat:'📐 Estrutura',icon:'⚠️',t:'Quais classes NÃO têm definição? (lacunas)',d:'Conceitos que precisam de rdfs:comment.',
-   q:`SELECT DISTINCT ?classe WHERE {
-  ?c a owl:Class .
-  ?c rdfs:label ?classe . FILTER(LANG(?classe)="pt")
-  FILTER NOT EXISTS { ?c rdfs:comment ?def . FILTER(LANG(?def)="pt") }
-  FILTER EXISTS { ?c rdfs:subClassOf+ ontohate:Discurso_de_odio }
+  {cat:'📐 Estrutura',icon:'📖',t:'Q5 · Classes com definição (rdfs:comment)',
+   d:'Conceitos que possuem descrição formal.',
+   q:`SELECT DISTINCT ?classe ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Discurso_de_odio .
+  ?c rdfs:label ?classe .
+  ?c rdfs:comment ?definicao .
 } ORDER BY ?classe`},
 
-  /* ── AGENTES ── */
-  {cat:'👤 Agentes',icon:'👤',t:'Quais são os tipos de agente odiador?',d:'Quem produz o discurso de ódio.',
-   q:`SELECT DISTINCT ?agente ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Agente_odiador .
-  ?c rdfs:label ?agente . FILTER(LANG(?agente)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?agente`},
+  {cat:'📐 Estrutura',icon:'⚠️',t:'Q6 · Classes SEM definição (lacunas)',
+   d:'Conceitos que ainda precisam de descrição.',
+   q:`SELECT DISTINCT ?classe WHERE {
+  ?c rdfs:subClassOf ontohate:Discurso_de_odio .
+  ?c rdfs:label ?classe .
+  FILTER NOT EXISTS { ?c rdfs:comment ?def }
+} ORDER BY ?classe`},
 
-  {cat:'👤 Agentes',icon:'🛡',t:'Quais são os agentes de moderação?',d:'Quem intervém e como modera.',
-   q:`SELECT DISTINCT ?agente ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Agente_moderador .
-  ?c rdfs:label ?agente . FILTER(LANG(?agente)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?agente`},
+  {cat:'📐 Estrutura',icon:'🌿',t:'Q7 · Classes folha (sem subclasses)',
+   d:'Conceitos terminais da taxonomia.',
+   q:`SELECT DISTINCT ?classe ?superclasse WHERE {
+  ?c rdfs:subClassOf ?pai .
+  ?c rdfs:label ?classe .
+  ?pai rdfs:label ?superclasse .
+  FILTER NOT EXISTS { ?filho rdfs:subClassOf ?c }
+} ORDER BY ?superclasse ?classe`},
 
-  {cat:'👤 Agentes',icon:'🎯',t:'Quais são os perfis de vítima?',d:'Destinatários e alvos do discurso de ódio.',
-   q:`SELECT DISTINCT ?vitima ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Destinatario_vitima .
-  ?c rdfs:label ?vitima . FILTER(LANG(?vitima)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?vitima`},
-
-  {cat:'👤 Agentes',icon:'🏷',t:'Quais características tornam alguém alvo?',d:'Atributos protegidos que motivam o ódio.',
-   q:`SELECT DISTINCT ?caracteristica ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Pessoa_com_caracteristica_protegida .
-  ?c rdfs:label ?caracteristica . FILTER(LANG(?caracteristica)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?caracteristica`},
-
-  {cat:'👤 Agentes',icon:'🤖',t:'Quais dispositivos automatizados existem?',d:'Bots e sistemas que amplificam ódio.',
-   q:`SELECT DISTINCT ?dispositivo ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Dispositivo_odiador .
-  ?c rdfs:label ?dispositivo . FILTER(LANG(?dispositivo)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?dispositivo`},
-
-  /* ── ESTRATÉGIAS E RECURSOS ── */
-  {cat:'⚔️ Estratégias',icon:'⚔️',t:'Quais são as estratégias discursivas?',d:'Recursos retóricos e linguísticos do ódio.',
-   q:`SELECT DISTINCT ?estrategia ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Estrategias_Discursivas .
-  ?c rdfs:label ?estrategia . FILTER(LANG(?estrategia)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?estrategia`},
-
-  {cat:'⚔️ Estratégias',icon:'📣',t:'Quais são as formas de manifestação?',d:'Como o discurso de ódio se expressa.',
-   q:`SELECT DISTINCT ?forma ?tipo ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Manifestacao .
-  ?c rdfs:label ?forma . FILTER(LANG(?forma)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?tipo . FILTER(LANG(?tipo)="pt") FILTER(?pai != ontohate:Manifestacao) }
-} ORDER BY ?tipo ?forma`},
-
-  {cat:'⚔️ Estratégias',icon:'🔧',t:'Quais recursos técnicos amplificam o ódio?',d:'Tecnologias e plataformas instrumentalizadas.',
-   q:`SELECT DISTINCT ?recurso ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Recursos_Tecnicos .
-  ?c rdfs:label ?recurso . FILTER(LANG(?recurso)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?recurso`},
-
-  {cat:'⚔️ Estratégias',icon:'🖊',t:'Quais recursos de forma são usados?',d:'Aspectos formais e multimodais do discurso.',
-   q:`SELECT DISTINCT ?recurso ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Recursos_de_Forma .
-  ?c rdfs:label ?recurso . FILTER(LANG(?recurso)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?recurso`},
-
-  {cat:'⚔️ Estratégias',icon:'🧠',t:'Quais são as motivações e intenções?',d:'Por que o discurso de ódio é produzido.',
-   q:`SELECT DISTINCT ?motivacao ?subtipo ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Motivacao .
-  ?c rdfs:label ?motivacao . FILTER(LANG(?motivacao)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?subtipo . FILTER(LANG(?subtipo)="pt") FILTER(?pai != ontohate:Motivacao) }
-} ORDER BY ?subtipo ?motivacao`},
-
-  /* ── CONTEXTO E IMPACTO ── */
-  {cat:'🌐 Contexto',icon:'🌐',t:'Em quais contextos o ódio ocorre?',d:'Ambientes sociais, digitais e culturais.',
-   q:`SELECT DISTINCT ?contexto ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Contexto .
-  ?c rdfs:label ?contexto . FILTER(LANG(?contexto)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?contexto`},
-
-  {cat:'🌐 Contexto',icon:'💥',t:'Quais são os danos e consequências?',d:'Impactos psicológicos, sociais e físicos.',
-   q:`SELECT DISTINCT ?dano ?tipo ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Consequencia .
-  ?c rdfs:label ?dano . FILTER(LANG(?dano)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?tipo . FILTER(LANG(?tipo)="pt") FILTER(?pai != ontohate:Consequencia) }
-} ORDER BY ?tipo ?dano`},
-
-  {cat:'🌐 Contexto',icon:'⚖️',t:'Quais mecanismos de moderação existem?',d:'Ações de detecção, remoção e sanção.',
-   q:`SELECT DISTINCT ?acao ?subtipo ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Moderacao .
-  ?c rdfs:label ?acao . FILTER(LANG(?acao)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?subtipo . FILTER(LANG(?subtipo)="pt") FILTER(?pai != ontohate:Moderacao) }
-} ORDER BY ?subtipo ?acao`},
-
-  {cat:'🌐 Contexto',icon:'🏛',t:'Quais são as plataformas digitais envolvidas?',d:'Sistemas tecnológicos de moderação.',
-   q:`SELECT DISTINCT ?plataforma ?definicao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Plataforma_digital .
-  ?c rdfs:label ?plataforma . FILTER(LANG(?plataforma)="pt")
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-} ORDER BY ?plataforma`},
-
-  /* ── RELAÇÕES CRUZADAS ── */
-  {cat:'⛓ Relações Cruzadas',icon:'⛓',t:'Quais relações cruzam fronteiras de dimensão?',d:'Object Properties entre dimensões distintas.',
-   q:`SELECT DISTINCT ?propriedade ?dimOrigem ?dimDestino ?classOrigem ?classDestino WHERE {
-  ?p a owl:ObjectProperty .
-  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
-  ?p rdfs:domain ?d . ?p rdfs:range ?r .
-  ?d rdfs:subClassOf+ ontohate:Discurso_de_odio .
-  ?r rdfs:subClassOf+ ontohate:Discurso_de_odio .
-  ?d rdfs:label ?classOrigem . FILTER(LANG(?classOrigem)="pt")
-  ?r rdfs:label ?classDestino . FILTER(LANG(?classDestino)="pt")
-  ?dimD rdfs:subClassOf ontohate:Discurso_de_odio . ?d rdfs:subClassOf+ ?dimD . ?dimD rdfs:label ?dimOrigem . FILTER(LANG(?dimOrigem)="pt")
-  ?dimR rdfs:subClassOf ontohate:Discurso_de_odio . ?r rdfs:subClassOf+ ?dimR . ?dimR rdfs:label ?dimDestino . FILTER(LANG(?dimDestino)="pt")
-  FILTER(?dimD != ?dimR)
-} ORDER BY ?dimOrigem ?dimDestino`},
-
-  {cat:'⛓ Relações Cruzadas',icon:'🎭',t:'Como agente e motivação se relacionam?',d:'Relações entre Núcleo e Motivação.',
-   q:`SELECT DISTINCT ?propriedade ?agente ?motivacao WHERE {
-  ?p a owl:ObjectProperty .
-  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
-  ?p rdfs:domain ?d . ?p rdfs:range ?r .
-  ?d rdfs:subClassOf+ ontohate:Nucleo .
-  ?r rdfs:subClassOf+ ontohate:Motivacao .
-  ?d rdfs:label ?agente . FILTER(LANG(?agente)="pt")
-  ?r rdfs:label ?motivacao . FILTER(LANG(?motivacao)="pt")
-} ORDER BY ?propriedade`},
-
-  {cat:'⛓ Relações Cruzadas',icon:'💔',t:'Como o ódio causa dano à vítima?',d:'Caminho de Agente para Consequência.',
-   q:`SELECT DISTINCT ?propriedade ?origem ?destino WHERE {
-  ?p a owl:ObjectProperty .
-  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
-  ?p rdfs:domain ?d . ?p rdfs:range ?r .
-  {?d rdfs:subClassOf+ ontohate:Nucleo . ?r rdfs:subClassOf+ ontohate:Consequencia .}
-  UNION
-  {?d rdfs:subClassOf+ ontohate:Discurso_de_odio . ?r rdfs:subClassOf+ ontohate:Destinatario_vitima .}
-  ?d rdfs:label ?origem . FILTER(LANG(?origem)="pt")
-  ?r rdfs:label ?destino . FILTER(LANG(?destino)="pt")
-} ORDER BY ?propriedade`},
-
-  {cat:'⛓ Relações Cruzadas',icon:'🔨',t:'Como moderação responde ao ódio?',d:'Relações entre Moderação e outras dimensões.',
-   q:`SELECT DISTINCT ?propriedade ?origem ?destino WHERE {
-  ?p a owl:ObjectProperty .
-  ?p rdfs:label ?propriedade . FILTER(LANG(?propriedade)="pt")
-  ?p rdfs:domain ?d . ?p rdfs:range ?r .
-  { ?d rdfs:subClassOf+ ontohate:Moderacao . } UNION { ?r rdfs:subClassOf+ ontohate:Moderacao . }
-  ?d rdfs:label ?origem . FILTER(LANG(?origem)="pt")
-  ?r rdfs:label ?destino . FILTER(LANG(?destino)="pt")
-} ORDER BY ?origem`},
-
-  /* ── ANÁLISE SEMÂNTICA ── */
-  {cat:'🔬 Análise',icon:'🔍',t:'Busca por palavra-chave nos rótulos',d:'Edite o termo entre aspas para buscar.',
-   q:`SELECT DISTINCT ?nome ?definicao ?dimensao WHERE {
-  ?c rdfs:label ?nome . FILTER(LANG(?nome)="pt")
-  FILTER(CONTAINS(LCASE(STR(?nome)),"odio"))
-  OPTIONAL { ?c rdfs:comment ?definicao . FILTER(LANG(?definicao)="pt") }
-  OPTIONAL { ?dim rdfs:subClassOf ontohate:Discurso_de_odio . ?c rdfs:subClassOf+ ?dim . ?dim rdfs:label ?dimensao . FILTER(LANG(?dimensao)="pt") }
-} ORDER BY ?nome LIMIT 50`},
-
-  {cat:'🔬 Análise',icon:'🧩',t:'Quais conceitos são folhas (sem subclasses)?',d:'Nós terminais da taxonomia.',
-   q:`SELECT DISTINCT ?conceito ?dimensao WHERE {
-  ?c rdfs:subClassOf+ ontohate:Discurso_de_odio .
-  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
-  FILTER NOT EXISTS { ?filho rdfs:subClassOf ?c . FILTER EXISTS {?filho rdfs:subClassOf+ ontohate:Discurso_de_odio} }
-  OPTIONAL { ?dim rdfs:subClassOf ontohate:Discurso_de_odio . ?c rdfs:subClassOf+ ?dim . ?dim rdfs:label ?dimensao . FILTER(LANG(?dimensao)="pt") }
-} ORDER BY ?dimensao ?conceito`},
-
-  {cat:'🔬 Análise',icon:'🌊',t:'Quais conceitos têm mais subclasses?',d:'Conceitos mais ricos hierarquicamente.',
-   q:`SELECT ?conceito (COUNT(?sub) AS ?qtd) WHERE {
-  ?c rdfs:subClassOf+ ontohate:Discurso_de_odio .
-  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
-  ?sub rdfs:subClassOf ?c .
-} GROUP BY ?c ?conceito HAVING (?qtd > 1) ORDER BY DESC(?qtd) LIMIT 20`},
-
-  {cat:'🔬 Análise',icon:'📊',t:'Quais conceitos participam de mais relações?',d:'Nós com maior conectividade semântica.',
-   q:`SELECT ?conceito (COUNT(?p) AS ?relacoes) WHERE {
-  ?c rdfs:subClassOf+ ontohate:Discurso_de_odio .
-  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
-  ?p a owl:ObjectProperty .
-  { ?p rdfs:domain ?c . } UNION { ?p rdfs:range ?c . }
-} GROUP BY ?c ?conceito ORDER BY DESC(?relacoes) LIMIT 20`},
-
-  {cat:'🔬 Análise',icon:'🔗',t:'Qual a profundidade máxima da hierarquia?',d:'Classes em cada nível da árvore taxonômica.',
-   q:`SELECT ?nivel ?conceito WHERE {
-  {?c rdfs:subClassOf ontohate:Discurso_de_odio . BIND(1 AS ?nivel)}
-  UNION {?c rdfs:subClassOf ?l1 . ?l1 rdfs:subClassOf ontohate:Discurso_de_odio . BIND(2 AS ?nivel)}
-  UNION {?c rdfs:subClassOf ?l2 . ?l2 rdfs:subClassOf ?l1 . ?l1 rdfs:subClassOf ontohate:Discurso_de_odio . BIND(3 AS ?nivel)}
-  UNION {?c rdfs:subClassOf ?l3 . ?l3 rdfs:subClassOf ?l2 . ?l2 rdfs:subClassOf ?l1 . ?l1 rdfs:subClassOf ontohate:Discurso_de_odio . BIND(4 AS ?nivel)}
-  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
-} ORDER BY ?nivel ?conceito`},
-
-  /* ── METADADOS ── */
-  {cat:'🏛 Metadados',icon:'🏛',t:'Quais são os metadados da ontologia?',d:'Versão, autoria, licença e título.',
+  {cat:'📐 Estrutura',icon:'🔗',t:'Q8 · Metadados da ontologia',
+   d:'Nome, versão, criador e outros metadados.',
    q:`SELECT DISTINCT ?campo ?valor WHERE {
   ?o a owl:Ontology .
   { ?o rdfs:label ?valor . BIND("Nome" AS ?campo) }
   UNION { ?o owl:versionInfo ?valor . BIND("Versão" AS ?campo) }
   UNION { ?o dcterms:creator ?valor . BIND("Criador" AS ?campo) }
-  UNION { ?o dcterms:license ?valor . BIND("Licença" AS ?campo) }
   UNION { ?o rdfs:comment ?valor . BIND("Descrição" AS ?campo) }
 } ORDER BY ?campo`},
 
-  {cat:'🏛 Metadados',icon:'📋',t:'Todos os conceitos com IRI e rótulo',d:'Inventário completo da ontologia.',
-   q:`SELECT DISTINCT ?conceito ?iri WHERE {
-  ?c a owl:Class .
-  ?c rdfs:label ?conceito . FILTER(LANG(?conceito)="pt")
-  BIND(STR(?c) AS ?iri)
-  FILTER EXISTS { ?c rdfs:subClassOf+ ontohate:Discurso_de_odio }
-} ORDER BY ?conceito LIMIT 500`},
+  /* ── 2. NÚCLEO / AGENTES ── */
+  {cat:'👤 Núcleo & Agentes',icon:'👤',t:'Q9 · Tipos de agente odiador',
+   d:'Quem produz ou dissemina discurso de ódio.',
+   q:`SELECT DISTINCT ?agente ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Agente_odiador .
+  ?c rdfs:label ?agente .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?agente`},
 
-  {cat:'🏛 Metadados',icon:'🔬',t:'Diagnóstico: classes OWL diretas',d:'Verificação técnica da ontologia.',
+  {cat:'👤 Núcleo & Agentes',icon:'🤖',t:'Q10 · Dispositivos automatizados de ódio',
+   d:'Bots e sistemas técnicos que amplificam ódio.',
+   q:`SELECT DISTINCT ?dispositivo ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Dispositivo_odiador .
+  ?c rdfs:label ?dispositivo .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?dispositivo`},
+
+  {cat:'👤 Núcleo & Agentes',icon:'🛡',t:'Q11 · Agentes de moderação',
+   d:'Quem intervém para conter o discurso de ódio.',
+   q:`SELECT DISTINCT ?agente ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Agente_moderador .
+  ?c rdfs:label ?agente .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?agente`},
+
+  {cat:'👤 Núcleo & Agentes',icon:'🏛',t:'Q12 · Todo o Núcleo e suas subdivisões',
+   d:'Agentes, dispositivos e estruturas do núcleo.',
+   q:`SELECT DISTINCT ?conceito ?superclasse ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Nucleo .
+  ?c rdfs:label ?conceito .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?superclasse . FILTER(?pai != ontohate:Nucleo) }
+} ORDER BY ?superclasse ?conceito`},
+
+  /* ── 3. DESTINATÁRIO / VÍTIMA ── */
+  {cat:'🎯 Vítimas',icon:'🎯',t:'Q13 · Perfis de destinatário/vítima',
+   d:'Quem é alvo do discurso de ódio.',
+   q:`SELECT DISTINCT ?vitima ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Destinatario_vitima .
+  ?c rdfs:label ?vitima .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?vitima`},
+
+  {cat:'🎯 Vítimas',icon:'🏷',t:'Q14 · Características protegidas',
+   d:'Atributos que tornam alguém alvo de ódio.',
+   q:`SELECT DISTINCT ?caracteristica ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Pessoa_com_caracteristica_protegida .
+  ?c rdfs:label ?caracteristica .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?caracteristica`},
+
+  /* ── 4. MANIFESTAÇÃO ── */
+  {cat:'📣 Manifestação',icon:'📣',t:'Q15 · Formas de manifestação do ódio',
+   d:'Como o discurso de ódio se expressa.',
+   q:`SELECT DISTINCT ?forma ?tipo ?definicao WHERE {
+  { ?c rdfs:subClassOf ontohate:Manifestacao . BIND("Manifestação" AS ?tipo) }
+  UNION { ?c rdfs:subClassOf ontohate:Manifestacao_explicita . BIND("Explícita" AS ?tipo) }
+  UNION { ?c rdfs:subClassOf ontohate:Manifestacao_velada . BIND("Velada" AS ?tipo) }
+  ?c rdfs:label ?forma .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?tipo ?forma`},
+
+  {cat:'📣 Manifestação',icon:'🔍',t:'Q16 · Manifestação explícita vs velada',
+   d:'Diferença entre ódio aberto e encoberto.',
+   q:`SELECT DISTINCT ?tipo ?definicao WHERE {
+  { ?c a owl:Class . ?c rdfs:subClassOf ontohate:Manifestacao .
+    ?c rdfs:label ?tipo . OPTIONAL { ?c rdfs:comment ?definicao } }
+} ORDER BY ?tipo`},
+
+  /* ── 5. RECURSOS ── */
+  {cat:'🔧 Recursos',icon:'🔧',t:'Q17 · Estratégias discursivas',
+   d:'Técnicas retóricas e linguísticas usadas.',
+   q:`SELECT DISTINCT ?estrategia ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Estrategias_Discursivas .
+  ?c rdfs:label ?estrategia .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?estrategia`},
+
+  {cat:'🔧 Recursos',icon:'💻',t:'Q18 · Recursos técnicos',
+   d:'Tecnologias que amplificam o discurso de ódio.',
+   q:`SELECT DISTINCT ?recurso ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Recursos_Tecnicos .
+  ?c rdfs:label ?recurso .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?recurso`},
+
+  {cat:'🔧 Recursos',icon:'🖊',t:'Q19 · Recursos de forma',
+   d:'Aspectos formais e multimodais do discurso.',
+   q:`SELECT DISTINCT ?recurso ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Recursos_de_Forma .
+  ?c rdfs:label ?recurso .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?recurso`},
+
+  {cat:'🔧 Recursos',icon:'🗂',t:'Q20 · Todos os recursos (técnicos + forma + estratégias)',
+   d:'Inventário completo da dimensão Recursos.',
+   q:`SELECT DISTINCT ?recurso ?tipo ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Recursos .
+  ?c rdfs:label ?recurso .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?tipo . FILTER(?pai != ontohate:Recursos) }
+} ORDER BY ?tipo ?recurso`},
+
+  /* ── 6. MOTIVAÇÃO ── */
+  {cat:'🧠 Motivação',icon:'🧠',t:'Q21 · Motivações e intenções',
+   d:'Por que o discurso de ódio é produzido.',
+   q:`SELECT DISTINCT ?motivacao ?subtipo ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Motivacao .
+  ?c rdfs:label ?motivacao .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?subtipo . FILTER(?pai != ontohate:Motivacao) }
+} ORDER BY ?subtipo ?motivacao`},
+
+  /* ── 7. CONSEQUÊNCIA ── */
+  {cat:'💥 Consequência',icon:'💥',t:'Q22 · Danos e consequências do ódio',
+   d:'Impactos psicológicos, sociais e físicos.',
+   q:`SELECT DISTINCT ?dano ?tipo ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Consequencia .
+  ?c rdfs:label ?dano .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?tipo . FILTER(?pai != ontohate:Consequencia) }
+} ORDER BY ?tipo ?dano`},
+
+  {cat:'💥 Consequência',icon:'🔴',t:'Q23 · Tipos de dano provocado',
+   d:'Dano psicológico, social, físico.',
+   q:`SELECT DISTINCT ?dano ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Dano_provocado .
+  ?c rdfs:label ?dano .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?dano`},
+
+  /* ── 8. MODERAÇÃO / CONTEXTO ── */
+  {cat:'⚖️ Moderação',icon:'⚖️',t:'Q24 · Mecanismos de moderação',
+   d:'Sistemas, plataformas e agentes de moderação.',
+   q:`SELECT DISTINCT ?acao ?subtipo ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Moderacao .
+  ?c rdfs:label ?acao .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+  OPTIONAL { ?c rdfs:subClassOf ?pai . ?pai rdfs:label ?subtipo . FILTER(?pai != ontohate:Moderacao) }
+} ORDER BY ?subtipo ?acao`},
+
+  {cat:'⚖️ Moderação',icon:'🌐',t:'Q25 · Contextos onde o ódio ocorre',
+   d:'Ambientes digitais e socioculturais.',
+   q:`SELECT DISTINCT ?contexto ?definicao WHERE {
+  ?c rdfs:subClassOf ontohate:Contexto .
+  ?c rdfs:label ?contexto .
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?contexto`},
+
+  /* ── 9. RELAÇÕES CRUZADAS ── */
+  {cat:'⛓ Relações Cruzadas',icon:'⛓',t:'Q26 · Todas as Object Properties com domínio e alcance',
+   d:'Mapa completo de relações formais da ontologia.',
+   q:`SELECT DISTINCT ?prop ?domClasseLabel ?rangeClasseLabel WHERE {
+  ?p a owl:ObjectProperty .
+  ?p rdfs:label ?prop .
+  ?p rdfs:domain ?d .
+  ?p rdfs:range ?r .
+  ?d rdfs:label ?domClasseLabel .
+  ?r rdfs:label ?rangeClasseLabel .
+} ORDER BY ?prop`},
+
+  {cat:'⛓ Relações Cruzadas',icon:'💔',t:'Q27 · Como o Agente provoca dano?',
+   d:'Relação entre Núcleo (agentes) e Consequência.',
+   q:`SELECT DISTINCT ?prop ?agente ?dano WHERE {
+  ?p a owl:ObjectProperty .
+  ?p rdfs:label ?prop .
+  ?p rdfs:domain ?d .
+  ?p rdfs:range ?r .
+  ?d rdfs:subClassOf ontohate:Nucleo .
+  ?r rdfs:subClassOf ontohate:Consequencia .
+  ?d rdfs:label ?agente .
+  ?r rdfs:label ?dano .
+} ORDER BY ?prop`},
+
+  {cat:'⛓ Relações Cruzadas',icon:'🎯',t:'Q28 · Quem vitimiza quem?',
+   d:'Relação entre agentes e destinatários/vítimas.',
+   q:`SELECT DISTINCT ?prop ?agente ?vitima WHERE {
+  ?p a owl:ObjectProperty .
+  ?p rdfs:label ?prop .
+  ?p rdfs:domain ?d .
+  ?p rdfs:range ?r .
+  ?d rdfs:subClassOf ontohate:Nucleo .
+  ?r rdfs:subClassOf ontohate:Destinatario_vitima .
+  ?d rdfs:label ?agente .
+  ?r rdfs:label ?vitima .
+} ORDER BY ?prop`},
+
+  {cat:'⛓ Relações Cruzadas',icon:'🔨',t:'Q29 · Relações a partir do Discurso_de_odio (raiz)',
+   d:'Propriedades que partem da raiz para dimensões.',
+   q:`SELECT DISTINCT ?prop ?dimensao WHERE {
+  ?p a owl:ObjectProperty .
+  ?p rdfs:label ?prop .
+  ?p rdfs:domain ontohate:Discurso_de_odio .
+  ?p rdfs:range ?r .
+  ?r rdfs:label ?dimensao .
+} ORDER BY ?prop`},
+
+  /* ── 10. ANÁLISE ── */
+  {cat:'🔬 Análise',icon:'🔍',t:'Q30 · Busca por palavra-chave',
+   d:'Busca em rótulos. Edite o termo entre aspas.',
+   q:`SELECT DISTINCT ?nome ?definicao WHERE {
+  ?c rdfs:label ?nome .
+  FILTER(CONTAINS(LCASE(STR(?nome)),"odio"))
+  OPTIONAL { ?c rdfs:comment ?definicao }
+} ORDER BY ?nome LIMIT 50`},
+
+  {cat:'🔬 Análise',icon:'📊',t:'Q31 · Inventário geral com IRIs',
+   d:'Todas as classes com IRI e rótulo.',
+   q:`SELECT DISTINCT ?classe ?iri WHERE {
+  ?c a owl:Class .
+  ?c rdfs:label ?classe .
+  BIND(STR(?c) AS ?iri)
+} ORDER BY ?classe LIMIT 200`},
+
+  {cat:'🔬 Análise',icon:'🏛',t:'Q32 · Diagnóstico: primeiras 20 classes',
+   d:'Verificação rápida da ontologia carregada.',
    q:`SELECT ?cls ?lbl WHERE {
   ?cls a owl:Class .
   OPTIONAL { ?cls rdfs:label ?lbl }
-} LIMIT 30`},
+} LIMIT 20`},
 ];
 
 let lastRows=[],lastVars=[];
