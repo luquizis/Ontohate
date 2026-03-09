@@ -424,20 +424,48 @@ canvas.gv:active{cursor:grabbing;}
 #tip{
   position:fixed;z-index:9999;pointer-events:none;
   background:var(--card);border:1px solid var(--bord);border-radius:12px;
-  padding:13px 15px;max-width:440px;font-size:12px;line-height:1.5;
+  padding:13px 15px 0;max-width:420px;min-width:240px;
+  font-size:12px;line-height:1.5;
   box-shadow:0 16px 48px rgba(0,0,0,.65);
   opacity:0;transform:translateY(5px);transition:opacity .1s,transform .1s;
+  max-height:80vh;overflow:hidden;display:flex;flex-direction:column;
 }
 #tip.on{opacity:1;transform:none;}
-.tip-n{font-family:var(--head);font-weight:800;font-size:14px;margin-bottom:3px;color:var(--txt);}
-.tip-i{font-family:var(--mono);font-size:9px;color:var(--txt3);word-break:break-all;margin-bottom:7px;}
-.tip-c{font-size:11px;color:var(--txt2);line-height:1.65;margin-bottom:8px;padding:7px 9px;background:rgba(90,110,255,.06);border-radius:6px;}
-.tip-m{font-size:11px;color:var(--txt3);display:flex;flex-direction:column;gap:3px;}
+.tip-n{font-family:var(--head);font-weight:800;font-size:14px;margin-bottom:3px;color:var(--txt);flex-shrink:0;}
+.tip-i{font-family:var(--mono);font-size:9px;color:var(--txt3);word-break:break-all;margin-bottom:7px;flex-shrink:0;}
+.tip-c{font-size:11px;color:var(--txt2);line-height:1.6;margin-bottom:8px;padding:6px 8px;background:rgba(90,110,255,.07);border-radius:6px;flex-shrink:0;}
+.tip-m{font-size:11px;color:var(--txt3);display:flex;flex-direction:column;gap:3px;margin-bottom:8px;flex-shrink:0;}
 .tip-m b{color:var(--txt2);}
-.tip-m div{padding:1px 0;}
-.tip-xr{margin-top:6px;padding-top:6px;border-top:1px solid var(--bord2);}
-.tip-xr-lbl{font-size:9px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:4px;}
-.tip-xr-item{font-size:10px;color:rgba(0,213,192,.8);padding:2px 0;}
+/* Scrollable props area */
+.tip-props-scroll{overflow-y:auto;flex:1;padding-bottom:10px;margin:0 -2px;padding:0 2px 10px;}
+.tip-props-scroll::-webkit-scrollbar{width:3px;}
+.tip-props-scroll::-webkit-scrollbar-thumb{background:rgba(90,110,255,.3);border-radius:2px;}
+/* Section label */
+.tip-sec{margin-top:7px;}
+.tip-sec:first-child{margin-top:2px;}
+.tip-sec-lbl{font-size:9px;font-family:var(--mono);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;font-weight:600;}
+/* Property rows */
+.tip-prop-row{display:flex;align-items:baseline;gap:5px;padding:2px 0;font-size:11px;border-bottom:1px solid rgba(90,110,255,.04);}
+.tip-prop-arrow{flex-shrink:0;font-size:10px;opacity:.7;}
+.tip-prop-text{flex:1;min-width:0;word-break:break-word;color:var(--txt);}
+.tip-prop-row.out .tip-prop-text{color:#c4a8ff;}
+.tip-prop-row.out.inh .tip-prop-text{color:rgba(196,168,255,.55);}
+.tip-prop-row.in .tip-prop-text{color:#93d4ff;}
+.tip-prop-row.in.inh .tip-prop-text{color:rgba(147,212,255,.55);}
+.tip-prop-row.cross .tip-prop-text{color:var(--teal);}
+.tip-cross-dim{font-size:9px;font-family:var(--mono);color:var(--txt3);flex-shrink:0;margin-left:3px;}
+.tip-no-range{font-size:9px;color:var(--txt3);font-style:italic;}
+.tip-no-props{font-size:10px;color:var(--txt3);padding:6px 0 10px;font-style:italic;}
+/* Type badges */
+.tip-badge{font-size:8px;padding:1px 4px;border-radius:3px;flex-shrink:0;font-family:var(--mono);}
+.tip-badge-d{background:rgba(245,200,66,.15);color:#f5c842;}
+.tip-badge-a{background:rgba(90,110,255,.15);color:#7080ff;}
+/* Light theme overrides */
+[data-theme=light] .tip-prop-row.out .tip-prop-text{color:#6030a0;}
+[data-theme=light] .tip-prop-row.out.inh .tip-prop-text{color:rgba(96,48,160,.5);}
+[data-theme=light] .tip-prop-row.in .tip-prop-text{color:#1a50a0;}
+[data-theme=light] .tip-prop-row.in.inh .tip-prop-text{color:rgba(26,80,160,.5);}
+[data-theme=light] .tip-prop-row.cross .tip-prop-text{color:#007a6e;}
 
 /* Status bar */
 #sbar{flex:none;border-top:1px solid var(--bord);background:var(--bg1);padding:5px 14px;display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10px;color:var(--txt3);}
@@ -484,23 +512,11 @@ canvas.gv:active{cursor:grabbing;}
   background:rgba(90,110,255,.12);border-radius:3px;color:var(--txt3);
   margin-left:auto;flex-shrink:0;
 }
-/* Tooltip property rows */
-.tip-props{margin-top:6px;padding-top:6px;border-top:1px solid var(--bord2);}
-.tip-prop-row{font-size:10px;padding:2px 0;color:var(--txt);}
-.tip-prop-row.out{color:#b06eff;}
-.tip-prop-row.in{color:#7dd3fc;}
-[data-theme=light] .tip-prop-row.out{color:#7030b0;}
-[data-theme=light] .tip-prop-row.in{color:#1a5cb0;}
 /* Sidebar text improvements */
 .sec-hd{font-size:10px;font-weight:700;color:var(--txt);letter-spacing:.08em;text-transform:uppercase;padding:6px 0 5px;border-bottom:1px solid var(--bord2);margin-bottom:6px;}
 .tog span{color:var(--txt2);}
-[data-theme=light] .tog span{color:var(--txt2);}
-/* Preset descriptions */
-.p-desc{color:var(--txt2);}
-[data-theme=light] .p-desc{color:var(--txt2);}
-/* Node detail panel improvements */
+/* Node detail panel */
 .nd-comment{font-size:11px;line-height:1.6;color:var(--txt);background:var(--bg2);padding:8px;border-radius:6px;}
-[data-theme=light] .nd-comment{color:var(--txt);}
 </style>
 </head>
 <body data-theme="dark">
@@ -967,30 +983,50 @@ function shortIri(iri){if(!iri)return'—';const m=iri.match(/[#\/]([^#\/]+)$/);
 function buildIndex(quads){
   Object.assign(G,{quads,byS:new Map(),byP:new Map(),bySP:new Map(),
     classes:new Set(),labels:new Map(),lblByLang:new Map(),comments:new Map(),
-    subOf:new Map(),childOf:new Map(),props:new Set(),propLabel:new Map(),
-    propDomain:new Map(),propRange:new Map(),annots:new Map(),dims:[],rootIri:null});
+    subOf:new Map(),childOf:new Map(),
+    props:new Set(),propLabel:new Map(),propDomain:new Map(),propRange:new Map(),
+    propType:new Map(),   // prop IRI → 'object'|'data'|'annotation'|'other'
+    subPropOf:new Map(),  // prop IRI → Set of super-prop IRIs
+    classProps:new Map(), // class IRI → [{prop, propLbl, ranges:[], type, inherited}]
+    annots:new Map(),dims:[],rootIri:null});
 
-  const Rtype=NS.RDF+'type',Rsub=NS.RDFS+'subClassOf',Rlbl=NS.RDFS+'label',
-        Rcmt=NS.RDFS+'comment',Rdom=NS.RDFS+'domain',Rrng=NS.RDFS+'range',
-        Ocls=NS.OWL+'Class',Oobj=NS.OWL+'ObjectProperty';
+  const Rtype=NS.RDF+'type', Rsub=NS.RDFS+'subClassOf', Rlbl=NS.RDFS+'label',
+        Rcmt=NS.RDFS+'comment', Rdom=NS.RDFS+'domain', Rrng=NS.RDFS+'range',
+        Ocls=NS.OWL+'Class', Oobj=NS.OWL+'ObjectProperty',
+        Odata=NS.OWL+'DatatypeProperty', Oann=NS.OWL+'AnnotationProperty',
+        OsubP=NS.RDFS+'subPropertyOf';
 
   for(const q of quads){
     if(!G.byS.has(q.s))G.byS.set(q.s,[]);G.byS.get(q.s).push(q);
     if(!G.byP.has(q.p))G.byP.set(q.p,[]);G.byP.get(q.p).push(q);
     const k=q.s+'|'+q.p;if(!G.bySP.has(k))G.bySP.set(k,[]);G.bySP.get(k).push(q);
   }
+
   for(const q of quads){
     if(q.p===Rtype&&q.o===Ocls&&!q.isLit)G.classes.add(q.s);
     if(q.p===Rsub&&!q.isLit){G.classes.add(q.s);G.classes.add(q.o);addSet(G.subOf,q.s,q.o);addSet(G.childOf,q.o,q.s);}
     if(q.p===Rlbl&&q.isLit){const l=(q.oLang||'').toLowerCase();if(!G.lblByLang.has(q.s))G.lblByLang.set(q.s,new Map());G.lblByLang.get(q.s).set(l||'_',q.o);}
     if(q.p===Rcmt&&q.isLit&&!G.comments.has(q.s))G.comments.set(q.s,q.o);
-    if(q.p===Rtype&&q.o===Oobj)G.props.add(q.s);
+    // All property types
+    if(q.p===Rtype&&!q.isLit){
+      if(q.o===Oobj){G.props.add(q.s);G.propType.set(q.s,'object');}
+      else if(q.o===Odata){G.props.add(q.s);G.propType.set(q.s,'data');}
+      else if(q.o===Oann){G.props.add(q.s);G.propType.set(q.s,'annotation');}
+    }
     if(q.p===Rdom&&!q.isLit)addSet(G.propDomain,q.s,q.o);
     if(q.p===Rrng&&!q.isLit)addSet(G.propRange,q.s,q.o);
-    if(q.p===Rlbl&&G.props.has(q.s)&&!G.propLabel.has(q.s))G.propLabel.set(q.s,q.o);
+    if(q.p===OsubP&&!q.isLit)addSet(G.subPropOf,q.s,q.o);
+    if(q.p===Rlbl&&q.isLit&&G.props.has(q.s)&&!G.propLabel.has(q.s))G.propLabel.set(q.s,q.o);
   }
+
+  // Second pass: pick up labels for props discovered after first label scan
+  for(const q of quads){
+    if(q.p===Rlbl&&q.isLit&&G.props.has(q.s)&&!G.propLabel.has(q.s))G.propLabel.set(q.s,q.o);
+  }
+
   for(const c of G.classes)G.labels.set(c,bestLbl(c));
 
+  // Annotations: all non-structural triples on class subjects
   const skipP=new Set([Rtype,Rsub]);
   for(const q of quads){
     if(!G.classes.has(q.s)||skipP.has(q.p))continue;
@@ -998,18 +1034,76 @@ function buildIndex(quads){
     G.annots.get(q.s).push({p:q.p,pS:shortIri(q.p),val:q.o,lang:q.oLang||'',dt:q.oDt||''});
   }
 
+  // Resolve rootIri first — needed for property indexing
   for(const r of ROOTS_IRI){if(G.classes.has(r)){G.rootIri=r;break;}}
   if(G.rootIri){
     const kids=G.childOf.get(G.rootIri);
-    if(kids&&kids.size>0){G.dims=[...kids].sort((a,b)=>bestLbl(a).localeCompare(bestLbl(b),'pt-BR'));return;}
+    if(kids&&kids.size>0){G.dims=[...kids].sort((a,b)=>bestLbl(a).localeCompare(bestLbl(b),'pt-BR'));}
   }
-  const block=new Set([NS.OWL+'Thing',NS.RDFS+'Resource']);
-  const tops=[...G.classes].filter(c=>{
-    if(block.has(c))return false;
-    const ps=G.subOf.get(c);
-    return(!ps||![...ps].some(p=>G.classes.has(p)&&!block.has(p)))&&(G.childOf.get(c)?.size||0)>0;
-  });
-  G.dims=tops.sort((a,b)=>bestLbl(a).localeCompare(bestLbl(b),'pt-BR'));
+  if(!G.dims.length){
+    const block=new Set([NS.OWL+'Thing',NS.RDFS+'Resource']);
+    const tops=[...G.classes].filter(c=>{
+      if(block.has(c))return false;
+      const ps=G.subOf.get(c);
+      return(!ps||![...ps].some(p=>G.classes.has(p)&&!block.has(p)))&&(G.childOf.get(c)?.size||0)>0;
+    });
+    G.dims=tops.sort((a,b)=>bestLbl(a).localeCompare(bestLbl(b),'pt-BR'));
+  }
+
+  // ── Build per-class property index (AFTER dims/rootIri are known) ────────
+  // Inline BFS — global descOf not yet callable here
+  function _bfsSubs(iri){
+    const out=new Set();
+    const q=[iri],seen=new Set([iri]);
+    while(q.length){
+      const c=q.shift();
+      const ch=G.childOf.get(c);
+      if(!ch)continue;
+      for(const x of ch)if(!seen.has(x)){seen.add(x);out.add(x);q.push(x);}
+    }
+    return out;
+  }
+
+  // G.classProps: class IRI → [{propLbl, propIri, ranges[], type, direct}]
+  // G.classInProps: class IRI → [{propLbl, propIri, domains[], type}]
+  G.classProps=new Map();
+  G.classInProps=new Map();
+
+  for(const p of G.props){
+    const rawDomains=[...(G.propDomain.get(p)||[])];
+    const rawRanges =[...(G.propRange.get(p) ||[])];
+    const pLbl=G.propLabel.get(p)||shortIri(p);
+    const pKind=G.propType.get(p)||'object';
+
+    // ── Outgoing (domain side) ─────────────────────────────
+    const effectiveDomains=new Set(rawDomains);
+    for(const d of rawDomains) for(const sub of _bfsSubs(d)) effectiveDomains.add(sub);
+
+    for(const cls of effectiveDomains){
+      if(!G.classProps.has(cls)) G.classProps.set(cls,[]);
+      G.classProps.get(cls).push({
+        propIri:p, propLbl:pLbl,
+        ranges:rawRanges,
+        type:pKind,
+        direct:rawDomains.includes(cls)
+      });
+    }
+
+    // ── Incoming (range side) ──────────────────────────────
+    const effectiveRanges=new Set(rawRanges);
+    for(const r of rawRanges) for(const sub of _bfsSubs(r)) effectiveRanges.add(sub);
+
+    for(const cls of effectiveRanges){
+      if(!G.classInProps.has(cls)) G.classInProps.set(cls,[]);
+      G.classInProps.get(cls).push({
+        propIri:p, propLbl:pLbl,
+        domains:rawDomains,
+        type:pKind,
+        direct:rawRanges.includes(cls)
+      });
+    }
+  }
+  // ── end property index ────────────────────────────────────
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1669,51 +1763,105 @@ function showTip(html,x,y){
 function hideTip(d){clearTimeout(tipTimer);tipTimer=setTimeout(()=>TIP.classList.remove('on'),d??80);}
 
 function tipHtml(iri){
-  const lbl=bestLbl(iri);
-  const cmt=G.comments.get(iri)||'';
-  const parents=[...(G.subOf.get(iri)||[])].map(p=>bestLbl(p));
-  const kids=[...(G.childOf.get(iri)||[])];
+  const lbl   = bestLbl(iri);
+  const cmt   = G.comments.get(iri)||'';
+  const parents = [...(G.subOf.get(iri)||[])].map(p=>bestLbl(p));
+  const kids    = [...(G.childOf.get(iri)||[])];
+  const myDim   = dimOf(iri);
 
-  // Collect ALL properties where this class is domain or range
-  const outProps=[],inProps=[],outCross=[],inCross=[];
-  const myDim=dimOf(iri);
-  for(const p of G.props){
-    const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];
-    const pl=G.propLabel.get(p)||shortIri(p);
-    // Expand: check if iri itself, OR if any ancestor of iri is in domain/range
-    const irisAndAncestors=new Set([iri,...ancestorsOf(iri)]);
-    const inDomain=ds.some(d=>d===iri||d===G.rootIri);
-    const inRange=rs.some(r=>r===iri||r===G.rootIri);
-    if(inDomain){
-      rs.forEach(r=>{
+  // ── Outgoing properties (this class is in domain) ────────
+  const outDirect=[], outInherited=[], crossOut=[];
+  const seenOut=new Set();
+  for(const e of (G.classProps?.get(iri)||[])){
+    const{propLbl,ranges,type,direct}=e;
+    if(!ranges.length){
+      const key=propLbl+'|—';
+      if(seenOut.has(key))continue; seenOut.add(key);
+      const item={text:propLbl,type,noRange:true};
+      if(direct) outDirect.push(item); else outInherited.push(item);
+    } else {
+      for(const r of ranges){
+        const key=propLbl+'|'+r;
+        if(seenOut.has(key))continue; seenOut.add(key);
+        const rLbl=bestLbl(r);
         const tD=dimOf(r);
-        if(myDim&&tD&&tD!==myDim) outCross.push(`${pl} → ${bestLbl(r)} (${bestLbl(tD)})`);
-        else outProps.push(`${pl} → ${bestLbl(r)}`);
-      });
-    }
-    if(inRange){
-      ds.forEach(d=>{
-        const fD=dimOf(d);
-        if(myDim&&fD&&fD!==myDim) inCross.push(`${bestLbl(d)} → ${pl} (${bestLbl(fD)})`);
-        else inProps.push(`${bestLbl(d)} → ${pl}`);
-      });
+        const item={text:`${propLbl} → ${rLbl}`,type,direct};
+        if(myDim&&tD&&tD!==myDim) crossOut.push({...item,dim:bestLbl(tD)});
+        else if(direct) outDirect.push(item);
+        else outInherited.push(item);
+      }
     }
   }
 
-  const propRows=[
-    ...outProps.slice(0,4).map(r=>`<div class="tip-prop-row out">→ ${esc(r)}</div>`),
-    ...inProps.slice(0,4).map(r=>`<div class="tip-prop-row in">← ${esc(r)}</div>`),
-  ].join('');
+  // ── Incoming properties (this class is in range) ─────────
+  const inDirect=[], inInherited=[], crossIn=[];
+  const seenIn=new Set();
+  for(const e of (G.classInProps?.get(iri)||[])){
+    const{propLbl,domains,type,direct}=e;
+    for(const d of domains){
+      const key=d+'|'+propLbl;
+      if(seenIn.has(key))continue; seenIn.add(key);
+      const dLbl=bestLbl(d);
+      const fD=dimOf(d);
+      const item={text:`${dLbl} → ${propLbl}`,type,direct};
+      if(myDim&&fD&&fD!==myDim) crossIn.push({...item,dim:bestLbl(fD)});
+      else if(direct) inDirect.push(item);
+      else inInherited.push(item);
+    }
+  }
 
-  return`<div class="tip-n">${esc(lbl)}</div>
-<div class="tip-i">${esc(iri)}</div>
-${cmt?`<div class="tip-c">${esc(cmt.slice(0,200))}${cmt.length>200?'…':''}</div>`:''}
-<div class="tip-m">
-  <div><b>Superclasse(s):</b> ${parents.length?esc(parents.slice(0,3).join(', '))+(parents.length>3?` +${parents.length-3}`:''):'—'}</div>
-  <div><b>Subclasses:</b> ${kids.length}${kids.length>0?' ('+kids.slice(0,3).map(k=>bestLbl(k)).join(', ')+(kids.length>3?'…':'')+')'  :''}</div>
-</div>
-${propRows?`<div class="tip-props">${propRows}</div>`:''}
-${(outCross.length||inCross.length)?`<div class="tip-xr"><div class="tip-xr-lbl">⛓ Relações entre dimensões</div>${outCross.slice(0,3).map(r=>`<div class="tip-xr-item">→ ${esc(r)}</div>`).join('')}${inCross.slice(0,3).map(r=>`<div class="tip-xr-item">← ${esc(r)}</div>`).join('')}</div>`:''}`;
+  // ── Render helpers ────────────────────────────────────────
+  const badge=t=>t==='data'
+    ?'<span class="tip-badge tip-badge-d">D</span>'
+    :t==='annotation'
+    ?'<span class="tip-badge tip-badge-a">A</span>'
+    :'';
+
+  const row=(cls,arrow,items)=>items.map(i=>
+    `<div class="tip-prop-row ${cls}">`+
+    `<span class="tip-prop-arrow">${arrow}</span>`+
+    `<span class="tip-prop-text">${esc(i.text)}${i.noRange?'<span class="tip-no-range"> (sem range)</span>':''}</span>`+
+    badge(i.type)+
+    `</div>`
+  ).join('');
+
+  const section=(label,color,rows)=>rows
+    ?`<div class="tip-sec"><div class="tip-sec-lbl" style="color:${color}">${label}</div>${rows}</div>`
+    :'';
+
+  const crossRow=(arrow,items)=>items.map(i=>
+    `<div class="tip-prop-row cross">`+
+    `<span class="tip-prop-arrow">${arrow}</span>`+
+    `<span class="tip-prop-text">${esc(i.text)}</span>`+
+    `<span class="tip-cross-dim">${esc(i.dim)}</span>`+
+    badge(i.type)+
+    `</div>`
+  ).join('');
+
+  const hasCross=crossOut.length||crossIn.length;
+  const hasProps=outDirect.length||outInherited.length||inDirect.length||inInherited.length||hasCross;
+
+  return `<div class="tip-n">${esc(lbl)}</div>`+
+    `<div class="tip-i">${esc(iri)}</div>`+
+    (cmt?`<div class="tip-c">${esc(cmt.slice(0,180))}${cmt.length>180?'…':''}</div>`:'') +
+    `<div class="tip-m">`+
+    `<div><b>Superclasse(s):</b> ${parents.length?esc(parents.slice(0,3).join(', '))+(parents.length>3?` +${parents.length-3}`:''):'—'}</div>`+
+    `<div><b>Subclasses:</b> ${kids.length||'—'}</div>`+
+    `</div>`+
+    (hasProps
+      ? `<div class="tip-props-scroll">`+
+          section('↗ Saída direta','#b06eff', row('out','→',outDirect))+
+          section('↗ Saída herdada','rgba(176,110,255,.55)', row('out inh','→',outInherited))+
+          section('↙ Entrada direta','#7dd3fc', row('in','←',inDirect))+
+          section('↙ Entrada herdada','rgba(125,211,252,.55)', row('in inh','←',inInherited))+
+          (hasCross
+            ? `<div class="tip-sec"><div class="tip-sec-lbl" style="color:var(--teal)">⛓ Entre dimensões</div>`+
+              crossRow('→',crossOut)+crossRow('←',crossIn)+
+              `</div>`
+            :'')+
+        `</div>`
+      : `<div class="tip-no-props">Nenhuma propriedade encontrada.</div>`
+    );
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1726,48 +1874,47 @@ function getNodeRelations(iri){
   const parents=[...(G.subOf.get(iri)||[])].map(p=>({iri:p,lbl:bestLbl(p)}));
   const kids=[...(G.childOf.get(iri)||[])].map(c=>({iri:c,lbl:bestLbl(c)}));
   const outProps=[],inProps=[],outCross=[],inCross=[];
-
   const myDim=dimOfBroad(iri);
-  // Build ancestor set for domain inheritance check
-  const iriAncestors=new Set([iri,...ancestorsOf(iri)]);
 
-  for(const p of G.props){
-    const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];
-    const pl=G.propLabel.get(p)||shortIri(p);
-    const pIri=p;
-
-    // Is this class in the domain? (direct or via root)
-    const inDomain=ds.includes(iri)||ds.includes(G.rootIri);
-    // Is this class in the range?
-    const inRange=rs.includes(iri)||rs.includes(G.rootIri);
-
-    if(inDomain){
-      rs.forEach(r=>{
-        if(r===G.rootIri)return;
+  // Outgoing — from G.classProps
+  const seenOut=new Set();
+  for(const e of (G.classProps?.get(iri)||[])){
+    const{propIri,propLbl,ranges,type,direct}=e;
+    if(!ranges.length){
+      const key=propLbl+'|—';
+      if(!seenOut.has(key)){seenOut.add(key);outProps.push({lbl:propLbl,tgt:'—',tIri:null,type,direct});}
+    } else {
+      for(const r of ranges){
+        const key=propLbl+'|'+r;
+        if(seenOut.has(key))continue; seenOut.add(key);
         const tD=dimOfBroad(r);
         const tDim=tD&&tD!=='__ROOT__'?tD:null;
         const myD=myDim&&myDim!=='__ROOT__'?myDim:null;
-        if(myD&&tDim&&tDim!==myD){
-          outCross.push({lbl:pl,tgt:bestLbl(r),tIri:r,fDim:bestLbl(myD),tDim:bestLbl(tDim)});
-        } else {
-          outProps.push({lbl:pl,tgt:bestLbl(r),tIri:r});
-        }
-      });
-    }
-    if(inRange){
-      ds.forEach(d=>{
-        if(d===G.rootIri)return;
-        const fD=dimOfBroad(d);
-        const fDim=fD&&fD!=='__ROOT__'?fD:null;
-        const myD=myDim&&myDim!=='__ROOT__'?myDim:null;
-        if(myD&&fDim&&fDim!==myD){
-          inCross.push({lbl:pl,src:bestLbl(d),sIri:d,fDim:bestLbl(fDim),tDim:bestLbl(myD)});
-        } else {
-          inProps.push({lbl:pl,src:bestLbl(d),sIri:d});
-        }
-      });
+        if(myD&&tDim&&tDim!==myD)
+          outCross.push({lbl:propLbl,tgt:bestLbl(r),tIri:r,fDim:bestLbl(myD),tDim:bestLbl(tDim),type,direct});
+        else
+          outProps.push({lbl:propLbl,tgt:bestLbl(r),tIri:r,type,direct});
+      }
     }
   }
+
+  // Incoming — from G.classInProps
+  const seenIn=new Set();
+  for(const e of (G.classInProps?.get(iri)||[])){
+    const{propIri,propLbl,domains,type,direct}=e;
+    for(const d of domains){
+      const key=d+'|'+propLbl;
+      if(seenIn.has(key))continue; seenIn.add(key);
+      const fD=dimOfBroad(d);
+      const fDim=fD&&fD!=='__ROOT__'?fD:null;
+      const myD=myDim&&myDim!=='__ROOT__'?myDim:null;
+      if(myD&&fDim&&fDim!==myD)
+        inCross.push({lbl:propLbl,src:bestLbl(d),sIri:d,fDim:bestLbl(fDim),tDim:bestLbl(myD),type,direct});
+      else
+        inProps.push({lbl:propLbl,src:bestLbl(d),sIri:d,type,direct});
+    }
+  }
+
   return{parents,kids,outProps,inProps,outCross,inCross};
 }
 
