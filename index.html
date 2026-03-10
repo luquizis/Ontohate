@@ -541,6 +541,20 @@ canvas.gv:active{cursor:grabbing;}
 .tip-annot-key{font-family:var(--mono);font-size:9px;color:var(--txt3);flex-shrink:0;min-width:80px;font-weight:600;}
 .tip-annot-val{color:var(--txt2);flex:1;min-width:0;word-break:break-word;line-height:1.5;}
 [data-theme=light] .tip-annot-val{color:#1a2050;}
+
+/* AI question tag — label da pergunta */
+.ai-question-tag{
+  font-size:10px;font-family:var(--mono);
+  color:var(--acc);background:rgba(120,140,255,.1);
+  border:1px solid rgba(120,140,255,.22);
+  border-radius:6px;padding:4px 9px;margin-bottom:10px;
+  line-height:1.4;word-break:break-word;
+}
+[data-theme=light] .ai-question-tag{
+  color:var(--acc2);background:rgba(40,60,180,.07);border-color:rgba(40,60,180,.2);
+}
+/* AI error */
+.ai-error{color:var(--bad);font-size:12px;}
 </style>
 </head>
 <body data-theme="dark">
@@ -839,7 +853,7 @@ canvas.gv:active{cursor:grabbing;}
     <div class="sq-results">
       <div class="sq-res-hd">
         <h2>Resultados SPARQL</h2>
-        <button class="btn sm teal" onclick="openAiBox(document.getElementById('sqta').value)" style="margin-right:auto;margin-left:8px">✦ Resposta IA</button>
+        <button class="btn sm teal" onclick="openAiBox(document.getElementById('sqta').value, lastQuestionTitle)" style="margin-right:auto;margin-left:8px">✦ Resposta IA</button>
         <span class="res-badge" id="qmeta">—</span>
       </div>
       <div id="qres" style="padding:20px">
@@ -1111,36 +1125,93 @@ function buildIndex(quads){
 }
 
 /* ══════════════════════════════════════════════════════
-   AI ANSWER ENGINE — calls Anthropic API
+   AI ANSWER ENGINE v2 — síntese semântica inteligente
 ══════════════════════════════════════════════════════ */
-function buildOntologyContext(){
-  // Summarize the ontology for the AI
-  const dims=G.dims.map(d=>`- ${bestLbl(d)}: ${G.comments.get(d)||''}`).join('\n');
-  const classes=[...G.classes].slice(0,80).map(c=>{
-    const lbl=bestLbl(c);
-    const cmt=G.comments.get(c)||getExtraAnnotations(c).slice(0,1).map(a=>a.val).join('')||'';
-    return`${lbl}${cmt?' — '+cmt.slice(0,100):''}`;
-  }).join('; ');
-  const props=[...G.props].slice(0,30).map(p=>{
-    const lbl=G.propLabel.get(p)||shortIri(p);
-    const doms=[...(G.propDomain.get(p)||[])].map(bestLbl).join(',');
-    const rngs=[...(G.propRange.get(p)||[])].map(bestLbl).join(',');
-    return`${lbl}(${doms}→${rngs})`;
-  }).join('; ');
-  return`Ontologia OntoHate — Discurso de Ódio Online (OWL/RDF).
-DIMENSÕES PRINCIPAIS:\n${dims}
-CLASSES PRINCIPAIS (${G.classes.size} total): ${classes}
-OBJECT PROPERTIES (${G.props.size} total): ${props}`;
-}
 
 function getExtraAnnotations(iri){
   return(G.allAnnots.get(iri)||[]).filter(a=>a.val&&a.val.length>5);
 }
 
-function summarizeQueryResults(rows,vars){
-  if(!rows||!rows.length)return'A consulta SPARQL não retornou resultados.';
-  const lines=rows.slice(0,15).map(r=>vars.map(v=>r[v]?humanize(r[v]):'').filter(Boolean).join(' | ')).join('\n');
-  return`Resultados (${rows.length} total):\n${lines}`;
+/* Constrói contexto rico da ontologia para o sistema de IA */
+function buildOntologyContext(){
+  // Dimensões com hierarquia completa
+  const dimBlocks=G.dims.map(d=>{
+    const lbl=bestLbl(d);
+    const cmt=G.comments.get(d)||'';
+    const children=[...(G.childOf.get(d)||[])].map(c=>{
+      const clbl=bestLbl(c);
+      const ccmt=G.comments.get(c)||getExtraAnnotations(c).slice(0,1).map(a=>a.val.slice(0,120)).join('');
+      const grandkids=[...(G.childOf.get(c)||[])].map(g2=>bestLbl(g2)).join(', ');
+      return`  • ${clbl}${ccmt?' ('+ccmt+')':''}${grandkids?' → ['+grandkids+']':''}`;
+    }).join('\n');
+    return`[${lbl}]${cmt?' — '+cmt:''}\n${children||'  (sem subclasses registradas)'}`;
+  }).join('\n\n');
+
+  // Object Properties com domínio→range
+  const propsBlock=[...G.props].map(p=>{
+    const lbl=G.propLabel.get(p)||shortIri(p);
+    const doms=[...(G.propDomain.get(p)||[])].map(bestLbl).join(', ')||'?';
+    const rngs=[...(G.propRange.get(p)||[])].map(bestLbl).join(', ')||'?';
+    return`  • ${lbl}: ${doms} → ${rngs}`;
+  }).join('\n')||'  (nenhuma propriedade encontrada)';
+
+  // Relações cruzadas entre dimensões
+  const xrels=findCrossRels?.()??[];
+  const xBlock=xrels.slice(0,20).map(r=>`  • ${r.lbl}: ${bestLbl(r.f)} [${bestLbl(r.fDim||r.f)}] → ${bestLbl(r.t)} [${bestLbl(r.tDim||r.t)}]`).join('\n')||'  (nenhuma)';
+
+  return`=== ONTOLOGIA OntoHate · Discurso de Ódio Online (OWL/RDF) ===
+Total: ${G.classes.size} classes · ${G.props.size} object properties · ${G.dims.length} dimensões principais
+
+=== ESTRUTURA POR DIMENSÃO ===
+${dimBlocks}
+
+=== OBJECT PROPERTIES (relações semânticas formais) ===
+${propsBlock}
+
+=== RELAÇÕES CRUZADAS ENTRE DIMENSÕES ===
+${xBlock}`;
+}
+
+/* Sintetiza resultados SPARQL em linguagem natural estruturada para a IA */
+function synthesizeResults(rows,vars,questionTitle){
+  if(!rows||!rows.length)return'A consulta não retornou resultados na ontologia carregada.';
+
+  // Agrupa por coluna principal (1ª variável)
+  const mainVar=vars[0];
+  const extraVars=vars.slice(1);
+
+  // Detecta se há coluna de tipo/categoria para agrupar
+  const typeVar=extraVars.find(v=>['tipo','categoria','superclasse','dimensao'].includes(v.toLowerCase()));
+
+  let synthesis='';
+
+  if(typeVar){
+    // Agrupa por tipo
+    const groups=new Map();
+    for(const r of rows){
+      const k=r[typeVar]||'(sem categoria)';
+      if(!groups.has(k))groups.set(k,[]);
+      groups.get(k).push(r);
+    }
+    synthesis=[...groups.entries()].map(([cat,items])=>{
+      const names=items.map(r=>{
+        const name=humanize(r[mainVar]);
+        const def=extraVars.filter(v=>v!==typeVar&&r[v]).map(v=>humanize(r[v]).slice(0,80)).join('; ');
+        return def?`${name} (${def})`:name;
+      }).join(', ');
+      return`${cat}: ${names}`;
+    }).join('\n');
+  } else {
+    // Lista linear com definições quando disponíveis
+    synthesis=rows.slice(0,25).map(r=>{
+      const name=humanize(r[mainVar]);
+      const defs=extraVars.filter(v=>r[v]).map(v=>humanize(r[v]).slice(0,100)).join('; ');
+      return defs?`${name}: ${defs}`:name;
+    }).join('\n');
+  }
+
+  const totalNote=rows.length>25?`\n(${rows.length} resultados no total — mostrando os principais)`:'';
+  return`Pergunta: "${questionTitle||'consulta SPARQL'}"\nResultados (${rows.length}):\n${synthesis}${totalNote}`;
 }
 
 async function callAI(systemPrompt,userMsg){
@@ -1154,40 +1225,82 @@ async function callAI(systemPrompt,userMsg){
       messages:[{role:'user',content:userMsg}]
     })
   });
-  if(!response.ok)throw new Error(`API ${response.status}`);
+  if(!response.ok){
+    const err=await response.json().catch(()=>({error:{message:`HTTP ${response.status}`}}));
+    throw new Error(err?.error?.message||`API ${response.status}`);
+  }
   const data=await response.json();
   return data.content.map(b=>b.text||'').join('');
 }
 
-async function openAiBox(sparqlQuery){
+function renderAIResponse(html,questionText){
+  const qHtml=questionText?`<div class="ai-question-tag">🔍 ${esc(questionText)}</div>`:'';
+  $id('aiBody').innerHTML=`<div class="ai-answer-body">${qHtml}${html}</div>`;
+}
+
+/* Abre e preenche o painel de IA a partir de um resultado SPARQL */
+async function openAiBox(sparqlQuery,questionTitle){
   const box=$id('aiBox');box.style.display='';
-  $id('aiBody').innerHTML=`<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Analisando a ontologia e os resultados…</span></div>`;
+  $id('aiBody').innerHTML=`<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Sintetizando resposta…</span></div>`;
+
   const ctx=buildOntologyContext();
-  const summary=summarizeQueryResults(lastRows,lastVars);
-  const system=`Você é um especialista em ontologias OWL e discurso de ódio online. Analise a consulta SPARQL e os resultados com base na ontologia OntoHate. Responda SEMPRE em EXATAMENTE DOIS PARÁGRAFOS em português, formatados como texto corrido (sem listas, sem markdown). O primeiro parágrafo deve explicar o que foi consultado e o que os resultados revelam sobre a estrutura do discurso de ódio. O segundo parágrafo deve contextualizar os achados na literatura ou na prática de moderação de conteúdo. Seja direto, informativo e rigoroso.\n\n${ctx}`;
-  const user=`Consulta SPARQL:\n${sparqlQuery}\n\n${summary}`;
+  const summary=synthesizeResults(lastRows,lastVars,questionTitle);
+
+  const system=`Você é um especialista em ontologias OWL/RDF e discurso de ódio online, integrado ao visualizador OntoHate.
+
+Seu papel é SINTETIZAR e INTERPRETAR — não listar dados brutos.
+
+CONTEXTO DA ONTOLOGIA:
+${ctx}
+
+INSTRUÇÕES DE RESPOSTA:
+- Responda SEMPRE em português, em 2 parágrafos de texto corrido (sem listas, sem markdown, sem bullets).
+- 1º parágrafo: interprete o que os resultados revelam sobre a ESTRUTURA CONCEITUAL do discurso de ódio segundo a ontologia. Mencione os conceitos-chave pelo nome, explique suas relações e o que isso significa semanticamente.
+- 2º parágrafo: contextualize os achados em relação à pesquisa sobre moderação de conteúdo, direito digital ou teoria da comunicação — ou explique implicações práticas para sistemas de detecção automática de ódio.
+- Se os dados forem insuficientes ou a consulta retornar vazio, diga claramente que a ontologia não possui essa informação na versão carregada.
+- NUNCA reproduza listas de nomes de classes — transforme-os em argumentos textuais.`;
+
+  const user=summary;
+
   try{
     const ans=await callAI(system,user);
-    const paras=ans.trim().split(/\n\n+/).filter(p=>p.trim()).slice(0,2);
-    $id('aiBody').innerHTML=`<div class="ai-answer-body">${paras.map(p=>`<p>${esc(p.trim())}</p>`).join('')}</div>`;
+    const paras=ans.trim().split(/\n\n+/).filter(p=>p.trim());
+    const html=paras.slice(0,3).map(p=>`<p>${esc(p.trim())}</p>`).join('');
+    renderAIResponse(html, questionTitle||null);
   }catch(e){
-    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p style="color:var(--bad)">Erro ao consultar a IA: ${esc(String(e.message))}. Verifique a conexão.</p></div>`;
+    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ Erro ao consultar a IA: ${esc(String(e.message))}.</p></div>`;
   }
 }
 
+/* Responde perguntas livres em linguagem natural */
 async function askAI(question){
   if(!question||!question.trim())return;
   const box=$id('aiBox');box.style.display='';
-  $id('aiBody').innerHTML=`<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Pensando…</span></div>`;
+  $id('aiBody').innerHTML=`<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Analisando sua pergunta…</span></div>`;
   $id('aiCustomQ').value='';
+
   const ctx=buildOntologyContext();
-  const system=`Você é um especialista em ontologias OWL e discurso de ódio online. Responda perguntas sobre a ontologia OntoHate com base nos dados fornecidos. Responda SEMPRE em EXATAMENTE DOIS PARÁGRAFOS em português, formatados como texto corrido (sem listas, sem markdown). O primeiro parágrafo deve responder diretamente à pergunta com base nos dados da ontologia. O segundo parágrafo deve contextualizar ou ampliar a resposta com perspectivas teóricas ou práticas relevantes.\n\n${ctx}`;
+
+  const system=`Você é um especialista em ontologias OWL/RDF e discurso de ódio online integrado ao visualizador OntoHate.
+
+CONTEXTO COMPLETO DA ONTOLOGIA:
+${ctx}
+
+INSTRUÇÕES:
+- Responda SEMPRE em português, em 2–3 parágrafos de texto corrido (sem listas, sem markdown).
+- Use o conhecimento da ontologia para responder. Mencione classes, dimensões e relações pelo nome quando relevante.
+- Se a pergunta for sobre algo que a ontologia NÃO cobre, diga explicitamente: "A ontologia OntoHate não possui informação sobre isso na versão carregada" e ofereça o que mais se aproxima.
+- Se a pergunta for ambígua, interprete-a da forma mais útil ao contexto de pesquisa sobre discurso de ódio.
+- Se a pergunta for completamente fora do escopo (ex: receita de bolo), responda: "Só consigo responder perguntas relacionadas à ontologia OntoHate e ao discurso de ódio online."
+- Nunca invente classes ou relações que não existam na ontologia fornecida.`;
+
   try{
     const ans=await callAI(system,question);
-    const paras=ans.trim().split(/\n\n+/).filter(p=>p.trim()).slice(0,2);
-    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p style="font-size:10px;color:var(--txt3);margin-bottom:8px;font-family:var(--mono)">Pergunta: ${esc(question)}</p>${paras.map(p=>`<p>${esc(p.trim())}</p>`).join('')}</div>`;
+    const paras=ans.trim().split(/\n\n+/).filter(p=>p.trim());
+    const html=paras.slice(0,3).map(p=>`<p>${esc(p.trim())}</p>`).join('');
+    renderAIResponse(html, question);
   }catch(e){
-    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p style="color:var(--bad)">Erro: ${esc(String(e.message))}</p></div>`;
+    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ Erro: ${esc(String(e.message))}</p></div>`;
   }
 }
 
@@ -1972,7 +2085,7 @@ const PRESETS=[
 } ORDER BY ?conceito LIMIT 30`},
 ];
 
-let lastRows=[],lastVars=[];
+let lastRows=[],lastVars=[],lastQuestionTitle='';
 
 function humanize(v){
   if(!v)return'—';
@@ -2030,11 +2143,12 @@ function buildPresets(){
       btn.innerHTML=`<span class="p-icon">${p.icon||'▸'}</span><span class="p-body"><span class="p-title">${esc(p.t)}</span><span class="p-desc">${esc(p.d)}</span></span><span class="q-num">${num}</span>`;
       btn.onclick=()=>{
         $id('sqta').value=p.q;
+        lastQuestionTitle=p.t.replace(/^Q\d+\s*·\s*/,'');
         document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));
         btn.classList.add('on');
         runQ();
-        // Auto-trigger AI answer
-        setTimeout(()=>openAiBox(p.q),600);
+        // Auto-trigger AI answer with question title
+        setTimeout(()=>openAiBox(p.q, lastQuestionTitle),600);
       };
       sec.appendChild(btn);
     }
