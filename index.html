@@ -560,6 +560,170 @@ canvas.gv:active{cursor:grabbing;}
 }
 /* AI error */
 .ai-error{color:var(--bad);font-size:12px;}
+
+/* ════════════════════════════════════════════════════
+   MOBILE RESPONSIVO — ≤ 768px
+════════════════════════════════════════════════════ */
+@media(max-width:768px){
+  :root{--hdr:50px;--sb:100vw;--np:100vw;}
+
+  /* ── Header mobile: logo + menu hambúrguer ── */
+  #hdr{padding:0 12px;gap:8px;}
+  .logo{padding:0 0 0 2px;border-right:none;gap:8px;}
+  .logo-name{font-size:15px;}
+  .logo-ver{display:none;}
+  .nav{display:none;} /* substituída por bottom-bar */
+  .hdr-right{gap:4px;padding:0;}
+  .pill{display:none;}
+  .hbtn{padding:5px 9px;font-size:10px;}
+  /* botão hambúrguer */
+  #mobileMenuBtn{
+    display:flex!important;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:8px;
+    border:1px solid var(--bord);background:var(--panel);
+    color:var(--txt2);cursor:pointer;font-size:16px;flex-shrink:0;
+  }
+
+  /* ── Body ocupa tudo ── */
+  #body{padding-bottom:56px;} /* espaço para bottom-nav */
+
+  /* ── Bottom nav bar ── */
+  #bottomNav{
+    display:flex!important;
+    position:fixed;bottom:0;left:0;right:0;z-index:200;
+    background:rgba(6,8,16,.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border-top:1px solid var(--bord);
+    height:56px;
+  }
+  [data-theme=light] #bottomNav{background:rgba(240,242,251,.98);}
+  .bnav-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;border:none;background:transparent;color:var(--txt3);
+    font-size:9px;font-family:var(--sans);font-weight:600;letter-spacing:.04em;
+    cursor:pointer;transition:.15s;padding:0;
+  }
+  .bnav-btn .bni{font-size:18px;line-height:1;}
+  .bnav-btn.on{color:var(--acc);}
+  .bnav-btn:active{opacity:.7;}
+
+  /* ── Sidebar vira drawer de cima para baixo ── */
+  .sb{
+    position:fixed;top:var(--hdr);left:0;right:0;bottom:56px;
+    width:100%!important;z-index:150;
+    transform:translateY(-102%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    border-right:none;border-bottom:1px solid var(--bord);
+  }
+  .sb.mob-open{transform:translateY(0);}
+  .sb-inner{width:100%!important;}
+
+  /* ── Node panel vira bottom-sheet ── */
+  #np{
+    position:fixed;left:0;right:0;bottom:56px;
+    width:100%!important;height:65vh;z-index:160;
+    border-left:none;border-top:1px solid var(--bord);border-radius:16px 16px 0 0;
+    transform:translateY(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 -12px 48px rgba(0,0,0,.55);
+  }
+  #np.mob-open{transform:translateY(0);}
+  #np-inner{width:100%!important;}
+  /* Handle de arraste visual */
+  .np-hd::before{
+    content:'';display:block;width:36px;height:4px;
+    background:var(--bord);border-radius:2px;
+    position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  }
+  .np-hd{position:relative;}
+
+  /* ── Pages layout ── */
+  #pg-home{padding:24px 16px 40px;}
+  .hero-title{font-size:clamp(36px,10vw,56px);}
+  .hero-desc{font-size:14px;}
+  .hero-cards{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:28px;}
+  .hcard{padding:14px 12px;}
+  .hcard-icon{font-size:22px;margin-bottom:8px;}
+  .hcard-title{font-size:12px;}
+  .hcard-desc{display:none;}
+  .about-box{padding:20px 16px;}
+  .stat-row{gap:20px;justify-content:center;}
+
+  /* ── Canvas pages: sidebar oculta, canvas full ── */
+  #pg-tax,#pg-onto{flex-direction:column;}
+  #pg-tax .sb,#pg-onto .sb{position:relative;top:auto;left:auto;right:auto;bottom:auto;
+    transform:none;height:0;overflow:hidden;transition:height .28s;}
+  #pg-tax .sb.mob-open,#pg-onto .sb.mob-open{height:60vh;overflow-y:auto;}
+  .cv-wrap{flex:1;min-height:0;}
+  .cv-toolbar{padding:5px 8px;gap:5px;flex-wrap:nowrap;overflow-x:auto;}
+  .cv-meta:first-child{display:none;} /* oculta meta no mobile */
+
+  /* botão de controles no canvas toolbar */
+  .mob-ctrl-btn{
+    display:flex!important;align-items:center;gap:4px;
+    padding:4px 10px;font-size:10px;
+    border:1px solid var(--bord);background:var(--panel);color:var(--txt2);
+    border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+  }
+
+  /* ── SPARQL mobile: layout vertical ── */
+  #pg-sparql{flex-direction:column;}
+  .sq-left{
+    width:100%!important;height:auto;flex:none;border-right:none;
+    border-bottom:1px solid var(--bord);
+    max-height:0;overflow:hidden;transition:max-height .3s;
+  }
+  .sq-left.mob-open{max-height:55vh;}
+  .sq-right{flex:1;min-height:0;overflow:hidden;}
+  .sq-ta{min-height:80px;max-height:120px;}
+  .sq-ed-hd{flex-wrap:wrap;gap:4px;}
+  .sq-ed-hd h2{width:100%;margin-bottom:2px;}
+
+  /* AI box no mobile: bottom-sheet */
+  .ai-answer-box{
+    position:fixed;left:0;right:0;bottom:56px;z-index:170;
+    max-height:70vh;height:auto;
+    border-bottom:none;border-top:1px solid var(--bord);
+    border-radius:16px 16px 0 0;
+    box-shadow:0 -8px 40px rgba(0,0,0,.6);
+    transform:translateY(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  .ai-answer-box.mob-open{transform:translateY(0);}
+  .ai-answer-hd{border-radius:16px 16px 0 0;}
+
+  /* barra de resultados SPARQL mobile */
+  .sq-res-hd{flex-wrap:wrap;gap:4px;}
+  .sq-res-hd h2{flex:1;}
+
+  /* bottom nav label */
+  #sbar{display:none;}
+
+  /* status bar substituto */
+  #mobStatus{
+    display:block!important;
+    position:fixed;bottom:56px;left:0;right:0;z-index:195;
+    padding:3px 10px;background:rgba(6,8,16,.92);
+    font-family:var(--mono);font-size:9px;color:var(--txt3);
+    border-top:1px solid var(--bord2);
+    text-align:center;
+  }
+  [data-theme=light] #mobStatus{background:rgba(240,242,251,.95);}
+
+  /* toque mais fácil nos botões */
+  .btn{min-height:32px;}
+  .btn.sm{min-height:28px;}
+  .tog{padding:6px 0;}
+}
+
+/* Tablet: 769–1024px — ajustes menores */
+@media(min-width:769px)and(max-width:1024px){
+  :root{--sb:220px;--np:260px;}
+  .hero-cards{grid-template-columns:repeat(2,1fr);}
+  .sq-left{width:260px;}
+}
+
+/* Esconde elementos mobile em desktop */
+#mobileMenuBtn{display:none;}
+#bottomNav{display:none;}
+#mobStatus{display:none;}
+.mob-ctrl-btn{display:none;}
 </style>
 </head>
 <body data-theme="dark">
@@ -584,8 +748,20 @@ canvas.gv:active{cursor:grabbing;}
     <div class="pill"><span class="dot warn" id="sdot"></span><span id="stxt">Carregando…</span></div>
     <label class="hbtn" style="cursor:pointer">📂 Abrir .ttl<input type="file" id="fileIn" accept=".ttl,.owl,.n3" style="display:none"></label>
     <button class="hbtn" onclick="toggleTheme()">◐ Tema</button>
+    <button id="mobileMenuBtn" onclick="toggleMobileControls()" title="Controles">☰</button>
   </div>
 </div>
+
+<!-- BOTTOM NAV (mobile) -->
+<div id="bottomNav">
+  <button class="bnav-btn on" data-tab="home" onclick="gotoTab('home')"><span class="bni">🏛</span>Início</button>
+  <button class="bnav-btn" data-tab="tax" onclick="gotoTab('tax')"><span class="bni">🌳</span>Taxonomia</button>
+  <button class="bnav-btn" data-tab="onto" onclick="gotoTab('onto')"><span class="bni">🔗</span>Ontologia</button>
+  <button class="bnav-btn" data-tab="sparql" onclick="gotoTab('sparql')"><span class="bni">⚡</span>SPARQL</button>
+</div>
+
+<!-- STATUS MOBILE -->
+<div id="mobStatus">Aguardando ontologia…</div>
 
 <div id="body">
 
@@ -691,8 +867,9 @@ canvas.gv:active{cursor:grabbing;}
   </div>
   <div class="cv-wrap">
     <div class="cv-toolbar">
+      <button class="mob-ctrl-btn" onclick="toggleSidebar('tax-sb')">⚙ Controles</button>
       <span class="cv-meta" id="tMeta">—</span>
-      <span class="cv-meta" style="color:var(--teal)">💡 Clique em um nó para ver relações cruzadas</span>
+      <span class="cv-meta" style="color:var(--teal)">💡 Clique em nó</span>
       <div style="margin-left:auto;display:flex;gap:5px">
         <button class="btn sm" onclick="gTax&&gTax.zoomIn()">＋</button>
         <button class="btn sm" onclick="gTax&&gTax.zoomOut()">－</button>
@@ -782,8 +959,9 @@ canvas.gv:active{cursor:grabbing;}
   </div>
   <div class="cv-wrap">
     <div class="cv-toolbar">
+      <button class="mob-ctrl-btn" onclick="toggleSidebar('onto-sb')">⚙ Controles</button>
       <span class="cv-meta" id="oMeta">—</span>
-      <span class="cv-meta" style="color:var(--teal)">💡 Clique em um nó para ver detalhes e relações cruzadas</span>
+      <span class="cv-meta" style="color:var(--teal)">💡 Clique em nó</span>
       <div style="margin-left:auto;display:flex;gap:5px">
         <button class="btn sm" onclick="gOnto&&gOnto.zoomIn()">＋</button>
         <button class="btn sm" onclick="gOnto&&gOnto.zoomOut()">－</button>
@@ -814,7 +992,7 @@ canvas.gv:active{cursor:grabbing;}
 
 <!-- SPARQL PAGE -->
 <div id="pg-sparql" class="page">
-  <div class="sq-left">
+  <div class="sq-left" id="sq-left-panel">
     <div class="sq-left-hd">
       <h2>Questões de Competência</h2>
       <p>30 perguntas semânticas sobre o discurso de ódio</p>
@@ -828,6 +1006,7 @@ canvas.gv:active{cursor:grabbing;}
     <div class="sq-editor">
       <div class="sq-ed-hd">
         <h2>Editor SPARQL</h2>
+        <button class="mob-ctrl-btn" onclick="toggleSparqlLeft()" style="margin-right:4px">📋 Questões</button>
         <button class="btn sm prim" onclick="runQ()">▶ Executar</button>
         <button class="btn sm" onclick="document.getElementById('sqta').value=''">Limpar</button>
         <button class="btn sm" onclick="navigator.clipboard?.writeText(document.getElementById('sqta').value)">Copiar</button>
@@ -844,7 +1023,7 @@ canvas.gv:active{cursor:grabbing;}
     <div class="ai-answer-box" id="aiBox" style="display:none">
       <div class="ai-answer-hd">
         <h3>✦ Resposta da IA</h3>
-        <button class="btn sm" onclick="document.getElementById('aiBox').style.display='none'" style="margin-left:auto">✕ Fechar</button>
+        <button class="btn sm" onclick="closeAiBox()" style="margin-left:auto">✕ Fechar</button>
       </div>
       <div id="aiBody">
         <div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Analisando a ontologia…</span></div>
@@ -1217,7 +1396,10 @@ function buildKnowledgeBase(){
 async function callAI(systemPrompt, userMsg){
   const response=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
     body:JSON.stringify({
       model:'claude-sonnet-4-20250514',
       max_tokens:1024,
@@ -2252,6 +2434,135 @@ async function boot(){
 }
 
 boot();
-</script>
+
+/* ══════════════════════════════════════════════════════
+   MOBILE INTERACTION HANDLERS
+══════════════════════════════════════════════════════ */
+const isMob=()=>window.innerWidth<=768;
+
+/* Sincroniza bottom nav com tab ativa */
+function syncBottomNav(tab){
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+}
+
+/* Fecha todos os painéis mobile abertos */
+function closeMobilePanels(){
+  $id('tax-sb')?.classList.remove('mob-open');
+  $id('onto-sb')?.classList.remove('mob-open');
+  $id('np')?.classList.remove('mob-open');
+  const sq=$id('sq-left-panel');if(sq)sq.classList.remove('mob-open');
+  const ai=$id('aiBox');if(ai){ai.classList.remove('mob-open');if(isMob())ai.style.display='none';}
+}
+
+/* Toggle sidebar de controles (taxonomia / ontologia) */
+function toggleSidebar(id){
+  const el=$id(id);if(!el)return;
+  const isOpen=el.classList.contains('mob-open');
+  closeMobilePanels();
+  if(!isOpen)el.classList.add('mob-open');
+}
+
+/* Toggle painel de questões SPARQL */
+function toggleSparqlLeft(){
+  const el=$id('sq-left-panel');if(!el)return;
+  el.classList.toggle('mob-open');
+}
+
+/* Botão hambúrguer do header — abre sidebar da tab atual */
+function toggleMobileControls(){
+  const tab=document.querySelector('.nav-btn.on')?.dataset.tab||'home';
+  if(tab==='tax')toggleSidebar('tax-sb');
+  else if(tab==='onto')toggleSidebar('onto-sb');
+  else if(tab==='sparql')toggleSparqlLeft();
+}
+
+/* Fecha AI box (mobile bottom-sheet ou desktop inline) */
+function closeAiBox(){
+  const b=$id('aiBox');if(!b)return;
+  b.classList.remove('mob-open');
+  b.style.display='none';
+}
+
+/* Abre AI box adaptado ao dispositivo */
+function openAiBoxMob(){
+  const b=$id('aiBox');if(!b)return;
+  b.style.display='';
+  if(isMob()){closeMobilePanels();b.style.display='';b.classList.add('mob-open');}
+}
+
+/* Intercepta openAiBox para gerir estado mobile */
+const _origOpenAiBox=openAiBox;
+openAiBox=async function(q,t){
+  const b=$id('aiBox');if(b){b.style.display='';if(isMob()){closeMobilePanels();b.classList.add('mob-open');}}
+  return _origOpenAiBox(q,t);
+};
+
+/* Intercepta askAI para gerir estado mobile */
+const _origAskAI=askAI;
+askAI=async function(q){
+  const b=$id('aiBox');if(b){b.style.display='';if(isMob()){closeMobilePanels();b.classList.add('mob-open');}}
+  return _origAskAI(q);
+};
+
+/* Node panel: no mobile, abrir como bottom-sheet */
+const _origDetailHtml=typeof detailHtml==='function'?detailHtml:null;
+function showNodePanelMob(iri){
+  if(!isMob())return;
+  const np=$id('np');if(!np)return;
+  np.style.display='flex';
+  closeMobilePanels();
+  setTimeout(()=>np.classList.add('mob-open'),10);
+}
+
+/* Patch gotoTab para sincronizar bottomNav e fechar painéis */
+const _origGotoTab=gotoTab;
+gotoTab=function(t){
+  closeMobilePanels();
+  _origGotoTab(t);
+  syncBottomNav(t);
+};
+
+/* Fechar node panel pelo botão × no header */
+const npCloseBtn=document.querySelector('#np .np-hd button');
+if(npCloseBtn){
+  const origClose=npCloseBtn.onclick;
+  npCloseBtn.onclick=function(){
+    $id('np')?.classList.remove('mob-open');
+    if(origClose)origClose.call(this);
+  };
+}
+
+/* Update status mobile */
+function setDbg(k,t){
+  $id('dbDot').className='dot '+k;$id('dbTxt').textContent=t;
+  const ms=$id('mobStatus');if(ms)ms.textContent=t;
+}
+
+/* Touch: fechar painéis ao tocar no canvas */
+['cvTax','cvOnto'].forEach(id=>{
+  const cv=$id(id);
+  if(cv)cv.addEventListener('touchstart',()=>{
+    if(isMob())closeMobilePanels();
+  },{passive:true});
+});
+
+/* Swipe down para fechar bottom-sheets */
+function addSwipeClose(el){
+  if(!el)return;
+  let startY=0;
+  el.addEventListener('touchstart',e=>{startY=e.touches[0].clientY;},{passive:true});
+  el.addEventListener('touchend',e=>{
+    const dy=e.changedTouches[0].clientY-startY;
+    if(dy>60){el.classList.remove('mob-open');if(el===document.getElementById('aiBox'))el.style.display='none';}
+  },{passive:true});
+}
+addSwipeClose($id('np'));
+addSwipeClose($id('aiBox'));
+addSwipeClose($id('tax-sb'));
+addSwipeClose($id('onto-sb'));
+
+/* Sincroniza estado inicial */
+syncBottomNav('home');
+
 </body>
 </html>
