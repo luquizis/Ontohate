@@ -1595,142 +1595,10 @@ function makeGraph(cvId){
 
   function draw(){
     const c=C(),w=W(),h=H();if(w<10||h<10)return;
-    c.clearRect(0,0,w,h);
-    c.save();
     const dark=document.body.getAttribute('data-theme')!=='light';
-
-    // High-contrast text color based on theme
-    const nodeTextColor=dark?'#ffffff':'#0a0d24';
-    const nodeTextHL=dark?'#ffddff':'#2000a0';
-    const nodeTextHov=dark?'#aaccff':'#00308a';
-    const edgeHier=getCSSVar('--edge-hier');
-    const edgeProp=getCSSVar('--edge-prop');
-    const edgeCross=getCSSVar('--edge-cross');
-    const fadAlpha=dark?0.04:0.03;
-    const hierAlpha=dark?0.78:0.88;
-    const propAlpha=dark?0.92:0.95;
-    const crossAlpha=dark?0.92:0.95;
-
-    // Draw hierarchy edges
-    for(const e of edges.filter(e=>!e.isP&&!e.isX)){
-      if(!e.f||!e.t||e.f.x==null||e.t.x==null)continue;
-      const a=toS(e.f.x,e.f.y),b=toS(e.t.x,e.t.y);
-      const fad=focused&&(!focused.has(e.f.id)||!focused.has(e.t.id));
-      c.globalAlpha=fad?fadAlpha:hierAlpha;
-      c.strokeStyle=edgeHier;c.lineWidth=(g._ew+0.5)*zoom;c.setLineDash([]);
-      c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
-      if(!fad)drawArrow(c,b.x,b.y,Math.atan2(b.y-a.y,b.x-a.x),edgeHier,11);
-      if(!fad&&showEL&&e.lbl&&zoom>0.4)drawEdgeLbl(c,(a.x+b.x)/2,(a.y+b.y)/2,e.lbl,edgeHier,dark);
-    }
-    // Draw cross-dim edges
-    for(const e of edges.filter(e=>e.isX)){
-      if(!e.f||!e.t||e.f.x==null||e.t.x==null)continue;
-      const a=toS(e.f.x,e.f.y),b=toS(e.t.x,e.t.y);
-      const fad=focused&&(!focused.has(e.f.id)||!focused.has(e.t.id));
-      c.globalAlpha=fad?fadAlpha:crossAlpha;
-      c.strokeStyle=edgeCross;c.lineWidth=(g._ew+0.8)*zoom;c.setLineDash([4,3]);
-      const dx=b.x-a.x,dy=b.y-a.y;
-      const cx1=(a.x+b.x)/2-dy*.3,cy1=(a.y+b.y)/2+dx*.3;
-      c.beginPath();c.moveTo(a.x,a.y);c.quadraticCurveTo(cx1,cy1,b.x,b.y);c.stroke();
-      if(!fad)drawArrow(c,b.x,b.y,Math.atan2(b.y-cy1,b.x-cx1),edgeCross,11);
-      if(!fad&&e.lbl&&zoom>0.22){const mx=(a.x+2*cx1+b.x)/4,my=(a.y+2*cy1+b.y)/4;drawPropLbl(c,mx,my,e.lbl,edgeCross,dark);}
-      c.setLineDash([]);
-    }
-    // Draw object property edges
-    for(const e of edges.filter(e=>e.isP)){
-      if(!e.f||!e.t||e.f.x==null||e.t.x==null)continue;
-      const a=toS(e.f.x,e.f.y),b=toS(e.t.x,e.t.y);
-      const fad=focused&&(!focused.has(e.f.id)||!focused.has(e.t.id));
-      c.globalAlpha=fad?fadAlpha:propAlpha;
-      c.strokeStyle=edgeProp;c.lineWidth=(g._ew+1)*zoom;c.setLineDash([7,4]);
-      const dx=b.x-a.x,dy=b.y-a.y;
-      const cx1=(a.x+b.x)/2-dy*.35,cy1=(a.y+b.y)/2+dx*.35;
-      c.beginPath();c.moveTo(a.x,a.y);c.quadraticCurveTo(cx1,cy1,b.x,b.y);c.stroke();
-      if(!fad)drawArrow(c,b.x,b.y,Math.atan2(b.y-cy1,b.x-cx1),edgeProp,11);
-      if(!fad&&e.lbl&&zoom>0.18){const mx=(a.x+2*cx1+b.x)/4,my=(a.y+2*cy1+b.y)/4;drawPropLbl(c,mx,my,e.lbl,edgeProp,dark);}
-      c.setLineDash([]);
-    }
-    c.globalAlpha=1;
-
-    // Draw nodes with high contrast
-    for(const n of nodes){
-      if(n.x==null)continue;
-      const s=toS(n.x,n.y);
-      const fad=focused&&!focused.has(n.id);
-      const isHL=hl.has(n.id),isHov=hovNode===n;
-      const dc=cmap.get(n.id)||null;
-      c.globalAlpha=fad?0.07:1;
-
-      const fs=Math.max(g._fs*.75,Math.min(g._fs*1.05,g._fs*Math.min(zoom*.9,1)));
-      c.font=`${isHL?'700':'600'} ${fs}px 'Outfit',system-ui`;
-      const lbl=truncLbl(n.label,28);
-      const tw=c.measureText(lbl).width;
-      const px=g._np,py=Math.max(7,g._np*.6);
-      const rw=tw+px*2,rh=Math.max(30,g._fs*1.7+py*2);
-      const sx=s.x-rw/2,sy=s.y-rh/2;
-      const r=g._nr;
-
-      const margin=6/Math.max(zoom,.1);
-      n._wx=n.x-rw/(2*zoom)-margin;n._wy=n.y-rh/(2*zoom)-margin;
-      n._ww=rw/zoom+margin*2;n._wh=rh/zoom+margin*2;
-
-      if(isHov){c.shadowColor=dc||'#8090ff';c.shadowBlur=32;}
-
-      // Node background — solid color for readability
-      if(dc){
-        // Use the dimension color with high opacity fill + slight gradient
-        const gr=c.createLinearGradient(sx,sy,sx,sy+rh);
-        const alpha=Math.round(g._op*255).toString(16).padStart(2,'0');
-        gr.addColorStop(0,dc+alpha);
-        gr.addColorStop(1,dc+(Math.round(g._op*0.55*255).toString(16).padStart(2,'0')));
-        c.fillStyle=gr;
-      } else {
-        c.fillStyle=dark?`rgba(20,24,48,${g._op*.95})`:`rgba(255,255,255,${g._op*.95})`;
-      }
-      roundRect(c,sx,sy,rw,rh,r);c.fill();
-
-      // Node border — prominent and high contrast
-      const borderColor=isHL?(dark?'#ffaaff':'#6000c0'):isHov?(dark?'#7090ff':'#1030b0'):dc?dc:dark?'rgba(130,150,255,.7)':'rgba(30,60,200,.55)';
-      c.strokeStyle=borderColor;
-      c.lineWidth=isHL?2.8:isHov?2.5:dc?2:1.8;
-      roundRect(c,sx,sy,rw,rh,r);c.stroke();
-      c.shadowBlur=0;
-
-      // Node text — always high contrast
-      let txtColor;
-      if(isHL)txtColor=dark?'#ffccff':'#3000a0';
-      else if(isHov)txtColor=dark?'#c8d8ff':'#0a2070';
-      else if(fad)txtColor=dark?'rgba(255,255,255,.15)':'rgba(0,0,0,.15)';
-      else if(dc){
-        // If we have a dimension color, ensure text is readable
-        // Dark background → white text; light background → dark text
-        txtColor=dark?'#ffffff':'#0a0d24';
-      } else {
-        txtColor=dark?'#ffffff':'#0a0d24';
-      }
-      c.fillStyle=txtColor;
-      c.textAlign='center';c.textBaseline='middle';
-      c.fillText(lbl,s.x,s.y);
-
-      // Child count badge
-      if(zoom>0.28&&!fad){
-        const kc=(G.childOf.get(n.id)?.size)||0;
-        if(kc>0){
-          const bs=Math.max(7,9*Math.min(zoom,1));c.font=`700 ${bs}px 'IBM Plex Mono',monospace`;
-          const bw=c.measureText(String(kc)).width+8;const bx=sx+rw-bw/2,by=sy-8;
-          c.globalAlpha=.97;
-          c.fillStyle=dark?'#0a0d20':'#ffffff';
-          roundRect(c,bx-bw/2,by-bs/2-2,bw,bs+4,bs/2);c.fill();
-          c.fillStyle=dc||'#7090ff';
-          roundRect(c,bx-bw/2,by-bs/2-2,bw,bs+4,bs/2);c.stroke();
-          c.fillStyle=dark?'#ffffff':'#0a0d20';
-          c.textAlign='center';c.textBaseline='middle';
-          c.fillText(String(kc),bx,by);
-        }
-      }
-    }
-    c.globalAlpha=1;
-    c.restore();
+    c.fillStyle=dark?'#060810':'#f0f2fb';
+    c.fillRect(0,0,w,h);
+    _drawToContext(c,w,h,dark);
   }
 
   function drawArrow(c,x,y,a,col,sz=10){
@@ -1787,7 +1655,133 @@ function makeGraph(cvId){
   function onNodeClick(fn){clickCb=fn;}
   function zoomIn(){zoom=Math.min(XZOOM,zoom*1.2);sched();}
   function zoomOut(){zoom=Math.max(MZOOM,zoom/1.2);sched();}
-  function exportPng(scale=2){const oc=document.createElement('canvas');oc.width=cv.width*scale;oc.height=cv.height*scale;const c2=oc.getContext('2d');c2.scale(scale,scale);const dark=document.body.getAttribute('data-theme')!=='light';c2.fillStyle=dark?'#060810':'#f0f2fb';c2.fillRect(0,0,oc.width,oc.height);c2.drawImage(cv,0,0,cv.width/DPR(),cv.height/DPR());const a=document.createElement('a');a.href=oc.toDataURL('image/png');a.download='ontohate.png';a.click();}
+  function exportPng(exportScale=3){
+    const dark=document.body.getAttribute('data-theme')!=='light';
+    const cw=W(), ch=H();
+    const pw=Math.round(cw*exportScale);
+    const ph=Math.round(ch*exportScale);
+    const oc=document.createElement('canvas');
+    oc.width=pw; oc.height=ph;
+    const c2=oc.getContext('2d');
+    c2.fillStyle=dark?'#060810':'#f0f2fb';
+    c2.fillRect(0,0,pw,ph);
+    c2.save();
+    c2.scale(exportScale,exportScale);
+    // Redraw the entire scene at full quality onto export canvas
+    _drawToContext(c2,cw,ch,dark);
+    c2.restore();
+    const a=document.createElement('a');
+    a.href=oc.toDataURL('image/png',1.0);
+    a.download='ontohate.png';
+    a.click();
+  }
+
+  function _drawToContext(c,w,h,dark){
+    c.clearRect(0,0,w,h);
+    c.save();
+    const edgeHier=getCSSVar('--edge-hier');
+    const edgeProp=getCSSVar('--edge-prop');
+    const edgeCross=getCSSVar('--edge-cross');
+    const fadAlpha=dark?0.04:0.03;
+    const hierAlpha=dark?0.78:0.88;
+    const propAlpha=dark?0.92:0.95;
+    const crossAlpha=dark?0.92:0.95;
+    const toSc=(x,y)=>({x:x*zoom+pan.x, y:y*zoom+pan.y});
+
+    // Hierarchy edges
+    for(const e of edges.filter(e=>!e.isP&&!e.isX)){
+      if(!e.f||!e.t||e.f.x==null||e.t.x==null)continue;
+      const a=toSc(e.f.x,e.f.y),b=toSc(e.t.x,e.t.y);
+      const fad=focused&&(!focused.has(e.f.id)||!focused.has(e.t.id));
+      c.globalAlpha=fad?fadAlpha:hierAlpha;
+      c.strokeStyle=edgeHier;c.lineWidth=(g._ew+0.5)*zoom;c.setLineDash([]);
+      c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
+      if(!fad)drawArrow(c,b.x,b.y,Math.atan2(b.y-a.y,b.x-a.x),edgeHier,11);
+      if(!fad&&showEL&&e.lbl&&zoom>0.4)drawEdgeLbl(c,(a.x+b.x)/2,(a.y+b.y)/2,e.lbl,edgeHier,dark);
+    }
+    // Cross-dim edges
+    for(const e of edges.filter(e=>e.isX)){
+      if(!e.f||!e.t||e.f.x==null||e.t.x==null)continue;
+      const a=toSc(e.f.x,e.f.y),b=toSc(e.t.x,e.t.y);
+      const fad=focused&&(!focused.has(e.f.id)||!focused.has(e.t.id));
+      c.globalAlpha=fad?fadAlpha:crossAlpha;
+      c.strokeStyle=edgeCross;c.lineWidth=(g._ew+0.8)*zoom;c.setLineDash([4,3]);
+      const dx=b.x-a.x,dy=b.y-a.y;
+      const cx1=(a.x+b.x)/2-dy*.3,cy1=(a.y+b.y)/2+dx*.3;
+      c.beginPath();c.moveTo(a.x,a.y);c.quadraticCurveTo(cx1,cy1,b.x,b.y);c.stroke();
+      if(!fad)drawArrow(c,b.x,b.y,Math.atan2(b.y-cy1,b.x-cx1),edgeCross,11);
+      if(!fad&&e.lbl&&zoom>0.22){const mx=(a.x+2*cx1+b.x)/4,my=(a.y+2*cy1+b.y)/4;drawPropLbl(c,mx,my,e.lbl,edgeCross,dark);}
+      c.setLineDash([]);
+    }
+    // Object property edges
+    for(const e of edges.filter(e=>e.isP)){
+      if(!e.f||!e.t||e.f.x==null||e.t.x==null)continue;
+      const a=toSc(e.f.x,e.f.y),b=toSc(e.t.x,e.t.y);
+      const fad=focused&&(!focused.has(e.f.id)||!focused.has(e.t.id));
+      c.globalAlpha=fad?fadAlpha:propAlpha;
+      c.strokeStyle=edgeProp;c.lineWidth=(g._ew+1)*zoom;c.setLineDash([7,4]);
+      const dx=b.x-a.x,dy=b.y-a.y;
+      const cx1=(a.x+b.x)/2-dy*.35,cy1=(a.y+b.y)/2+dx*.35;
+      c.beginPath();c.moveTo(a.x,a.y);c.quadraticCurveTo(cx1,cy1,b.x,b.y);c.stroke();
+      if(!fad)drawArrow(c,b.x,b.y,Math.atan2(b.y-cy1,b.x-cx1),edgeProp,11);
+      if(!fad&&e.lbl&&zoom>0.18){const mx=(a.x+2*cx1+b.x)/4,my=(a.y+2*cy1+b.y)/4;drawPropLbl(c,mx,my,e.lbl,edgeProp,dark);}
+      c.setLineDash([]);
+    }
+    c.globalAlpha=1;
+
+    // Nodes
+    for(const n of nodes){
+      if(n.x==null)continue;
+      const s=toSc(n.x,n.y);
+      const fad=focused&&!focused.has(n.id);
+      const isHL=hl.has(n.id),isHov=hovNode===n;
+      const dc=cmap.get(n.id)||null;
+      c.globalAlpha=fad?0.07:1;
+      const fs=Math.max(g._fs*.75,Math.min(g._fs*1.05,g._fs*Math.min(zoom*.9,1)));
+      c.font=`${isHL?'700':'600'} ${fs}px 'Outfit',system-ui`;
+      const lbl=truncLbl(n.label,28);
+      const tw=c.measureText(lbl).width;
+      const px=g._np,py=Math.max(7,g._np*.6);
+      const rw=tw+px*2,rh=Math.max(30,g._fs*1.7+py*2);
+      const sx=s.x-rw/2,sy=s.y-rh/2;
+      const r=g._nr;
+      if(isHov){c.shadowColor=dc||'#8090ff';c.shadowBlur=32;}
+      if(dc){
+        const gr=c.createLinearGradient(sx,sy,sx,sy+rh);
+        const alpha=Math.round(g._op*255).toString(16).padStart(2,'0');
+        gr.addColorStop(0,dc+alpha);
+        gr.addColorStop(1,dc+(Math.round(g._op*0.55*255).toString(16).padStart(2,'0')));
+        c.fillStyle=gr;
+      } else {
+        c.fillStyle=dark?`rgba(20,24,48,${g._op*.95})`:`rgba(255,255,255,${g._op*.95})`;
+      }
+      roundRect(c,sx,sy,rw,rh,r);c.fill();
+      const borderColor=isHL?(dark?'#ffaaff':'#6000c0'):isHov?(dark?'#7090ff':'#1030b0'):dc?dc:dark?'rgba(130,150,255,.7)':'rgba(30,60,200,.55)';
+      c.strokeStyle=borderColor;c.lineWidth=isHL?2.8:isHov?2.5:dc?2:1.8;
+      roundRect(c,sx,sy,rw,rh,r);c.stroke();
+      c.shadowBlur=0;
+      let txtColor;
+      if(isHL)txtColor=dark?'#ffccff':'#3000a0';
+      else if(isHov)txtColor=dark?'#c8d8ff':'#0a2070';
+      else if(fad)txtColor=dark?'rgba(255,255,255,.15)':'rgba(0,0,0,.15)';
+      else txtColor=dark?'#ffffff':'#0a0d24';
+      c.fillStyle=txtColor;c.textAlign='center';c.textBaseline='middle';
+      c.fillText(lbl,s.x,s.y);
+      // Child count badge
+      if(zoom>0.28&&!fad){
+        const kc=(G.childOf.get(n.id)?.size)||0;
+        if(kc>0){
+          const bs=Math.max(7,9*Math.min(zoom,1));c.font=`700 ${bs}px 'IBM Plex Mono',monospace`;
+          const bw=c.measureText(String(kc)).width+8;const bx=sx+rw-bw/2,by=sy-8;
+          c.globalAlpha=fad?0.07:.92;
+          c.fillStyle=dc||'#5a6eff';roundRect(c,bx-bw/2,by-8,bw,16,8);c.fill();
+          c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';c.fillText(String(kc),bx,by);
+        }
+      }
+      c.globalAlpha=1;
+    }
+    c.restore();
+  }
 
   const proxy=new Proxy(g,{
     set(t,p,v){t[p]=v;sched();return true;},
