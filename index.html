@@ -1599,6 +1599,24 @@ function makeGraph(cvId){
     c.fillStyle=dark?'#060810':'#f0f2fb';
     c.fillRect(0,0,w,h);
     _drawToContext(c,w,h,dark);
+    /* Recalculate hit-test bounding boxes using the screen-space toS/toW
+       (must run after _drawToContext so font metrics are current) */
+    c.save();
+    for(const n of nodes){
+      if(n.x==null){n._wx=null;continue;}
+      const s=toS(n.x,n.y);
+      const fs=Math.max(g._fs*.75,Math.min(g._fs*1.05,g._fs*Math.min(zoom*.9,1)));
+      c.font=`600 ${fs}px 'Outfit',system-ui`;
+      const tw=c.measureText(truncLbl(n.label,28)).width;
+      const px=g._np,py=Math.max(7,g._np*.6);
+      const rw=tw+px*2,rh=Math.max(30,g._fs*1.7+py*2);
+      const margin=6/Math.max(zoom,.1);
+      n._wx=n.x-rw/(2*zoom)-margin;
+      n._wy=n.y-rh/(2*zoom)-margin;
+      n._ww=rw/zoom+margin*2;
+      n._wh=rh/zoom+margin*2;
+    }
+    c.restore();
   }
 
   function drawArrow(c,x,y,a,col,sz=10){
