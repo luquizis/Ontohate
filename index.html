@@ -2398,8 +2398,9 @@ async function processText(txt,src){
   try{
     const{quads}=parseTurtle(txt);
     buildIndex(quads);
-    if(!gTax)gTax=makeGraph('cvTax');
-    if(!gOnto)gOnto=makeGraph('cvOnto');
+    /* reset graphs so they rebuild with new data on next tab visit */
+    if(gTax){gTax=null;}
+    if(gOnto){gOnto=null;}
     fillControls();buildPresets();
     if(!$id('sqta').value.trim()&&PRESETS.length){$id('sqta').value=PRESETS[0].q;runQ();}
     setStatus('ok','Ontologia carregada');
@@ -2410,7 +2411,7 @@ async function processText(txt,src){
     $id('ws-q').textContent=G.quads.length.toLocaleString('pt-BR');
   }catch(e){
     setStatus('bad','Falha');setDbg('bad','Erro: '+String(e?.message||e).slice(0,120));
-    console.error(e);throw e;
+    console.error(e);
   }
 }
 
