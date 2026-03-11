@@ -1019,7 +1019,8 @@ canvas.gv:active{cursor:grabbing;}
     <div class="ai-answer-box" id="aiBox" style="display:none">
       <div class="ai-answer-hd">
         <h3>✦ Resposta da IA</h3>
-        <button class="btn sm" onclick="closeAiBox()" style="margin-left:auto">✕ Fechar</button>
+        <button id="aiKeyBtn" class="btn sm" onclick="showApiKeyPrompt()" title="Configurar Anthropic API Key" style="margin-left:auto;margin-right:6px;font-size:9px;opacity:.8">🔑 API Key</button>
+        <button class="btn sm" onclick="closeAiBox()">✕ Fechar</button>
       </div>
       <div id="aiBody">
         <div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Analisando a ontologia…</span></div>
@@ -1392,10 +1393,14 @@ function buildKnowledgeBase(){
 
 /* ── Chama a API ── */
 async function callAI(systemPrompt, userMsg){
+  const apiKey=getApiKey();
+  if(!apiKey){throw new Error('Chave API não configurada. Clique em ⚙ Configurar API Key no painel IA.');}
   const response=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{
       'Content-Type':'application/json',
+      'x-api-key':apiKey,
+      'anthropic-version':'2023-06-01',
       'anthropic-dangerous-direct-browser-access':'true'
     },
     body:JSON.stringify({
@@ -1411,6 +1416,19 @@ async function callAI(systemPrompt, userMsg){
   }
   const data=await response.json();
   return data.content.map(b=>b.text||'').join('');
+}
+
+/* ── Gestão de API Key (sessão apenas) ── */
+let _apiKey='';
+function getApiKey(){return _apiKey;}
+function setApiKey(k){_apiKey=(k||'').trim();}
+function showApiKeyPrompt(){
+  const cur=_apiKey?'(chave configurada)':'';
+  const k=prompt(`Cole sua Anthropic API Key abaixo.\nEla é usada apenas nesta sessão e não é armazenada em lugar nenhum.\n${cur}`,'');
+  if(k===null)return;
+  setApiKey(k);
+  const btn=$id('aiKeyBtn');
+  if(btn)btn.textContent=_apiKey?'🔑 API Key ✓':'🔑 API Key';
 }
 
 /* ── Renderiza a resposta ── */
@@ -1456,7 +1474,8 @@ async function openAiBox(sparqlQuery, questionTitle){
     const html=paras.map(p=>`<p>${esc(p.trim())}</p>`).join('');
     renderAIResponse(html, questionTitle||null);
   }catch(e){
-    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ Erro: ${esc(String(e.message))}</p></div>`;
+    const isKey=String(e.message).includes('API Key')||String(e.message).includes('x-api-key')||String(e.message).includes('api_key');
+    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ ${esc(String(e.message))}</p>${isKey?`<p style="margin-top:8px"><button class="btn sm prim" onclick="showApiKeyPrompt()">🔑 Configurar API Key</button></p>`:''}</div>`;
   }
 }
 
@@ -1477,7 +1496,8 @@ async function askAI(question){
     const html=paras.map(p=>`<p>${esc(p.trim())}</p>`).join('');
     renderAIResponse(html, question);
   }catch(e){
-    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ Erro: ${esc(String(e.message))}</p></div>`;
+    const isKey=String(e.message).includes('API Key')||String(e.message).includes('x-api-key')||String(e.message).includes('api_key');
+    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ ${esc(String(e.message))}</p>${isKey?`<p style="margin-top:8px"><button class="btn sm prim" onclick="showApiKeyPrompt()">🔑 Configurar API Key</button></p>`:''}</div>`;
   }
 }
 
@@ -2019,12 +2039,25 @@ function buildOnto(){
   if(!gOnto)return;
   const dimVal=$id('oDim').value,showSub=$id('oSub').checked,showProp=$id('oProps').checked,showXR=$id('oXR').checked,useCol=$id('oCol').checked,showEL=$id('oEL').checked;
   const ns=parseInt($id('oNS').value||240),ls=parseInt($id('oLS').value||180);
-  const set=dimVal==='__ALL__'?new Set(G.classes):descOf(dimVal);
+  let set=dimVal==='__ALL__'?new Set(G.classes):descOf(dimVal);
+
+  /* Quando showXR ativo e há uma dimensão específica selecionada,
+     incluir também os nós de destino das relações cruzadas */
+  if(showXR && dimVal!=='__ALL__'){
+    const xr=findCrossRels();
+    const extra=new Set();
+    for(const r of xr){
+      if(set.has(r.f)&&!set.has(r.t))extra.add(r.t);
+      if(set.has(r.t)&&!set.has(r.f))extra.add(r.f);
+    }
+    if(extra.size){set=new Set([...set,...extra]);}
+  }
+
   const tooMany=dimVal==='__ALL__'&&set.size>140;
   $id('oWarn').style.display=tooMany?'':'none';
   const nm=new Map(),nodes=[],edges=[];
   for(const iri of set){const n={id:iri,label:bestLbl(iri)};nm.set(iri,n);nodes.push(n);}
-  if(showSub){for(const c of set){const ps=G.subOf.get(c);if(!ps)continue;for(const p of ps){if(!set.has(p))continue;edges.push({f:nm.get(p),t:nm.get(c),lbl:'subClassOf',isP:false,isX:false});}}}
+  if(showSub){for(const c of set){const ps=G.subOf.get(c);if(!ps)continue;for(const p of ps){if(!nm.has(p))continue;edges.push({f:nm.get(p),t:nm.get(c),lbl:'subClassOf',isP:false,isX:false});}}}
   if(showProp&&!tooMany){for(const p of G.props){const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];const lbl=G.propLabel.get(p)||shortIri(p);for(const d of ds){if(!nm.has(d))continue;for(const r of rs){if(!nm.has(r))continue;const fD=dimOf(d),tD=dimOf(r);const isCross=fD&&tD&&fD!==tD;if(!isCross)edges.push({f:nm.get(d),t:nm.get(r),lbl,isP:true,isX:false});}}}}
   if(showXR){const xr=findCrossRels();for(const r of xr){if(nm.has(r.f)&&nm.has(r.t)){if(!edges.find(e=>e.f?.id===r.f&&e.t?.id===r.t&&e.lbl===r.lbl))edges.push({f:nm.get(r.f),t:nm.get(r.t),lbl:r.lbl,isP:false,isX:true});}}if(showProp&&!tooMany){for(const p of G.props){const ds=[...(G.propDomain.get(p)||[])],rs=[...(G.propRange.get(p)||[])];const lbl=G.propLabel.get(p)||shortIri(p);for(const d of ds){if(!nm.has(d))continue;for(const r of rs){if(!nm.has(r))continue;const fD=dimOf(d),tD=dimOf(r);if(fD&&tD&&fD!==tD){if(!edges.find(e=>e.f?.id===d&&e.t?.id===r&&e.lbl===lbl))edges.push({f:nm.get(d),t:nm.get(r),lbl,isP:false,isX:true});}}}}}}
   const cm=useCol?rebuildCmap():new Map();
