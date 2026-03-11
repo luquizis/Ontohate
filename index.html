@@ -606,11 +606,12 @@ canvas.gv:active{cursor:grabbing;}
   .bnav-btn.on{color:var(--acc);}
   .bnav-btn:active{opacity:.7;}
 
-  /* ── Sidebar vira drawer de cima para baixo ── */
+  /* ── Sidebar vira drawer deslizante de cima ── */
   .sb{
-    position:fixed;top:var(--hdr);left:0;right:0;bottom:56px;
-    width:100%!important;z-index:150;
-    transform:translateY(-102%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    position:fixed;top:var(--hdr);left:0;right:0;
+    height:calc(100vh - var(--hdr) - 56px);
+    width:100%!important;z-index:150;overflow-y:auto;
+    transform:translateY(-105%);transition:transform .28s cubic-bezier(.4,0,.2,1);
     border-right:none;border-bottom:1px solid var(--bord);
   }
   .sb.mob-open{transform:translateY(0);}
@@ -626,13 +627,12 @@ canvas.gv:active{cursor:grabbing;}
   }
   #np.mob-open{transform:translateY(0);}
   #np-inner{width:100%!important;}
-  /* Handle de arraste visual */
+  .np-hd{position:relative;}
   .np-hd::before{
     content:'';display:block;width:36px;height:4px;
     background:var(--bord);border-radius:2px;
     position:absolute;top:8px;left:50%;transform:translateX(-50%);
   }
-  .np-hd{position:relative;}
 
   /* ── Pages layout ── */
   #pg-home{padding:24px 16px 40px;}
@@ -646,70 +646,66 @@ canvas.gv:active{cursor:grabbing;}
   .about-box{padding:20px 16px;}
   .stat-row{gap:20px;justify-content:center;}
 
-  /* ── Canvas pages: sidebar oculta, canvas full ── */
-  #pg-tax,#pg-onto{flex-direction:column;}
-  #pg-tax .sb,#pg-onto .sb{position:relative;top:auto;left:auto;right:auto;bottom:auto;
-    transform:none;height:0;overflow:hidden;transition:height .28s;}
-  #pg-tax .sb.mob-open,#pg-onto .sb.mob-open{height:60vh;overflow-y:auto;}
+  /* ── Canvas pages: canvas full-screen ── */
+  #pg-tax,#pg-onto{flex-direction:row;}
   .cv-wrap{flex:1;min-height:0;}
   .cv-toolbar{padding:5px 8px;gap:5px;flex-wrap:nowrap;overflow-x:auto;}
-  .cv-meta:first-child{display:none;} /* oculta meta no mobile */
+  .cv-meta{display:none;}
 
-  /* botão de controles no canvas toolbar */
+  /* botão controles no toolbar */
   .mob-ctrl-btn{
     display:flex!important;align-items:center;gap:4px;
-    padding:4px 10px;font-size:10px;
+    padding:5px 11px;font-size:10px;font-weight:600;
     border:1px solid var(--bord);background:var(--panel);color:var(--txt2);
     border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;
   }
 
-  /* ── SPARQL mobile: layout vertical ── */
+  /* ── SPARQL mobile: empilhado verticalmente ── */
   #pg-sparql{flex-direction:column;}
   .sq-left{
-    width:100%!important;height:auto;flex:none;border-right:none;
+    width:100%!important;flex:none;border-right:none;
     border-bottom:1px solid var(--bord);
-    max-height:0;overflow:hidden;transition:max-height .3s;
+    max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.4,0,.2,1);
   }
   .sq-left.mob-open{max-height:55vh;}
-  .sq-right{flex:1;min-height:0;overflow:hidden;}
-  .sq-ta{min-height:80px;max-height:120px;}
-  .sq-ed-hd{flex-wrap:wrap;gap:4px;}
+  .sq-right{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
+  .sq-ta{min-height:80px;max-height:110px;}
+  .sq-ed-hd{flex-wrap:wrap;gap:4px;padding:7px 10px;}
   .sq-ed-hd h2{width:100%;margin-bottom:2px;}
 
   /* AI box no mobile: bottom-sheet */
   .ai-answer-box{
     position:fixed;left:0;right:0;bottom:56px;z-index:170;
-    max-height:70vh;height:auto;
+    max-height:72vh;
     border-bottom:none;border-top:1px solid var(--bord);
     border-radius:16px 16px 0 0;
-    box-shadow:0 -8px 40px rgba(0,0,0,.6);
+    box-shadow:0 -8px 40px rgba(0,0,0,.65);
     transform:translateY(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+    display:block!important; /* sempre no DOM, visibilidade via transform */
   }
   .ai-answer-box.mob-open{transform:translateY(0);}
-  .ai-answer-hd{border-radius:16px 16px 0 0;}
+  .ai-answer-hd{border-radius:16px 16px 0 0;position:sticky;top:0;z-index:1;}
 
-  /* barra de resultados SPARQL mobile */
+  /* SPARQL resultados */
   .sq-res-hd{flex-wrap:wrap;gap:4px;}
   .sq-res-hd h2{flex:1;}
 
-  /* bottom nav label */
+  /* Status bar */
   #sbar{display:none;}
-
-  /* status bar substituto */
   #mobStatus{
     display:block!important;
-    position:fixed;bottom:56px;left:0;right:0;z-index:195;
-    padding:3px 10px;background:rgba(6,8,16,.92);
+    position:fixed;bottom:56px;left:0;right:0;z-index:130;
+    padding:3px 12px;background:rgba(6,8,16,.9);
     font-family:var(--mono);font-size:9px;color:var(--txt3);
-    border-top:1px solid var(--bord2);
-    text-align:center;
+    border-top:1px solid var(--bord2);text-align:center;
   }
   [data-theme=light] #mobStatus{background:rgba(240,242,251,.95);}
 
-  /* toque mais fácil nos botões */
-  .btn{min-height:32px;}
-  .btn.sm{min-height:28px;}
-  .tog{padding:6px 0;}
+  /* Alvos de toque maiores */
+  .btn{min-height:34px;}
+  .btn.sm{min-height:30px;}
+  .tog{padding:7px 0;}
+  .pbtn{padding:11px 10px;}
 }
 
 /* Tablet: 769–1024px — ajustes menores */
@@ -1068,13 +1064,15 @@ function dl(name,text,mime){const a=document.createElement('a');a.href=URL.creat
 function toCsv(rows){if(!rows.length)return'';const c=Object.keys(rows[0]);const q=v=>{const s=String(v??'');return/[,"\n]/.test(s)?`"${s.replace(/"/g,'""').replace(/\n/g,'\\n')}"`:s;};return[c.join(','),...rows.map(r=>c.map(k=>q(r[k])).join(','))].join('\n');}
 function toggleTheme(){const t=document.body.getAttribute('data-theme')||'dark';document.body.setAttribute('data-theme',t==='dark'?'light':'dark');[gTax,gOnto].forEach(g=>g&&g.draw());}
 function setStatus(k,t){$id('sdot').className='dot '+k;$id('stxt').textContent=t;}
-function setDbg(k,t){$id('dbDot').className='dot '+k;$id('dbTxt').textContent=t;}
+function setDbg(k,t){$id('dbDot').className='dot '+k;$id('dbTxt').textContent=t;const ms=$id('mobStatus');if(ms)ms.textContent=t;}
 
 /* ══ TABS ══ */
 const PAGES=['home','tax','onto','sparql'];
 function gotoTab(t){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   PAGES.forEach(id=>{const el=$id('pg-'+id);if(el)el.classList.toggle('on',id===t);});
+  closeMobPanels();
   if(t==='tax'){setTimeout(()=>{if(!gTax)gTax=makeGraph('cvTax');gTax.resize();if(!gTax.getNodes().length&&G.classes.size>0)buildTax();},40);}
   if(t==='onto'){setTimeout(()=>{if(!gOnto)gOnto=makeGraph('cvOnto');gOnto.resize();if(!gOnto.getNodes().length&&G.classes.size>0)buildOnto();},40);}
 }
@@ -1441,6 +1439,7 @@ REGRAS DE RESPOSTA:
 /* ── Abre o painel IA a partir de uma questão de competência ── */
 async function openAiBox(sparqlQuery, questionTitle){
   const box=$id('aiBox'); box.style.display='';
+  if(isMob()){closeMobPanels();box.classList.add('mob-open');}
   $id('aiBody').innerHTML=`<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Interpretando a ontologia…</span></div>`;
 
   const kb=buildKnowledgeBase();
@@ -1465,6 +1464,7 @@ async function openAiBox(sparqlQuery, questionTitle){
 async function askAI(question){
   if(!question||!question.trim())return;
   const box=$id('aiBox'); box.style.display='';
+  if(isMob()){closeMobPanels();box.classList.add('mob-open');}
   $id('aiBody').innerHTML=`<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Consultando a ontologia…</span></div>`;
   $id('aiCustomQ').value='';
 
@@ -2435,134 +2435,72 @@ async function boot(){
 
 boot();
 
-/* ══════════════════════════════════════════════════════
-   MOBILE INTERACTION HANDLERS
-══════════════════════════════════════════════════════ */
-const isMob=()=>window.innerWidth<=768;
+/* ══ MOBILE HANDLERS ══ */
+function isMob(){return window.innerWidth<=768;}
 
-/* Sincroniza bottom nav com tab ativa */
-function syncBottomNav(tab){
-  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-}
-
-/* Fecha todos os painéis mobile abertos */
-function closeMobilePanels(){
-  $id('tax-sb')?.classList.remove('mob-open');
-  $id('onto-sb')?.classList.remove('mob-open');
-  $id('np')?.classList.remove('mob-open');
+function closeMobPanels(){
+  ['tax-sb','onto-sb'].forEach(id=>{$id(id)?.classList.remove('mob-open');});
   const sq=$id('sq-left-panel');if(sq)sq.classList.remove('mob-open');
-  const ai=$id('aiBox');if(ai){ai.classList.remove('mob-open');if(isMob())ai.style.display='none';}
+  const np=$id('np');if(np)np.classList.remove('mob-open');
+  const ai=$id('aiBox');if(ai)ai.classList.remove('mob-open');
 }
 
-/* Toggle sidebar de controles (taxonomia / ontologia) */
 function toggleSidebar(id){
   const el=$id(id);if(!el)return;
-  const isOpen=el.classList.contains('mob-open');
-  closeMobilePanels();
-  if(!isOpen)el.classList.add('mob-open');
+  const was=el.classList.contains('mob-open');
+  closeMobPanels();
+  if(!was)el.classList.add('mob-open');
 }
 
-/* Toggle painel de questões SPARQL */
 function toggleSparqlLeft(){
-  const el=$id('sq-left-panel');if(!el)return;
-  el.classList.toggle('mob-open');
+  $id('sq-left-panel')?.classList.toggle('mob-open');
 }
 
-/* Botão hambúrguer do header — abre sidebar da tab atual */
 function toggleMobileControls(){
-  const tab=document.querySelector('.nav-btn.on')?.dataset.tab||'home';
+  const tab=document.querySelector('.nav-btn.on')?.dataset.tab;
   if(tab==='tax')toggleSidebar('tax-sb');
   else if(tab==='onto')toggleSidebar('onto-sb');
   else if(tab==='sparql')toggleSparqlLeft();
 }
 
-/* Fecha AI box (mobile bottom-sheet ou desktop inline) */
 function closeAiBox(){
   const b=$id('aiBox');if(!b)return;
   b.classList.remove('mob-open');
-  b.style.display='none';
+  if(!isMob())b.style.display='none';
 }
 
-/* Abre AI box adaptado ao dispositivo */
-function openAiBoxMob(){
+function openAiBoxMobile(){
   const b=$id('aiBox');if(!b)return;
   b.style.display='';
-  if(isMob()){closeMobilePanels();b.style.display='';b.classList.add('mob-open');}
+  if(isMob()){closeMobPanels();b.classList.add('mob-open');}
 }
 
-/* Intercepta openAiBox para gerir estado mobile */
-const _origOpenAiBox=openAiBox;
-openAiBox=async function(q,t){
-  const b=$id('aiBox');if(b){b.style.display='';if(isMob()){closeMobilePanels();b.classList.add('mob-open');}}
-  return _origOpenAiBox(q,t);
-};
-
-/* Intercepta askAI para gerir estado mobile */
-const _origAskAI=askAI;
-askAI=async function(q){
-  const b=$id('aiBox');if(b){b.style.display='';if(isMob()){closeMobilePanels();b.classList.add('mob-open');}}
-  return _origAskAI(q);
-};
-
-/* Node panel: no mobile, abrir como bottom-sheet */
-const _origDetailHtml=typeof detailHtml==='function'?detailHtml:null;
-function showNodePanelMob(iri){
+function showNpMob(){
   if(!isMob())return;
+  closeMobPanels();
   const np=$id('np');if(!np)return;
   np.style.display='flex';
-  closeMobilePanels();
-  setTimeout(()=>np.classList.add('mob-open'),10);
+  requestAnimationFrame(()=>np.classList.add('mob-open'));
 }
 
-/* Patch gotoTab para sincronizar bottomNav e fechar painéis */
-const _origGotoTab=gotoTab;
-gotoTab=function(t){
-  closeMobilePanels();
-  _origGotoTab(t);
-  syncBottomNav(t);
-};
-
-/* Fechar node panel pelo botão × no header */
-const npCloseBtn=document.querySelector('#np .np-hd button');
-if(npCloseBtn){
-  const origClose=npCloseBtn.onclick;
-  npCloseBtn.onclick=function(){
-    $id('np')?.classList.remove('mob-open');
-    if(origClose)origClose.call(this);
-  };
-}
-
-/* Update status mobile */
-function setDbg(k,t){
-  $id('dbDot').className='dot '+k;$id('dbTxt').textContent=t;
-  const ms=$id('mobStatus');if(ms)ms.textContent=t;
-}
-
-/* Touch: fechar painéis ao tocar no canvas */
-['cvTax','cvOnto'].forEach(id=>{
-  const cv=$id(id);
-  if(cv)cv.addEventListener('touchstart',()=>{
-    if(isMob())closeMobilePanels();
+/* Swipe down fecha bottom-sheets */
+['np','aiBox','tax-sb','onto-sb'].forEach(id=>{
+  const el=$id(id);if(!el)return;
+  let sy=0;
+  el.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
+  el.addEventListener('touchend',e=>{
+    if(e.changedTouches[0].clientY-sy>70){
+      el.classList.remove('mob-open');
+      if(id==='aiBox')el.style.display='none';
+    }
   },{passive:true});
 });
 
-/* Swipe down para fechar bottom-sheets */
-function addSwipeClose(el){
-  if(!el)return;
-  let startY=0;
-  el.addEventListener('touchstart',e=>{startY=e.touches[0].clientY;},{passive:true});
-  el.addEventListener('touchend',e=>{
-    const dy=e.changedTouches[0].clientY-startY;
-    if(dy>60){el.classList.remove('mob-open');if(el===document.getElementById('aiBox'))el.style.display='none';}
-  },{passive:true});
-}
-addSwipeClose($id('np'));
-addSwipeClose($id('aiBox'));
-addSwipeClose($id('tax-sb'));
-addSwipeClose($id('onto-sb'));
+/* Toque no canvas fecha painéis */
+['cvTax','cvOnto'].forEach(id=>{
+  $id(id)?.addEventListener('touchstart',()=>{if(isMob())closeMobPanels();},{passive:true});
+});
 
-/* Sincroniza estado inicial */
-syncBottomNav('home');
-
+</script>
 </body>
 </html>
