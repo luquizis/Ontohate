@@ -282,6 +282,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13p
   background-repeat:no-repeat;background-position:right 9px center;
 }
 .sel:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(100,120,255,.15);}
+#apiKeyInput:focus{border-color:var(--acc)!important;box-shadow:0 0 0 3px rgba(100,120,255,.18)!important;}
 
 .inp{
   width:100%;border:1px solid var(--bord);background:var(--panel);color:var(--txt);
@@ -1418,18 +1419,48 @@ async function callAI(systemPrompt, userMsg){
   return data.content.map(b=>b.text||'').join('');
 }
 
-/* ── Gestão de API Key (sessão apenas) ── */
+/* ── Gestão de API Key ── */
 let _apiKey='';
 function getApiKey(){return _apiKey;}
 function setApiKey(k){_apiKey=(k||'').trim();}
+
 function showApiKeyPrompt(){
-  const cur=_apiKey?'(chave configurada)':'';
-  const k=prompt(`Cole sua Anthropic API Key abaixo.\nEla é usada apenas nesta sessão e não é armazenada em lugar nenhum.\n${cur}`,'');
-  if(k===null)return;
-  setApiKey(k);
-  const btn=$id('aiKeyBtn');
-  if(btn)btn.textContent=_apiKey?'🔑 API Key ✓':'🔑 API Key';
+  const modal=$id('apiKeyModal');
+  if(!modal)return;
+  const inp=$id('apiKeyInput');
+  if(inp){inp.value=_apiKey;inp.type='password';}
+  modal.style.display='flex';
+  setTimeout(()=>inp&&inp.focus(),80);
 }
+
+function closeApiKeyModal(){
+  const modal=$id('apiKeyModal');
+  if(modal)modal.style.display='none';
+}
+
+function confirmApiKey(){
+  const inp=$id('apiKeyInput');
+  const k=(inp?.value||'').trim();
+  setApiKey(k);
+  closeApiKeyModal();
+  const btn=$id('aiKeyBtn');
+  if(btn){
+    btn.textContent=_apiKey?'🔑 Key ✓':'🔑 API Key';
+    btn.style.color=_apiKey?'var(--teal)':'';
+  }
+  if(_apiKey){
+    // Se há uma pergunta pendente, tentar novamente
+    const body=$id('aiBody');
+    if(body&&body.querySelector('.ai-error'))
+      body.innerHTML=`<div style="padding:16px;font-size:12px;color:var(--txt2)">Chave configurada. Clique na questão ou no botão ✦ Resposta IA para perguntar.</div>`;
+  }
+}
+
+/* Fechar modal clicando fora */
+document.addEventListener('click',e=>{
+  const modal=$id('apiKeyModal');
+  if(modal&&modal.style.display==='flex'&&e.target===modal)closeApiKeyModal();
+});
 
 /* ── Renderiza a resposta ── */
 function renderAIResponse(html, questionText){
@@ -4706,5 +4737,31 @@ function showNpMob(){
 });
 
 </script>
+
+<!-- ── Modal API Key ── -->
+<div id="apiKeyModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:var(--panel);border:1px solid var(--bord);border-radius:16px;padding:28px 28px 24px;width:min(420px,92vw);box-shadow:0 24px 80px rgba(0,0,0,.7);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <span style="font-size:22px">🔑</span>
+      <div>
+        <div style="font-family:var(--head);font-weight:700;font-size:14px;color:var(--txt1)">Anthropic API Key</div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:2px">Usada apenas nesta sessão — não é armazenada</div>
+      </div>
+    </div>
+    <input id="apiKeyInput" type="password"
+      placeholder="sk-ant-api03-…"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;background:var(--bg);border:1px solid var(--bord);border-radius:8px;color:var(--txt1);font-family:var(--mono);font-size:12px;outline:none;margin-bottom:8px"
+      onkeydown="if(event.key==='Enter')confirmApiKey()"
+    />
+    <div style="font-size:10px;color:var(--txt3);margin-bottom:16px">
+      Obtenha sua chave em <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--acc)">console.anthropic.com</a>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn sm" onclick="closeApiKeyModal()">Cancelar</button>
+      <button class="btn sm prim" onclick="confirmApiKey()">✓ Confirmar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
