@@ -732,7 +732,7 @@ canvas.gv:active{cursor:grabbing;}
     <div class="logo-mark">O</div>
     <div>
       <div class="logo-name">OntoHate</div>
-      <div class="logo-ver">v5.0 · 2026</div>
+      <div class="logo-ver">v5.1 · 2026</div>
     </div>
   </div>
   <nav class="nav">
@@ -1054,7 +1054,7 @@ canvas.gv:active{cursor:grabbing;}
 <div id="sbar">
   <span class="dot warn" id="dbDot"></span>
   <span id="dbTxt">Aguardando…</span>
-  <span style="margin-left:auto;font-size:9px">build 2026.03-r7 · v5.0</span>
+  <span style="margin-left:auto;font-size:9px">build 2026.03-r8 · v5.1</span>
 </div>
 
 <script>
@@ -1320,53 +1320,46 @@ function getExtraAnnotations(iri){
 }
 
 /* ── Serializa a ontologia inteira como base de conhecimento ── */
-function buildKnowledgeBase(){
-  if(!G.classes||!G.classes.size) return'(ontologia não carregada)';
+let _kbCache=null,_kbCacheSize=0;
+function invalidateKbCache(){_kbCache=null;_kbCacheSize=0;}
 
+function buildKnowledgeBase(force=false){
+  if(!G.classes||!G.classes.size)return'(ontologia não carregada)';
+  if(_kbCache&&!force&&_kbCacheSize===G.classes.size)return _kbCache;
   const lines=[];
-
-  // Cabeçalho
   lines.push(`ONTOLOGIA: OntoHate — Discurso de Ódio Online (OWL/RDF)`);
   lines.push(`TOTAL: ${G.classes.size} classes · ${G.props.size} propriedades · ${G.dims.length} dimensões`);
   lines.push('');
-
-  // Percorre cada dimensão e sua hierarquia completa
   for(const dim of G.dims){
     const dimLbl=bestLbl(dim);
     const dimCmt=G.comments.get(dim)||'';
     lines.push(`== DIMENSÃO: ${dimLbl}${dimCmt?' — '+dimCmt:''} ==`);
-
-    // BFS para percorrer a hierarquia da dimensão
-    const queue=[{iri:dim, depth:0}];
+    const queue=[{iri:dim,depth:0}];
     const visited=new Set([dim]);
     while(queue.length){
-      const {iri, depth}=queue.shift();
-      if(depth===0){ // já imprimiu no cabeçalho da dimensão
+      const{iri,depth}=queue.shift();
+      if(depth===0){
         const kids=[...(G.childOf.get(iri)||[])];
-        for(const k of kids) if(!visited.has(k)){visited.add(k);queue.push({iri:k,depth:1});}
+        for(const k of kids)if(!visited.has(k)){visited.add(k);queue.push({iri:k,depth:1});}
         continue;
       }
       const lbl=bestLbl(iri);
       const cmt=G.comments.get(iri)||getExtraAnnotations(iri).slice(0,1).map(a=>a.val.slice(0,150)).join('');
-      const indent='  '.repeat(depth);
+      const indent='  '.repeat(Math.min(depth,4));
       lines.push(`${indent}• ${lbl}${cmt?' : '+cmt:''}`);
       const kids=[...(G.childOf.get(iri)||[])];
-      for(const k of kids) if(!visited.has(k)){visited.add(k);queue.push({iri:k,depth:depth+1});}
+      for(const k of kids)if(!visited.has(k)){visited.add(k);queue.push({iri:k,depth:depth+1});}
     }
     lines.push('');
   }
-
-  // Classes sem dimensão
   const allInDims=new Set();
-  for(const d of G.dims){const s=descOf?.(d)||new Set();for(const x of s)allInDims.add(x);allInDims.add(d);}
+  for(const d of G.dims){allInDims.add(d);const subs=descOf(d);for(const x of subs)allInDims.add(x);}
   const orphans=[...G.classes].filter(c=>!allInDims.has(c)&&c!==G.rootIri);
   if(orphans.length){
     lines.push(`== CLASSES SEM DIMENSÃO ==`);
-    for(const c of orphans) lines.push(`  • ${bestLbl(c)}${G.comments.get(c)?' : '+G.comments.get(c):''}`);
+    for(const c of orphans.slice(0,30))lines.push(`  • ${bestLbl(c)}${G.comments.get(c)?' : '+G.comments.get(c).slice(0,100):''}`);
     lines.push('');
   }
-
-  // Object Properties
   if(G.props.size){
     lines.push(`== RELAÇÕES FORMAIS (Object Properties) ==`);
     for(const p of G.props){
@@ -1377,25 +1370,24 @@ function buildKnowledgeBase(){
     }
     lines.push('');
   }
-
-  // Relações cruzadas entre dimensões
   const xrels=typeof findCrossRels==='function'?findCrossRels():[];
   if(xrels.length){
     lines.push(`== RELAÇÕES CRUZADAS ENTRE DIMENSÕES ==`);
-    for(const r of xrels.slice(0,30)){
-      const fDimLbl=r.fDim&&r.fDim!==r.f?` (${bestLbl(r.fDim)})`:'';
-      const tDimLbl=r.tDim&&r.tDim!==r.t?` (${bestLbl(r.tDim)})`:'';
-      lines.push(`  • ${r.lbl}: ${bestLbl(r.f)}${fDimLbl} → ${bestLbl(r.t)}${tDimLbl}`);
+    for(const r of xrels.slice(0,40)){
+      const fDL=r.fDim&&r.fDim!==r.f?` (${bestLbl(r.fDim)})`:'';
+      const tDL=r.tDim&&r.tDim!==r.t?` (${bestLbl(r.tDim)})`:'';
+      lines.push(`  • ${r.lbl}: ${bestLbl(r.f)}${fDL} → ${bestLbl(r.t)}${tDL}`);
     }
   }
-
-  return lines.join('\n');
+  _kbCache=lines.join('\n');
+  _kbCacheSize=G.classes.size;
+  return _kbCache;
 }
 
 /* ── Chama a API ── */
-async function callAI(systemPrompt, userMsg){
+async function callAI(systemPrompt,userMsg){
   const apiKey=getApiKey();
-  if(!apiKey){throw new Error('Chave API não configurada. Clique em ⚙ Configurar API Key no painel IA.');}
+  if(!apiKey){throw new Error('Chave API não configurada. Clique em 🔑 API Key.');}
   const response=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{
@@ -1406,14 +1398,18 @@ async function callAI(systemPrompt, userMsg){
     },
     body:JSON.stringify({
       model:'claude-sonnet-4-20250514',
-      max_tokens:1024,
+      max_tokens:1200,
       system:systemPrompt,
       messages:[{role:'user',content:userMsg}]
     })
   });
   if(!response.ok){
-    const err=await response.json().catch(()=>({error:{message:`HTTP ${response.status}`}}));
-    throw new Error(err?.error?.message||`API ${response.status}`);
+    let errMsg=`Erro HTTP ${response.status}`;
+    try{const err=await response.json();errMsg=err?.error?.message||errMsg;}catch{}
+    if(response.status===401)throw new Error('API Key inválida ou expirada. Verifique em console.anthropic.com.');
+    if(response.status===429)throw new Error('Limite de requisições atingido. Aguarde alguns segundos.');
+    if(response.status===500)throw new Error('Erro interno na API Anthropic. Tente novamente.');
+    throw new Error(errMsg);
   }
   const data=await response.json();
   return data.content.map(b=>b.text||'').join('');
@@ -1470,42 +1466,42 @@ function renderAIResponse(html, questionText){
 
 /* ── Prompt de sistema compartilhado ── */
 function buildSystemPrompt(kb){
-  return`Você é um assistente especialista integrado ao visualizador OntoHate, uma ontologia OWL/RDF sobre discurso de ódio online.
+  return`Você é um assistente especialista integrado ao visualizador OntoHate, uma ontologia OWL/RDF sobre discurso de ódio online, desenvolvida como tese de doutorado por Luiz Rogério Lopes Silva.
 
 BASE DE CONHECIMENTO DA ONTOLOGIA:
 ${kb}
 
-REGRAS DE RESPOSTA:
-1. Responda SEMPRE em português brasileiro, em texto corrido (sem listas, sem markdown, sem bullets, sem títulos).
-2. Use 2 a 3 parágrafos bem desenvolvidos.
-3. Baseie-se EXCLUSIVAMENTE nos conceitos, classes e relações presentes na base de conhecimento acima.
-4. Se a pergunta tocar em algo que a ontologia NÃO cobre, diga claramente qual é o limite e ofereça o que mais se aproxima dentro da ontologia.
-5. Se não houver nenhuma informação relevante, responda: "A ontologia OntoHate não possui informação suficiente para responder a essa pergunta na versão carregada."
-6. NUNCA enumere listas de nomes de classes — transforme os conceitos em argumentos interpretativos.
-7. Perguntas completamente fora do escopo (não relacionadas a discurso de ódio ou à ontologia): responda apenas "Essa pergunta está fora do escopo da ontologia OntoHate."`;
+INSTRUÇÕES DE RESPOSTA — siga rigorosamente:
+1. Responda SEMPRE em português brasileiro.
+2. Escreva em texto corrido, com 2 a 3 parágrafos bem desenvolvidos.
+3. NUNCA use bullets, listas numeradas, markdown, negrito (**) ou títulos com #.
+4. Baseie-se EXCLUSIVAMENTE nos conceitos, classes e relações da base de conhecimento acima. Não invente conceitos.
+5. Quando resultados SPARQL forem fornecidos, interprete-os em linguagem natural: explique o que revelam sobre o discurso de ódio, contextualizando com a estrutura da ontologia.
+6. Se a pergunta tocar em algo que a ontologia NÃO cobre, diga qual é o limite e ofereça o mais próximo disponível.
+7. Se não houver informação relevante: "A ontologia OntoHate não possui informação suficiente para responder a essa pergunta na versão carregada."
+8. Perguntas completamente fora do escopo: "Essa pergunta está fora do escopo da ontologia OntoHate."`;
 }
 
 /* ── Abre o painel IA a partir de uma questão de competência ── */
-async function openAiBox(sparqlQuery, questionTitle){
-  const box=$id('aiBox'); box.style.display='';
+async function openAiBox(sparqlQuery,questionTitle){
+  const box=$id('aiBox');box.style.display='';
   if(isMob()){closeMobPanels();box.classList.add('mob-open');}
   $id('aiBody').innerHTML=`<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Interpretando a ontologia…</span></div>`;
-
   const kb=buildKnowledgeBase();
   const system=buildSystemPrompt(kb);
-
-  // A pergunta para a IA é o TÍTULO da questão em linguagem natural,
-  // não os dados SPARQL. O SPARQL é só a tabela técnica na tela.
   const question=questionTitle||sparqlQuery.slice(0,200);
-  const userMsg=`Pergunta: "${question}"\n\nCom base na ontologia OntoHate, responda de forma interpretativa e contextualizada.`;
-
+  let sparqlContext='';
+  if(lastRows&&lastRows.length&&lastVars&&lastVars.length){
+    sparqlContext='\n\n'+formatSparqlResults(lastRows,lastVars,30);
+  }
+  const userMsg=`Pergunta: "${question}"${sparqlContext}\n\nResponda de forma interpretativa e contextualizada, em texto corrido.`;
   try{
-    const ans=await callAI(system, userMsg);
+    const ans=await callAI(system,userMsg);
     const paras=ans.trim().split(/\n\n+/).filter(p=>p.trim());
     const html=paras.map(p=>`<p>${esc(p.trim())}</p>`).join('');
-    renderAIResponse(html, questionTitle||null);
+    renderAIResponse(html,questionTitle||null);
   }catch(e){
-    const isKey=String(e.message).includes('API Key')||String(e.message).includes('x-api-key')||String(e.message).includes('api_key');
+    const isKey=String(e.message).toLowerCase().includes('api key')||String(e.message).includes('401');
     $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ ${esc(String(e.message))}</p>${isKey?`<p style="margin-top:8px"><button class="btn sm prim" onclick="showApiKeyPrompt()">🔑 Configurar API Key</button></p>`:''}</div>`;
   }
 }
@@ -1513,21 +1509,24 @@ async function openAiBox(sparqlQuery, questionTitle){
 /* ── Responde perguntas livres em linguagem natural ── */
 async function askAI(question){
   if(!question||!question.trim())return;
-  const box=$id('aiBox'); box.style.display='';
+  const box=$id('aiBox');box.style.display='';
   if(isMob()){closeMobPanels();box.classList.add('mob-open');}
   $id('aiBody').innerHTML=`<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Consultando a ontologia…</span></div>`;
   $id('aiCustomQ').value='';
-
   const kb=buildKnowledgeBase();
   const system=buildSystemPrompt(kb);
-
+  let sparqlContext='';
+  if(lastRows&&lastRows.length&&lastVars&&lastVars.length){
+    sparqlContext='\n\nContexto atual (resultados visíveis na tela):\n'+formatSparqlResults(lastRows,lastVars,20);
+  }
+  const userMsg=question+sparqlContext;
   try{
-    const ans=await callAI(system, question);
+    const ans=await callAI(system,userMsg);
     const paras=ans.trim().split(/\n\n+/).filter(p=>p.trim());
     const html=paras.map(p=>`<p>${esc(p.trim())}</p>`).join('');
-    renderAIResponse(html, question);
+    renderAIResponse(html,question);
   }catch(e){
-    const isKey=String(e.message).includes('API Key')||String(e.message).includes('x-api-key')||String(e.message).includes('api_key');
+    const isKey=String(e.message).toLowerCase().includes('api key')||String(e.message).includes('401');
     $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ ${esc(String(e.message))}</p>${isKey?`<p style="margin-top:8px"><button class="btn sm prim" onclick="showApiKeyPrompt()">🔑 Configurar API Key</button></p>`:''}</div>`;
   }
 }
@@ -1544,7 +1543,95 @@ function matchTriple(pat,binds,pfxMap,transitive){const SUBOF=NS.RDFS+'subClassO
 function splitUnion(blk){const br=[];let dep=0,st=-1,i=0;while(i<blk.length){if(blk[i]==='{'){if(dep===0)st=i+1;dep++;}else if(blk[i]==='}'){dep--;if(dep===0&&st>=0){br.push(blk.slice(st,i));st=-1;}}i++;}return br.length>0?br:[blk];}
 function evalWhere(blk,binds,pfxMap){function extractFiltersTopLevel(src){const filters=[];let out='',i=0,braceDepth=0;while(i<src.length){if(src[i]==='{'){braceDepth++;out+=src[i++];continue;}if(src[i]==='}'){braceDepth--;out+=src[i++];continue;}if(braceDepth===0){const rest=src.slice(i);const fm=/^\bFILTER\s*\(/i.exec(rest);if(fm){i+=fm[0].length;let depth=1,content='';while(i<src.length&&depth>0){if(src[i]==='(')depth++;else if(src[i]===')'){depth--;if(depth===0){i++;break;}}content+=src[i++];}filters.push(content);continue;}}out+=src[i++];}return{out,filters};}const{out:noF,filters}=extractFiltersTopLevel(blk);const bindsArr=[];const bRe=/BIND\s*\(([^)]+)\s+AS\s+\?(\w+)\s*\)/gi;let bm;while((bm=bRe.exec(noF))!==null)bindsArr.push({expr:bm[1].trim(),v:bm[2]});const noFB=noF.replace(/BIND\s*\([^)]+\)/gi,'');function hasTopLevelUnion(src){let d=0;for(let i=0;i<src.length-6;i++){if(src[i]==='{')d++;else if(src[i]==='}')d--;if(d===0&&/^UNION\b/i.test(src.slice(i+1).trimStart()))return true;}return false;}let result;if(hasTopLevelUnion(noFB)){const brs=splitUnion(noFB);const seen=new Set();result=[];for(const br of brs){let bb=evalWhere(br,[...binds],pfxMap);for(const b of bb){const k=JSON.stringify(b);if(!seen.has(k)){seen.add(k);result.push(b);}}}}else{result=evalSimple(noFB,binds,pfxMap);}for(const bd of bindsArr){const litM=bd.expr.match(/^"([^"]*)"(?:@(\w+))?$/);if(litM)result=result.map(b=>({...b,[bd.v]:litM[1],['__lg__'+bd.v]:litM[2]||''}));const repM=bd.expr.match(/REPLACE\s*\(\s*STR\s*\(\s*\?(\w+)\s*\)\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"\s*\)/i);if(repM)result=result.map(b=>({...b,[bd.v]:String(b[repM[1]]||'').replace(new RegExp(repM[2]),repM[3])}));}for(const f of filters)result=result.filter(b=>evalFilter(f,b));return result;}
 function evalSimple(blk,binds,pfxMap){const opts=[];function extractOptionals(src){let out='',i=0;while(i<src.length){const m=/OPTIONAL\s*\{/i.exec(src.slice(i));if(!m){out+=src.slice(i);break;}out+=src.slice(i,i+m.index);i+=m.index+m[0].length;let depth=1,start=i;while(i<src.length&&depth>0){if(src[i]==='{')depth++;else if(src[i]==='}')depth--;i++;}opts.push(src.slice(start,i-1));}return out;}const noOpt=extractOptionals(blk);const TERM_S='(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+|a(?=\\s))';const TERM_P='(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}+]+\\+?|a(?=\\s))';const TERM_O='(?:<[^>]*>|\\?[\\w]+|[\\w][\\w.-]*:[^\\s,;.(){}]+|"(?:[^"\\\\]|\\\\.)*"(?:@[\\w-]+)?(?:\\^\\^(?:<[^>]+>|[\\w]+:[\\w]+))?)';const tRe=new RegExp(`(${TERM_S})\\s+(${TERM_P})\\s+(${TERM_O})`,'g');let m;let cur=[...binds];while((m=tRe.exec(noOpt))!==null){const raw_p=m[2];const ptrans=raw_p.endsWith('+');const pclean=ptrans?raw_p.slice(0,-1):raw_p;cur=matchTriple({s:m[1].trim(),p:pclean.trim(),o:m[3].trim()},cur,pfxMap,ptrans);if(!cur.length)break;}for(const opt of opts){const ext=[];for(const b of cur){const res=evalWhere(opt,[b],pfxMap);if(res.length>0)ext.push(...res);else ext.push(b);}cur=ext;}return cur;}
-function sparqlQ(raw){const pfxMap={};for(const[,p,u]of raw.matchAll(/PREFIX\s+(\w*):\s*<([^>]+)>/gi))pfxMap[p]=u;const allPfx={...NSDEF,...pfxMap};const mq=raw.match(/SELECT\s+(DISTINCT\s+)?([^{]+?)\s+WHERE\s*\{([\s\S]*)\}/i);if(!mq)return[];const distinct=!!mq[1];const selS=mq[2].trim();const whereRaw=mq[3];let vars=selS==='*'?null:[...new Set([...selS.matchAll(/\?(\w+)/g)].map(m=>m[1]))];const limM=raw.match(/LIMIT\s+(\d+)/i);const limit=limM?parseInt(limM[1]):2000;const obM=raw.match(/ORDER\s+BY\s+(DESC\s*\(\s*\?(\w+)\s*\)|ASC\s*\(\s*\?(\w+)\s*\)|\?(\w+))/i);let binds=evalWhere(whereRaw,[{}],allPfx);if(!vars)vars=binds.length?Object.keys(binds[0]).filter(k=>!k.startsWith('__')):[];let rows=binds.map(b=>{const r={};for(const v of vars)r[v]=b[v]??'';return r;});if(distinct){const seen=new Set();rows=rows.filter(r=>{const k=vars.map(v=>r[v]).join('|||');if(seen.has(k))return false;seen.add(k);return true;});}if(obM){const desc=!!obM[1]&&obM[1].trim().startsWith('DESC');const sv=obM[2]||obM[3]||obM[4];rows.sort((a,b)=>{const av=String(a[sv]??''),bv=String(b[sv]??'');return desc?bv.localeCompare(av,'pt-BR'):av.localeCompare(bv,'pt-BR');});}return rows.slice(0,limit);}
+function sparqlQ(raw){
+  const pfxMap={};
+  for(const[,p,u]of raw.matchAll(/PREFIX\s+(\w*):\s*<([^>]+)>/gi))pfxMap[p]=u;
+  const allPfx={...NSDEF,...pfxMap};
+  const whereMatch=raw.match(/SELECT\s+(DISTINCT\s+)?([^{]+?)\s+WHERE\s*\{/i);
+  if(!whereMatch)return[];
+  const distinct=!!whereMatch[1];
+  const selS=whereMatch[2].trim();
+  const wIdx=raw.search(/WHERE\s*\{/i)+raw.match(/WHERE\s*\{/i)[0].length;
+  let depth=0,wEnd=raw.length;
+  for(let i=wIdx;i<raw.length;i++){if(raw[i]==='{')depth++;else if(raw[i]==='}'){if(depth===0){wEnd=i;break;}depth--;}}
+  const whereRaw=raw.slice(wIdx,wEnd);
+  const afterBlock=raw.slice(wEnd+1);
+  const gbM=afterBlock.match(/GROUP\s+BY\s+((?:\?\w+\s*)+)/i);
+  const groupVars=gbM?[...gbM[1].matchAll(/\?(\w+)/g)].map(m=>m[1]):[];
+  const havM=afterBlock.match(/HAVING\s*\(([^)]+)\)/i);
+  const havingExpr=havM?havM[1].trim():null;
+  const obM=afterBlock.match(/ORDER\s+BY\s+(DESC\s*\(\s*\?(\w+)\s*\)|ASC\s*\(\s*\?(\w+)\s*\)|\?(\w+))/i);
+  const limM=afterBlock.match(/LIMIT\s+(\d+)/i);
+  const limit=limM?parseInt(limM[1]):2000;
+  let vars=selS==='*'?null:[...new Set([...selS.matchAll(/\?(\w+)/g)].map(m=>m[1]))];
+  let binds=evalWhere(whereRaw,[{}],allPfx);
+  if(groupVars.length){
+    const groups=new Map();
+    for(const b of binds){const k=groupVars.map(v=>b[v]||'').join('|||');if(!groups.has(k))groups.set(k,{key:b,rows:[]});groups.get(k).rows.push(b);}
+    binds=[];
+    for(const{key:kr,rows:gr}of groups.values()){
+      const out={...kr};
+      const aggRe=/(COUNT|SUM|AVG|MIN|MAX)\s*\(\s*(?:DISTINCT\s+)?\??\s*(\w+|\*)\s*\)\s+AS\s+\?(\w+)/gi;
+      let am;
+      while((am=aggRe.exec(selS))!==null){
+        const[,fn,vn,alias]=am;
+        const vals=gr.map(r=>r[vn]||'').filter(v=>v!=='');
+        if(fn.toUpperCase()==='COUNT')out[alias]=String(gr.length);
+        else if(fn.toUpperCase()==='SUM')out[alias]=String(vals.reduce((a,b)=>a+parseFloat(b||0),0));
+        else if(fn.toUpperCase()==='AVG')out[alias]=vals.length?String(vals.reduce((a,b)=>a+parseFloat(b||0),0)/vals.length):'0';
+        else if(fn.toUpperCase()==='MIN')out[alias]=vals.sort()[0]||'';
+        else if(fn.toUpperCase()==='MAX')out[alias]=vals.sort().reverse()[0]||'';
+      }
+      const cstar=selS.match(/\(COUNT\s*\(\s*\*\s*\)\s+AS\s+\?(\w+)\s*\)/i);
+      if(cstar)out[cstar[1]]=String(gr.length);
+      binds.push(out);
+    }
+    if(havingExpr){
+      binds=binds.filter(r=>{
+        const hm=havingExpr.match(/(\w+)\s*([><=!]+)\s*(\d+)/i);
+        if(!hm)return true;
+        const v=parseInt(r[hm[1]]||0),op=hm[2],val=parseInt(hm[3]);
+        if(op==='>')return v>val;if(op==='>=')return v>=val;if(op==='<')return v<val;if(op==='<=')return v<=val;return true;
+      });
+    }
+  }
+  if(!vars)vars=binds.length?Object.keys(binds[0]).filter(k=>!k.startsWith('__')):[];
+  const aggVars=[...selS.matchAll(/AS\s+\?(\w+)/gi)].map(m=>m[1]);
+  for(const av of aggVars)if(!vars.includes(av))vars.push(av);
+  vars=[...new Set(vars)].filter(v=>!v.startsWith('__'));
+  let rows=binds.map(b=>{const r={};for(const v of vars)r[v]=b[v]??'';return r;});
+  if(distinct){const seen=new Set();rows=rows.filter(r=>{const k=vars.map(v=>r[v]).join('|||');if(seen.has(k))return false;seen.add(k);return true;});}
+  if(obM){
+    const desc=!!obM[1]&&obM[1].trim().startsWith('DESC');
+    const sv=obM[2]||obM[3]||obM[4];
+    rows.sort((a,b)=>{
+      const av=String(a[sv]??''),bv=String(b[sv]??'');
+      const an=parseFloat(av),bn=parseFloat(bv);
+      if(!isNaN(an)&&!isNaN(bn))return desc?bn-an:an-bn;
+      return desc?bv.localeCompare(av,'pt-BR'):av.localeCompare(bv,'pt-BR');
+    });
+  }
+  return rows.slice(0,limit);
+}
+
+function formatSparqlResults(rows,vars,maxRows=30){
+  if(!rows||!rows.length)return'(sem resultados SPARQL)';
+  const sample=rows.slice(0,maxRows);
+  const lines=[];
+  lines.push(`RESULTADOS SPARQL (${rows.length} linha${rows.length!==1?'s':''}${rows.length>maxRows?`, exibindo primeiras ${maxRows}`:''})`);
+  lines.push(vars.join(' | '));
+  lines.push('─'.repeat(60));
+  for(const row of sample){
+    lines.push(vars.map(v=>{
+      const val=(row[v]||'').toString();
+      if(!val)return'—';
+      if(val.startsWith('http://ontohate.org/')||val.startsWith('https://ontohate.org/'))return G.labels.get(val)||shortIri(val);
+      if(val.startsWith('http://www.w3.org/')||val.startsWith('https://'))return shortIri(val);
+      return val.slice(0,100);
+    }).join(' | '));
+  }
+  return lines.join('\n');
+}
 function sparqlEnhanced(raw){const pfxBlock=Object.entries(NSDEF).filter(([p])=>!raw.includes(`PREFIX ${p}:`)).map(([p,u])=>`PREFIX ${p}: <${u}>`).join('\n');return sparqlQ(pfxBlock?pfxBlock+'\n'+raw:raw);}
 
 /* ══════════════════════════════════════════════════════
@@ -2364,17 +2451,28 @@ function renderTable(rows,vars){
 function runQ(){
   let raw=$id('sqta').value.trim();if(!raw)return;
   if(!G.quads.length){$id('qres').innerHTML=`<div style="color:var(--warn);padding:16px">⚠️ Ontologia não carregada.</div>`;return;}
-  const t0=performance.now();let rows,usedRelax=false;
-  try{rows=sparqlEnhanced(raw);}catch(e){$id('qres').innerHTML=`<div style="color:var(--bad);font-family:var(--mono);font-size:11px;padding:14px">❌ Erro: ${esc(String(e?.message||e))}</div>`;return;}
-  if((!rows||!rows.length)&&$id('qRelax').checked){const r1=raw.replace(/FILTER\s*\(\s*LANG\s*\([^)]*\)\s*=+\s*["'][^"']*["']\s*\)/gi,'').replace(/FILTER\s*\(\s*LANGMATCHES[^)]*\)/gi,'');if(r1!==raw){try{rows=sparqlEnhanced(r1);if(rows?.length)usedRelax=true;}catch(_){}}}
-  if((!rows||!rows.length)&&$id('qRelax').checked){const r2=raw.replace(/FILTER\s*\([^)]+\)/gi,'');if(r2!==raw){try{rows=sparqlEnhanced(r2);if(rows?.length)usedRelax=true;}catch(_){}}}
+  const t0=performance.now();let rows,usedRelax=false,relaxLevel=0;
+  try{rows=sparqlEnhanced(raw);}catch(e){$id('qres').innerHTML=`<div style="color:var(--bad);font-family:var(--mono);font-size:11px;padding:14px">❌ Erro SPARQL: ${esc(String(e?.message||e))}</div>`;return;}
+  if((!rows||!rows.length)&&$id('qRelax').checked){
+    const r1=raw.replace(/FILTER\s*\(\s*LANG\s*\([^)]*\)\s*=+\s*["'][^"']*["']\s*\)/gi,'').replace(/FILTER\s*\(\s*LANGMATCHES[^)]*\)/gi,'');
+    if(r1!==raw){try{const t=sparqlEnhanced(r1);if(t?.length){rows=t;usedRelax=true;relaxLevel=1;}}catch(_){}}
+    if(!rows?.length){
+      const r2=raw.replace(/FILTER\s*\([^)]*(?:LANG|CONTAINS|regex|STRSTARTS)[^)]*\)/gi,'');
+      if(r2!==raw){try{const t=sparqlEnhanced(r2);if(t?.length){rows=t;usedRelax=true;relaxLevel=2;}}catch(_){}}
+    }
+    if(!rows?.length){
+      const r3=raw.replace(/FILTER\s*\([^)]+\)/gi,'');
+      if(r3!==raw){try{const t=sparqlEnhanced(r3);if(t?.length){rows=t;usedRelax=true;relaxLevel=3;}}catch(_){}}
+    }
+  }
   const ms=(performance.now()-t0).toFixed(1);
   lastRows=rows||[];lastVars=[];
   const vm=raw.match(/SELECT[^{]+(WHERE|\{)/i);
   if(vm)for(const m of vm[0].matchAll(/\?(\w+)/g))lastVars.push(m[1]);
   if(!lastVars.length&&rows?.length)lastVars=Object.keys(rows[0]).filter(k=>!k.startsWith('__'));
   lastVars=[...new Set(lastVars)].filter(v=>!v.startsWith('__'));
-  $id('qmeta').textContent=`${(rows||[]).length} resultado${rows?.length!==1?'s':''} · ${ms}ms${usedRelax?' · tolerante':''}`;
+  const relaxLabel=relaxLevel===1?' · tolerante (idioma)':relaxLevel===2?' · tolerante (texto)':relaxLevel===3?' · tolerante (tudo)':'';
+  $id('qmeta').textContent=`${(rows||[]).length} resultado${rows?.length!==1?'s':''} · ${ms}ms${usedRelax?relaxLabel:''}`;
   $id('qres').innerHTML=renderTable(rows||[],lastVars);
 }
 
@@ -4642,6 +4740,7 @@ async function processText(txt,src){
   setStatus('warn','Processando…');setDbg('warn','Interpretando '+name+'…');
   await new Promise(r=>requestAnimationFrame(r));
   try{
+    invalidateKbCache();
     const{quads}=parseTurtle(txt);
     buildIndex(quads);
     /* reset graphs so they rebuild with new data on next tab visit */
