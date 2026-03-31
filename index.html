@@ -1020,7 +1020,6 @@ canvas.gv:active{cursor:grabbing;}
     <div class="ai-answer-box" id="aiBox" style="display:none">
       <div class="ai-answer-hd">
         <h3>✦ Resposta da IA</h3>
-        <button id="aiKeyBtn" class="btn sm" onclick="showApiKeyPrompt()" title="Configurar Anthropic API Key" style="margin-left:auto;margin-right:6px;font-size:9px;opacity:.8">🔑 API Key</button>
         <button class="btn sm" onclick="closeAiBox()">✕ Fechar</button>
       </div>
       <div id="aiBody">
@@ -1338,15 +1337,10 @@ function buildKnowledgeBase(force=false){
     const visited=new Set([dim]);
     while(queue.length){
       const{iri,depth}=queue.shift();
-      if(depth===0){
-        const kids=[...(G.childOf.get(iri)||[])];
-        for(const k of kids)if(!visited.has(k)){visited.add(k);queue.push({iri:k,depth:1});}
-        continue;
-      }
+      if(depth===0){const kids=[...(G.childOf.get(iri)||[])];for(const k of kids)if(!visited.has(k)){visited.add(k);queue.push({iri:k,depth:1});}continue;}
       const lbl=bestLbl(iri);
       const cmt=G.comments.get(iri)||getExtraAnnotations(iri).slice(0,1).map(a=>a.val.slice(0,150)).join('');
-      const indent='  '.repeat(Math.min(depth,4));
-      lines.push(`${indent}• ${lbl}${cmt?' : '+cmt:''}`);
+      lines.push(`${'  '.repeat(Math.min(depth,4))}• ${lbl}${cmt?' : '+cmt:''}`);
       const kids=[...(G.childOf.get(iri)||[])];
       for(const k of kids)if(!visited.has(k)){visited.add(k);queue.push({iri:k,depth:depth+1});}
     }
@@ -1355,47 +1349,25 @@ function buildKnowledgeBase(force=false){
   const allInDims=new Set();
   for(const d of G.dims){allInDims.add(d);const subs=descOf(d);for(const x of subs)allInDims.add(x);}
   const orphans=[...G.classes].filter(c=>!allInDims.has(c)&&c!==G.rootIri);
-  if(orphans.length){
-    lines.push(`== CLASSES SEM DIMENSÃO ==`);
-    for(const c of orphans.slice(0,30))lines.push(`  • ${bestLbl(c)}${G.comments.get(c)?' : '+G.comments.get(c).slice(0,100):''}`);
-    lines.push('');
-  }
+  if(orphans.length){lines.push(`== CLASSES SEM DIMENSÃO ==`);for(const c of orphans.slice(0,30))lines.push(`  • ${bestLbl(c)}${G.comments.get(c)?' : '+G.comments.get(c).slice(0,100):''}`);lines.push('');}
   if(G.props.size){
     lines.push(`== RELAÇÕES FORMAIS (Object Properties) ==`);
-    for(const p of G.props){
-      const lbl=G.propLabel.get(p)||shortIri(p);
-      const doms=[...(G.propDomain.get(p)||[])].map(bestLbl).join(', ')||'(qualquer)';
-      const rngs=[...(G.propRange.get(p)||[])].map(bestLbl).join(', ')||'(qualquer)';
-      lines.push(`  • ${lbl}: [${doms}] → [${rngs}]`);
-    }
+    for(const p of G.props){const lbl=G.propLabel.get(p)||shortIri(p);const doms=[...(G.propDomain.get(p)||[])].map(bestLbl).join(', ')||'(qualquer)';const rngs=[...(G.propRange.get(p)||[])].map(bestLbl).join(', ')||'(qualquer)';lines.push(`  • ${lbl}: [${doms}] → [${rngs}]`);}
     lines.push('');
   }
   const xrels=typeof findCrossRels==='function'?findCrossRels():[];
-  if(xrels.length){
-    lines.push(`== RELAÇÕES CRUZADAS ENTRE DIMENSÕES ==`);
-    for(const r of xrels.slice(0,40)){
-      const fDL=r.fDim&&r.fDim!==r.f?` (${bestLbl(r.fDim)})`:'';
-      const tDL=r.tDim&&r.tDim!==r.t?` (${bestLbl(r.tDim)})`:'';
-      lines.push(`  • ${r.lbl}: ${bestLbl(r.f)}${fDL} → ${bestLbl(r.t)}${tDL}`);
-    }
-  }
-  _kbCache=lines.join('\n');
-  _kbCacheSize=G.classes.size;
+  if(xrels.length){lines.push(`== RELAÇÕES CRUZADAS ENTRE DIMENSÕES ==`);for(const r of xrels.slice(0,40)){const fDL=r.fDim&&r.fDim!==r.f?` (${bestLbl(r.fDim)})`:'';const tDL=r.tDim&&r.tDim!==r.t?` (${bestLbl(r.tDim)})`:'';lines.push(`  • ${r.lbl}: ${bestLbl(r.f)}${fDL} → ${bestLbl(r.t)}${tDL}`);}}
+  _kbCache=lines.join('\n');_kbCacheSize=G.classes.size;
   return _kbCache;
 }
 
 /* ── Chama a API ── */
 async function callAI(systemPrompt,userMsg){
-  const apiKey=getApiKey();
-  if(!apiKey){throw new Error('Chave API não configurada. Clique em 🔑 API Key.');}
-  const response=await fetch('https://api.anthropic.com/v1/messages',{
+  // Proxy URL — substitua pelo seu domínio Vercel após o deploy
+  const PROXY_URL = 'https://SEU-PROJETO.vercel.app/api/anthropic';
+  const response=await fetch(PROXY_URL,{
     method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'x-api-key':apiKey,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true'
-    },
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       model:'claude-sonnet-4-20250514',
       max_tokens:1200,
@@ -1406,9 +1378,8 @@ async function callAI(systemPrompt,userMsg){
   if(!response.ok){
     let errMsg=`Erro HTTP ${response.status}`;
     try{const err=await response.json();errMsg=err?.error?.message||errMsg;}catch{}
-    if(response.status===401)throw new Error('API Key inválida ou expirada. Verifique em console.anthropic.com.');
-    if(response.status===429)throw new Error('Limite de requisições atingido. Aguarde alguns segundos.');
-    if(response.status===500)throw new Error('Erro interno na API Anthropic. Tente novamente.');
+    if(response.status===429)throw new Error('Limite de requisições atingido. Tente em instantes.');
+    if(response.status===500)throw new Error('Erro no servidor proxy. Contacte o administrador.');
     throw new Error(errMsg);
   }
   const data=await response.json();
@@ -1475,11 +1446,11 @@ INSTRUÇÕES DE RESPOSTA — siga rigorosamente:
 1. Responda SEMPRE em português brasileiro.
 2. Escreva em texto corrido, com 2 a 3 parágrafos bem desenvolvidos.
 3. NUNCA use bullets, listas numeradas, markdown, negrito (**) ou títulos com #.
-4. Baseie-se EXCLUSIVAMENTE nos conceitos, classes e relações da base de conhecimento acima. Não invente conceitos.
-5. Quando resultados SPARQL forem fornecidos, interprete-os em linguagem natural: explique o que revelam sobre o discurso de ódio, contextualizando com a estrutura da ontologia.
-6. Se a pergunta tocar em algo que a ontologia NÃO cobre, diga qual é o limite e ofereça o mais próximo disponível.
-7. Se não houver informação relevante: "A ontologia OntoHate não possui informação suficiente para responder a essa pergunta na versão carregada."
-8. Perguntas completamente fora do escopo: "Essa pergunta está fora do escopo da ontologia OntoHate."`;
+4. Baseie-se EXCLUSIVAMENTE nos conceitos, classes e relações da base de conhecimento acima.
+5. Quando resultados SPARQL forem fornecidos, interprete-os em linguagem natural.
+6. Se a pergunta não for coberta pela ontologia, diga o limite e ofereça o mais próximo.
+7. Sem informação relevante: "A ontologia OntoHate não possui informação suficiente para responder a essa pergunta na versão carregada."
+8. Fora do escopo: "Essa pergunta está fora do escopo da ontologia OntoHate."`;
 }
 
 /* ── Abre o painel IA a partir de uma questão de competência ── */
@@ -1491,22 +1462,16 @@ async function openAiBox(sparqlQuery,questionTitle){
   const system=buildSystemPrompt(kb);
   const question=questionTitle||sparqlQuery.slice(0,200);
   let sparqlContext='';
-  if(lastRows&&lastRows.length&&lastVars&&lastVars.length){
-    sparqlContext='\n\n'+formatSparqlResults(lastRows,lastVars,30);
-  }
+  if(lastRows&&lastRows.length&&lastVars&&lastVars.length)sparqlContext='\n\n'+formatSparqlResults(lastRows,lastVars,30);
   const userMsg=`Pergunta: "${question}"${sparqlContext}\n\nResponda de forma interpretativa e contextualizada, em texto corrido.`;
   try{
     const ans=await callAI(system,userMsg);
     const paras=ans.trim().split(/\n\n+/).filter(p=>p.trim());
-    const html=paras.map(p=>`<p>${esc(p.trim())}</p>`).join('');
-    renderAIResponse(html,questionTitle||null);
+    renderAIResponse(paras.map(p=>`<p>${esc(p.trim())}</p>`).join(''),questionTitle||null);
   }catch(e){
-    const isKey=String(e.message).toLowerCase().includes('api key')||String(e.message).includes('401');
-    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ ${esc(String(e.message))}</p>${isKey?`<p style="margin-top:8px"><button class="btn sm prim" onclick="showApiKeyPrompt()">🔑 Configurar API Key</button></p>`:''}</div>`;
+    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ ${esc(String(e.message))}</p></div>`;
   }
 }
-
-/* ── Responde perguntas livres em linguagem natural ── */
 async function askAI(question){
   if(!question||!question.trim())return;
   const box=$id('aiBox');box.style.display='';
@@ -1516,18 +1481,13 @@ async function askAI(question){
   const kb=buildKnowledgeBase();
   const system=buildSystemPrompt(kb);
   let sparqlContext='';
-  if(lastRows&&lastRows.length&&lastVars&&lastVars.length){
-    sparqlContext='\n\nContexto atual (resultados visíveis na tela):\n'+formatSparqlResults(lastRows,lastVars,20);
-  }
-  const userMsg=question+sparqlContext;
+  if(lastRows&&lastRows.length&&lastVars&&lastVars.length)sparqlContext='\n\nContexto atual:\n'+formatSparqlResults(lastRows,lastVars,20);
   try{
-    const ans=await callAI(system,userMsg);
+    const ans=await callAI(system,question+sparqlContext);
     const paras=ans.trim().split(/\n\n+/).filter(p=>p.trim());
-    const html=paras.map(p=>`<p>${esc(p.trim())}</p>`).join('');
-    renderAIResponse(html,question);
+    renderAIResponse(paras.map(p=>`<p>${esc(p.trim())}</p>`).join(''),question);
   }catch(e){
-    const isKey=String(e.message).toLowerCase().includes('api key')||String(e.message).includes('401');
-    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ ${esc(String(e.message))}</p>${isKey?`<p style="margin-top:8px"><button class="btn sm prim" onclick="showApiKeyPrompt()">🔑 Configurar API Key</button></p>`:''}</div>`;
+    $id('aiBody').innerHTML=`<div class="ai-answer-body"><p class="ai-error">⚠ ${esc(String(e.message))}</p></div>`;
   }
 }
 
@@ -1617,19 +1577,10 @@ function sparqlQ(raw){
 function formatSparqlResults(rows,vars,maxRows=30){
   if(!rows||!rows.length)return'(sem resultados SPARQL)';
   const sample=rows.slice(0,maxRows);
-  const lines=[];
-  lines.push(`RESULTADOS SPARQL (${rows.length} linha${rows.length!==1?'s':''}${rows.length>maxRows?`, exibindo primeiras ${maxRows}`:''})`);
+  const lines=[`RESULTADOS SPARQL (${rows.length} linha${rows.length!==1?'s':''}${rows.length>maxRows?`, exibindo primeiras ${maxRows}`:''})`];
   lines.push(vars.join(' | '));
   lines.push('─'.repeat(60));
-  for(const row of sample){
-    lines.push(vars.map(v=>{
-      const val=(row[v]||'').toString();
-      if(!val)return'—';
-      if(val.startsWith('http://ontohate.org/')||val.startsWith('https://ontohate.org/'))return G.labels.get(val)||shortIri(val);
-      if(val.startsWith('http://www.w3.org/')||val.startsWith('https://'))return shortIri(val);
-      return val.slice(0,100);
-    }).join(' | '));
-  }
+  for(const row of sample)lines.push(vars.map(v=>{const val=(row[v]||'').toString();if(!val)return'—';if(val.startsWith('http://ontohate.org/')||val.startsWith('https://ontohate.org/'))return G.labels.get(val)||shortIri(val);if(val.startsWith('http://'))return shortIri(val);return val.slice(0,100);}).join(' | '));
   return lines.join('\n');
 }
 function sparqlEnhanced(raw){const pfxBlock=Object.entries(NSDEF).filter(([p])=>!raw.includes(`PREFIX ${p}:`)).map(([p,u])=>`PREFIX ${p}: <${u}>`).join('\n');return sparqlQ(pfxBlock?pfxBlock+'\n'+raw:raw);}
@@ -4849,30 +4800,7 @@ function showNpMob(){
 
 </script>
 
-<!-- ── Modal API Key ── -->
-<div id="apiKeyModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
-  <div style="background:var(--panel);border:1px solid var(--bord);border-radius:16px;padding:28px 28px 24px;width:min(420px,92vw);box-shadow:0 24px 80px rgba(0,0,0,.7);">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-      <span style="font-size:22px">🔑</span>
-      <div>
-        <div style="font-family:var(--head);font-weight:700;font-size:14px;color:var(--txt1)">Anthropic API Key</div>
-        <div style="font-size:11px;color:var(--txt3);margin-top:2px">Usada apenas nesta sessão — não é armazenada</div>
-      </div>
-    </div>
-    <input id="apiKeyInput" type="password"
-      placeholder="sk-ant-api03-…"
-      style="width:100%;box-sizing:border-box;padding:10px 12px;background:var(--bg);border:1px solid var(--bord);border-radius:8px;color:var(--txt1);font-family:var(--mono);font-size:12px;outline:none;margin-bottom:8px"
-      onkeydown="if(event.key==='Enter')confirmApiKey()"
-    />
-    <div style="font-size:10px;color:var(--txt3);margin-bottom:16px">
-      Obtenha sua chave em <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--acc)">console.anthropic.com</a>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn sm" onclick="closeApiKeyModal()">Cancelar</button>
-      <button class="btn sm prim" onclick="confirmApiKey()">✓ Confirmar</button>
-    </div>
-  </div>
-</div>
+
 
 </body>
 </html>
