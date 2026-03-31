@@ -1,15 +1,9 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/anthropic.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/anthropic",
-      "dest": "/api/anthropic.js"
+      "source": "/api/anthropic",
+      "destination": "/api/anthropic.js"
     }
   ]
 }
