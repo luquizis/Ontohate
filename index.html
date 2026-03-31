@@ -1360,11 +1360,8 @@ function buildKnowledgeBase(force=false){
   _kbCache=lines.join('\n');_kbCacheSize=G.classes.size;
   return _kbCache;
 }
-
-/* ── Chama a API ── */
 async function callAI(systemPrompt,userMsg){
-  // Proxy URL — substitua pelo seu domínio Vercel após o deploy
-  const PROXY_URL = 'https://SEU-PROJETO.vercel.app/api/anthropic';
+  const PROXY_URL='https://ontohate.vercel.app/api/anthropic';
   const response=await fetch(PROXY_URL,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -1379,7 +1376,7 @@ async function callAI(systemPrompt,userMsg){
     let errMsg=`Erro HTTP ${response.status}`;
     try{const err=await response.json();errMsg=err?.error?.message||errMsg;}catch{}
     if(response.status===429)throw new Error('Limite de requisições atingido. Tente em instantes.');
-    if(response.status===500)throw new Error('Erro no servidor proxy. Contacte o administrador.');
+    if(response.status===500)throw new Error('Erro no servidor. Tente novamente.');
     throw new Error(errMsg);
   }
   const data=await response.json();
@@ -1452,8 +1449,6 @@ INSTRUÇÕES DE RESPOSTA — siga rigorosamente:
 7. Sem informação relevante: "A ontologia OntoHate não possui informação suficiente para responder a essa pergunta na versão carregada."
 8. Fora do escopo: "Essa pergunta está fora do escopo da ontologia OntoHate."`;
 }
-
-/* ── Abre o painel IA a partir de uma questão de competência ── */
 async function openAiBox(sparqlQuery,questionTitle){
   const box=$id('aiBox');box.style.display='';
   if(isMob()){closeMobPanels();box.classList.add('mob-open');}
