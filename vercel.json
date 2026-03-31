@@ -1,9 +1,6 @@
 {
   "version": 2,
   "rewrites": [
-    {
-      "source": "/api/anthropic",
-      "destination": "/api/anthropic.js"
-    }
+    { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }
