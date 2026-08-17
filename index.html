@@ -767,7 +767,7 @@ canvas.gv:active{cursor:grabbing;}
   <div class="hero">
     <div class="hero-badge">✦ Ontologia Formal · Discurso de Ódio Online</div>
     <h1 class="hero-title"><span>OntoHate</span></h1>
-    <div class="hero-subtitle">Versão 5.0 · Luiz Rogério Lopes Silva</div>
+    <div class="hero-subtitle">Versão 5.1 · Luiz Rogério Lopes Silva</div>
     <p class="hero-desc">Uma ontologia computacional para representar, analisar e explorar o ecossistema do discurso de ódio online — seus agentes, estratégias, contextos, vítimas e consequências.</p>
     <div class="hero-cards">
       <div class="hcard" onclick="gotoTab('tax')"><span class="hcard-icon">🌳</span><div class="hcard-title">Taxonomia</div><div class="hcard-desc">Hierarquia de classes com seleção de dimensões, cruzamentos configuráveis e relações visíveis ao clicar.</div></div>
@@ -1366,7 +1366,7 @@ async function callAI(systemPrompt,userMsg){
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
+      model:'claude-sonnet-4-6',
       max_tokens:1200,
       system:systemPrompt,
       messages:[{role:'user',content:userMsg}]
